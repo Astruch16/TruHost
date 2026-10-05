@@ -1,21 +1,23 @@
 # TruHost: Technical Spec
 
-Status: **draft for review** (2026-10-05). Nothing in here is built yet beyond
-the scaffold and `GET /health`. Items marked **[Q#]** depend on an open
-question in [§8](#8-open-questions). Items marked **[A#]** rest on an
-assumption in [§7](#7-assumptions).
+Status: **approved for Phase 1** (revised 2026-10-05 with answers to the
+blocking questions). Items marked **[N#]** are open but non-blocking questions
+([§9](#9-open-questions-non-blocking)). Items marked **[A#]** are assumptions
+([§8](#8-assumptions)).
 
 Contents:
 
 1. [Domain overview](#1-domain-overview)
-2. [Data model (Prisma)](#2-data-model-prisma)
-3. [Computed metrics](#3-computed-metrics)
-4. [Cross-cutting API design](#4-cross-cutting-api-design)
-5. [REST API surface](#5-rest-api-surface)
-6. [Permissions matrix](#6-permissions-matrix)
-7. [Assumptions](#7-assumptions)
-8. [Open questions](#8-open-questions)
-9. [Build order](#9-build-order)
+2. [Money flow](#2-money-flow)
+3. [Data model (Prisma)](#3-data-model-prisma)
+4. [Computed metrics and statements](#4-computed-metrics-and-statements)
+5. [Cross-cutting API design](#5-cross-cutting-api-design)
+6. [REST API surface](#6-rest-api-surface)
+7. [Permissions matrix](#7-permissions-matrix)
+8. [Assumptions](#8-assumptions)
+9. [Open questions (non-blocking)](#9-open-questions-non-blocking)
+10. [Build order](#10-build-order)
+11. [Decision log](#11-decision-log)
 
 ---
 
@@ -24,93 +26,114 @@ Contents:
 - **Single tenant** [A1]. One company (TruHost) with many properties, so
   there is no `Organization` table.
 - **Admin** is a company-wide role stored on `User.staffRole`, not a
-  per-property membership. Admins see every property, including ones created
-  after they joined. Creating admin memberships per property would invite
-  "forgot to add the admin" bugs.
+  per-property membership. Admins see every property.
 - **Owner** and **Cleaner** are per-property roles stored in `Membership`.
-  One user can hold several (e.g. an owner who also cleans their own unit),
-  and a property can have several owners (co-owners) [Q1].
-- **Bookings** produce **cleans**: each guest or owner-stay checkout creates a
-  turnover `Clean` on the checkout date. A booking that is cancelled or moved
-  updates or cancels its clean in the same transaction.
-- **Revenue numbers are never stored.** They are derived from `Booking`,
-  `Expense` and the property's `Plan` at the time ([§3](#3-computed-metrics)).
+  One user can hold several. In particular, **an admin can also hold an
+  OWNER membership**. That is the starting state: TruHost's own Airbnb is the
+  first property, and the admin owns it. Access is the union of the user's
+  roles. The web app shows the owner view to anyone with an OWNER membership,
+  admins included.
+- **Bookings** produce **cleans**: each GUEST or OWNER_STAY checkout creates a
+  turnover `Clean`. Cancelling or moving a booking updates or cancels its clean
+  in the same transaction.
+- **Each completed clean is owed to its cleaner.** The amount defaults from
+  the property's rate. An admin records payments, which flips cleans to paid.
+- **Owners are paid monthly** through an `OwnerStatement` per property per
+  month: DRAFT → FINALIZED → RELEASED. Finalizing locks that month's bookings
+  and expenses. Later corrections are adjustment lines on the next
+  statement.
+- **Revenue figures are never entered.** They are computed from bookings,
+  expenses, adjustments and the plan. The one exception is a FINALIZED
+  statement, which keeps a server-computed copy of its lines and totals so the
+  document can never change after it has been issued ([§4](#4-computed-metrics-and-statements)).
+
+## 2. Money flow
+
+```
+Airbnb ──payout──▶ TruHost
+                   │
+                   ├─ guest cleaning fee ─▶ TruHost revenue ─▶ pays cleaner (cleaner pay per clean)
+                   │
+                   └─ owner gross = payout − cleaning fee
+                          − TruPlan fee (22% of the month's owner gross) ─▶ TruHost revenue
+                          − owner-borne expenses (each backed by a receipt)
+                          ± adjustments (corrections to finalized months)
+                          = owner net ─▶ released to owner (statement RELEASED)
+```
+
+- An admin enters, per booking, the **payout received** and the **guest
+  cleaning fee charged**. Airbnb's host fee is never entered or shown.
+- **TruPlan**: 22% of the month's owner gross. Plans stay versioned through
+  `PropertyPlan`, so the rate can change later.
+- **Taxes**: TruHost is not GST-registered and takes no direct bookings. Tax
+  fields exist in the model, but the API rejects non-null values unless
+  `TAX_FIELDS_ENABLED=true`, and the UI hides them.
+- **No client invoices.** The monthly statement is the document. Stripe
+  Invoicing is dropped.
 
 ---
 
-## 2. Data model (Prisma)
+## 3. Data model (Prisma)
 
 Conventions:
 
-- IDs are UUIDv7 (`@default(uuid(7)) @db.Uuid`). They are time-ordered, so
-  B-tree indexes stay compact, and they are safe to expose in URLs.
-- Money is `Int` cents. Rates are `Int` basis points (1 bps = 0.01%).
-  A single row tops out at $21.4M, which is plenty. Aggregates are summed in
-  SQL or as `bigint` and checked against `Number.MAX_SAFE_INTEGER`.
-- Stay dates are `@db.Date` (property-local calendar days). Instants are
-  `@db.Timestamptz` (UTC).
+- IDs are UUIDv7 (`@default(uuid(7)) @db.Uuid`).
+- Money is `Int` cents (CAD) and rates are `Int` basis points. Sums happen in
+  SQL as `bigint` or in JS with safe-integer checks.
+- Stay dates and months are `@db.Date` (property-local calendar days).
+  Instants are `@db.Timestamptz` (UTC).
 - Anything referenced by money, documents or evidence is soft-deleted
-  (`archivedAt`, `voidedAt` or `revokedAt`) and never hard-deleted.
-- `///` comments explain non-obvious fields and will be kept in the real
-  `schema.prisma`.
-- Constraints Prisma can't express (partial unique indexes, exclusion
-  constraints, CHECKs and immutability triggers) are written as raw SQL in
-  the migration and listed after the schema.
+  (`archivedAt`, `voidedAt` or `revokedAt`). Nothing is hard-deleted.
+- `///` comments explain non-obvious fields and carry into `schema.prisma`.
+- Constraints Prisma can't express are raw SQL in migrations
+  ([table below](#constraints-added-as-raw-sql)).
 
 ```prisma
-// ───────────────────────── Identity & access ─────────────────────────
+// ───────────────────────── Identity & access ─────────────────────────  (Phase 1)
 
 enum StaffRole {
   ADMIN
 }
 
 enum UserStatus {
-  INVITED      /// Created by an admin. Clerk account not yet linked.
+  INVITED      /// Created by an admin (or the bootstrap CLI). Clerk account not yet linked.
   ACTIVE
   DEACTIVATED
 }
 
 model User {
   id            String     @id @default(uuid(7)) @db.Uuid
-  /// Null until the invitee completes Clerk sign-up. Linked by the user.created webhook.
+  /// Null until first sign-in. Linked on the first authenticated request by matching Clerk's verified email.
   clerkUserId   String?    @unique
-  /// Lower-cased. Must match the Clerk primary verified email when linking.
+  /// Stored lower-cased. Unique.
   email         String     @unique
   firstName     String
   lastName      String
   phone         String?
-  /// Null means not staff. Company-wide role. Owner and cleaner access is in Membership.
+  /// Null means not staff. Company-wide. Owner and cleaner access is in Membership.
   staffRole     StaffRole?
   status        UserStatus @default(INVITED)
   deactivatedAt DateTime?  @db.Timestamptz
   createdAt     DateTime   @default(now()) @db.Timestamptz
   updatedAt     DateTime   @updatedAt @db.Timestamptz
-
-  memberships      Membership[]       @relation("MembershipUser")
-  invites          Invite[]           @relation("InviteUser")
-  assignedCleans   Clean[]            @relation("CleanAssignee")
-  // ...remaining back-relations omitted for brevity
-}
-
-model Invite {
-  id                String       @id @default(uuid(7)) @db.Uuid
-  userId            String       @db.Uuid
-  user              User         @relation("InviteUser", fields: [userId], references: [id])
-  /// Clerk invitation id. Used to revoke and resend, and to match the webhook.
-  clerkInvitationId String       @unique
-  status            InviteStatus @default(PENDING)
-  invitedById       String       @db.Uuid
-  expiresAt         DateTime     @db.Timestamptz
-  acceptedAt        DateTime?    @db.Timestamptz
-  revokedAt         DateTime?    @db.Timestamptz
-  createdAt         DateTime     @default(now()) @db.Timestamptz
 }
 
 enum InviteStatus {
   PENDING
   ACCEPTED
   REVOKED
-  EXPIRED
+}
+
+model Invite {
+  id                String       @id @default(uuid(7)) @db.Uuid
+  userId            String       @db.Uuid
+  /// Clerk invitation id. Used to revoke and resend. Null if Clerk was skipped (dev bootstrap without a key).
+  clerkInvitationId String?      @unique
+  status            InviteStatus @default(PENDING)
+  invitedById       String?      @db.Uuid /// Null for the bootstrap CLI.
+  acceptedAt        DateTime?    @db.Timestamptz
+  revokedAt         DateTime?    @db.Timestamptz
+  createdAt         DateTime     @default(now()) @db.Timestamptz
 }
 
 enum MembershipRole {
@@ -118,17 +141,15 @@ enum MembershipRole {
   CLEANER
 }
 
-/// The single source of property-scoped access. Every non-admin query joins through this table.
+/// The single source of property-scoped access. Every non-admin query is scoped through this table.
 model Membership {
   id          String         @id @default(uuid(7)) @db.Uuid
   userId      String         @db.Uuid
-  user        User           @relation("MembershipUser", fields: [userId], references: [id])
   propertyId  String         @db.Uuid
-  property    Property       @relation(fields: [propertyId], references: [id])
   role        MembershipRole
-  createdById String         @db.Uuid
+  createdById String?        @db.Uuid
   createdAt   DateTime       @default(now()) @db.Timestamptz
-  /// Soft revoke keeps a history of who had access when. A revoked cleaner's past photos stay attributed.
+  /// Soft revoke keeps a history of who had access when.
   revokedAt   DateTime?      @db.Timestamptz
   revokedById String?        @db.Uuid
 
@@ -137,42 +158,33 @@ model Membership {
   // + partial unique (userId, propertyId, role) WHERE revokedAt IS NULL
 }
 
-// ───────────────────────── Properties ─────────────────────────
+// ───────────────────────── Properties ─────────────────────────  (Phase 1)
 
 model Property {
-  id                    String    @id @default(uuid(7)) @db.Uuid
-  name                  String    /// Internal nickname shown in UI, e.g. "Kits 2BR".
-  addressLine1          String
-  addressLine2          String?
-  city                  String
-  province              String    @default("BC")
-  postalCode            String
-  country               String    @default("CA")
-  /// IANA zone. Used to turn check-in/out dates and times into instants and to bucket reports by month.
-  timeZone              String    @default("America/Vancouver")
-  /// Default times used to build clean windows when a booking doesn't override them. Stored as "HH:mm".
-  checkInTime           String    @default("16:00")
-  checkOutTime          String    @default("11:00")
-  /// BC Short-Term Rental Registry number. Platforms must display it, so we keep it on file.
+  id                           String    @id @default(uuid(7)) @db.Uuid
+  name                         String    /// Internal nickname, e.g. "Kits 2BR".
+  addressLine1                 String
+  addressLine2                 String?
+  city                         String
+  province                     String    @default("BC")
+  postalCode                   String
+  country                      String    @default("CA")
+  /// IANA zone. Used to turn dates and times into instants and to bucket months.
+  timeZone                     String    @default("America/Vancouver")
+  /// Default "HH:mm" times used to build clean windows.
+  checkInTime                  String    @default("16:00")
+  checkOutTime                 String    @default("11:00")
+  /// BC Short-Term Rental Registry number (platforms must display it).
   provincialRegistrationNumber String?
-  /// Municipal business licence (e.g. City of Vancouver STR licence). Separate from the provincial number.
-  businessLicenceNumber String?
-  /// Lockbox/door codes and parking. Sensitive: visible to admins and the property's cleaners only [Q14].
-  accessInstructions    String?
-  archivedAt            DateTime? @db.Timestamptz
-  createdAt             DateTime  @default(now()) @db.Timestamptz
-  updatedAt             DateTime  @updatedAt @db.Timestamptz
-
-  memberships   Membership[]
-  rooms         Room[]
-  plans         PropertyPlan[]
-  bookings      Booking[]
-  expenses      Expense[]
-  receipts      Receipt[]
-  cleans        Clean[]
-  supplyItems   SupplyItem[]
-  damageReports DamageReport[]
-  icalFeeds     IcalFeed[]
+  /// Municipal business licence, separate from the provincial number.
+  businessLicenceNumber        String?
+  /// Lockbox and door codes. Visible to admins and this property's cleaners only. [N7]
+  accessInstructions           String?
+  /// Default amount owed to the cleaner per turnover. Copied onto each Clean at creation.
+  defaultCleanerPayCents       Int       @default(0)
+  archivedAt                   DateTime? @db.Timestamptz
+  createdAt                    DateTime  @default(now()) @db.Timestamptz
+  updatedAt                    DateTime  @updatedAt @db.Timestamptz
 }
 
 enum RoomType {
@@ -188,63 +200,52 @@ enum RoomType {
 }
 
 model Room {
-  id          String    @id @default(uuid(7)) @db.Uuid
-  propertyId  String    @db.Uuid
-  property    Property  @relation(fields: [propertyId], references: [id])
-  name        String    /// e.g. "Primary bedroom", "Ensuite"
-  type        RoomType
-  sortOrder   Int       @default(0) /// Order in the cleaner's photo checklist (walk-through order).
-  /// Archived rooms drop out of the clean-completion requirement but keep their historic photos.
-  archivedAt  DateTime? @db.Timestamptz
-  createdAt   DateTime  @default(now()) @db.Timestamptz
+  id         String    @id @default(uuid(7)) @db.Uuid
+  propertyId String    @db.Uuid
+  name       String    /// e.g. "Primary bedroom", "Ensuite".
+  type       RoomType
+  sortOrder  Int       @default(0) /// Order in the cleaner's photo checklist.
+  /// Archived rooms leave the clean-completion requirement but keep their historic photos.
+  archivedAt DateTime? @db.Timestamptz
+  createdAt  DateTime  @default(now()) @db.Timestamptz
 
-  /// Lets CleanPhoto use a composite FK that proves the room belongs to the clean's property.
+  /// Target of CleanPhoto's composite FK, which proves the room belongs to the clean's property.
   @@unique([propertyId, id])
 }
 
-// ───────────────────────── Plans ─────────────────────────
+// ───────────────────────── Plans ─────────────────────────  (Phase 1)
 
-/// A management plan, e.g. "Full service 20%". Fee terms are immutable once any property has used the plan,
-/// so historic statements stay reproducible. Changing terms means creating a new plan. [Q3]
+/// A management plan, e.g. TruPlan at 2200 bps. The rate is immutable once any PropertyPlan references it, so past
+/// statements stay reproducible. A new rate means a new plan.
 model Plan {
   id               String    @id @default(uuid(7)) @db.Uuid
   name             String    @unique
   description      String?
-  /// Management fee rate in basis points (2000 = 20%).
+  /// Management fee in basis points of the month's owner gross (2200 = 22%).
   managementFeeBps Int
-  /// Which revenue the fee is charged on. The enum stays provisional until Q4 is answered.
-  feeBasis         FeeBasis
   archivedAt       DateTime? @db.Timestamptz
   createdAt        DateTime  @default(now()) @db.Timestamptz
 }
 
-enum FeeBasis {
-  GROSS_REVENUE          /// accommodation + guest fees
-  ACCOMMODATION_ONLY     /// excludes guest cleaning fees
-  NET_OF_CHANNEL_FEES    /// gross minus platform host fees
-}
-
-/// Which plan applied to a property over which dates. Needed because reports for past months must use the plan
-/// in force at that time, not today's.
+/// Which plan applied to a property from which month. Starts on the 1st of a month so every statement month has exactly
+/// one rate.
 model PropertyPlan {
-  id            String   @id @default(uuid(7)) @db.Uuid
-  propertyId    String   @db.Uuid
-  property      Property @relation(fields: [propertyId], references: [id])
-  planId        String   @db.Uuid
-  plan          Plan     @relation(fields: [planId], references: [id])
-  effectiveFrom DateTime @db.Date
-  effectiveTo   DateTime? @db.Date /// Exclusive. Null means current.
-  createdById   String   @db.Uuid
-  createdAt     DateTime @default(now()) @db.Timestamptz
+  id            String    @id @default(uuid(7)) @db.Uuid
+  propertyId    String    @db.Uuid
+  planId        String    @db.Uuid
+  effectiveFrom DateTime  @db.Date  /// CHECK: day = 1
+  effectiveTo   DateTime? @db.Date  /// Exclusive. CHECK: day = 1. Null means current.
+  createdById   String?   @db.Uuid
+  createdAt     DateTime  @default(now()) @db.Timestamptz
   // + EXCLUDE USING gist (propertyId WITH =, daterange(effectiveFrom, effectiveTo) WITH &&)
 }
 
-// ───────────────────────── Bookings ─────────────────────────
+// ───────────────────────── Bookings ─────────────────────────  (Phase 2)
 
 enum BookingSource {
-  MANUAL  /// Entered by an admin.
-  ICAL    /// Created by the iCal sync. Dates only, so an admin fills in money later.
-  PMS     /// Created by a future PMS integration.
+  MANUAL
+  ICAL
+  PMS
 }
 
 enum BookingChannel {
@@ -257,8 +258,8 @@ enum BookingChannel {
 
 enum BookingKind {
   GUEST       /// Revenue stay.
-  OWNER_STAY  /// The owner is using the property. Counts as nights blocked, not revenue, and still needs a clean.
-  BLOCK       /// Maintenance or hold. No clean is created by default.
+  OWNER_STAY  /// Owner using the property. Not revenue, but still gets a turnover clean.
+  BLOCK       /// Maintenance or hold. No clean by default.
 }
 
 enum BookingStatus {
@@ -267,66 +268,55 @@ enum BookingStatus {
 }
 
 model Booking {
-  id                   String         @id @default(uuid(7)) @db.Uuid
-  propertyId           String         @db.Uuid
-  property             Property       @relation(fields: [propertyId], references: [id])
-  /// How the record got here (rule 3). This is separate from channel.
-  source               BookingSource
-  /// Where the guest booked. Drives which fee fields are expected.
-  channel              BookingChannel
-  kind                 BookingKind    @default(GUEST)
-  status               BookingStatus  @default(CONFIRMED)
-  /// Platform confirmation code or iCal UID. Makes sync idempotent: (propertyId, source, externalId) is unique.
-  externalId           String?
-  checkInDate          DateTime       @db.Date
-  checkOutDate         DateTime       @db.Date  /// nights = checkOutDate - checkInDate. CHECK (checkOut > checkIn).
-  /// Overrides Property.checkInTime/checkOutTime for early check-in or late checkout. Feeds the clean window.
-  checkInTimeOverride  String?
-  checkOutTimeOverride String?
-  guestName            String?        /// PII. Hidden from owners unless Q8 says otherwise.
-  guestCount           Int?
+  id                    String         @id @default(uuid(7)) @db.Uuid
+  propertyId            String         @db.Uuid
+  /// How the record got here (rule 3). Separate from channel.
+  source                BookingSource
+  /// Where the guest booked.
+  channel               BookingChannel
+  kind                  BookingKind    @default(GUEST)
+  status                BookingStatus  @default(CONFIRMED)
+  /// Platform confirmation code or iCal UID. (propertyId, source, externalId) is unique, so sync is idempotent.
+  externalId            String?
+  checkInDate           DateTime       @db.Date
+  checkOutDate          DateTime       @db.Date /// nights = checkOutDate − checkInDate. CHECK (checkOut > checkIn).
+  checkInTimeOverride   String?        /// Early check-in. Feeds the clean window.
+  checkOutTimeOverride  String?        /// Late checkout. Feeds the clean window.
+  guestName             String?        /// PII. Admin-only (hidden from owners and cleaners).
+  guestCount            Int?
 
-  // Money: entered by admins, all nullable because iCal-sourced bookings arrive without amounts.
-  // Null means "not entered yet", which is different from 0. Reports flag GUEST bookings with null amounts as incomplete.
-  /// Total nightly-rate revenue for the stay, before guest fees and taxes.
-  accommodationCents    Int?
-  /// Cleaning fee charged to the guest. Revenue, not a cost. [Q2]
+  // Money. Nullable because iCal bookings arrive without amounts. Null means "not entered", which is not 0.
+  /// What the channel actually paid TruHost for this stay, after the channel's host fee.
+  payoutCents           Int?
+  /// Cleaning fee charged to the guest. TruHost revenue. Subtracted from payout to get owner gross.
+  /// CHECK (guestCleaningFeeCents <= payoutCents).
   guestCleaningFeeCents Int?
-  /// Pet fees, extra-guest fees and similar.
-  otherGuestFeesCents   Int?
-  /// Host-side fee the platform keeps (e.g. Airbnb host service fee). Reduces payout.
-  channelFeeCents       Int?
-  /// Taxes collected from the guest (GST/PST/MRDT). Never counted as revenue. Recorded for direct bookings
-  /// where TruHost remits. For Airbnb, which remits PST/MRDT itself, this is usually 0. [Q11]
+  /// Guest-paid taxes. Must be null unless TAX_FIELDS_ENABLED. Never revenue.
   taxesCollectedCents   Int?
-  /// For cancelled bookings that still paid out (partial refund policy). Revenue is the amounts above as
-  /// entered, so admins enter what was actually earned. [Q10]
-  cancelledAt          DateTime?      @db.Timestamptz
-  cancellationNote     String?
-  notes                String?
-  enteredById          String?        @db.Uuid /// Null for system-created (iCal/PMS) records.
-  /// Optimistic concurrency. Clients send it back on PATCH, and a mismatch returns 409.
-  version              Int            @default(0)
-  lastSyncedAt         DateTime?      @db.Timestamptz
-  createdAt            DateTime       @default(now()) @db.Timestamptz
-  updatedAt            DateTime       @updatedAt @db.Timestamptz
 
-  clean         Clean?
-  damageReports DamageReport[]
+  cancelledAt           DateTime?      @db.Timestamptz
+  cancellationNote      String?
+  notes                 String?
+  enteredById           String?        @db.Uuid /// Null for iCal or PMS records.
+  /// Optimistic concurrency. A stale version on PATCH returns 409.
+  version               Int            @default(0)
+  createdAt             DateTime       @default(now()) @db.Timestamptz
+  updatedAt             DateTime       @updatedAt @db.Timestamptz
 
   @@unique([propertyId, source, externalId])
   @@index([propertyId, checkInDate])
   @@index([propertyId, checkOutDate])
-  // + EXCLUDE USING gist (propertyId WITH =, daterange(checkInDate, checkOutDate) WITH &&) WHERE status = 'CONFIRMED'
-  //   prevents double-booking data-entry errors. Same-day turnover is fine because the range is half-open.
+  // + EXCLUDE USING gist (propertyId WITH =, daterange(checkInDate, checkOutDate, '[)') WITH &&)
+  //     WHERE (status = 'CONFIRMED')
+  //   See "Booking overlap rules" below.
 }
 
-/// Phase 6. One feed per property per channel listing. The URL is a secret (anyone with it can read
-/// availability), so it is encrypted at rest and never returned to non-admins.
+// ───────────────────────── iCal staging ─────────────────────────  (Phase 6)
+
+/// One feed per channel listing. Anyone with the URL can read availability, so it is encrypted at rest and admin-only.
 model IcalFeed {
   id            String         @id @default(uuid(7)) @db.Uuid
   propertyId    String         @db.Uuid
-  property      Property       @relation(fields: [propertyId], references: [id])
   channel       BookingChannel
   urlEncrypted  String
   active        Boolean        @default(true)
@@ -335,11 +325,45 @@ model IcalFeed {
   createdAt     DateTime       @default(now()) @db.Timestamptz
 }
 
-// ───────────────────────── Expenses & receipts ─────────────────────────
+enum IcalImportState {
+  PENDING    /// Fetched, not yet processed.
+  APPLIED    /// Created or updated a Booking without conflict.
+  CONFLICT   /// Overlaps or duplicates an existing booking. Waiting for an admin.
+  RESOLVED   /// Admin linked, replaced or ignored it.
+  IGNORED    /// Auto-ignored (e.g. unchanged re-fetch of an applied event).
+}
+
+/// Every iCal event lands here first. Sync never writes a conflicting Booking, so it can't trip the overlap constraint.
+model IcalImport {
+  id                String          @id @default(uuid(7)) @db.Uuid
+  feedId            String          @db.Uuid
+  propertyId        String          @db.Uuid
+  uid               String          /// iCal UID.
+  kind              BookingKind     /// Reservation → GUEST, "Not available" → BLOCK.
+  checkInDate       DateTime        @db.Date
+  checkOutDate      DateTime        @db.Date
+  rawSummary        String?
+  /// SHA-256 of the normalised event. An unchanged re-fetch is a no-op.
+  eventHash         String
+  state             IcalImportState @default(PENDING)
+  /// Booking this event created or updated (APPLIED), or was linked to (RESOLVED).
+  bookingId         String?         @db.Uuid
+  /// The existing booking(s) it clashed with, for the review screen.
+  conflictBookingIds String[]       @db.Uuid
+  /// e.g. OVERLAP, POSSIBLE_DUPLICATE, CANCELLED_IN_FINALIZED_MONTH, DATES_CHANGED_IN_FINALIZED_MONTH
+  conflictReason    String?
+  resolvedById      String?         @db.Uuid
+  resolvedAt        DateTime?       @db.Timestamptz
+  resolution        String?         /// LINK | REPLACE | IGNORE
+  createdAt         DateTime        @default(now()) @db.Timestamptz
+
+  @@index([propertyId, state])
+  @@index([feedId, uid])
+}
+
+// ───────────────────────── Expenses & receipts ─────────────────────────  (Phase 2)
 
 enum ExpenseCategory {
-  CLEANING
-  LAUNDRY
   SUPPLIES
   REPAIRS_MAINTENANCE
   FURNISHINGS
@@ -352,50 +376,43 @@ enum ExpenseCategory {
 }
 
 enum ExpenseBearer {
-  OWNER    /// Deducted in the owner's net revenue (and shown to them).
-  TRUHOST  /// TruHost absorbs it. Not shown to owners and not in owner net. [Q5]
+  OWNER    /// Deducted on the owner statement. Must have a receipt before the month can be finalized.
+  TRUHOST  /// TruHost's own cost for this property. Not shown to owners.
 }
 
 model Expense {
-  id          String          @id @default(uuid(7)) @db.Uuid
-  propertyId  String          @db.Uuid
-  property    Property        @relation(fields: [propertyId], references: [id])
-  category    ExpenseCategory
-  /// Who ultimately bears the cost. Determines whether it reduces owner net.
-  bearer      ExpenseBearer   @default(OWNER)
-  incurredOn  DateTime        @db.Date /// Bucket date for monthly reports.
-  vendor      String?
-  description String
-  /// Pre-tax amount. Taxes are separate so GST input tax credits can be reported later.
-  subtotalCents Int
-  gstCents      Int           @default(0)
-  pstCents      Int           @default(0)
-  /// Optional link to the clean that generated it (e.g. per-clean cleaner pay). [Q6]
-  cleanId     String?         @db.Uuid
-  enteredById String          @db.Uuid
-  /// Void instead of delete. Voided rows are excluded from reports but kept for audit.
-  voidedAt    DateTime?       @db.Timestamptz
-  voidedById  String?         @db.Uuid
-  voidReason  String?
-  version     Int             @default(0)
-  createdAt   DateTime        @default(now()) @db.Timestamptz
-  updatedAt   DateTime        @updatedAt @db.Timestamptz
-
-  receipts Receipt[]
+  id            String          @id @default(uuid(7)) @db.Uuid
+  propertyId    String          @db.Uuid
+  category      ExpenseCategory
+  bearer        ExpenseBearer   @default(OWNER)
+  /// Decides which statement month it lands in.
+  incurredOn    DateTime        @db.Date
+  vendor        String?
+  description   String
+  /// Total paid, including any tax. This is what is deducted. CHECK (>= 0).
+  amountCents   Int
+  /// Tax breakdown. Must be null unless TAX_FIELDS_ENABLED.
+  gstCents      Int?
+  pstCents      Int?
+  enteredById   String          @db.Uuid
+  /// Void instead of delete. Voided rows are excluded from all money computations.
+  voidedAt      DateTime?       @db.Timestamptz
+  voidedById    String?         @db.Uuid
+  voidReason    String?
+  version       Int             @default(0)
+  createdAt     DateTime        @default(now()) @db.Timestamptz
+  updatedAt     DateTime        @updatedAt @db.Timestamptz
 
   @@index([propertyId, incurredOn])
-  // + CHECK (subtotalCents >= 0 AND gstCents >= 0 AND pstCents >= 0). Refunds are a separate category/negative? [Q12]
 }
 
-/// A receipt or invoice document. Usually attached to an expense, but can stand alone (e.g. a warranty).
+/// A receipt document. Usually attached to an expense. Several receipts per expense are allowed (e.g. a multi-page
+/// invoice).
 model Receipt {
   id           String    @id @default(uuid(7)) @db.Uuid
   propertyId   String    @db.Uuid
-  property     Property  @relation(fields: [propertyId], references: [id])
   expenseId    String?   @db.Uuid
-  expense      Expense?  @relation(fields: [expenseId], references: [id])
   fileId       String    @unique @db.Uuid
-  file         StoredFile @relation(fields: [fileId], references: [id])
   receiptDate  DateTime  @db.Date
   description  String?
   uploadedById String    @db.Uuid
@@ -405,7 +422,100 @@ model Receipt {
   createdAt    DateTime  @default(now()) @db.Timestamptz
 }
 
-// ───────────────────────── Files ─────────────────────────
+// ───────────────────────── Owner statements ─────────────────────────  (Phase 2b)
+
+enum StatementStatus {
+  DRAFT      /// Computed live on every read. Nothing is snapshotted.
+  FINALIZED  /// Lines and totals snapshotted. The month's bookings and expenses are locked.
+  RELEASED   /// Net paid out to the owner.
+}
+
+/// One per property per month. A DRAFT row only holds status. Lines are computed live until finalized.
+model OwnerStatement {
+  id                 String          @id @default(uuid(7)) @db.Uuid
+  propertyId         String          @db.Uuid
+  /// First day of the month this statement covers.
+  periodMonth        DateTime        @db.Date
+  status             StatementStatus @default(DRAFT)
+
+  // Server-computed copy taken at finalize. Never entered by a person. Null while DRAFT.
+  /// Plan rate in force for the month, copied so a later plan edit can't change history.
+  managementFeeBps   Int?
+  nightsBooked       Int?
+  grossCents         Int?
+  managementFeeCents Int?
+  expensesCents      Int?
+  adjustmentsCents   Int?            /// Signed.
+  netCents           Int?            /// Signed. Can be negative (see §10 "Later").
+  /// Version of the reporting code that produced the copy, so recomputations can be compared.
+  calcVersion        Int?
+
+  finalizedAt        DateTime?       @db.Timestamptz
+  finalizedById      String?         @db.Uuid
+  /// Date the money was sent (business date, entered by the admin). Distinct from releasedAt.
+  releasedOn         DateTime?       @db.Date
+  releasedAt         DateTime?       @db.Timestamptz
+  releasedById       String?         @db.Uuid
+  /// e-Transfer or bank reference, for reconciliation.
+  paymentReference   String?
+  createdAt          DateTime        @default(now()) @db.Timestamptz
+  updatedAt          DateTime        @updatedAt @db.Timestamptz
+
+  @@unique([propertyId, periodMonth])
+}
+
+enum StatementLineKind {
+  BOOKING         /// Owner gross allocated to this month (positive).
+  MANAGEMENT_FEE  /// Negative.
+  EXPENSE         /// Negative.
+  ADJUSTMENT      /// Signed.
+}
+
+/// Immutable copy written at finalize. What the owner sees for a finalized month.
+model OwnerStatementLine {
+  id           String            @id @default(uuid(7)) @db.Uuid
+  statementId  String            @db.Uuid
+  kind         StatementLineKind
+  bookingId    String?           @db.Uuid
+  expenseId    String?           @db.Uuid
+  adjustmentId String?           @db.Uuid
+  description  String
+  /// Nights of the booking that fall in this month (BOOKING lines only).
+  nights       Int?
+  /// Signed, from the owner's point of view.
+  amountCents  Int
+  sortOrder    Int
+  // + trigger: reject UPDATE and DELETE
+}
+
+enum AdjustmentKind {
+  REVENUE  /// Changes owner gross. TruPlan fee applies to it on the statement it lands on.
+  EXPENSE  /// Changes owner expenses. No fee effect.
+  OTHER    /// Neither (e.g. goodwill credit). No fee effect.
+}
+
+/// A correction to an already-finalized month. It lands on the next non-finalized statement for the property.
+model StatementAdjustment {
+  id                   String         @id @default(uuid(7)) @db.Uuid
+  propertyId           String         @db.Uuid
+  kind                 AdjustmentKind
+  /// Signed, from the owner's point of view (+ owner receives more).
+  amountCents          Int
+  reason               String
+  /// What it corrects. Shown on the statement line.
+  correctsStatementId  String?        @db.Uuid
+  bookingId            String?        @db.Uuid
+  expenseId            String?        @db.Uuid
+  /// Set when the statement it landed on is finalized. After that the adjustment is immutable.
+  appliedStatementId   String?        @db.Uuid
+  createdById          String         @db.Uuid
+  createdAt            DateTime       @default(now()) @db.Timestamptz
+  voidedAt             DateTime?      @db.Timestamptz /// Only before it is applied.
+  voidedById           String?        @db.Uuid
+  voidReason           String?
+}
+
+// ───────────────────────── Files ─────────────────────────  (Phase 2)
 
 enum FilePurpose {
   RECEIPT
@@ -418,12 +528,12 @@ enum FileStatus {
   VERIFIED  /// Object exists in R2 with the declared size, type and SHA-256.
 }
 
-/// Every R2 object. Domain tables (Receipt, CleanPhoto, DamagePhoto) point here. Access to a file is decided
-/// by what it is attached to, never by the file row alone.
+/// Every R2 object. Access is decided by the domain row it's attached to (Receipt, CleanPhoto, DamagePhoto), never by
+/// this row alone.
 model StoredFile {
   id               String      @id @default(uuid(7)) @db.Uuid
   purpose          FilePurpose
-  /// Scoping key. Also the R2 key prefix: properties/{propertyId}/{purpose}/{id}.
+  /// Scoping key and R2 key prefix: properties/{propertyId}/{purpose}/{id}.
   propertyId       String      @db.Uuid
   r2Key            String      @unique
   contentType      String      /// Allow-listed: image/jpeg, image/png, image/heic, image/webp, application/pdf.
@@ -432,48 +542,45 @@ model StoredFile {
   sha256           String
   status           FileStatus  @default(PENDING)
   uploadedById     String      @db.Uuid
-  /// Server time the upload was authorised. Evidence timestamp, not client-controlled.
+  /// Server time the upload was authorised. Evidence timestamp.
   createdAt        DateTime    @default(now()) @db.Timestamptz
-  /// Server time we confirmed the object exists in R2.
+  /// Server time the object was confirmed in R2.
   verifiedAt       DateTime?   @db.Timestamptz
-  /// Device-reported capture time (EXIF or client clock). Untrusted. Shown for context only.
+  /// Device-reported capture time. Untrusted, context only.
   clientCapturedAt DateTime?   @db.Timestamptz
   originalFilename String?
 
-  @@index([status, createdAt]) /// Lets the nightly job purge PENDING rows and objects older than 24h.
+  @@index([status, createdAt]) /// Nightly purge of PENDING rows older than 24h.
 }
 
-// ───────────────────────── Cleaning ─────────────────────────
+// ───────────────────────── Cleaning & cleaner pay ─────────────────────────  (Phase 3)
 
 enum CleanKind {
   TURNOVER  /// Auto-created from a booking's checkout.
-  ADHOC     /// Created by an admin (deep clean, pre-listing, inspection).
+  ADHOC     /// Admin-created (deep clean, inspection).
 }
 
 enum CleanStatus {
   SCHEDULED
   IN_PROGRESS
   COMPLETE
-  CANCELLED   /// Added to the brief's three states: needed when the triggering booking is cancelled.
+  CANCELLED   /// The triggering booking was cancelled.
 }
 
 model Clean {
   id                String      @id @default(uuid(7)) @db.Uuid
   propertyId        String      @db.Uuid
-  property          Property    @relation(fields: [propertyId], references: [id])
   kind              CleanKind
-  /// The stay whose checkout triggers this clean. Unique, so one booking has at most one turnover.
+  /// The stay whose checkout triggers this clean. One turnover per booking.
   bookingId         String?     @unique @db.Uuid
-  booking           Booking?    @relation(fields: [bookingId], references: [id])
   scheduledDate     DateTime    @db.Date
-  /// Checkout instant to next check-in instant. The cleaner's working window, recomputed when bookings change.
-  /// windowEnd is null when there is no next booking.
+  /// From checkout to the next check-in. Recomputed when bookings change. windowEnd is null if nothing follows.
   windowStart       DateTime?   @db.Timestamptz
   windowEnd         DateTime?   @db.Timestamptz
   status            CleanStatus @default(SCHEDULED)
-  /// Must hold an active CLEANER membership on the property (checked in the service).
+  /// Must hold an active CLEANER membership on the property. Required to start. Frozen once COMPLETE, because it
+  /// identifies who is owed the pay.
   assignedCleanerId String?     @db.Uuid
-  assignedCleaner   User?       @relation("CleanAssignee", fields: [assignedCleanerId], references: [id])
   startedAt         DateTime?   @db.Timestamptz
   startedById       String?     @db.Uuid
   completedAt       DateTime?   @db.Timestamptz
@@ -481,17 +588,34 @@ model Clean {
   cancelledAt       DateTime?   @db.Timestamptz
   cancelReason      String?
   notes             String?
+
+  /// Amount owed to the assigned cleaner, copied from Property.defaultCleanerPayCents at creation. Admins can change
+  /// it until paid. Only COMPLETE cleans are payable.
+  cleanerPayCents   Int         @default(0)
+  /// Set when an admin records a payment covering this clean. Non-null means paid.
+  cleanerPaymentId  String?     @db.Uuid
+
   version           Int         @default(0)
   createdAt         DateTime    @default(now()) @db.Timestamptz
   updatedAt         DateTime    @updatedAt @db.Timestamptz
 
-  photos         CleanPhoto[]
-  supplyStatuses SupplyStatus[]
-  damageReports  DamageReport[]
-
-  @@unique([propertyId, id]) /// Target of CleanPhoto's composite FK.
+  @@unique([propertyId, id])
   @@index([propertyId, scheduledDate])
   @@index([assignedCleanerId, scheduledDate])
+  @@index([assignedCleanerId, cleanerPaymentId])
+}
+
+/// One payment to one cleaner (e.g. an e-Transfer) that covers one or more completed cleans. The total is computed
+/// from the cleans.
+model CleanerPayment {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  cleanerId   String   @db.Uuid
+  paidOn      DateTime @db.Date
+  reference   String?  /// e-Transfer reference.
+  note        String?
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  // Immutable once created. A mistake is fixed by voiding (later) rather than editing. [N9]
 }
 
 enum PhotoPhase {
@@ -499,41 +623,31 @@ enum PhotoPhase {
   AFTER
 }
 
-/// Immutable. Several photos per (clean, room, phase) are allowed: a cleaner who took a bad shot adds another
-/// rather than replacing it. [Q9]
+/// Immutable. A bad shot is fixed by adding another photo, never by replacing one.
 model CleanPhoto {
   id           String     @id @default(uuid(7)) @db.Uuid
   cleanId      String     @db.Uuid
-  /// Denormalised so the composite FKs below can prove clean and room share a property.
+  /// Denormalised so composite FKs prove the clean and the room share a property.
   propertyId   String     @db.Uuid
   roomId       String     @db.Uuid
   phase        PhotoPhase
   fileId       String     @unique @db.Uuid
-  file         StoredFile @relation(fields: [fileId], references: [id])
   uploadedById String     @db.Uuid
   createdAt    DateTime   @default(now()) @db.Timestamptz
-
-  clean Clean @relation(fields: [propertyId, cleanId], references: [propertyId, id])
-  room  Room  @relation(fields: [propertyId, roomId], references: [propertyId, id])
-
+  // FK (propertyId, cleanId) → Clean(propertyId, id); FK (propertyId, roomId) → Room(propertyId, id)
   @@index([cleanId, roomId, phase])
-  // + trigger: reject UPDATE and DELETE
 }
 
-// ───────────────────────── Supplies ─────────────────────────
+// ───────────────────────── Supplies ─────────────────────────  (Phase 3)
 
-/// What a property stocks (toilet paper, coffee pods...). Per property, because units differ.
 model SupplyItem {
   id         String    @id @default(uuid(7)) @db.Uuid
   propertyId String    @db.Uuid
-  property   Property  @relation(fields: [propertyId], references: [id])
   name       String
-  unit       String?   /// e.g. "rolls", "pods". Display only.
+  unit       String?
   sortOrder  Int       @default(0)
   archivedAt DateTime? @db.Timestamptz
   createdAt  DateTime  @default(now()) @db.Timestamptz
-
-  statuses SupplyStatus[]
 
   @@unique([propertyId, name])
 }
@@ -545,24 +659,20 @@ enum SupplyLevel {
   OUT
 }
 
-/// Append-only reading. The current level is the latest row, so history (and how fast things run out) is
-/// never lost.
+/// Append-only. The current level is the latest row, so history is kept.
 model SupplyStatus {
   id           String      @id @default(uuid(7)) @db.Uuid
   supplyItemId String      @db.Uuid
-  supplyItem   SupplyItem  @relation(fields: [supplyItemId], references: [id])
   level        SupplyLevel
   note         String?
-  /// Set when recorded during a clean. Lets admins see stock at each turnover.
-  cleanId      String?     @db.Uuid
-  clean        Clean?      @relation(fields: [cleanId], references: [id])
+  cleanId      String?     @db.Uuid /// Set when recorded during a clean.
   reportedById String      @db.Uuid
   reportedAt   DateTime    @default(now()) @db.Timestamptz
 
   @@index([supplyItemId, reportedAt(sort: Desc)])
 }
 
-// ───────────────────────── Damage ─────────────────────────
+// ───────────────────────── Damage ─────────────────────────  (Phase 4)
 
 enum DamageSeverity {
   MINOR
@@ -571,23 +681,18 @@ enum DamageSeverity {
 }
 
 enum DamageStatus {
-  DRAFT         /// Being written. Photos can be added. Only the reporter and admins can see it.
-  SUBMITTED     /// Locked: title, description and links can no longer change.
+  DRAFT         /// Visible to its reporter and to admins only.
+  SUBMITTED     /// Title, description and links are locked from here on.
   ACKNOWLEDGED
-  CLAIM_FILED   /// Claim lodged with the channel (e.g. AirCover, which has a 14-day deadline after checkout).
+  CLAIM_FILED   /// Claim lodged with the channel (AirCover has a 14-day window after checkout).
   RESOLVED
 }
 
 model DamageReport {
   id                 String         @id @default(uuid(7)) @db.Uuid
   propertyId         String         @db.Uuid
-  property           Property       @relation(fields: [propertyId], references: [id])
-  /// The clean during which it was found, if any.
-  cleanId            String?        @db.Uuid
-  clean              Clean?         @relation(fields: [cleanId], references: [id])
-  /// The stay believed responsible. Needed for platform damage claims.
-  bookingId          String?        @db.Uuid
-  booking            Booking?       @relation(fields: [bookingId], references: [id])
+  cleanId            String?        @db.Uuid /// The clean during which it was found.
+  bookingId          String?        @db.Uuid /// The stay believed responsible (needed for claims).
   roomId             String?        @db.Uuid
   reportedById       String         @db.Uuid
   title              String
@@ -601,46 +706,39 @@ model DamageReport {
   createdAt          DateTime       @default(now()) @db.Timestamptz
   updatedAt          DateTime       @updatedAt @db.Timestamptz
 
-  photos DamagePhoto[]
-
   @@index([propertyId, status])
 }
 
-/// Immutable. Photos can be added after submission (more evidence) but never removed.
+/// Immutable. Photos can be added after submission but never removed.
 model DamagePhoto {
-  id             String       @id @default(uuid(7)) @db.Uuid
-  damageReportId String       @db.Uuid
-  damageReport   DamageReport @relation(fields: [damageReportId], references: [id])
-  fileId         String       @unique @db.Uuid
-  file           StoredFile   @relation(fields: [fileId], references: [id])
-  uploadedById   String       @db.Uuid
-  createdAt      DateTime     @default(now()) @db.Timestamptz
-  // + trigger: reject UPDATE and DELETE
+  id             String   @id @default(uuid(7)) @db.Uuid
+  damageReportId String   @db.Uuid
+  fileId         String   @unique @db.Uuid
+  uploadedById   String   @db.Uuid
+  createdAt      DateTime @default(now()) @db.Timestamptz
 }
 
-// ───────────────────────── Audit & infrastructure ─────────────────────────
+// ───────────────────────── Audit & infrastructure ─────────────────────────  (Phase 1)
 
 enum ActorType {
   USER
-  SYSTEM   /// Scheduled jobs (iCal sync, file cleanup).
-  WEBHOOK  /// Clerk/Stripe callbacks.
+  SYSTEM   /// Jobs (iCal sync, file purge) and the bootstrap CLI.
 }
 
-/// Append-only. Written inside the same transaction as the change it records (rule 7).
+/// Append-only. Written in the same transaction as the change.
 model AuditLog {
   id         String    @id @default(uuid(7)) @db.Uuid
   actorType  ActorType
   actorId    String?   @db.Uuid
-  /// Dotted verb, e.g. "booking.update", "expense.void", "membership.revoke".
+  /// Dotted verb, e.g. "booking.update", "statement.finalize", "clean.pay".
   action     String
   entityType String
   entityId   String    @db.Uuid
-  /// Denormalised for "everything that happened to property X" queries.
+  /// Denormalised so "everything on property X" is one indexed query.
   propertyId String?   @db.Uuid
-  /// Field-level snapshots of changed fields only, with PII-light values.
+  /// Changed fields only.
   before     Json?
   after      Json?
-  /// Correlates with request logs.
   requestId  String?
   ipAddress  String?
   createdAt  DateTime  @default(now()) @db.Timestamptz
@@ -648,10 +746,9 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([propertyId, createdAt])
   @@index([actorId, createdAt])
-  // + trigger: reject UPDATE and DELETE
 }
 
-/// Makes POST retries safe for cleaners on flaky mobile connections. The same key replays the stored response.
+/// Makes POST retries safe for clients on flaky connections. The same key replays the stored response.
 model IdempotencyKey {
   userId         String   @db.Uuid
   key            String
@@ -666,496 +763,585 @@ model IdempotencyKey {
 }
 ```
 
-### Constraints added as raw SQL in migrations
+(Relations are omitted above for readability. In `schema.prisma` every `…Id`
+column gets a real `@relation` with `onDelete: Restrict`.)
+
+### Constraints added as raw SQL
 
 | Table | Constraint | Why |
 |---|---|---|
 | `Membership` | partial unique `(userId, propertyId, role) WHERE revokedAt IS NULL` | No duplicate active grants, while keeping revoked history. |
-| `PropertyPlan` | `EXCLUDE USING gist` on `daterange(effectiveFrom, effectiveTo)` per property | A property can't be on two plans on the same day. |
-| `Booking` | `CHECK (checkOutDate > checkInDate)`; `EXCLUDE USING gist` overlap for `CONFIRMED` | Rejects impossible stays and double entries. |
-| `Booking`, `Expense` | `CHECK (<money> >= 0)` on every cents column | Negative values must be explicit (Q12), not typos. |
-| `Plan` | `CHECK (managementFeeBps BETWEEN 0 AND 10000)` | Bounds. |
-| `CleanPhoto`, `DamagePhoto`, `AuditLog`, `SupplyStatus` | `BEFORE UPDATE OR DELETE` trigger raising an exception | Rule 5 and rule 7, enforced even against buggy code or manual SQL. |
-| `StoredFile` | trigger: `sha256`, `sizeBytes`, `r2Key` and `uploadedById` immutable; `status` may only go `PENDING → VERIFIED` | Evidence integrity. |
+| `PropertyPlan` | `CHECK (EXTRACT(day FROM effectiveFrom) = 1)` (same for `effectiveTo`); `EXCLUDE USING gist` on `daterange(effectiveFrom, effectiveTo)` per property | One rate per statement month, and no overlapping plans. |
+| `Plan` | `CHECK (managementFeeBps BETWEEN 0 AND 10000)`; trigger blocks `managementFeeBps` updates once referenced | Reproducible statements. |
+| `Booking` | `CHECK (checkOutDate > checkInDate)`; `CHECK (guestCleaningFeeCents <= payoutCents)`; `CHECK (money >= 0)`; exclusion constraint below | Rejects impossible stays and typos. |
+| `Expense` | `CHECK (amountCents >= 0)` | Negative corrections are adjustments, not negative expenses. |
+| `OwnerStatement` | `CHECK (EXTRACT(day FROM periodMonth) = 1)` | Month key. |
+| `CleanPhoto`, `DamagePhoto`, `AuditLog`, `SupplyStatus`, `OwnerStatementLine`, `CleanerPayment` | `BEFORE UPDATE OR DELETE` trigger raising an exception | Evidence, audit and issued documents stay immutable even against buggy code or manual SQL. |
+| `StoredFile` | trigger: `sha256`, `sizeBytes`, `r2Key` and `uploadedById` immutable; `status` only goes `PENDING → VERIFIED` | Evidence integrity. |
 
-### Not modelled yet (deliberately)
+### Booking overlap rules
 
-- **Invoices / owner statements / payouts** come with Stripe Invoicing.
-  Reports are computed live until then.
-- **Notifications** (cleaner reminders, damage alerts) come after Phase 4.
-- **Organization / multi-tenancy** stays out per [A1].
+```sql
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE "Booking" ADD CONSTRAINT booking_no_overlap
+  EXCLUDE USING gist (
+    "propertyId" WITH =,
+    daterange("checkInDate", "checkOutDate", '[)') WITH &&
+  ) WHERE (status = 'CONFIRMED');
+```
+
+1. **Same-day turnover is allowed.** `'[)'` is half-open: a stay
+   `[Mar 1, Mar 4)` occupies the nights of the 1st, 2nd and 3rd, so a stay
+   starting Mar 4 doesn't overlap.
+2. **Cancelled bookings are ignored**, through the partial `WHERE (status =
+   'CONFIRMED')`. Cancelling a booking frees its dates. Re-confirming one goes
+   through the constraint again.
+3. **All kinds participate.** A GUEST stay can't overlap an OWNER_STAY or a
+   BLOCK on the same property.
+4. **Manual entry:** a violation (SQLSTATE `23P01`) is mapped to
+   `409 BOOKING_OVERLAP` with the clashing booking id.
+5. **iCal sync never relies on the constraint.** Events are written to
+   `IcalImport` first. The sync then, per event, in one transaction:
+   - same `uid` already linked → update dates if changed (if that would
+     overlap, or if the booking is locked by a finalized statement →
+     `CONFLICT`);
+   - no link, but an existing CONFIRMED booking overlaps → `CONFLICT`
+     (`POSSIBLE_DUPLICATE` when the dates match exactly, typically the same
+     stay entered manually first, otherwise `OVERLAP`);
+   - otherwise → insert Booking (`source = ICAL`, null money) → `APPLIED`;
+   - an applied UID that disappears from the feed → cancel the booking, unless
+     it is locked → `CONFLICT`.
+
+   The admin resolves each conflict with **LINK** (attach the UID to the
+   existing booking), **REPLACE** (cancel the existing booking and apply
+   the import) or **IGNORE**. As a backstop, a `23P01` hit during sync is
+   caught and turned into `CONFLICT` rather than failing the run.
+
+   Tests for all of the above ship with the Booking migration (Phase 2) and
+   the sync (Phase 6). The SQL itself gets a test in Phase 2: same-day
+   turnover inserts, a one-night overlap is rejected, and a cancelled
+   overlap is accepted.
+
+### Not modelled (deliberately)
+
+- **Organization / multi-tenancy** [A1].
+- **Owner-owes-TruHost balances**: see §10 "Later".
+- **Notifications**: after Phase 4.
 
 ---
 
-## 3. Computed metrics
+## 4. Computed metrics and statements
 
-All metrics are computed in `apps/api/src/reporting/` by pure functions over
-records, with table-driven tests. The formulas below are **proposals pending
-Q2–Q5 and Q10**.
+All in `apps/api/src/reporting/` as pure functions with table-driven tests
+(exact cents).
 
-For a property and date range `[from, to)` (property-local dates):
+**Per booking:**
+`ownerGross = payoutCents − guestCleaningFeeCents` (GUEST bookings only. A
+null in either field makes the booking *incomplete*).
 
-| Metric | Proposed definition |
+**Allocation to months (Q7: split per night):** a booking's `ownerGross` is
+split across its nights. Each night gets `floor(ownerGross / nights)`, and
+the remainder cents go one each to the earliest nights, so the parts always
+sum exactly to the whole. A month's share is the sum of its nights. The
+cleaning fee (TruHost revenue) is attributed to the checkout date.
+
+For a property and month `M` (property-local):
+
+| Metric | Definition |
 |---|---|
-| **Nights booked** | Count of nights `d` in range where a `CONFIRMED`, `kind = GUEST` booking has `checkIn ≤ d < checkOut`. Owner stays and blocks are reported separately. |
-| **Gross revenue** | Σ (`accommodationCents` + `guestCleaningFeeCents` + `otherGuestFeesCents`) for GUEST bookings, allocated to the range (below). Excludes taxes. |
-| **Channel fees** | Σ `channelFeeCents`, allocated the same way. |
-| **Management fee** | `round_half_even(feeBase × managementFeeBps / 10000)` per booking, using the plan in force on the booking's check-in date [Q4]. |
-| **Owner expenses** | Σ (`subtotal + gst + pst`) for non-voided expenses with `bearer = OWNER` and `incurredOn` in range. |
-| **Net revenue (owner)** | Gross − channel fees − management fee (+ GST on the fee if TruHost is registered [Q11]) − owner expenses. |
-| **ADR** | Allocated `accommodationCents` ÷ nights booked, rounded to the nearest cent. Excludes cleaning fees (industry standard). |
-| **Occupancy** | Nights booked ÷ (nights in range − owner-stay − block nights). |
+| **Nights booked** | Nights `d ∈ M` covered by a CONFIRMED GUEST booking. Owner stays and blocks are reported separately. |
+| **Gross revenue** | Σ allocated `ownerGross` for nights in `M`. |
+| **TruPlan fee** | `roundHalfUp(gross × managementFeeBps / 10000)`, **rounded once on the month total** with the plan in force on the 1st of `M`. |
+| **Owner expenses** | Σ `amountCents` of non-voided `bearer = OWNER` expenses with `incurredOn ∈ M`. |
+| **Adjustments** | Σ unvoided adjustments landing on this statement. REVENUE adjustments add to the fee base. |
+| **Net revenue** | Gross + REVENUE adj − fee(gross + REVENUE adj) − expenses + EXPENSE adj + OTHER adj. |
+| **ADR** | Gross ÷ nights booked, to the nearest cent (net of channel fees and cleaning fee, consistent with gross) [N2]. |
+| **Occupancy** | Nights booked ÷ (days in `M` − owner-stay nights − block nights). |
 
-**Allocation across range boundaries** [Q7]: a stay that spans months has its
-amounts split per night, with integer cents distributed by the
-largest-remainder method so the parts sum exactly to the whole. Guest
-cleaning fees go to the checkout night. Reports return
-`incompleteBookings: n` whenever any GUEST booking in range has null
-amounts.
+Reports for arbitrary ranges use the same per-night allocation. The fee for a
+range is the sum of each month's fee, so ranges always agree with
+statements.
+
+**Statement lifecycle:**
+
+- **DRAFT**: created on demand (or by a monthly job) for `periodMonth`. Every
+  read recomputes lines live. Flags problems that block finalizing:
+  incomplete bookings (null money), owner-borne expenses with no receipt,
+  and an earlier month for the property that is not finalized yet.
+- **Finalize** (admin) runs in one serializable transaction: it locks the
+  statement row, re-checks the blockers (422 with a list), copies the lines
+  into `OwnerStatementLine`, writes the totals and `managementFeeBps`, stamps
+  pending adjustments with `appliedStatementId`, and writes the audit log.
+- **Lock**: from then on, any create, update, cancel or void of a Booking
+  with a night in a finalized month, or of an Expense with `incurredOn` in
+  one, returns `409 PERIOD_LOCKED`. The check runs in the service, inside
+  the mutation's transaction, with `FOR SHARE` on the statement row, so it
+  can't race a concurrent finalize. A booking that straddles an open and a
+  finalized month is locked as a whole. Corrections become a
+  `StatementAdjustment`, which lands on the earliest non-finalized statement.
+- **Release** (admin): FINALIZED → RELEASED with `releasedOn` and
+  `paymentReference`. Audited. Refused when `netCents < 0` until the
+  owner-owes flow exists (§10 "Later").
+- **Owners** see FINALIZED and RELEASED statements, plus a live
+  "current month (estimate)" built from the same functions.
+
+**TruHost revenue report (admin):** cleaning fees (by checkout date) + TruPlan
+fees − cleaner pay (completed cleans by completion date) − TRUHOST-borne
+expenses.
 
 ---
 
-## 4. Cross-cutting API design
+## 5. Cross-cutting API design
 
-- **Base path** `/v1`. JSON. **OpenAPI 3.1** is generated from the same zod
-  schemas in `@truhost/shared` (via `nestjs-zod`) and served at `/v1/docs`
-  outside production. The web (and later mobile) client is generated from it
-  (`openapi-typescript` + `openapi-fetch`), so types never drift.
+- **Base path** `/v1`. JSON. OpenAPI 3.1 generated from the zod schemas in
+  `@truhost/shared` (`nestjs-zod`), served at `/v1/docs` outside production.
+  The web client (and later mobile) uses `openapi-fetch` with types from
+  `openapi-typescript`.
 - **Errors**: RFC 9457 `application/problem+json` with a stable `code`
-  (e.g. `CLEAN_MISSING_PHOTOS` with `missing: [{roomId, phase}]`).
-- **Pagination**: cursor-based (`?cursor=&limit=`, max 100) on every list.
-- **Authentication**: `Authorization: Bearer <Clerk session JWT>`, verified
-  without a network call using `@clerk/backend` `verifyToken` and JWKS. The guard
-  loads `User` by `clerkUserId`, rejects `DEACTIVATED` users, and attaches
-  `Actor { userId, staffRole }`. Clerk sign-up is restricted (Clerk
-  "Restricted" mode), so only invited emails can create accounts.
-- **Authorization**: `AccessService` in `src/access/` owns a single policy
-  table, `(role, resource, action) → scope`. Services call:
-  - `access.assert(actor, 'expense:create', { propertyId })` for a single
-    target,
-  - `access.propertyScope(actor, 'booking:read')`, which returns a Prisma
-    `where` fragment (`{}` for admins,
-    `{ property: { memberships: { some: { userId, role, revokedAt: null } } } }`
-    otherwise), for lists.
-
-  Out-of-scope access returns **404**. Controllers never call Prisma.
-- **Authz test matrix**: `test/authz/matrix.e2e-spec.ts` seeds two
-  properties, each with its own owner and cleaner, plus an admin. It hits
-  **every route** as every role against both properties and asserts
-  allow/deny. A meta-test lists the Nest router's routes and fails if any
-  route lacks a matrix entry.
-- **Idempotency**: `Idempotency-Key` header accepted on all POSTs and
-  required on cleaner-facing POSTs (photos, supply statuses, damage reports,
-  clean transitions).
-- **Concurrency**: mutable money rows and cleans carry `version`. PATCH and
-  transitions must send `version`, and a mismatch returns 409.
+  (`CLEAN_MISSING_PHOTOS`, `PERIOD_LOCKED`, `BOOKING_OVERLAP`, ...).
+- **Pagination**: cursor-based (`?cursor=&limit=`, max 100).
+- **CORS**: allow-list from `CORS_ORIGINS` (the Cloudflare Pages domain and
+  `http://localhost:3001`). There are no cookies: auth is a bearer token, so
+  no CSRF surface.
+- **Authentication**: the SPA gets a Clerk session token with
+  `useAuth().getToken()` and sends `Authorization: Bearer <jwt>` on every
+  call. The API verifies it with `@clerk/backend` `verifyToken` (JWKS,
+  networkless, checks `azp` against `CORS_ORIGINS`). Then:
+  - **Known `clerkUserId`** → load the User. DEACTIVATED returns 401.
+  - **Unknown `clerkUserId`** → first sign-in. Fetch the Clerk user, take its
+    *verified* primary email, find a User in status INVITED with that email,
+    link `clerkUserId`, set ACTIVE, and mark the invite ACCEPTED. No match
+    returns 403 `NOT_INVITED`. This runs on the `auth` rate-limit tier.
+  - This avoids depending on a public webhook URL, so it works locally. A
+    Clerk webhook (`user.deleted` → deactivate) can come later.
+  - Clerk runs in Restricted sign-up mode, so only invited emails can create
+    accounts.
+- **Authorization**: `AccessService` (`src/access/`) owns one policy table,
+  `(role, resource, action) → scope`. Services call
+  `access.assert(actor, action, { propertyId })` for one target, and
+  `access.propertyScope(actor, action)` to get a Prisma `where` fragment for
+  lists. Admin access is a superset, and an admin with an OWNER membership
+  gets nothing extra from it. Out-of-scope access returns **404**.
+- **Authz test matrix**: `test/authz/` seeds two properties, each with an
+  owner and a cleaner, plus an admin who also owns property A. Every route
+  is called as every role against both properties. A meta-test enumerates
+  the router and fails if any route lacks an entry.
+- **Idempotency**: `Idempotency-Key` is accepted on all POSTs and required on
+  cleaner-facing POSTs.
+- **Concurrency**: `version` on mutable money rows and cleans. A mismatch
+  returns 409.
 - **Rate limiting** (`@nestjs/throttler`, keyed by user id, or by IP when
-  unauthenticated). Storage is in-memory for one instance and Redis
-  (Upstash) once there is more than one [Q13].
+  unauthenticated). Storage is in-memory while there is one Railway replica,
+  and Redis once it scales out.
 
   | Tier | Limit | Applies to |
   |---|---|---|
   | `default` | 120 / min | All authenticated routes |
   | `write` | 30 / min | Mutating routes |
   | `upload` | 60 / 10 min | `POST /uploads` |
-  | `auth` | 10 / min per IP + 30 / hour per user | `/invites*`, `/me` writes, `/webhooks/*` |
+  | `auth` | 10 / min per IP | First-sign-in linking, `/invites*`, `PATCH /me` |
   | `public` | 30 / min per IP | `/health` |
-- **Uploads (presigned)**:
-  1. The client calls `POST /v1/uploads` with
-     `{ purpose, propertyId, contentType, sizeBytes, sha256 }`.
-  2. The API checks access for that purpose on that property, creates a
-     `StoredFile(PENDING)`, and returns a PUT URL valid for 10 min. The URL
-     signs `Content-Type`, `Content-Length` and `x-amz-checksum-sha256`, so
-     R2 rejects any other body.
-  3. The client PUTs to R2.
-  4. The client calls the domain attach endpoint (e.g.
-     `POST /cleans/:id/photos { fileId, roomId, phase }`). The API `HEAD`s the
-     object, checks size, type and checksum, marks it `VERIFIED`, and creates
-     the immutable domain row, all in one transaction.
-
-  Viewing goes through `GET /v1/files/:id/url`. It authorises via the owning
-  domain row and returns a GET URL valid for 5 min.
-- **Audit**: `AuditService.record(tx, …)` takes the Prisma transaction
-  client, so it can't be called outside one. Every admin mutation on
-  Booking, Expense, Receipt, Plan, PropertyPlan, Membership, User role and
-  DamageReport status is recorded.
-- **Observability**: request id on every request, structured JSON logs
-  (pino), Sentry for errors [Q13].
+- **Uploads**: the client declares `{purpose, propertyId, contentType,
+  sizeBytes, sha256}` and gets back a 10-minute presigned PUT URL that signs
+  type, length and `x-amz-checksum-sha256`. After uploading, the client calls
+  the domain attach route. The API `HEAD`s the object, marks the file
+  VERIFIED and creates the immutable row in one transaction. Viewing goes
+  through `GET /files/:id/url` (5-minute signed GET, authorised via the
+  attached row).
+- **Audit**: `AuditService.record(tx, …)` requires the transaction client.
+  Every admin mutation of money (bookings, expenses, plans, statements,
+  adjustments, cleaner pay), documents (receipts), access (memberships,
+  users, invites) and damage status is recorded.
+- **Settings**: env-driven (`TAX_FIELDS_ENABLED`), exposed read-only at
+  `GET /config` so the UI can hide fields.
+- **Hosting**: API on Railway (US West). Neon Postgres in the same region
+  (AWS us-west-2). Web on Cloudflare Pages (static, SPA fallback). R2
+  bucket for files. US data storage is disclosed in the privacy policy.
 
 ---
 
-## 5. REST API surface
+## 6. REST API surface
 
-Roles: **A** = admin, **O** = owner (own properties only), **C** = cleaner
-(assigned properties only). "own" = the caller's own records. All paths are
-under `/v1`.
+Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
+(assigned properties). All paths are under `/v1`. *Phase* in brackets.
 
-### Health
+### Health & config
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/health` | public | Liveness. Already built. |
+| GET | `/health` | public | Already built. [0] |
+| GET | `/config` | A O C | Feature flags (`taxFieldsEnabled`). [1] |
 
-### Me & auth
+### Me
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/me` | A O C | Profile, staffRole, active memberships. Drives the web/mobile nav. |
-| PATCH | `/me` | A O C | Name and phone. Email changes go through Clerk. |
-| POST | `/webhooks/clerk` | Svix-signed | `user.created` links an INVITED user by verified email. `user.deleted` deactivates. |
+| GET | `/me` | A O C | Profile, staffRole, active memberships with property names. Drives navigation. [1] |
+| PATCH | `/me` | A O C | Name and phone. [1] |
+| GET | `/me/earnings` | C | Completed cleans with pay and paid/unpaid status, plus totals. [3] |
 
-### Users & invites (team)
+### Users & invites
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/users` | A | Filter by `staffRole`, membership role, status. |
-| GET | `/users/:id` | A | |
-| PATCH | `/users/:id` | A | Name, phone, staffRole. Audited. |
-| POST | `/users/:id/deactivate` | A | Sets DEACTIVATED and revokes Clerk sessions. Audited. Can't target self. |
-| POST | `/invites` | A | `{ email, firstName, lastName, staffRole?, memberships: [{propertyId, role}] }`. Creates the User (INVITED), the memberships and the Clerk invitation in one go. |
-| GET | `/invites` | A | |
-| POST | `/invites/:id/resend` | A | |
-| POST | `/invites/:id/revoke` | A | |
+| GET | `/users` | A | [1] |
+| GET | `/users/:id` | A | [1] |
+| PATCH | `/users/:id` | A | Name, phone, staffRole. Audited. [1] |
+| POST | `/users/:id/deactivate` | A | Not self. Audited. Revokes Clerk sessions. [1] |
+| POST | `/invites` | A | `{ email, firstName, lastName, staffRole?, memberships[] }`. Creates the INVITED User, memberships and Clerk invitation. Audited. [1] |
+| GET | `/invites` | A | [1] |
+| POST | `/invites/:id/resend` | A | [1] |
+| POST | `/invites/:id/revoke` | A | Audited. [1] |
 
-### Properties & memberships
+### Properties, memberships, rooms
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/properties` | A O C | A: all. O and C: scoped. The response shape varies by role (C gets no financial or plan fields). |
-| POST | `/properties` | A | |
-| GET | `/properties/:id` | A O C | `accessInstructions` only for A and C [Q14]. |
-| PATCH | `/properties/:id` | A | |
-| POST | `/properties/:id/archive` | A | |
-| GET | `/properties/:id/memberships` | A | |
-| POST | `/properties/:id/memberships` | A | `{ userId, role }`. Audited. |
-| POST | `/memberships/:id/revoke` | A | Audited. Unassigns the user from future cleans. |
-
-### Rooms
-| Method | Path | Roles | Notes |
-|---|---|---|---|
-| GET | `/properties/:id/rooms` | A O C | |
-| POST | `/properties/:id/rooms` | A | |
-| PATCH | `/rooms/:id` | A | |
-| POST | `/rooms/:id/archive` | A | |
-| PUT | `/properties/:id/rooms/order` | A | `{ roomIds: [] }` |
+| GET | `/properties` | A O C | Scoped. Field set depends on role. [1] |
+| POST | `/properties` | A | Audited. [1] |
+| GET | `/properties/:id` | A O C | `accessInstructions` for A and C only. `defaultCleanerPayCents` for A only. [1] |
+| PATCH | `/properties/:id` | A | Audited. [1] |
+| POST | `/properties/:id/archive` | A | Audited. [1] |
+| GET | `/properties/:id/memberships` | A | [1] |
+| POST | `/properties/:id/memberships` | A | `{ userId, role }`. Audited. [1] |
+| POST | `/memberships/:id/revoke` | A | Audited. [1] |
+| GET | `/properties/:id/rooms` | A O C | [1] |
+| POST | `/properties/:id/rooms` | A | [1] |
+| PATCH | `/rooms/:id` | A | [1] |
+| POST | `/rooms/:id/archive` | A | [1] |
+| PUT | `/properties/:id/rooms/order` | A | [1] |
 
 ### Plans
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/plans` | A | |
-| POST | `/plans` | A | Audited. |
-| PATCH | `/plans/:id` | A | Name and description only. Fee terms are immutable once used. |
-| POST | `/plans/:id/archive` | A | |
-| GET | `/properties/:id/plan` | A O | Current plan plus history. |
-| POST | `/properties/:id/plan` | A | `{ planId, effectiveFrom }`. Closes the previous assignment. Audited. |
+| GET | `/plans` | A | [1] |
+| POST | `/plans` | A | Audited. [1] |
+| PATCH | `/plans/:id` | A | Name and description. Rate only if unused. Audited. [1] |
+| GET | `/properties/:id/plan` | A O | Current plan plus history. [1] |
+| POST | `/properties/:id/plan` | A | `{ planId, effectiveFrom }` (1st of a month). Audited. [1] |
 
-### Bookings & calendar
+### Bookings & calendar [2]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/bookings` | A | Cross-property list with filters. |
-| GET | `/properties/:id/bookings` | A O | `?from&to`. O gets guest PII redacted [Q8]. |
-| GET | `/bookings/:id` | A O | |
-| POST | `/properties/:id/bookings` | A | `source = MANUAL`. Creates or updates the turnover clean in the same transaction. Audited. |
-| PATCH | `/bookings/:id` | A | Requires `version`. Reschedules the clean. Audited. |
-| POST | `/bookings/:id/cancel` | A | Cancels the clean if it hasn't started. Audited. |
-| GET | `/properties/:id/calendar` | A O | `?from&to`. Merged bookings, blocks and cleans, with minimal fields. |
+| GET | `/bookings` | A | Cross-property, filters. |
+| GET | `/properties/:id/bookings` | A O | O: no guest PII, and money shown as ownerGross only. |
+| GET | `/bookings/:id` | A O | Same redaction. |
+| POST | `/properties/:id/bookings` | A | MANUAL. 409 `BOOKING_OVERLAP` / `PERIOD_LOCKED`. Audited. |
+| PATCH | `/bookings/:id` | A | Requires `version`. Audited. |
+| POST | `/bookings/:id/cancel` | A | Audited. |
+| GET | `/properties/:id/calendar` | A O | Bookings, blocks and cleans, minimal fields. |
 
-### Expenses & receipts
+### Expenses & receipts [2]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
 | GET | `/expenses` | A | Cross-property. |
-| GET | `/properties/:id/expenses` | A O | O sees `bearer = OWNER` only [Q5]. |
+| GET | `/properties/:id/expenses` | A O | O: `bearer = OWNER` only. |
 | POST | `/properties/:id/expenses` | A | Audited. |
 | PATCH | `/expenses/:id` | A | Requires `version`. Audited. |
-| POST | `/expenses/:id/void` | A | `{ reason }`. Audited. |
-| GET | `/properties/:id/receipts` | A O | O sees receipts for OWNER-borne expenses and standalone receipts. |
+| POST | `/expenses/:id/void` | A | Audited. |
+| GET | `/properties/:id/receipts` | A O | O: receipts on OWNER-borne expenses. |
 | POST | `/properties/:id/receipts` | A | `{ fileId, expenseId?, receiptDate, description? }`. Audited. |
-| POST | `/receipts/:id/void` | A | Audited. The file stays in storage. |
+| POST | `/receipts/:id/void` | A | Audited. |
 
-### Files
+### Files [2]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| POST | `/uploads` | A C | Issues a presigned PUT. C may only request `CLEAN_PHOTO` or `DAMAGE_PHOTO` for assigned properties. |
-| GET | `/files/:id/url` | A O C | Signed GET, valid 5 min. Authorised via the attached Receipt, CleanPhoto or DamagePhoto. PENDING or unattached files are visible only to their uploader. |
+| POST | `/uploads` | A C | Presigned PUT. C: photo purposes on own properties only. |
+| GET | `/files/:id/url` | A O C | Signed GET (5 min), authorised via the attached row. |
 
-### Cleans
+### Statements, adjustments, reports [2b]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/cleans` | A O C | `?propertyId&from&to&status&assignee=me`. Scoped. O is read-only. |
-| GET | `/cleans/:id` | A O C | Includes the room checklist: per room, BEFORE and AFTER photo counts. |
-| POST | `/properties/:id/cleans` | A | ADHOC clean. |
-| PATCH | `/cleans/:id` | A | Assign cleaner, reschedule, notes. Only while SCHEDULED. |
-| POST | `/cleans/:id/start` | A, C (assignee) | SCHEDULED → IN_PROGRESS. Not before `scheduledDate` [Q15]. |
-| POST | `/cleans/:id/photos` | A, C (assignee) | `{ fileId, roomId, phase }`. Only while IN_PROGRESS. Room must be active and on this property. |
-| GET | `/cleans/:id/photos` | A O C | Metadata plus file ids. Images come through `/files/:id/url`. |
-| POST | `/cleans/:id/complete` | A, C (assignee) | IN_PROGRESS → COMPLETE. 422 `CLEAN_MISSING_PHOTOS` unless every active room has ≥1 BEFORE and ≥1 AFTER. |
-| POST | `/cleans/:id/cancel` | A | SCHEDULED/IN_PROGRESS → CANCELLED. Audited. |
+| GET | `/properties/:id/statements` | A O | O: FINALIZED and RELEASED only. |
+| POST | `/properties/:id/statements` | A | `{ periodMonth }`. Creates the DRAFT (idempotent). |
+| GET | `/statements/:id` | A O | DRAFT: live lines plus blockers. Otherwise the stored copy. |
+| POST | `/statements/:id/finalize` | A | 422 with a list of blockers. Audited. |
+| POST | `/statements/:id/release` | A | `{ releasedOn, paymentReference }`. Audited. |
+| GET | `/properties/:id/adjustments` | A | |
+| POST | `/properties/:id/adjustments` | A | Audited. |
+| POST | `/adjustments/:id/void` | A | Only before it is applied. Audited. |
+| GET | `/properties/:id/summary` | A O | `?from&to`. Nights, gross, fee, expenses, net, ADR, occupancy, `incompleteBookings`. |
+| GET | `/properties/:id/summary/monthly` | A O | `?year` |
+| GET | `/reports/portfolio` | A | |
+| GET | `/reports/truhost` | A | TruHost revenue: cleaning fees, plan fees, cleaner pay. |
 
-### Supplies
+### Cleans & cleaner pay [3]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/properties/:id/supplies` | A O C | Items with their latest level. |
-| POST | `/properties/:id/supplies` | A | Create an item. |
+| GET | `/cleans` | A O C | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans. |
+| GET | `/cleans/:id` | A O C | Includes the room checklist. |
+| POST | `/properties/:id/cleans` | A | ADHOC. |
+| PATCH | `/cleans/:id` | A | Assign, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited. |
+| POST | `/cleans/:id/start` | A, C (assignee) | SCHEDULED → IN_PROGRESS. |
+| POST | `/cleans/:id/photos` | A, C (assignee) | IN_PROGRESS only. |
+| GET | `/cleans/:id/photos` | A O C | |
+| POST | `/cleans/:id/complete` | A, C (assignee) | 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases. |
+| POST | `/cleans/:id/cancel` | A | Audited. |
+| GET | `/cleaner-pay` | A | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner. |
+| POST | `/cleaner-payments` | A | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited. |
+| GET | `/cleaner-payments` | A | |
+
+### Supplies [3]
+| Method | Path | Roles | Notes |
+|---|---|---|---|
+| GET | `/properties/:id/supplies` | A O C | Items with latest level. |
+| POST | `/properties/:id/supplies` | A | |
 | PATCH | `/supply-items/:id` | A | |
 | POST | `/supply-items/:id/archive` | A | |
-| POST | `/properties/:id/supply-statuses` | A C | Batch `{ cleanId?, readings: [{ supplyItemId, level, note? }] }`. Append-only. |
+| POST | `/properties/:id/supply-statuses` | A C | Batch readings. Append-only. |
 | GET | `/supply-items/:id/history` | A O | |
-| GET | `/supplies/restock` | A | Cross-property list of items at LOW or OUT. |
+| GET | `/supplies/restock` | A | LOW and OUT across properties. |
 
-### Damage reports
+### Damage reports [4]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/damage-reports` | A O C | Scoped. O never sees DRAFTs. C sees submitted reports on their properties plus their own drafts. |
-| GET | `/damage-reports/:id` | A O C | Same visibility rules. |
-| POST | `/properties/:id/damage-reports` | A C | Creates a DRAFT. |
-| PATCH | `/damage-reports/:id` | A, C (reporter) | Only while DRAFT. |
-| POST | `/damage-reports/:id/photos` | A, C (reporter) | `{ fileId }`. Allowed in DRAFT or after submission. Append-only. |
-| POST | `/damage-reports/:id/submit` | A, C (reporter) | DRAFT → SUBMITTED. 422 `DAMAGE_REPORT_NO_PHOTOS` if there are no photos. |
-| POST | `/damage-reports/:id/status` | A | `{ status, note?, estimatedCostCents? }`. Forward-only transitions. Audited. |
+| GET | `/damage-reports` | A O C | O: no DRAFTs. C: submitted reports on own properties plus own drafts. |
+| GET | `/damage-reports/:id` | A O C | Same rules. |
+| POST | `/properties/:id/damage-reports` | A C | DRAFT. |
+| PATCH | `/damage-reports/:id` | A, C (reporter) | DRAFT only. |
+| POST | `/damage-reports/:id/photos` | A, C (reporter) | Append-only. |
+| POST | `/damage-reports/:id/submit` | A, C (reporter) | 422 `DAMAGE_REPORT_NO_PHOTOS`. |
+| POST | `/damage-reports/:id/status` | A | Forward-only. Audited. |
 
-### Reports
+### iCal [6]
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/properties/:id/summary` | A O | `?from&to`. Nights, gross, channel fees, management fee, owner expenses, net, ADR, occupancy, `incompleteBookings`. |
-| GET | `/properties/:id/summary/monthly` | A O | `?year`. Twelve buckets. |
-| GET | `/reports/portfolio` | A | `?from&to`. All properties. |
+| GET / POST | `/properties/:id/ical-feeds` | A | URL is write-only (never returned). |
+| PATCH | `/ical-feeds/:id` | A | |
+| POST | `/ical-feeds/:id/sync` | A | Manual trigger. |
+| GET | `/ical-imports` | A | `?state=CONFLICT` |
+| POST | `/ical-imports/:id/resolve` | A | `{ action: LINK\|REPLACE\|IGNORE, bookingId? }`. Audited. |
 
 ### Audit
 | Method | Path | Roles | Notes |
 |---|---|---|---|
-| GET | `/audit-logs` | A | `?entityType&entityId&propertyId&actorId&from&to` |
+| GET | `/audit-logs` | A | Filters. [1 API, 4 UI] |
 
 ---
 
-## 6. Permissions matrix
+## 7. Permissions matrix
 
-Scope key: **all** = any property; **own** = properties where the caller has
-an active membership in that role; **self** = records the caller created;
-**assigned** = cleans where `assignedCleanerId = caller`; — = denied (404).
+**all** = any property · **own** = properties where the caller has an active
+membership in that role · **self** = caller's own records · **assigned** =
+cleans with `assignedCleanerId = caller` · — = denied (404).
 
 | Resource | Action | Admin | Owner | Cleaner |
 |---|---|---|---|---|
-| Me (profile) | read / update | self | self | self |
-| User | list / read / update / deactivate | all | — | — |
-| Invite | create / list / resend / revoke | all | — | — |
-| Property | list / read | all | own | own (no money/plan fields) |
+| Me | read / update | self | self | self |
+| Cleaner earnings | read | — | — | self |
+| Config | read | ✓ | ✓ | ✓ |
+| User, Invite | any | all | — | — |
+| Property | list / read | all | own | own (no money or plan fields) |
 | Property | create / update / archive | all | — | — |
-| Property access instructions | read | all | — [Q14] | own |
+| Property access instructions | read | all | — [N7] | own |
 | Membership | list / create / revoke | all | — | — |
 | Room | list / read | all | own | own |
-| Room | create / update / archive / reorder | all | — | — |
-| Plan | list / create / update / archive | all | — | — |
+| Room | write | all | — | — |
+| Plan | any | all | — | — |
 | Property plan | read | all | own | — |
 | Property plan | assign | all | — | — |
-| Booking | list / read | all | own (guest PII redacted [Q8]) | — |
+| Booking | list / read | all | own (no guest PII; ownerGross only) | — |
 | Booking | create / update / cancel | all | — | — |
-| Calendar | read | all | own | — (cleaners use cleans) |
+| Calendar | read | all | own | — |
 | Expense | list / read | all | own, `bearer = OWNER` | — |
-| Expense | create / update / void | all | — | — |
-| Receipt | list / read file | all | own (OWNER-borne or standalone) | — |
+| Expense | write / void | all | — | — |
+| Receipt | list / read file | all | own, OWNER-borne | — |
 | Receipt | create / void | all | — | — |
-| Upload URL | create | all | — | own (photo purposes only) |
-| Clean | list / read | all | own | own |
-| Clean | create (adhoc) / update / cancel | all | — | — |
-| Clean | start / complete | all | — | own + assigned |
-| Clean photo | create | all | — | own + assigned, IN_PROGRESS |
-| Clean photo | list / read file | all | own | own |
-| Clean photo | update / delete | — | — | — (immutable) |
+| Upload URL | create | all | — | own (photo purposes) |
+| Statement | list / read | all | own, FINALIZED or RELEASED | — |
+| Statement | create / finalize / release | all | — | — |
+| Adjustment | any | all | — (seen as statement lines) | — |
+| Property summary | read | all | own | — |
+| Portfolio and TruHost reports | read | all | — | — |
+| Clean | list / read | all | own (no pay fields) | own |
+| Clean | create / update / cancel | all | — | — |
+| Clean | start / complete / add photo | all | — | own + assigned |
+| Clean pay fields | read | all | — | assigned (self) |
+| Cleaner payment | create / list | all | — | — |
+| Clean photo | read file | all | own | own |
+| Clean photo, damage photo | update / delete | — | — | — |
 | Supply item | list / read | all | own | own |
-| Supply item | create / update / archive | all | — | — |
+| Supply item | write | all | — | — |
 | Supply status | create | all | — | own |
 | Supply status | history | all | own | — |
-| Damage report | list / read | all | own, not DRAFT | own (submitted) + self (drafts) |
+| Damage report | list / read | all | own, not DRAFT | own submitted + self drafts |
 | Damage report | create | all | — | own |
-| Damage report | update (DRAFT) / submit | all | — | self |
-| Damage photo | create | all | — | self (reporter) |
-| Damage photo | read file | all | own, not DRAFT | own |
+| Damage report | edit draft / submit / add photo | all | — | self |
 | Damage report | change status | all | — | — |
-| Report (property) | read | all | own | — |
-| Report (portfolio) | read | all | — | — |
+| iCal feeds and imports | any | all | — | — |
 | Audit log | read | all | — | — |
 
-Required negative tests (Phase 1 onward, extended each phase): owner A
-cannot list, read or fetch file URLs for property B's bookings, expenses,
-receipts, cleans, clean photos, damage reports, supplies or summaries. Cleaner
-A likewise cannot touch property B. A cleaner cannot start or complete a
-clean assigned to someone else. A revoked membership loses access
-immediately. A deactivated user gets 401.
+**Required negative tests** (built in Phase 1 and extended each phase):
+
+- Owner A gets nothing from property B: bookings, expenses, receipts,
+  statements, summaries, cleans, photos, damage reports, supplies or file
+  URLs.
+- Cleaner A gets nothing from property B either.
+- A cleaner can't act on someone else's clean, or see another cleaner's pay.
+- A revoked membership loses access immediately. A deactivated user gets
+  401. An uninvited Clerk user gets 403.
+- An admin who owns property A gets the same admin access everywhere, and
+  the owner view of A shows exactly what any other owner would see.
 
 ---
 
-## 7. Assumptions
+## 8. Assumptions
 
-Each assumption is something I proceeded with. Tell me if any is wrong.
-
-- **A1** Single company, so no multi-tenant `Organization`. Adding one later
-  is a migration plus an access-scope change, not a rewrite.
-- **A2** Admin is a global staff role, and there is only one staff role for
-  now (no bookkeeper or ops-manager split).
-- **A3** Currency is CAD only.
-- **A4** Users are created at invite time (status INVITED) and linked to Clerk
-  by verified email on `user.created`. Clerk runs in Restricted sign-up mode,
-  so uninvited emails can't sign up at all.
-- **A5** An owner sees all receipts and photos for their properties, but never
-  TruHost-borne expenses or other owners' data.
-- **A6** Every non-archived room needs BEFORE and AFTER photos, evaluated at
-  completion time. A room archived mid-clean drops out of the requirement.
-  (Alternative: snapshot the room list at `start`. Say if you'd prefer that.)
-- **A7** Photos are uploaded only while a clean is IN_PROGRESS. Starting the
-  clean is the cleaner's first action on arrival.
-- **A8** Each GUEST or OWNER_STAY checkout generates exactly one turnover
-  clean. BLOCKs don't.
-- **A9** Cleaners don't see bookings or guest names, only cleans and their
-  windows.
-- **A10** Photo originals (including EXIF/GPS) are kept as evidence. Strip
-  them only in derived thumbnails if we add them.
-- **A11** R2 enforces `x-amz-checksum-sha256` on presigned PUTs. I'll verify
-  this in Phase 2. If it doesn't, the fallback is the server streaming the
-  object and hashing it on attach.
-- **A12** The hosting target for the API is undecided ([Q13]). Phases end in
-  something runnable locally plus a deploy step once that's decided.
-- **A13** Tests need a real Postgres (exclusion constraints and triggers can't
-  be mocked). There is no Docker on this machine, so the plan is a Neon
-  branch per developer/CI run (Neon branching), or local Postgres if you
-  install it [Q16].
-- **A14** Plan fee terms are immutable once used. New terms mean a new plan
-  assigned from a date.
-- **A15** Next.js keeps a minimal BFF role only for Clerk session handling. All
-  data comes from the API with the user's Clerk token.
+- **A1** Single company: no `Organization`.
+- **A2** One staff role (ADMIN).
+- **A3** CAD only.
+- **A4** Users are created at invite time (INVITED) and linked on first sign-in
+  by verified email. The first admin comes from a bootstrap CLI, since there
+  is no admin yet to invite them.
+- **A5** Every non-archived room needs BEFORE and AFTER photos, evaluated at
+  completion.
+- **A6** Photos are uploaded only while a clean is IN_PROGRESS.
+- **A7** GUEST and OWNER_STAY checkouts each create one turnover clean.
+  BLOCKs don't.
+- **A8** Cleaners see cleans and windows, not bookings or guest names. Owners
+  never see guest PII.
+- **A9** Photo originals (with EXIF) are kept as evidence.
+- **A10** R2 enforces `x-amz-checksum-sha256` on presigned PUTs (verified in
+  Phase 2; the fallback is server-side hashing on attach).
+- **A11** The monthly fee is rounded once, half-up, on the month total, not
+  per booking.
+- **A12** Plan changes start on the 1st of a month.
+- **A13** Cancelled bookings count no nights. A cancelled GUEST booking with
+  a payout still contributes ownerGross, all of it attributed to the
+  check-in month [N3].
+- **A14** Statements are finalized in month order per property.
+- **A15** The cleaner owed for a clean is the assignee at completion. Admins
+  can complete on a cleaner's behalf, but the pay still goes to the
+  assignee.
+- **A16** OWNER_STAY cleans use the same cleaner pay. Since there is no guest
+  cleaning fee, TruHost absorbs the cost for now [N1].
+- **A17** The web app is a static SPA: no SSR or SEO, and only signed-in
+  users use it.
 
 ---
 
-## 8. Open questions
+## 9. Open questions (non-blocking)
 
-Money and reporting (these block Phase 2):
-
-- **Q1 Owners.** Can a property have several owner users (co-owners,
-  spouses)? Is an owner sometimes a company that will later need one Stripe
-  customer per entity rather than per person?
-- **Q2 Cleaning fees.** Where does the guest cleaning fee go: to the owner as
-  revenue (with cleaners paid as an owner expense), to TruHost, or straight
-  to the cleaner? Is the management fee charged on it?
-- **Q3 Plans.** What are your management plans? For each: name, fee %, what
-  it includes, and any flat monthly fees or minimums.
-- **Q4 Fee basis.** Is the management fee a % of gross (incl. cleaning fee),
-  accommodation only, or payout after channel fees?
-- **Q5 Net revenue formula.** Please confirm or correct: *net = gross −
-  channel fees − management fee (− GST on fee?) − owner-borne expenses.* Do
-  owners see TruHost-borne expenses at all?
-- **Q6 Cleaner pay.** Are cleaners paid per clean (fixed fee per property?),
-  hourly, or salaried? Should a completed clean auto-create a CLEANING
-  expense?
-- **Q7 Month boundaries.** For a stay spanning Jan 30–Feb 3, should revenue
-  be split per night (my proposal), or attributed wholly to the check-in
-  month or the checkout or payout month? What do your current owner
-  statements do?
-- **Q10 Cancellations.** When a guest cancels but a partial payout still
-  arrives, should it count as revenue (I'd keep the booking CANCELLED with
-  amounts = what was actually earned and 0 nights)?
-- **Q11 Taxes.** Is TruHost GST-registered (so the management fee carries
-  5% GST)? Do you take direct bookings where TruHost collects and remits
-  PST/MRDT/GST?
-- **Q12 Refunds and credits.** Do you need negative expenses (vendor refunds)
-  or owner credits, or should those be separate record types?
-
-Product:
-
-- **Q8 Guest PII.** Should owners see guest names (or first names only) on
-  their calendar? Under BC PIPA I'd default to hiding them.
-- **Q9 Bad photos.** If a cleaner uploads the wrong photo, is "add another
-  and the latest counts" enough, or do admins need a "flag as invalid (with
-  reason)" action that still never deletes?
-- **Q14 Access instructions.** Should owners see lockbox codes and access
-  notes for their own property?
-- **Q15 Clean timing.** Can a cleaner start a clean before the scheduled
-  date or before checkout time (e.g. an early departure)? Who assigns
-  cleaners: always an admin, or a default cleaner per property?
-- **Q17 Owner stays.** Do owners request their own stays through the app
-  (later), or does an admin enter them?
-- **Q18 Damage workflow.** Beyond reporting, do you track repair cost
-  recovery (e.g. AirCover payout received) against the damage report?
-- **Q19 Supply restocking.** Does TruHost restock supplies and bill owners
-  (an expense), or do owners restock? Should LOW/OUT trigger a notification?
-
-Infrastructure:
-
-- **Q13 Hosting.** Where should the API run (Fly.io, Render, Railway, AWS)?
-  Any Canadian data-residency requirement? Neon has no Canadian region that
-  I can confirm, and R2 jurisdictions don't include Canada. Is a US region
-  acceptable? Also: Sentry yes or no, and Upstash Redis for rate limiting.
-- **Q16 Local DB for tests.** Would you install Docker or Postgres locally, or
-  should tests run against a Neon branch (needs network and a Neon API key
-  in CI)?
-- **Q20 Domain and email.** What domains for web and API (affects CORS and
-  Clerk config), and which email sender for Clerk invites?
+- **N1 Owner stays:** who pays the cleaner for the turnover after an owner
+  stay? Should it become an owner-borne expense automatically?
+- **N2 ADR:** with gross defined as payout − cleaning fee, ADR comes out net
+  of Airbnb's fee and lower than the nightly price owners see on Airbnb.
+  Is that the figure you want to show, or should ADR be labelled
+  "average nightly earnings"?
+- **N3 Cancellation payouts:** is the check-in month right for a cancelled
+  stay that still paid out?
+- **N4 Airbnb fee on the cleaning fee:** Airbnb's host fee is charged on the
+  cleaning fee too. Subtracting the full cleaning fee from the payout
+  means the owner bears Airbnb's fee on TruHost's cleaning revenue (about 3%
+  of the fee). This follows your formula. Just confirm it's intended.
+- **N5 Negative months:** when expenses exceed revenue, release is blocked.
+  The owner-owes flow (carry forward vs. request payment) is in "Later".
+- **N6 Expense timing:** is an expense's month its purchase date
+  (`incurredOn`) or the date it was reimbursed?
+- **N7 Access instructions:** should owners see lockbox codes for their own
+  property?
+- **N8 Clean timing:** can a cleaner start before the scheduled date or
+  checkout time? Should each property have a default cleaner?
+- **N9 Payment mistakes:** should a mistaken cleaner payment be voidable
+  (audited), or corrected only by a reversing entry?
+- **N10 Bad photos:** is "add another photo" enough, or do admins need a
+  "flag as invalid with reason" action?
+- **N11 Damage cost recovery:** should AirCover payouts against damage be
+  tracked (they may flow into an adjustment)?
+- **N12 Supplies:** does TruHost restock and bill owners (expense), and
+  should LOW/OUT notify someone?
+- **N13 Domains:** what are the web and API domains (needed for CORS and the
+  Clerk production instance), and who sends the invite emails?
 
 ---
 
-## 9. Build order
+## 10. Build order
 
-Each phase ends with something you can run and click through. Tests are
-written within each phase, never deferred.
+Each phase ends with something you can run. Tests are written in each phase,
+never deferred.
 
-### Phase 0: Scaffold ✅ (done)
-pnpm + Turborepo, `apps/api` (Nest 12, Vitest, oxlint), `apps/web` (Next 16,
-Tailwind), `packages/shared` (zod). `GET /health`.
-**Run:** `pnpm dev` and `curl localhost:3000/health`. `pnpm lint typecheck
-test test:e2e` are all green.
-Remaining here: GitHub Actions CI running lint, typecheck, test and e2e.
+### Phase 0: Scaffold ✅
+pnpm + Turborepo, `apps/api` (Nest 12), `apps/web` (Vite + React + TanStack
+Router/Query + Tailwind 4 + Clerk), `packages/shared`. `GET /health`.
 
 ### Phase 1: Identity, access and properties
-- Prisma + Neon, migrations, seed script. Models: User, Invite, Membership,
-  Property, Room, Plan, PropertyPlan, AuditLog, IdempotencyKey, plus the raw
-  SQL constraints and triggers.
-- Clerk guard, `@Actor()`, Clerk webhook, invites, `/me`.
-- `AccessService` + policy table + **authz matrix test harness** (including
-  the meta-test that every route has an entry).
-- Throttler tiers, problem+json errors, OpenAPI, generated client in
-  `packages/shared` or `packages/api-client`.
-- API routes: me, users, invites, properties, memberships, rooms, plans.
+- Prisma + Postgres (local for tests, Neon branch for dev). Models: User,
+  Invite, Membership, Property, Room, Plan, PropertyPlan, AuditLog,
+  IdempotencyKey, plus their raw SQL constraints and triggers.
+- Clerk token guard with first-sign-in linking. `@Actor()`. `/me`,
+  `/config`.
+- `AccessService` + policy table + authz matrix harness (with the
+  route-coverage meta-test).
+- Rate-limit tiers, problem+json errors, OpenAPI document and the typed web
+  client.
+- Users, invites, properties, memberships, rooms and plans routes. Audit on
+  every admin mutation.
+- **Bootstrap CLI** `pnpm --filter @truhost/api bootstrap`: creates TruPlan
+  (22%), the first admin, and optionally the first property with the admin
+  as OWNER, on TruPlan from the current month, with default rooms. It is
+  idempotent.
 - Web: Clerk sign-in, role-aware shell, admin screens for properties, rooms,
-  team and invites. Owner and cleaner see "my properties".
+  team, invites and plans; a "My properties" owner/cleaner landing page.
+- CI: GitHub Actions with a Postgres service; lint, typecheck, test, e2e.
 
-**Run:** invite yourself as admin via the seed, sign in, create a property
-and rooms, invite a test owner and see their scoped view.
+**Run:** bootstrap, sign in as yourself (admin and owner of your property),
+edit the property and rooms, invite a test cleaner, and sign in as them to see
+only that property.
 
-### Phase 2: Money (bookings, expenses, receipts, reports)
-- Booking, Expense, Receipt, StoredFile. R2 presigned uploads (receipts
-  first). Audit on all of it.
-- `reporting` module with table-driven tests of every formula (needs
-  Q2–Q7, Q10–Q12 answered).
-- Web: admin booking and expense entry, receipt upload, owner dashboard
-  (nights, gross, net, ADR, monthly chart, calendar, receipts).
+### Phase 2a: Bookings, expenses, receipts, owner dashboard + first deploy
+Booking (with the overlap constraint and its tests), Expense, Receipt,
+StoredFile and R2. The reporting functions. Owner dashboard (nights,
+gross, fee, expenses, net, ADR, calendar, receipts). Deploy: Railway (API),
+Neon (prod), Cloudflare Pages (web), R2 bucket.
+**Run:** on the deployed site, enter last month's real bookings for your
+property and see the owner dashboard.
 
-**Run:** enter a month of bookings and expenses, log in as the owner and see
-correct numbers. The authz matrix proves owner B sees none of it.
+### Phase 2b: Owner statements
+OwnerStatement, lines, adjustments, finalize/lock/release, the TruHost
+revenue report, and statement screens for admin and owner.
+**Run:** finalize and release last month's statement, then try to edit a
+locked booking (409) and add an adjustment that lands on the next month.
 
-### Phase 3: Cleaning
-- Clean (auto-created from bookings), CleanPhoto, SupplyItem, SupplyStatus.
-  State machine with completion guard, idempotency on cleaner POSTs.
-- Web (mobile-first): cleaner schedule, clean checklist by room with camera
-  upload, supply levels. Admin schedule board and assignment. Owner photo
-  gallery per clean.
-
-**Run:** create a booking, see the clean appear, complete it on a phone
-browser with photos, and confirm that completion is refused with a missing
-photo.
+### Phase 3: Cleaning and cleaner pay
+Clean (auto from bookings), CleanPhoto, the state machine and its guard,
+supplies, cleaner pay and payments. Mobile-first cleaner screens: schedule,
+room checklist with camera upload, supplies, earnings. Admin schedule
+board, assignment and pay run.
+**Run:** a booking creates a clean, a cleaner completes it on a phone
+(completion is refused while a photo is missing), and the admin records the
+payment.
 
 ### Phase 4: Damage reports and audit viewer
-- DamageReport, DamagePhoto, submit guard, status workflow.
-- Web: cleaner damage flow, admin triage, owner view, admin audit log viewer.
+**Run:** file a report from a phone, triage it as admin and see it as the
+owner.
 
-**Run:** file a damage report from a phone with photos, triage it as admin
-and see it as the owner.
-
-### Phase 5: Production hardening and deploy
-Hosting per Q13, environments (staging and prod Neon branches), backups and
-PITR check, Sentry, security review, rate-limit tuning, R2 bucket lock
-retention for evidence prefixes, and a load sanity check.
-
-**Run:** staging URL used for a real week of operations.
+### Phase 5: Hardening
+Sentry, backups and PITR drill, R2 bucket lock for evidence prefixes,
+security review, rate-limit tuning, Redis if scaled out, privacy policy page.
 
 ### Phase 6: iCal sync
-IcalFeed, scheduled fetch (every 15–30 min), upsert by
-`(propertyId, ICAL, UID)`, cancellation detection when an event disappears,
-and an admin "needs financials" queue for iCal bookings with null amounts.
+IcalFeed, IcalImport staging, scheduled sync (Railway cron), conflict review
+UI, and a "needs financials" queue.
 
 ### Later
-Expo app on the same API (`apps/mobile`), Stripe Invoicing (owner
-statements/invoices), PMS integration (`source = PMS`), and notifications.
+- **Owner owes TruHost:** a month where expenses exceed revenue (net < 0).
+  Options: carry the balance forward as an automatic adjustment on the next
+  statement, or issue a payment request. Decide before the first negative
+  month.
+- Expo app (`apps/mobile`) on the same API.
+- PMS integration (`source = PMS`).
+- Notifications.
+- Clerk webhook for `user.deleted`.
+
+---
+
+## 11. Decision log
+
+| Date | Decision |
+|---|---|
+| 2026-10-05 | Web is a Vite + React SPA (TanStack Router/Query, Tailwind 4) on Cloudflare Pages, replacing Next.js. Clerk React SDK in the browser, bearer token to the API. |
+| 2026-10-05 | TruHost keeps the guest cleaning fee and pays cleaners per clean. Owner gross = payout − cleaning fee. |
+| 2026-10-05 | One plan, TruPlan, at 22% of the month's owner gross. Net = gross − fee − owner-borne expenses ± adjustments. |
+| 2026-10-05 | Monthly owner statements (DRAFT → FINALIZED → RELEASED) replace invoicing. Stripe Invoicing dropped. |
+| 2026-10-05 | Per-night revenue split across month boundaries. |
+| 2026-10-05 | Not GST-registered. Tax fields kept but disabled by `TAX_FIELDS_ENABLED`. |
+| 2026-10-05 | API on Railway US West. Neon in the same region. No Canadian residency requirement. |
+| 2026-10-05 | Tests on local Postgres (WSL), Neon branch for dev, Postgres service in CI. |
+| 2026-10-05 | iCal imports go through an `IcalImport` staging table. Conflicts are resolved by an admin and never hit the overlap constraint. |
+| 2026-10-05 | Invited users are linked on first authenticated request (no webhook dependency). |

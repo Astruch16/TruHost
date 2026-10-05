@@ -14,20 +14,31 @@ Change the spec in the same PR as the code that departs from it.
 - **Monorepo:** pnpm workspaces + Turborepo.
   - `apps/api`: NestJS REST API with OpenAPI, Prisma and Postgres (Neon).
     The only thing that touches the database.
-  - `apps/web`: Next.js App Router. A **thin client** of the API: no database
-    access, and no server actions or route handlers containing business logic.
+  - `apps/web`: Vite + React SPA (TanStack Router, TanStack Query, Tailwind 4),
+    deployed as static files to Cloudflare Pages. A **thin client** of the API:
+    it never computes money or decides access, it only displays what the API
+    returns.
   - `packages/shared`: zod schemas and TS types used by api, web and mobile.
     Contains no business logic that needs to be trusted. The API recomputes and
     re-validates everything.
   - `apps/mobile` (later): Expo. Reuses the same API unchanged, so never build
     a web-only backend path.
-- **Auth:** Clerk proves identity only. Roles and property access live in
-  *our* database (`User.staffRole`, `Membership`). Never read roles from
-  Clerk metadata.
+- **Auth:** Clerk proves identity only. The SPA uses `@clerk/react` and sends
+  `Authorization: Bearer <session token>` on every call. The API verifies it
+  on every request. Roles and property access live in *our* database
+  (`User.staffRole`, `Membership`). Never read roles from Clerk metadata.
+  An invited user is linked to their Clerk account on their first
+  authenticated request, by verified email.
+- **Hosting:** API on Railway (US West). Postgres on Neon (same region).
+  Web on Cloudflare Pages. Local Postgres in WSL for tests; CI runs its own
+  Postgres service.
 - **Files:** Cloudflare R2, private bucket. Clients upload with presigned PUT
   URLs and view with short-lived signed GET URLs (5 min or less). Never make
   objects public.
-- **Invoices:** Stripe Invoicing later. Out of scope until scheduled.
+- **Owner payouts:** monthly `OwnerStatement` per property (DRAFT → FINALIZED
+  → RELEASED). There are no client invoices and no Stripe. Finalizing locks
+  that month's bookings and expenses; corrections become adjustments on the
+  next statement.
 
 ## Rules (non-negotiable)
 
@@ -37,8 +48,11 @@ Change the spec in the same PR as the code that departs from it.
    A resource outside the caller's scope returns 404, not 403. Every new route
    must be added to the authorization test matrix
    (`apps/api/test/authz/`), and that test fails if a route is missing.
-2. **No stored totals.** Admins enter bookings and expenses. Nights booked,
-   gross, net and ADR are always computed from records (`reporting` module).
+2. **No entered totals.** Admins enter per-booking payout and cleaning fee,
+   and per-expense amounts. Nights, owner gross (payout − cleaning fee),
+   the TruPlan fee (22% of the month's gross), net and ADR are always
+   computed in the `reporting` module. The only stored totals are the copy
+   the server writes into a FINALIZED statement.
 3. **Bookings have `source`** (`MANUAL | ICAL | PMS`) and `channel` (where the
    guest booked). Data is manual now, iCal next, a PMS API later.
 4. **Money is integer cents** (`Int`, CAD). Never floats, never `Decimal` in JS
@@ -60,6 +74,10 @@ Also:
 
 - Tests are required for anything touching permissions, money or state
   machines. Money calculations get table-driven tests with exact expected cents.
+- Money formulas, allocation (per-night split, largest remainder) and
+  rounding live only in `apps/api/src/reporting/`. Never re-implement them in
+  the web app.
+- Tax fields stay disabled unless `TAX_FIELDS_ENABLED=true`.
 - Never hard-delete records with money, documents or evidence. Use
   `archivedAt`, `voidedAt` or `revokedAt` instead.
 - Dates of stay are `@db.Date` in property-local time. Instants are
@@ -76,7 +94,10 @@ apps/api/src/
   files/         R2 presign, verification, signed view URLs
   <domain>/      controller (thin) + service (logic + access) + *.spec.ts
 apps/api/test/   e2e and authz matrix tests (*.e2e-spec.ts)
-apps/web/src/    Next.js app. Talks to the API through the generated client
+apps/web/src/
+  routes/        TanStack Router file routes (routeTree.gen.ts is generated
+                 by the Vite plugin and committed)
+  lib/api.ts     typed API client (openapi-fetch) with the Clerk token
 packages/shared/src/  zod schemas, enums, types
 docs/spec.md     data model, API, permissions, phases, open questions
 ```
@@ -93,7 +114,7 @@ Requires Node 24+ and pnpm (`corepack enable`). Run from the repo root.
 |---|---|---|
 | Install | `pnpm install` | |
 | Dev servers | `pnpm dev` (api :3000, web :3001) | `pnpm --filter @truhost/api dev` |
-| Build | `pnpm build` | `pnpm --filter @truhost/web build` |
+| Build | `pnpm build` | `pnpm --filter @truhost/web build` (static output in `apps/web/dist`) |
 | Lint | `pnpm lint` | `pnpm --filter @truhost/api lint` |
 | Typecheck | `pnpm typecheck` | `pnpm --filter @truhost/shared typecheck` |
 | Unit tests | `pnpm test` | `pnpm --filter @truhost/api test` |
@@ -106,10 +127,11 @@ Tooling per package:
 - **api:** NestJS 12 (ESM, `nodenext`, so relative imports use `.js`
   suffixes), Vitest (`*.spec.ts` unit, `test/*.e2e-spec.ts` e2e), oxlint
   (type-aware).
-- **web:** Next.js 16 (App Router, Turbopack), Tailwind 4, ESLint, Vitest.
-  This Next version differs from older docs: read
-  `apps/web/node_modules/next/dist/docs/` before using unfamiliar APIs (see
-  `apps/web/AGENTS.md`).
+- **web:** Vite 8, React 19, TanStack Router (file-based, via
+  `@tanstack/router-plugin`) and TanStack Query, Tailwind 4 (`@tailwindcss/vite`),
+  `@clerk/react` v6 (use `<Show when="signed-in">`, which replaced
+  `SignedIn`/`SignedOut`), ESLint, Vitest with jsdom. Env vars must be
+  prefixed `VITE_` and are public.
 - **shared:** compiled with `tsc` to `dist/`. Turbo builds it before
   dependents. Run `pnpm --filter @truhost/shared dev` for watch mode
   (`pnpm dev` does this already).
