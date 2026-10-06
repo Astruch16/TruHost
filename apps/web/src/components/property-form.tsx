@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Button, ErrorBanner, Field, Input } from './ui';
+import { Button } from './ui/button';
+import { ErrorAlert } from './ui/alert';
+import { Field } from './ui/field';
+import { Input, Textarea } from './ui/input';
 import { fieldErrors } from '../lib/errors';
-import type { PropertyFormValues } from '../lib/property-values';
 import { centsToInput, parseDollarsToCents } from '../lib/money';
+import type { PropertyFormValues } from '../lib/property-values';
 
 /** Shared by create and edit. Empty optional fields are sent as null. */
 export function PropertyForm({
@@ -11,12 +14,14 @@ export function PropertyForm({
   pending,
   error,
   onSubmit,
+  onCancel,
 }: {
   initial: PropertyFormValues;
   submitLabel: string;
   pending: boolean;
   error: unknown;
   onSubmit: (values: PropertyFormValues) => void;
+  onCancel?: () => void;
 }) {
   const [v, setV] = useState({
     ...initial,
@@ -52,28 +57,28 @@ export function PropertyForm({
   };
 
   return (
-    <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
-      <Field label="Name" error={errors.name} hint="Internal nickname, e.g. “Kits 2BR”">
-        <Input value={v.name} onChange={set('name')} required />
+    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+      <Field label="Name" error={errors.name} hint="Internal nickname, e.g. “Cedar Suite”" required>
+        <Input value={v.name} onChange={set('name')} autoComplete="off" />
       </Field>
-      <Field label="Postal code" error={errors.postalCode}>
-        <Input value={v.postalCode} onChange={set('postalCode')} required />
+      <Field label="Postal code" error={errors.postalCode} required>
+        <Input value={v.postalCode} onChange={set('postalCode')} autoComplete="postal-code" />
       </Field>
-      <Field label="Address" error={errors.addressLine1}>
-        <Input value={v.addressLine1} onChange={set('addressLine1')} required />
+      <Field label="Street address" error={errors.addressLine1} required>
+        <Input value={v.addressLine1} onChange={set('addressLine1')} autoComplete="address-line1" />
       </Field>
       <Field label="Unit / line 2" error={errors.addressLine2}>
-        <Input value={v.addressLine2} onChange={set('addressLine2')} />
+        <Input value={v.addressLine2} onChange={set('addressLine2')} autoComplete="address-line2" />
       </Field>
-      <Field label="City" error={errors.city}>
-        <Input value={v.city} onChange={set('city')} required />
+      <Field label="City" error={errors.city} required>
+        <Input value={v.city} onChange={set('city')} autoComplete="address-level2" />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Check-in" error={errors.checkInTime}>
-          <Input type="time" value={v.checkInTime} onChange={set('checkInTime')} required />
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Check-in" error={errors.checkInTime} required>
+          <Input type="time" value={v.checkInTime} onChange={set('checkInTime')} />
         </Field>
-        <Field label="Check-out" error={errors.checkOutTime}>
-          <Input type="time" value={v.checkOutTime} onChange={set('checkOutTime')} required />
+        <Field label="Check-out" error={errors.checkOutTime} required>
+          <Input type="time" value={v.checkOutTime} onChange={set('checkOutTime')} />
         </Field>
       </div>
       <Field label="BC STR registration #" error={errors.provincialRegistrationNumber}>
@@ -82,29 +87,28 @@ export function PropertyForm({
       <Field label="Business licence #" error={errors.businessLicenceNumber}>
         <Input value={v.businessLicenceNumber} onChange={set('businessLicenceNumber')} />
       </Field>
-      <Field label="Default cleaner pay per clean ($)" error={payError ?? errors.defaultCleanerPayCents}>
-        <Input value={v.pay} onChange={set('pay')} inputMode="decimal" required />
+      <Field label="Default cleaner pay per clean ($)" error={payError ?? errors.defaultCleanerPayCents} required>
+        <Input value={v.pay} onChange={set('pay')} inputMode="decimal" className="figure" />
       </Field>
-      <div className="sm:col-span-2">
-        <Field
-          label="Access instructions"
-          error={errors.accessInstructions}
-          hint="Visible to admins and this property’s cleaners only"
-        >
-          <textarea
-            value={v.accessInstructions}
-            onChange={set('accessInstructions')}
-            rows={3}
-            className="rounded-md border border-slate-300 px-3 py-2 text-base sm:text-sm"
-          />
-        </Field>
-      </div>
-      <div className="flex flex-col gap-2 sm:col-span-2">
-        <ErrorBanner error={Object.keys(errors).length ? null : error} />
-        <div>
-          <Button type="submit" disabled={pending}>
+      <Field
+        label="Arrival notes"
+        error={errors.accessInstructions}
+        hint="Parking and building entry. Never lockbox or door codes."
+        className="sm:col-span-2"
+      >
+        <Textarea value={v.accessInstructions} onChange={set('accessInstructions')} />
+      </Field>
+      <div className="flex flex-col gap-3 sm:col-span-2">
+        <ErrorAlert error={Object.keys(errors).length ? null : error} />
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" loading={pending}>
             {submitLabel}
           </Button>
+          {onCancel && (
+            <Button variant="secondary" onClick={onCancel} disabled={pending}>
+              Cancel
+            </Button>
+          )}
         </div>
       </div>
     </form>

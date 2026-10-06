@@ -2,17 +2,31 @@ import { useState, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Badge, Button, Card, ErrorBanner, Field, Input, Loading, PageHeader, Select } from '../../../components/ui';
-import { fieldErrors } from '../../../lib/errors';
+import { CircleCheck, Send } from 'lucide-react';
+import { ErrorAlert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { ConfirmDialog } from '../../../components/ui/dialog';
+import { Field } from '../../../components/ui/field';
+import { Input, Select } from '../../../components/ui/input';
+import { PageHeader } from '../../../components/ui/page-header';
+import { Pill } from '../../../components/ui/pill';
+import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../components/ui/table';
 import { useApi } from '../../../lib/api-context';
+import { fieldErrors } from '../../../lib/errors';
 import { titleCase } from '../../../lib/format';
 import { queries } from '../../../lib/queries';
+import type { PillTone } from '../../../lib/styles';
 
 export const Route = createFileRoute('/_app/admin/team')({
   component: Team,
 });
 
 type Role = 'ADMIN' | 'OWNER' | 'CLEANER';
+type Pending = { kind: 'deactivate' | 'revoke'; id: string; label: string } | null;
+
+const statusTone: Record<string, PillTone> = { ACTIVE: 'sage', INVITED: 'lavender', DEACTIVATED: 'neutral' };
+const inviteTone: Record<string, PillTone> = { PENDING: 'lavender', ACCEPTED: 'sage', REVOKED: 'neutral' };
 
 function Team() {
   const api = useApi();
@@ -20,84 +34,162 @@ function Team() {
   const me = useQuery(queries.me(api));
   const users = useQuery(queries.users(api));
   const invites = useQuery(queries.invites(api));
+  const [pending, setPending] = useState<Pending>(null);
   const refresh = () =>
     Promise.all([qc.invalidateQueries({ queryKey: ['users'] }), qc.invalidateQueries({ queryKey: ['invites'] })]);
 
   const deactivate = useMutation({
     mutationFn: (id: string) => unwrap(api.POST('/v1/users/{id}/deactivate', { params: { path: { id } } })),
-    onSuccess: refresh,
+    onSuccess: async () => {
+      await refresh();
+      setPending(null);
+    },
+  });
+  const revoke = useMutation({
+    mutationFn: (id: string) => unwrap(api.POST('/v1/invites/{id}/revoke', { params: { path: { id } } })),
+    onSuccess: async () => {
+      await refresh();
+      setPending(null);
+    },
   });
   const resend = useMutation({
     mutationFn: (id: string) => unwrap(api.POST('/v1/invites/{id}/resend', { params: { path: { id } } })),
     onSuccess: refresh,
   });
-  const revoke = useMutation({
-    mutationFn: (id: string) => unwrap(api.POST('/v1/invites/{id}/revoke', { params: { path: { id } } })),
-    onSuccess: refresh,
-  });
+  const action = pending?.kind === 'deactivate' ? deactivate : revoke;
 
   return (
     <>
-      <PageHeader title="Team" />
-      <div className="grid gap-4">
+      <PageHeader title="Team" description="Admins, owners and cleaners. TruHost is invite-only." />
+      <div className="flex flex-col gap-5">
         <InviteForm onDone={refresh} />
         <Card title="People">
-          <ErrorBanner error={users.error ?? deactivate.error} />
-          {!users.data ? (
-            <Loading />
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {users.data.items.map((u) => (
-                <li key={u.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-                  <span className="flex-1">
-                    {u.firstName} {u.lastName} <span className="text-slate-500">· {u.email}</span>
-                  </span>
-                  {u.staffRole && <Badge tone="green">Admin</Badge>}
-                  <Badge tone={u.status === 'ACTIVE' ? 'slate' : u.status === 'INVITED' ? 'amber' : 'red'}>
-                    {titleCase(u.status)}
-                  </Badge>
-                  {u.status !== 'DEACTIVATED' && u.id !== me.data?.id && (
-                    <Button
-                      variant="ghost"
-                      onClick={() =>
-                        confirm(`Deactivate ${u.firstName}? They will be signed out.`) && deactivate.mutate(u.id)
-                      }
-                    >
-                      Deactivate
-                    </Button>
-                  )}
-                </li>
+          <Table>
+            <THead>
+              <tr>
+                <Th>Name</Th>
+                <Th>Email</Th>
+                <Th>Status</Th>
+                <Th align="right">
+                  <span className="sr-only">Actions</span>
+                </Th>
+              </tr>
+            </THead>
+            <TBody>
+              <TableState
+                columns={4}
+                loading={users.isPending}
+                error={users.error}
+                empty={users.data?.items.length === 0}
+              />
+              {users.data?.items.map((u) => (
+                <Tr key={u.id} interactive>
+                  <Td className="font-medium">
+                    {u.firstName} {u.lastName}
+                    {u.staffRole && (
+                      <span className="ml-2">
+                        <Pill tone="dark">Admin</Pill>
+                      </span>
+                    )}
+                  </Td>
+                  <Td className="text-muted">{u.email}</Td>
+                  <Td>
+                    <Pill tone={statusTone[u.status] ?? 'neutral'}>{titleCase(u.status)}</Pill>
+                  </Td>
+                  <Td align="right">
+                    {u.status !== 'DEACTIVATED' && u.id !== me.data?.id && (
+                      <Button
+                        variant="quiet"
+                        size="sm"
+                        onClick={() =>
+                          setPending({ kind: 'deactivate', id: u.id, label: `${u.firstName} ${u.lastName}` })
+                        }
+                      >
+                        Deactivate
+                      </Button>
+                    )}
+                  </Td>
+                </Tr>
               ))}
-            </ul>
-          )}
+            </TBody>
+          </Table>
         </Card>
         <Card title="Invites">
-          <ErrorBanner error={invites.error ?? resend.error ?? revoke.error} />
-          <ul className="divide-y divide-slate-100">
-            {invites.data?.items.map((i) => (
-              <li key={i.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-                <span className="flex-1">
-                  {i.user.email}
-                  {!i.emailSent && <span className="text-amber-700"> · email not sent</span>}
-                </span>
-                <Badge tone={i.status === 'PENDING' ? 'amber' : i.status === 'ACCEPTED' ? 'green' : 'red'}>
-                  {titleCase(i.status)}
-                </Badge>
-                {i.status === 'PENDING' && (
-                  <>
-                    <Button variant="ghost" onClick={() => resend.mutate(i.id)}>
-                      Resend
-                    </Button>
-                    <Button variant="ghost" onClick={() => confirm('Revoke this invite?') && revoke.mutate(i.id)}>
-                      Revoke
-                    </Button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
+          <ErrorAlert error={resend.error} />
+          <Table>
+            <THead>
+              <tr>
+                <Th>Email</Th>
+                <Th>Status</Th>
+                <Th align="right">
+                  <span className="sr-only">Actions</span>
+                </Th>
+              </tr>
+            </THead>
+            <TBody>
+              <TableState
+                columns={3}
+                loading={invites.isPending}
+                error={invites.error}
+                empty={invites.data?.items.length === 0}
+                emptyMessage="No invites sent yet."
+              />
+              {invites.data?.items.map((i) => (
+                <Tr key={i.id} interactive>
+                  <Td>
+                    {i.user.email}
+                    {!i.emailSent && <span className="ml-2 text-xs text-muted">(email not sent)</span>}
+                  </Td>
+                  <Td>
+                    <Pill tone={inviteTone[i.status] ?? 'neutral'}>{titleCase(i.status)}</Pill>
+                  </Td>
+                  <Td align="right">
+                    {i.status === 'PENDING' && (
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="quiet"
+                          size="sm"
+                          loading={resend.isPending && resend.variables === i.id}
+                          onClick={() => resend.mutate(i.id)}
+                        >
+                          Resend
+                        </Button>
+                        <Button
+                          variant="quiet"
+                          size="sm"
+                          onClick={() => setPending({ kind: 'revoke', id: i.id, label: i.user.email })}
+                        >
+                          Revoke
+                        </Button>
+                      </div>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
         </Card>
       </div>
+      <ConfirmDialog
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPending(null);
+            action.reset();
+          }
+        }}
+        title={pending?.kind === 'deactivate' ? `Deactivate ${pending.label}?` : 'Revoke this invite?'}
+        description={
+          pending?.kind === 'deactivate'
+            ? 'They are signed out everywhere and can no longer sign in. Their history is kept.'
+            : `The invite link for ${pending?.label ?? 'this person'} stops working.`
+        }
+        confirmLabel={pending?.kind === 'deactivate' ? 'Deactivate' : 'Revoke invite'}
+        destructive
+        pending={action.isPending}
+        error={action.error}
+        onConfirm={() => pending && action.mutate(pending.id)}
+      />
     </>
   );
 }
@@ -132,21 +224,29 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
   };
 
   return (
-    <Card title="Invite someone">
-      <form onSubmit={submit} className="grid gap-3 sm:grid-cols-3">
-        <Field label="Email" error={errors.email}>
+    <Card title="Invite someone" description="They’ll get an email with a link to create their account.">
+      <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Field label="Email" error={errors.email} required>
           <Input
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            required
+            autoComplete="off"
           />
         </Field>
-        <Field label="First name" error={errors.firstName}>
-          <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+        <Field label="First name" error={errors.firstName} required>
+          <Input
+            value={form.firstName}
+            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+            autoComplete="off"
+          />
         </Field>
-        <Field label="Last name" error={errors.lastName}>
-          <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
+        <Field label="Last name" error={errors.lastName} required>
+          <Input
+            value={form.lastName}
+            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+            autoComplete="off"
+          />
         </Field>
         <Field label="Role">
           <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
@@ -156,8 +256,8 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
           </Select>
         </Field>
         {form.role !== 'ADMIN' && (
-          <Field label="Property">
-            <Select value={form.propertyId} onChange={(e) => setForm({ ...form, propertyId: e.target.value })} required>
+          <Field label="Property" required>
+            <Select value={form.propertyId} onChange={(e) => setForm({ ...form, propertyId: e.target.value })}>
               <option value="">Choose…</option>
               {properties.data?.items.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -167,14 +267,18 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
             </Select>
           </Field>
         )}
-        <div className="flex flex-col justify-end gap-2">
-          <Button type="submit" disabled={invite.isPending}>
-            Send invite
-          </Button>
-        </div>
-        <div className="sm:col-span-3">
-          <ErrorBanner error={Object.keys(errors).length ? null : invite.error} />
-          {invite.isSuccess && <p className="text-sm text-green-700">Invite sent.</p>}
+        <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-3">
+          <ErrorAlert error={Object.keys(errors).length ? null : invite.error} />
+          <div className="flex items-center gap-3">
+            <Button type="submit" loading={invite.isPending}>
+              <Send aria-hidden className="size-4" /> Send invite
+            </Button>
+            {invite.isSuccess && (
+              <span role="status" className="flex items-center gap-1.5 text-sm text-sage-deep">
+                <CircleCheck aria-hidden className="size-4" /> Invite sent
+              </span>
+            )}
+          </div>
         </div>
       </form>
     </Card>

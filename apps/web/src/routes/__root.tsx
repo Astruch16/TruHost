@@ -6,13 +6,5 @@ export interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootLayout,
+  component: () => <Outlet />,
 });
-
-function RootLayout() {
-  return (
-    <div className="flex min-h-dvh flex-col bg-white text-slate-900">
-      <Outlet />
-    </div>
-  );
-}
