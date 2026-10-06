@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Building2, CalendarDays, Home, Settings, Shield, Users } from 'lucide-react';
+import { Building2, CalendarDays, Home, ReceiptText, Settings, Shield, Users } from 'lucide-react';
 import type { LinkProps } from '@tanstack/react-router';
 
 export interface NavItem {
@@ -22,6 +22,7 @@ export function navItems(me: { staffRole: string | null; memberships: unknown[] 
     items.push(
       { to: '/admin/properties', label: 'Properties', icon: Building2 },
       { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays },
+      { to: '/admin/expenses', label: 'Expenses', icon: ReceiptText },
       { to: '/admin/team', label: 'Team', icon: Users },
       { to: '/admin/plans', label: 'Plans', icon: Shield },
     );

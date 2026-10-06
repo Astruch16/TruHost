@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, MapPin } from 'lucide-react';
+import { Clock, FileText, MapPin } from 'lucide-react';
 import { ErrorAlert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { PageHeader } from '../../../components/ui/page-header';
 import { Pill } from '../../../components/ui/pill';
@@ -14,6 +15,7 @@ import { formatCents } from '../../../lib/money';
 import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
 import { formatBps, kindLabel } from '../../../lib/format';
 import { queries } from '../../../lib/queries';
+import { openFile } from '../../../lib/upload';
 
 /**
  * Read-only property view for owners and cleaners. The API decides which fields come back; this page renders what it
@@ -79,6 +81,7 @@ function PropertyView() {
           </Card>
         )}
         {isOwner && <OwnerBookings propertyId={propertyId} />}
+        {isOwner && <OwnerExpenses propertyId={propertyId} />}
         <Card title="Rooms" description="In cleaning-checklist order.">
           {rooms.error ? (
             <ErrorAlert error={rooms.error} />
@@ -144,6 +147,67 @@ function OwnerBookings({ propertyId }: { propertyId: string }) {
               </Td>
               <Td align="right" className="font-semibold">
                 {b.ownerGrossCents != null ? formatCents(b.ownerGrossCents) : b.complete ? '—' : 'Payout pending'}
+              </Td>
+            </Tr>
+          ))}
+        </TBody>
+      </Table>
+    </Card>
+  );
+}
+
+/** Owner-borne expenses for the month, with their receipts. */
+function OwnerExpenses({ propertyId }: { propertyId: string }) {
+  const api = useApi();
+  const [month, setMonth] = useState(monthKey);
+  const [viewError, setViewError] = useState<unknown>(null);
+  const expenses = useQuery(queries.propertyExpenses(api, propertyId, monthRange(month)));
+  const items = expenses.data?.items ?? [];
+  return (
+    <Card title="Expenses" actions={<MonthStepper month={month} onChange={setMonth} />} className="lg:col-span-2">
+      <ErrorAlert error={viewError} />
+      <Table>
+        <THead>
+          <tr>
+            <Th>Date</Th>
+            <Th>Expense</Th>
+            <Th align="right">Amount</Th>
+            <Th>Receipt</Th>
+          </tr>
+        </THead>
+        <TBody>
+          <TableState
+            columns={4}
+            loading={expenses.isPending}
+            error={expenses.error}
+            empty={items.length === 0}
+            emptyMessage={`No expenses in ${monthLabel(month)}.`}
+          />
+          {items.map((e) => (
+            <Tr key={e.id}>
+              <Td className="whitespace-nowrap">{shortDate(e.incurredOn)}</Td>
+              <Td>
+                {e.description}
+                {e.vendor && <span className="block text-xs text-muted">{e.vendor}</span>}
+              </Td>
+              <Td align="right" className="font-semibold">
+                {formatCents(e.amountCents)}
+              </Td>
+              <Td>
+                {e.receipts.length ? (
+                  e.receipts.map((r) => (
+                    <Button
+                      key={r.id}
+                      variant="quiet"
+                      size="sm"
+                      onClick={() => void openFile(api, r.fileId).catch(setViewError)}
+                    >
+                      <FileText aria-hidden className="size-4" /> View
+                    </Button>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted">Pending</span>
+                )}
               </Td>
             </Tr>
           ))}

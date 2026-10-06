@@ -7,3 +7,5 @@ export * from './api/users.js';
 export * from './api/properties.js';
 export * from './api/audit.js';
 export * from './api/bookings.js';
+export * from './api/files.js';
+export * from './api/expenses.js';
