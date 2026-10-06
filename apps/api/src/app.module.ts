@@ -10,6 +10,7 @@ import { ProblemFilter } from './common/problem.filter.js';
 import { ZodResponseInterceptor } from './common/zod.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
+import { EmailModule } from './email/email.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InvitesModule } from './invites/invites.module.js';
 import { MeModule } from './me/me.module.js';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module.js';
       useFactory: (env: Env) => ({ throttlers: throttlers(env) }),
     }),
     AuthModule,
+    EmailModule,
     AccessModule,
     AuditModule,
     HealthModule,

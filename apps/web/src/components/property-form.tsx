@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button } from './ui/button';
 import { ErrorAlert } from './ui/alert';
 import { Field } from './ui/field';
-import { Input, Textarea } from './ui/input';
+import { Input } from './ui/input';
 import { fieldErrors } from '../lib/errors';
 import { centsToInput, parseDollarsToCents } from '../lib/money';
 import type { PropertyFormValues } from '../lib/property-values';
@@ -28,10 +28,10 @@ export function PropertyForm({
     addressLine2: initial.addressLine2 ?? '',
     provincialRegistrationNumber: initial.provincialRegistrationNumber ?? '',
     businessLicenceNumber: initial.businessLicenceNumber ?? '',
-    accessInstructions: initial.accessInstructions ?? '',
     pay: centsToInput(initial.defaultCleanerPayCents),
+    cleaningFee: centsToInput(initial.standardCleaningFeeCents),
   });
-  const [payError, setPayError] = useState<string>();
+  const [moneyErrors, setMoneyErrors] = useState<{ pay?: string; cleaningFee?: string }>({});
   const errors = fieldErrors(error);
   const set = (key: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [key]: e.target.value });
   const orNull = (s: string) => (s.trim() ? s.trim() : null);
@@ -39,8 +39,10 @@ export function PropertyForm({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const cents = parseDollarsToCents(v.pay);
-    if (cents === null) return setPayError('Enter an amount like 90 or 90.50');
-    setPayError(undefined);
+    const feeCents = parseDollarsToCents(v.cleaningFee);
+    const bad = 'Enter an amount like 90 or 90.50';
+    setMoneyErrors({ pay: cents === null ? bad : undefined, cleaningFee: feeCents === null ? bad : undefined });
+    if (cents === null || feeCents === null) return;
     onSubmit({
       name: v.name,
       addressLine1: v.addressLine1,
@@ -51,8 +53,8 @@ export function PropertyForm({
       checkOutTime: v.checkOutTime,
       provincialRegistrationNumber: orNull(v.provincialRegistrationNumber),
       businessLicenceNumber: orNull(v.businessLicenceNumber),
-      accessInstructions: orNull(v.accessInstructions),
       defaultCleanerPayCents: cents,
+      standardCleaningFeeCents: feeCents,
     });
   };
 
@@ -87,16 +89,21 @@ export function PropertyForm({
       <Field label="Business licence #" error={errors.businessLicenceNumber}>
         <Input value={v.businessLicenceNumber} onChange={set('businessLicenceNumber')} />
       </Field>
-      <Field label="Default cleaner pay per clean ($)" error={payError ?? errors.defaultCleanerPayCents} required>
-        <Input value={v.pay} onChange={set('pay')} inputMode="decimal" className="figure" />
+      <Field
+        label="Standard cleaning fee ($)"
+        error={moneyErrors.cleaningFee ?? errors.standardCleaningFeeCents}
+        hint="What guests are normally charged. Owners pay this after an owner stay."
+        required
+      >
+        <Input value={v.cleaningFee} onChange={set('cleaningFee')} inputMode="decimal" className="figure" />
       </Field>
       <Field
-        label="Arrival notes"
-        error={errors.accessInstructions}
-        hint="Parking and building entry. Never lockbox or door codes."
-        className="sm:col-span-2"
+        label="Cleaner pay per clean ($)"
+        error={moneyErrors.pay ?? errors.defaultCleanerPayCents}
+        hint="Default amount owed to the cleaner for each clean."
+        required
       >
-        <Textarea value={v.accessInstructions} onChange={set('accessInstructions')} />
+        <Input value={v.pay} onChange={set('pay')} inputMode="decimal" className="figure" />
       </Field>
       <div className="flex flex-col gap-3 sm:col-span-2">
         <ErrorAlert error={Object.keys(errors).length ? null : error} />

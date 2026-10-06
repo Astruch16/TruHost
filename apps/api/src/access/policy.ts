@@ -12,8 +12,8 @@ import type { MembershipRole } from '../generated/prisma/enums.js';
 export const POLICY = {
   'property:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
   'property:write': { admin: true, roles: [] },
-  'property:readAccessInstructions': { admin: true, roles: ['CLEANER'] },
-  'property:readCleanerPay': { admin: true, roles: [] },
+  /** Default cleaner, cleaner pay and standard cleaning fee. */
+  'property:readAdminFields': { admin: true, roles: [] },
   'membership:manage': { admin: true, roles: [] },
   'room:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
   'room:write': { admin: true, roles: [] },

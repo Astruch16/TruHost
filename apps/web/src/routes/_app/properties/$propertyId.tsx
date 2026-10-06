@@ -54,11 +54,6 @@ function PropertyView() {
             </p>
           </div>
         </Card>
-        {p.accessInstructions !== undefined && (
-          <Card title="Arrival notes">
-            <p className="text-sm whitespace-pre-wrap text-ink">{p.accessInstructions || 'No arrival notes yet.'}</p>
-          </Card>
-        )}
         {isOwner && (
           <Card title="Plan">
             {plan.error ? (

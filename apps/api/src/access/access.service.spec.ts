@@ -24,8 +24,8 @@ describe('AccessService', () => {
   it('scopes members to their own properties and roles', () => {
     expect(access.can(owner, 'property:read', P1)).toBe(true);
     expect(access.can(owner, 'property:read', P2)).toBe(false);
-    expect(access.can(owner, 'property:readAccessInstructions', P1)).toBe(false);
-    expect(access.can(cleaner, 'property:readAccessInstructions', P1)).toBe(true);
+    expect(access.can(owner, 'property:readAdminFields', P1)).toBe(false);
+    expect(access.can(cleaner, 'property:readAdminFields', P1)).toBe(false);
     expect(access.can(cleaner, 'propertyPlan:read', P1)).toBe(false);
     expect(access.can(owner, 'propertyPlan:read', P1)).toBe(true);
   });
@@ -46,7 +46,7 @@ describe('AccessService', () => {
 
   it('gives an admin who also owns a property nothing beyond admin access', () => {
     expect(access.propertyIds(adminOwner, 'property:read')).toBe('all');
-    expect(access.can(adminOwner, 'property:readAccessInstructions', P2)).toBe(true);
+    expect(access.can(adminOwner, 'property:readAdminFields', P2)).toBe(true);
   });
 
   it('builds list scopes', () => {

@@ -8,8 +8,8 @@ export interface PropertyFormValues {
   checkOutTime: string;
   provincialRegistrationNumber: string | null;
   businessLicenceNumber: string | null;
-  accessInstructions: string | null;
   defaultCleanerPayCents: number;
+  standardCleaningFeeCents: number;
 }
 
 export const emptyProperty: PropertyFormValues = {
@@ -22,6 +22,6 @@ export const emptyProperty: PropertyFormValues = {
   checkOutTime: '11:00',
   provincialRegistrationNumber: null,
   businessLicenceNumber: null,
-  accessInstructions: null,
   defaultCleanerPayCents: 0,
+  standardCleaningFeeCents: 0,
 };

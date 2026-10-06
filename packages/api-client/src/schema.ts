@@ -891,8 +891,10 @@ export interface operations {
               businessLicenceNumber: string | null;
               /** Format: date-time */
               archivedAt: string | null;
-              accessInstructions?: string | null;
+              /** Format: uuid */
+              defaultCleanerId?: string | null;
               defaultCleanerPayCents?: number;
+              standardCleaningFeeCents?: number;
             }[];
             /** Format: uuid */
             nextCursor: string | null;
@@ -929,10 +931,10 @@ export interface operations {
           provincialRegistrationNumber?: string | null;
           /** @default null */
           businessLicenceNumber?: string | null;
-          /** @default null */
-          accessInstructions?: string | null;
           /** @default 0 */
           defaultCleanerPayCents?: number;
+          /** @default 0 */
+          standardCleaningFeeCents?: number;
         };
       };
     };
@@ -959,8 +961,10 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
-            accessInstructions?: string | null;
+            /** Format: uuid */
+            defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
+            standardCleaningFeeCents?: number;
           };
         };
       };
@@ -999,8 +1003,10 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
-            accessInstructions?: string | null;
+            /** Format: uuid */
+            defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
+            standardCleaningFeeCents?: number;
           };
         };
       };
@@ -1029,8 +1035,10 @@ export interface operations {
           checkOutTime?: string;
           provincialRegistrationNumber?: string | null;
           businessLicenceNumber?: string | null;
-          accessInstructions?: string | null;
           defaultCleanerPayCents?: number;
+          standardCleaningFeeCents?: number;
+          /** Format: uuid */
+          defaultCleanerId?: string | null;
         };
       };
     };
@@ -1057,8 +1065,10 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
-            accessInstructions?: string | null;
+            /** Format: uuid */
+            defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
+            standardCleaningFeeCents?: number;
           };
         };
       };
@@ -1097,8 +1107,10 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
-            accessInstructions?: string | null;
+            /** Format: uuid */
+            defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
+            standardCleaningFeeCents?: number;
           };
         };
       };

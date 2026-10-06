@@ -27,7 +27,6 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
         addressLine1: `1 ${name} St`,
         city: 'Vancouver',
         postalCode: 'V6K 1A1',
-        accessInstructions: `Lockbox for ${name}: 1234`,
         defaultCleanerPayCents: 9000,
         rooms: {
           create: [

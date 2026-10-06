@@ -1067,7 +1067,8 @@ sizeBytes, sha256}` and gets back a 10-minute presigned PUT URL that signs
   | `EMAIL_FROM`     | api   | `TruHost <no-reply@truhost.example>`                                |
   | `VITE_API_URL`   | web   | `https://api.truhost.example`                                       |
 
-  `INVITE_REDIRECT_URL` (Phase 1) is replaced by `${WEB_URL}/sign-up`.
+  `INVITE_REDIRECT_URL` (Phase 1) has been replaced by `${WEB_URL}/sign-up`. Without `RESEND_API_KEY` outside
+  production, emails (including the sign-up link) are written to the API log instead.
 
 - **Hosting**: API on Railway (US West). Neon Postgres in the same region
   (AWS us-west-2). Web on Cloudflare Pages (static, SPA fallback). R2
@@ -1450,7 +1451,7 @@ property.
 
 ### Phase 2a: Bookings, expenses, receipts, owner dashboard + first deploy
 
-First, Phase 1 follow-ups from the 2026-10-06 answers:
+First, Phase 1 follow-ups from the 2026-10-06 answers ✅ (PR #2):
 
 - Migration to drop `Property.accessInstructions`, and its removal from the
   API, policy (`property:readAccessInstructions`), web forms, fixtures and

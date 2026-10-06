@@ -13,6 +13,7 @@ describe('invites', () => {
   beforeEach(async () => {
     await resetDb(t.prisma);
     t.identity.reset();
+    t.email.reset();
     w = await seedWorld(t.prisma);
   });
 
@@ -27,7 +28,21 @@ describe('invites', () => {
       })
       .expect(201);
     expect(res.body).toMatchObject({ status: 'PENDING', emailSent: true, user: { email: 'new.cleaner@example.test' } });
-    expect(t.identity.invitations).toEqual([{ id: 'inv_1', email: 'new.cleaner@example.test' }]);
+    // Clerk creates the invitation without emailing it; we send our own email with its link.
+    expect(t.identity.invitations).toEqual([
+      {
+        id: 'inv_1',
+        email: 'new.cleaner@example.test',
+        redirectUrl: 'https://app.truhost.example/sign-up',
+        url: 'https://app.truhost.example/sign-up?__clerk_ticket=inv_1',
+      },
+    ]);
+    expect(t.email.sent).toHaveLength(1);
+    expect(t.email.sent[0]).toMatchObject({ to: 'new.cleaner@example.test', subject: 'You’re invited to TruHost' });
+    expect(t.email.sent[0]!.text).toContain('https://app.truhost.example/sign-up?__clerk_ticket=inv_1');
+    const stored = await t.prisma.invite.findUniqueOrThrow({ where: { id: res.body.id } });
+    expect(stored).toMatchObject({ clerkInvitationId: 'inv_1', emailMessageId: 'email_1' });
+    expect(stored.lastSentAt).toBeInstanceOf(Date);
 
     t.identity.users.set('clerk_nc', 'new.cleaner@example.test');
     const me = await t.as('clerk_nc').get('/v1/me').expect(200);
@@ -71,6 +86,18 @@ describe('invites', () => {
     await t.as('admin').post(`/v1/invites/${w.pendingInviteId}/resend`).expect(200);
     expect(t.identity.revokedInvitations).toEqual(['inv_seed']);
     expect(t.identity.invitations).toHaveLength(1);
+    expect(t.email.sent.map((m) => m.to)).toEqual(['invited@example.test']);
+  });
+
+  it('saves nothing and revokes the provider invitation when the email fails', async () => {
+    t.email.fail = true;
+    const res = await t
+      .as('admin')
+      .post('/v1/invites', { email: 'unlucky@example.test', firstName: 'Un', lastName: 'Lucky' })
+      .expect(502);
+    expect(res.body.code).toBe('EMAIL_FAILED');
+    expect(await t.prisma.user.count({ where: { email: 'unlucky@example.test' } })).toBe(0);
+    expect(t.identity.revokedInvitations).toEqual(['inv_1']);
   });
 });
 

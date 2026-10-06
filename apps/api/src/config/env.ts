@@ -26,8 +26,12 @@ export const envSchema = z
     CLERK_SECRET_KEY: z.string().optional(),
     /** PEM public key for networkless token verification (Clerk dashboard → API keys). Optional. */
     CLERK_JWT_KEY: z.string().optional(),
-    /** Where Clerk invitation emails send people to sign up. */
-    INVITE_REDIRECT_URL: z.url().optional(),
+    /** Public URL of the web app (invite links point at `${WEB_URL}/sign-up`). Placeholder until domains are chosen. */
+    WEB_URL: z.url().default('http://localhost:3001'),
+    /** Sender for all emails, e.g. "TruHost <no-reply@truhost.example>". */
+    EMAIL_FROM: z.string().min(3).default('TruHost <no-reply@truhost.example>'),
+    /** Resend API key. When unset outside production, emails are logged instead of sent. */
+    RESEND_API_KEY: z.string().optional(),
     TAX_FIELDS_ENABLED: bool,
     /** Multiplies every rate limit; tests raise it so only the dedicated throttling test trips limits. */
     RATE_LIMIT_MULTIPLIER: z.coerce.number().positive().default(1),
@@ -37,6 +41,9 @@ export const envSchema = z
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'test' && !env.CLERK_SECRET_KEY) {
       ctx.addIssue({ code: 'custom', path: ['CLERK_SECRET_KEY'], message: 'Required' });
+    }
+    if (env.NODE_ENV === 'production' && !env.RESEND_API_KEY) {
+      ctx.addIssue({ code: 'custom', path: ['RESEND_API_KEY'], message: 'Required in production' });
     }
   });
 

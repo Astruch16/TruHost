@@ -48,6 +48,7 @@ model User {
   propertyPlansSet   PropertyPlan[]
   auditLogs          AuditLog[]
   idempotencyKeys    IdempotencyKey[]
+  defaultCleanerFor  Property[]       @relation("PropertyDefaultCleaner")
 }
 
 enum InviteStatus {
@@ -60,8 +61,12 @@ model Invite {
   id                String       @id @default(uuid(7)) @db.Uuid
   userId            String       @db.Uuid
   user              User         @relation("InviteUser", fields: [userId], references: [id], onDelete: Restrict)
-  /// Clerk invitation id, used to revoke/resend. Null when Clerk was not configured (local dev bootstrap).
+  /// Clerk invitation id (created with notify: false; we email its link ourselves). Null when Clerk was not
+  /// configured (local dev bootstrap).
   clerkInvitationId String?      @unique
+  /// Id from the email provider (Resend) for the last invite email; null if none was sent (e.g. local dev).
+  emailMessageId    String?
+  lastSentAt        DateTime?    @db.Timestamptz
   status            InviteStatus @default(PENDING)
   /// Null when created by the bootstrap CLI.
   invitedById       String?      @db.Uuid
@@ -120,8 +125,13 @@ model Property {
   provincialRegistrationNumber String?
   /// Municipal business licence, distinct from the provincial registration.
   businessLicenceNumber        String?
-  /// Lockbox/door codes. Admins and this property's cleaners only.
-  accessInstructions           String?
+  // No lockbox or door codes are stored in the app (docs/spec.md decision 2026-10-06).
+  /// Cleaner assigned to new cleans by default. Must hold an active CLEANER membership here (checked in the
+  /// service); cleared when that membership is revoked or the user is deactivated.
+  defaultCleanerId             String?   @db.Uuid
+  defaultCleaner               User?     @relation("PropertyDefaultCleaner", fields: [defaultCleanerId], references: [id], onDelete: Restrict)
+  /// Cleaning fee normally charged to guests; the owner-borne charge after an OWNER_STAY (Phase 3).
+  standardCleaningFeeCents     Int       @default(0)
   /// Default amount owed to the cleaner per turnover; copied onto each Clean at creation.
   defaultCleanerPayCents       Int       @default(0)
   archivedAt                   DateTime? @db.Timestamptz
