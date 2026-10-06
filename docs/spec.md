@@ -1,6 +1,6 @@
 # TruHost: Technical Spec
 
-Status: **Phase 1 built** (revised 2026-10-05 with answers to the
+Status: **Phase 1 built; answers to all open questions applied** (2026-10-06) (revised 2026-10-05 with answers to the
 blocking questions). Items marked **[N#]** are open but non-blocking questions
 ([§9](#9-open-questions-non-blocking)). Items marked **[A#]** are assumptions
 ([§8](#8-assumptions)).
@@ -36,8 +36,15 @@ Contents:
 - **Bookings** produce **cleans**: each GUEST or OWNER_STAY checkout creates a
   turnover `Clean`. Cancelling or moving a booking updates or cancels its clean
   in the same transaction.
+- **Each property has a default cleaner.** New cleans are assigned to them,
+  and an admin can override the assignment per clean. A cleaner can start a
+  clean any time on its scheduled day.
 - **Each completed clean is owed to its cleaner.** The amount defaults from
   the property's rate. An admin records payments, which flips cleans to paid.
+  A payment can be voided with a reason, but never deleted.
+- **Owner stays are cleaned at the owner's expense.** When the turnover clean
+  after an OWNER_STAY completes, the API adds an owner-borne CLEANING expense
+  at the property's standard cleaning fee.
 - **Owners are paid monthly** through an `OwnerStatement` per property per
   month: DRAFT → FINALIZED → RELEASED. Finalizing locks that month's bookings
   and expenses. Later corrections are adjustment lines on the next
@@ -56,13 +63,19 @@ Airbnb ──payout──▶ TruHost
                    │
                    └─ owner gross = payout − cleaning fee
                           − TruPlan fee (22% of the month's owner gross) ─▶ TruHost revenue
-                          − owner-borne expenses (each backed by a receipt)
+                          − owner-borne expenses (receipted purchases, e.g. supply restocks)
+                          − owner-stay cleaning fees ─▶ TruHost revenue ─▶ pays cleaner
                           ± adjustments (corrections to finalized months)
                           = owner net ─▶ released to owner (statement RELEASED)
 ```
 
 - An admin enters, per booking, the **payout received** and the **guest
   cleaning fee charged**. Airbnb's host fee is never entered or shown.
+- **Owners absorb Airbnb's fee on the cleaning fee.** Airbnb charges its host
+  fee on the cleaning fee too, but owner gross is still payout minus the
+  _full_ cleaning fee.
+- **Supplies**: TruHost restocks and records each purchase as an owner-borne
+  SUPPLIES expense with a receipt.
 - **TruPlan**: 22% of the month's owner gross. Plans stay versioned through
   `PropertyPlan`, so the rate can change later.
 - **Taxes**: TruHost is not GST-registered and takes no direct bookings. Tax
@@ -127,8 +140,12 @@ enum InviteStatus {
 model Invite {
   id                String       @id @default(uuid(7)) @db.Uuid
   userId            String       @db.Uuid
-  /// Clerk invitation id. Used to revoke and resend. Null if Clerk was skipped (dev bootstrap without a key).
+  /// Clerk invitation id (created with notify: false, so Clerk sends no email). Its ticket URL is what we email.
+  /// Used to revoke and resend. Null if Clerk was skipped (dev bootstrap without a key).
   clerkInvitationId String?      @unique
+  /// Resend message id of the last invite email, for delivery troubleshooting. Null if not sent.
+  emailMessageId    String?
+  lastSentAt        DateTime?    @db.Timestamptz
   status            InviteStatus @default(PENDING)
   invitedById       String?      @db.Uuid /// Null for the bootstrap CLI.
   acceptedAt        DateTime?    @db.Timestamptz
@@ -178,8 +195,12 @@ model Property {
   provincialRegistrationNumber String?
   /// Municipal business licence, separate from the provincial number.
   businessLicenceNumber        String?
-  /// Lockbox and door codes. Visible to admins and this property's cleaners only. [N7]
-  accessInstructions           String?
+  // No lockbox or door codes are stored in the app (decision 2026-10-06). See §10 "Later".
+  /// Cleaner assigned to new cleans by default. Must hold an active CLEANER membership here; cleared when that
+  /// membership is revoked. Admins can override per clean.
+  defaultCleanerId             String?   @db.Uuid
+  /// Cleaning fee normally charged to guests. Used as the owner-borne expense after an OWNER_STAY.
+  standardCleaningFeeCents     Int       @default(0)
   /// Default amount owed to the cleaner per turnover. Copied onto each Clean at creation.
   defaultCleanerPayCents       Int       @default(0)
   archivedAt                   DateTime? @db.Timestamptz
@@ -364,7 +385,8 @@ model IcalImport {
 // ───────────────────────── Expenses & receipts ─────────────────────────  (Phase 2)
 
 enum ExpenseCategory {
-  SUPPLIES
+  CLEANING            /// Owner-stay cleans (system-created).
+  SUPPLIES            /// Restocks bought by TruHost.
   REPAIRS_MAINTENANCE
   FURNISHINGS
   UTILITIES
@@ -376,8 +398,13 @@ enum ExpenseCategory {
 }
 
 enum ExpenseBearer {
-  OWNER    /// Deducted on the owner statement. Must have a receipt before the month can be finalized.
+  OWNER    /// Deducted on the owner statement. MANUAL ones must have a receipt before the month can be finalized.
   TRUHOST  /// TruHost's own cost for this property. Not shown to owners.
+}
+
+enum ExpenseSource {
+  MANUAL            /// Entered by an admin. If owner-borne, needs a receipt before its month can be finalized.
+  OWNER_STAY_CLEAN  /// Created by the API when an owner-stay clean completes. The clean is its evidence; no receipt needed.
 }
 
 model Expense {
@@ -385,7 +412,11 @@ model Expense {
   propertyId    String          @db.Uuid
   category      ExpenseCategory
   bearer        ExpenseBearer   @default(OWNER)
-  /// Decides which statement month it lands in.
+  source        ExpenseSource   @default(MANUAL)
+  /// The owner-stay clean that generated this expense. Unique, so one clean produces at most one charge.
+  cleanId       String?         @unique @db.Uuid
+  /// Purchase date: the date on the receipt (for a system-created cleaning charge, the clean's date). Decides which
+  /// statement month it lands in.
   incurredOn    DateTime        @db.Date
   vendor        String?
   description   String
@@ -578,8 +609,8 @@ model Clean {
   windowStart       DateTime?   @db.Timestamptz
   windowEnd         DateTime?   @db.Timestamptz
   status            CleanStatus @default(SCHEDULED)
-  /// Must hold an active CLEANER membership on the property. Required to start. Frozen once COMPLETE, because it
-  /// identifies who is owed the pay.
+  /// Defaults to Property.defaultCleanerId at creation; an admin can override. Must hold an active CLEANER membership
+  /// on the property. Required to start. Frozen once COMPLETE, because it identifies who is owed the pay.
   assignedCleanerId String?     @db.Uuid
   startedAt         DateTime?   @db.Timestamptz
   startedById       String?     @db.Uuid
@@ -592,7 +623,8 @@ model Clean {
   /// Amount owed to the assigned cleaner, copied from Property.defaultCleanerPayCents at creation. Admins can change
   /// it until paid. Only COMPLETE cleans are payable.
   cleanerPayCents   Int         @default(0)
-  /// Set when an admin records a payment covering this clean. Non-null means paid.
+  /// The active (non-voided) payment covering this clean. Non-null means paid. Voiding the payment clears it, and
+  /// CleanerPaymentLine keeps the history.
   cleanerPaymentId  String?     @db.Uuid
 
   version           Int         @default(0)
@@ -605,17 +637,33 @@ model Clean {
   @@index([assignedCleanerId, cleanerPaymentId])
 }
 
-/// One payment to one cleaner (e.g. an e-Transfer) that covers one or more completed cleans. The total is computed
-/// from the cleans.
+/// One payment to one cleaner (e.g. an e-Transfer) that covers one or more completed cleans. The total is the sum of
+/// its lines. Never edited or deleted. A mistake is voided (with a required reason) and re-recorded.
 model CleanerPayment {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  cleanerId   String   @db.Uuid
-  paidOn      DateTime @db.Date
-  reference   String?  /// e-Transfer reference.
+  id          String    @id @default(uuid(7)) @db.Uuid
+  cleanerId   String    @db.Uuid
+  paidOn      DateTime  @db.Date
+  reference   String?   /// e-Transfer reference.
   note        String?
-  createdById String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz
-  // Immutable once created. A mistake is fixed by voiding (later) rather than editing. [N9]
+  createdById String    @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  /// Voiding returns the covered cleans to unpaid. The only change ever allowed on this row, and only once (trigger).
+  voidedAt    DateTime? @db.Timestamptz
+  voidedById  String?   @db.Uuid
+  /// Required when voided (CHECK).
+  voidReason  String?
+}
+
+/// Which cleans a payment covered and how much was paid for each. A copy taken at payment time, immutable, so a voided
+/// payment still shows exactly what it covered.
+model CleanerPaymentLine {
+  id          String @id @default(uuid(7)) @db.Uuid
+  paymentId   String @db.Uuid
+  cleanId     String @db.Uuid
+  amountCents Int
+
+  @@unique([paymentId, cleanId])
+  @@index([cleanId])
 }
 
 enum PhotoPhase {
@@ -768,16 +816,18 @@ column gets a real `@relation` with `onDelete: Restrict`.)
 
 ### Constraints added as raw SQL
 
-| Table                                                                                           | Constraint                                                                                                                                           | Why                                                                                        |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `Membership`                                                                                    | partial unique `(userId, propertyId, role) WHERE revokedAt IS NULL`                                                                                  | No duplicate active grants, while keeping revoked history.                                 |
-| `PropertyPlan`                                                                                  | `CHECK (EXTRACT(day FROM effectiveFrom) = 1)` (same for `effectiveTo`); `EXCLUDE USING gist` on `daterange(effectiveFrom, effectiveTo)` per property | One rate per statement month, and no overlapping plans.                                    |
-| `Plan`                                                                                          | `CHECK (managementFeeBps BETWEEN 0 AND 10000)`; trigger blocks `managementFeeBps` updates once referenced                                            | Reproducible statements.                                                                   |
-| `Booking`                                                                                       | `CHECK (checkOutDate > checkInDate)`; `CHECK (guestCleaningFeeCents <= payoutCents)`; `CHECK (money >= 0)`; exclusion constraint below               | Rejects impossible stays and typos.                                                        |
-| `Expense`                                                                                       | `CHECK (amountCents >= 0)`                                                                                                                           | Negative corrections are adjustments, not negative expenses.                               |
-| `OwnerStatement`                                                                                | `CHECK (EXTRACT(day FROM periodMonth) = 1)`                                                                                                          | Month key.                                                                                 |
-| `CleanPhoto`, `DamagePhoto`, `AuditLog`, `SupplyStatus`, `OwnerStatementLine`, `CleanerPayment` | `BEFORE UPDATE OR DELETE` trigger raising an exception                                                                                               | Evidence, audit and issued documents stay immutable even against buggy code or manual SQL. |
-| `StoredFile`                                                                                    | trigger: `sha256`, `sizeBytes`, `r2Key` and `uploadedById` immutable; `status` only goes `PENDING → VERIFIED`                                        | Evidence integrity.                                                                        |
+| Table                                                                                               | Constraint                                                                                                                                                       | Why                                                                                        |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `Membership`                                                                                        | partial unique `(userId, propertyId, role) WHERE revokedAt IS NULL`                                                                                              | No duplicate active grants, while keeping revoked history.                                 |
+| `PropertyPlan`                                                                                      | `CHECK (EXTRACT(day FROM effectiveFrom) = 1)` (same for `effectiveTo`); `EXCLUDE USING gist` on `daterange(effectiveFrom, effectiveTo)` per property             | One rate per statement month, and no overlapping plans.                                    |
+| `Plan`                                                                                              | `CHECK (managementFeeBps BETWEEN 0 AND 10000)`; trigger blocks `managementFeeBps` updates once referenced                                                        | Reproducible statements.                                                                   |
+| `Booking`                                                                                           | `CHECK (checkOutDate > checkInDate)`; `CHECK (guestCleaningFeeCents <= payoutCents)`; `CHECK (money >= 0)`; exclusion constraint below                           | Rejects impossible stays and typos.                                                        |
+| `Expense`                                                                                           | `CHECK (amountCents >= 0)`                                                                                                                                       | Negative corrections are adjustments, not negative expenses.                               |
+| `OwnerStatement`                                                                                    | `CHECK (EXTRACT(day FROM periodMonth) = 1)`                                                                                                                      | Month key.                                                                                 |
+| `CleanPhoto`, `DamagePhoto`, `AuditLog`, `SupplyStatus`, `OwnerStatementLine`, `CleanerPaymentLine` | `BEFORE UPDATE OR DELETE` trigger raising an exception                                                                                                           | Evidence, audit and issued documents stay immutable even against buggy code or manual SQL. |
+| `StoredFile`                                                                                        | trigger: `sha256`, `sizeBytes`, `r2Key` and `uploadedById` immutable; `status` only goes `PENDING → VERIFIED`                                                    | Evidence integrity.                                                                        |
+| `CleanerPayment`                                                                                    | trigger: only `voidedAt`, `voidedById` and `voidReason` may change, only from null, and never DELETE; `CHECK (voidedAt IS NULL OR length(trim(voidReason)) > 0)` | Payments are voided, never edited or removed.                                              |
+| `Expense`                                                                                           | `CHECK ((source = 'OWNER_STAY_CLEAN') = (cleanId IS NOT NULL))`                                                                                                  | System cleaning charges always point at their clean, and nothing else does.                |
 
 ### Booking overlap rules
 
@@ -837,7 +887,13 @@ All in `apps/api/src/reporting/` as pure functions with table-driven tests
 
 **Per booking:**
 `ownerGross = payoutCents − guestCleaningFeeCents` (GUEST bookings only. A
-null in either field makes the booking _incomplete_).
+null in either field makes the booking _incomplete_). Owners absorb Airbnb's
+fee on the cleaning fee: the full cleaning fee is subtracted.
+
+**Cancelled bookings that still pay out** count as revenue: all of their
+`ownerGross` goes to the **check-in month**, with **zero nights booked**.
+They are not split per night and don't affect avg. nightly earnings'
+denominator.
 
 **Allocation to months (Q7: split per night):** a booking's `ownerGross` is
 split across its nights. Each night gets `floor(ownerGross / nights)`, and
@@ -847,16 +903,16 @@ cleaning fee (TruHost revenue) is attributed to the checkout date.
 
 For a property and month `M` (property-local):
 
-| Metric             | Definition                                                                                                                     |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Nights booked**  | Nights `d ∈ M` covered by a CONFIRMED GUEST booking. Owner stays and blocks are reported separately.                           |
-| **Gross revenue**  | Σ allocated `ownerGross` for nights in `M`.                                                                                    |
-| **TruPlan fee**    | `roundHalfUp(gross × managementFeeBps / 10000)`, **rounded once on the month total** with the plan in force on the 1st of `M`. |
-| **Owner expenses** | Σ `amountCents` of non-voided `bearer = OWNER` expenses with `incurredOn ∈ M`.                                                 |
-| **Adjustments**    | Σ unvoided adjustments landing on this statement. REVENUE adjustments add to the fee base.                                     |
-| **Net revenue**    | Gross + REVENUE adj − fee(gross + REVENUE adj) − expenses + EXPENSE adj + OTHER adj.                                           |
-| **ADR**            | Gross ÷ nights booked, to the nearest cent (net of channel fees and cleaning fee, consistent with gross) [N2].                 |
-| **Occupancy**      | Nights booked ÷ (days in `M` − owner-stay nights − block nights).                                                              |
+| Metric                    | Definition                                                                                                                                                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nights booked**         | Nights `d ∈ M` covered by a CONFIRMED GUEST booking. Owner stays and blocks are reported separately.                                                                                                                 |
+| **Gross revenue**         | Σ allocated `ownerGross` for nights in `M`.                                                                                                                                                                          |
+| **TruPlan fee**           | `roundHalfUp(gross × managementFeeBps / 10000)`, **rounded once on the month total** with the plan in force on the 1st of `M`.                                                                                       |
+| **Owner expenses**        | Σ `amountCents` of non-voided `bearer = OWNER` expenses with `incurredOn` (purchase date) `∈ M`, including owner-stay cleaning charges.                                                                              |
+| **Adjustments**           | Σ unvoided adjustments landing on this statement. REVENUE adjustments add to the fee base.                                                                                                                           |
+| **Net revenue**           | Gross + REVENUE adj − fee(gross + REVENUE adj) − expenses + EXPENSE adj + OTHER adj.                                                                                                                                 |
+| **Avg. nightly earnings** | Gross from CONFIRMED stays in `M` ÷ nights booked, to the nearest cent. Labelled "Avg. nightly earnings", never "ADR": it is net of Airbnb's fee and the cleaning fee, so it is lower than the listed nightly price. |
+| **Occupancy**             | Nights booked ÷ (days in `M` − owner-stay nights − block nights).                                                                                                                                                    |
 
 Reports for arbitrary ranges use the same per-night allocation. The fee for a
 range is the sum of each month's fee, so ranges always agree with
@@ -866,8 +922,8 @@ statements.
 
 - **DRAFT**: created on demand (or by a monthly job) for `periodMonth`. Every
   read recomputes lines live. Flags problems that block finalizing:
-  incomplete bookings (null money), owner-borne expenses with no receipt,
-  and an earlier month for the property that is not finalized yet.
+  incomplete bookings (null money), MANUAL owner-borne expenses with no
+  receipt, and an earlier month for the property that is not finalized yet.
 - **Finalize** (admin) runs in one serializable transaction: it locks the
   statement row, re-checks the blockers (422 with a list), copies the lines
   into `OwnerStatementLine`, writes the totals and `managementFeeBps`, stamps
@@ -885,18 +941,25 @@ statements.
 - **Owners** see FINALIZED and RELEASED statements, plus a live
   "current month (estimate)" built from the same functions.
 
-**TruHost revenue report (admin):** cleaning fees (by checkout date) + TruPlan
-fees − cleaner pay (completed cleans by completion date) − TRUHOST-borne
-expenses.
+**Owner-stay cleaning charge:** when a turnover clean for an OWNER_STAY
+booking reaches COMPLETE, the same transaction creates an Expense: `source =
+OWNER_STAY_CLEAN`, `bearer = OWNER`, `category = CLEANING`, `cleanId` set,
+`incurredOn` = the clean's scheduled date, and `amountCents` = the property's
+`standardCleaningFeeCents` at that moment. If that month is already finalized,
+the charge becomes an EXPENSE adjustment on the next statement instead.
+
+**TruHost revenue report (admin):** guest cleaning fees (by checkout date) +
+owner-stay cleaning charges + TruPlan fees − cleaner pay (completed cleans by
+completion date, excluding voided payments) − TRUHOST-borne expenses.
 
 ---
 
 ## 5. Cross-cutting API design
 
-- **Base path** `/v1`. JSON. OpenAPI 3.1 generated from the zod schemas in
-  `@truhost/shared` (`nestjs-zod`), served at `/v1/docs` outside production.
-  The web client (and later mobile) uses `openapi-fetch` with types from
-  `openapi-typescript`.
+- **Base path** `/v1`. JSON. OpenAPI generated from the zod schemas in
+  `@truhost/shared` (via `z.toJSONSchema` and `@nestjs/swagger`), served at
+  `/v1/docs` outside production. Web (and later mobile) use
+  `packages/api-client` (`openapi-fetch` + `openapi-typescript`).
 - **Errors**: RFC 9457 `application/problem+json` with a stable `code`
   (`CLEAN_MISSING_PHOTOS`, `PERIOD_LOCKED`, `BOOKING_OVERLAP`, ...).
 - **Pagination**: cursor-based (`?cursor=&limit=`, max 100).
@@ -916,6 +979,13 @@ expenses.
     Clerk webhook (`user.deleted` → deactivate) can come later.
   - Clerk runs in Restricted sign-up mode, so only invited emails can create
     accounts.
+- **Invite emails are sent by us through Resend, not by Clerk.** `POST
+/invites` creates the Clerk invitation with `notify: false` (Clerk sends
+  nothing but returns a sign-up ticket URL). It then sends our own email
+  through Resend containing that URL, and stores the Resend message id. Resend
+  replaces the provider invitation and emails the new URL. Email lives behind
+  an `EmailSender` interface (fake in tests) so templates and provider stay in
+  one place.
 - **Authorization**: `AccessService` (`src/access/`) owns one policy table,
   `(role, resource, action) → scope`. Services call
   `access.assert(actor, action, { propertyId })` for one target, and
@@ -955,6 +1025,19 @@ sizeBytes, sha256}` and gets back a 10-minute presigned PUT URL that signs
   users, invites) and damage status is recorded.
 - **Settings**: env-driven (`TAX_FIELDS_ENABLED`), exposed read-only at
   `GET /config` so the UI can hide fields.
+- **URLs and email are environment variables** (domains aren't chosen yet).
+  Placeholders until then:
+
+  | Variable         | Where | Placeholder                                                         |
+  | ---------------- | ----- | ------------------------------------------------------------------- |
+  | `WEB_URL`        | api   | `https://app.truhost.example` (used to build invite redirect links) |
+  | `CORS_ORIGINS`   | api   | `https://app.truhost.example`                                       |
+  | `RESEND_API_KEY` | api   | empty (emails are logged, not sent, when unset outside production)  |
+  | `EMAIL_FROM`     | api   | `TruHost <no-reply@truhost.example>`                                |
+  | `VITE_API_URL`   | web   | `https://api.truhost.example`                                       |
+
+  `INVITE_REDIRECT_URL` (Phase 1) is replaced by `${WEB_URL}/sign-up`.
+
 - **Hosting**: API on Railway (US West). Neon Postgres in the same region
   (AWS us-west-2). Web on Cloudflare Pages (static, SPA fallback). R2
   bucket for files. US data storage is disclosed in the privacy policy.
@@ -975,42 +1058,42 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 
 ### Me
 
-| Method | Path           | Roles | Notes                                                                              |
-| ------ | -------------- | ----- | ---------------------------------------------------------------------------------- |
-| GET    | `/me`          | A O C | Profile, staffRole, active memberships with property names. Drives navigation. [1] |
-| PATCH  | `/me`          | A O C | Name and phone. [1]                                                                |
-| GET    | `/me/earnings` | C     | Completed cleans with pay and paid/unpaid status, plus totals. [3]                 |
+| Method | Path           | Roles | Notes                                                                                               |
+| ------ | -------------- | ----- | --------------------------------------------------------------------------------------------------- |
+| GET    | `/me`          | A O C | Profile, staffRole, active memberships with property names. Drives navigation. [1]                  |
+| PATCH  | `/me`          | A O C | Name and phone. [1]                                                                                 |
+| GET    | `/me/earnings` | C     | Completed cleans with pay and paid/unpaid status (voided payments show as unpaid), plus totals. [3] |
 
 ### Users & invites
 
-| Method | Path                    | Roles | Notes                                                                                                                                 |
-| ------ | ----------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/users`                | A     | [1]                                                                                                                                   |
-| GET    | `/users/:id`            | A     | [1]                                                                                                                                   |
-| PATCH  | `/users/:id`            | A     | Name, phone, staffRole. Audited. [1]                                                                                                  |
-| POST   | `/users/:id/deactivate` | A     | Not self. Audited. Revokes Clerk sessions. [1]                                                                                        |
-| POST   | `/invites`              | A     | `{ email, firstName, lastName, staffRole?, memberships[] }`. Creates the INVITED User, memberships and Clerk invitation. Audited. [1] |
-| GET    | `/invites`              | A     | [1]                                                                                                                                   |
-| POST   | `/invites/:id/resend`   | A     | [1]                                                                                                                                   |
-| POST   | `/invites/:id/revoke`   | A     | Audited. [1]                                                                                                                          |
+| Method | Path                    | Roles | Notes                                                                                                                                                                                                    |
+| ------ | ----------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/users`                | A     | [1]                                                                                                                                                                                                      |
+| GET    | `/users/:id`            | A     | [1]                                                                                                                                                                                                      |
+| PATCH  | `/users/:id`            | A     | Name, phone, staffRole. Audited. [1]                                                                                                                                                                     |
+| POST   | `/users/:id/deactivate` | A     | Not self. Audited. Revokes Clerk sessions. [1]                                                                                                                                                           |
+| POST   | `/invites`              | A     | `{ email, firstName, lastName, staffRole?, memberships[] }`. Creates the INVITED User, memberships and a Clerk invitation (`notify: false`), then emails its link via Resend. Audited. [1, Resend in 2a] |
+| GET    | `/invites`              | A     | [1]                                                                                                                                                                                                      |
+| POST   | `/invites/:id/resend`   | A     | Replaces the Clerk invitation and re-sends our email. [1]                                                                                                                                                |
+| POST   | `/invites/:id/revoke`   | A     | Audited. [1]                                                                                                                                                                                             |
 
 ### Properties, memberships, rooms
 
-| Method | Path                          | Roles | Notes                                                                           |
-| ------ | ----------------------------- | ----- | ------------------------------------------------------------------------------- |
-| GET    | `/properties`                 | A O C | Scoped. Field set depends on role. [1]                                          |
-| POST   | `/properties`                 | A     | Audited. [1]                                                                    |
-| GET    | `/properties/:id`             | A O C | `accessInstructions` for A and C only. `defaultCleanerPayCents` for A only. [1] |
-| PATCH  | `/properties/:id`             | A     | Audited. [1]                                                                    |
-| POST   | `/properties/:id/archive`     | A     | Audited. [1]                                                                    |
-| GET    | `/properties/:id/memberships` | A     | [1]                                                                             |
-| POST   | `/properties/:id/memberships` | A     | `{ userId, role }`. Audited. [1]                                                |
-| POST   | `/memberships/:id/revoke`     | A     | Audited. [1]                                                                    |
-| GET    | `/properties/:id/rooms`       | A O C | [1]                                                                             |
-| POST   | `/properties/:id/rooms`       | A     | [1]                                                                             |
-| PATCH  | `/rooms/:id`                  | A     | [1]                                                                             |
-| POST   | `/rooms/:id/archive`          | A     | [1]                                                                             |
-| PUT    | `/properties/:id/rooms/order` | A     | [1]                                                                             |
+| Method | Path                          | Roles | Notes                                                                                                                 |
+| ------ | ----------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/properties`                 | A O C | Scoped. Field set depends on role. [1]                                                                                |
+| POST   | `/properties`                 | A     | Audited. [1]                                                                                                          |
+| GET    | `/properties/:id`             | A O C | `defaultCleanerId`, `defaultCleanerPayCents` and `standardCleaningFeeCents` for A only. [1]                           |
+| PATCH  | `/properties/:id`             | A     | Audited. `defaultCleanerId` must hold an active CLEANER membership on the property (422 otherwise). [1, fields in 2a] |
+| POST   | `/properties/:id/archive`     | A     | Audited. [1]                                                                                                          |
+| GET    | `/properties/:id/memberships` | A     | [1]                                                                                                                   |
+| POST   | `/properties/:id/memberships` | A     | `{ userId, role }`. Audited. [1]                                                                                      |
+| POST   | `/memberships/:id/revoke`     | A     | Audited. [1]                                                                                                          |
+| GET    | `/properties/:id/rooms`       | A O C | [1]                                                                                                                   |
+| POST   | `/properties/:id/rooms`       | A     | [1]                                                                                                                   |
+| PATCH  | `/rooms/:id`                  | A     | [1]                                                                                                                   |
+| POST   | `/rooms/:id/archive`          | A     | [1]                                                                                                                   |
+| PUT    | `/properties/:id/rooms/order` | A     | [1]                                                                                                                   |
 
 ### Plans
 
@@ -1056,37 +1139,38 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 
 ### Statements, adjustments, reports [2b]
 
-| Method | Path                              | Roles | Notes                                                                                |
-| ------ | --------------------------------- | ----- | ------------------------------------------------------------------------------------ |
-| GET    | `/properties/:id/statements`      | A O   | O: FINALIZED and RELEASED only.                                                      |
-| POST   | `/properties/:id/statements`      | A     | `{ periodMonth }`. Creates the DRAFT (idempotent).                                   |
-| GET    | `/statements/:id`                 | A O   | DRAFT: live lines plus blockers. Otherwise the stored copy.                          |
-| POST   | `/statements/:id/finalize`        | A     | 422 with a list of blockers. Audited.                                                |
-| POST   | `/statements/:id/release`         | A     | `{ releasedOn, paymentReference }`. Audited.                                         |
-| GET    | `/properties/:id/adjustments`     | A     |                                                                                      |
-| POST   | `/properties/:id/adjustments`     | A     | Audited.                                                                             |
-| POST   | `/adjustments/:id/void`           | A     | Only before it is applied. Audited.                                                  |
-| GET    | `/properties/:id/summary`         | A O   | `?from&to`. Nights, gross, fee, expenses, net, ADR, occupancy, `incompleteBookings`. |
-| GET    | `/properties/:id/summary/monthly` | A O   | `?year`                                                                              |
-| GET    | `/reports/portfolio`              | A     |                                                                                      |
-| GET    | `/reports/truhost`                | A     | TruHost revenue: cleaning fees, plan fees, cleaner pay.                              |
+| Method | Path                              | Roles | Notes                                                                                                  |
+| ------ | --------------------------------- | ----- | ------------------------------------------------------------------------------------------------------ |
+| GET    | `/properties/:id/statements`      | A O   | O: FINALIZED and RELEASED only.                                                                        |
+| POST   | `/properties/:id/statements`      | A     | `{ periodMonth }`. Creates the DRAFT (idempotent).                                                     |
+| GET    | `/statements/:id`                 | A O   | DRAFT: live lines plus blockers. Otherwise the stored copy.                                            |
+| POST   | `/statements/:id/finalize`        | A     | 422 with a list of blockers. Audited.                                                                  |
+| POST   | `/statements/:id/release`         | A     | `{ releasedOn, paymentReference }`. Audited.                                                           |
+| GET    | `/properties/:id/adjustments`     | A     |                                                                                                        |
+| POST   | `/properties/:id/adjustments`     | A     | Audited.                                                                                               |
+| POST   | `/adjustments/:id/void`           | A     | Only before it is applied. Audited.                                                                    |
+| GET    | `/properties/:id/summary`         | A O   | `?from&to`. Nights, gross, fee, expenses, net, avg. nightly earnings, occupancy, `incompleteBookings`. |
+| GET    | `/properties/:id/summary/monthly` | A O   | `?year`                                                                                                |
+| GET    | `/reports/portfolio`              | A     |                                                                                                        |
+| GET    | `/reports/truhost`                | A     | TruHost revenue: cleaning fees, plan fees, cleaner pay.                                                |
 
 ### Cleans & cleaner pay [3]
 
-| Method | Path                     | Roles           | Notes                                                                                                                       |
-| ------ | ------------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/cleans`                | A O C           | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans.                                      |
-| GET    | `/cleans/:id`            | A O C           | Includes the room checklist.                                                                                                |
-| POST   | `/properties/:id/cleans` | A               | ADHOC.                                                                                                                      |
-| PATCH  | `/cleans/:id`            | A               | Assign, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited.                                        |
-| POST   | `/cleans/:id/start`      | A, C (assignee) | SCHEDULED → IN_PROGRESS.                                                                                                    |
-| POST   | `/cleans/:id/photos`     | A, C (assignee) | IN_PROGRESS only.                                                                                                           |
-| GET    | `/cleans/:id/photos`     | A O C           |                                                                                                                             |
-| POST   | `/cleans/:id/complete`   | A, C (assignee) | 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases.                                                               |
-| POST   | `/cleans/:id/cancel`     | A               | Audited.                                                                                                                    |
-| GET    | `/cleaner-pay`           | A               | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner.                                                               |
-| POST   | `/cleaner-payments`      | A               | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited. |
-| GET    | `/cleaner-payments`      | A               |                                                                                                                             |
+| Method | Path                         | Roles           | Notes                                                                                                                                                |
+| ------ | ---------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/cleans`                    | A O C           | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans.                                                               |
+| GET    | `/cleans/:id`                | A O C           | Includes the room checklist.                                                                                                                         |
+| POST   | `/properties/:id/cleans`     | A               | ADHOC.                                                                                                                                               |
+| PATCH  | `/cleans/:id`                | A               | Override the assigned cleaner, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited.                                          |
+| POST   | `/cleans/:id/start`          | A, C (assignee) | SCHEDULED → IN_PROGRESS. A cleaner may start only on `scheduledDate` in the property's time zone (422 `CLEAN_NOT_TODAY`). Admins may start any time. |
+| POST   | `/cleans/:id/photos`         | A, C (assignee) | IN_PROGRESS only.                                                                                                                                    |
+| GET    | `/cleans/:id/photos`         | A O C           |                                                                                                                                                      |
+| POST   | `/cleans/:id/complete`       | A, C (assignee) | 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases.                                                                                        |
+| POST   | `/cleans/:id/cancel`         | A               | Audited.                                                                                                                                             |
+| GET    | `/cleaner-pay`               | A               | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner.                                                                                        |
+| POST   | `/cleaner-payments`          | A               | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited.                          |
+| GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                   |
+| POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                       |
 
 ### Supplies [3]
 
@@ -1136,51 +1220,51 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 membership in that role · **self** = caller's own records · **assigned** =
 cleans with `assignedCleanerId = caller` · — = denied (404).
 
-| Resource                      | Action                          | Admin | Owner                               | Cleaner                       |
-| ----------------------------- | ------------------------------- | ----- | ----------------------------------- | ----------------------------- |
-| Me                            | read / update                   | self  | self                                | self                          |
-| Cleaner earnings              | read                            | —     | —                                   | self                          |
-| Config                        | read                            | ✓     | ✓                                   | ✓                             |
-| User, Invite                  | any                             | all   | —                                   | —                             |
-| Property                      | list / read                     | all   | own                                 | own (no money or plan fields) |
-| Property                      | create / update / archive       | all   | —                                   | —                             |
-| Property access instructions  | read                            | all   | — [N7]                              | own                           |
-| Membership                    | list / create / revoke          | all   | —                                   | —                             |
-| Room                          | list / read                     | all   | own                                 | own                           |
-| Room                          | write                           | all   | —                                   | —                             |
-| Plan                          | any                             | all   | —                                   | —                             |
-| Property plan                 | read                            | all   | own                                 | —                             |
-| Property plan                 | assign                          | all   | —                                   | —                             |
-| Booking                       | list / read                     | all   | own (no guest PII; ownerGross only) | —                             |
-| Booking                       | create / update / cancel        | all   | —                                   | —                             |
-| Calendar                      | read                            | all   | own                                 | —                             |
-| Expense                       | list / read                     | all   | own, `bearer = OWNER`               | —                             |
-| Expense                       | write / void                    | all   | —                                   | —                             |
-| Receipt                       | list / read file                | all   | own, OWNER-borne                    | —                             |
-| Receipt                       | create / void                   | all   | —                                   | —                             |
-| Upload URL                    | create                          | all   | —                                   | own (photo purposes)          |
-| Statement                     | list / read                     | all   | own, FINALIZED or RELEASED          | —                             |
-| Statement                     | create / finalize / release     | all   | —                                   | —                             |
-| Adjustment                    | any                             | all   | — (seen as statement lines)         | —                             |
-| Property summary              | read                            | all   | own                                 | —                             |
-| Portfolio and TruHost reports | read                            | all   | —                                   | —                             |
-| Clean                         | list / read                     | all   | own (no pay fields)                 | own                           |
-| Clean                         | create / update / cancel        | all   | —                                   | —                             |
-| Clean                         | start / complete / add photo    | all   | —                                   | own + assigned                |
-| Clean pay fields              | read                            | all   | —                                   | assigned (self)               |
-| Cleaner payment               | create / list                   | all   | —                                   | —                             |
-| Clean photo                   | read file                       | all   | own                                 | own                           |
-| Clean photo, damage photo     | update / delete                 | —     | —                                   | —                             |
-| Supply item                   | list / read                     | all   | own                                 | own                           |
-| Supply item                   | write                           | all   | —                                   | —                             |
-| Supply status                 | create                          | all   | —                                   | own                           |
-| Supply status                 | history                         | all   | own                                 | —                             |
-| Damage report                 | list / read                     | all   | own, not DRAFT                      | own submitted + self drafts   |
-| Damage report                 | create                          | all   | —                                   | own                           |
-| Damage report                 | edit draft / submit / add photo | all   | —                                   | self                          |
-| Damage report                 | change status                   | all   | —                                   | —                             |
-| iCal feeds and imports        | any                             | all   | —                                   | —                             |
-| Audit log                     | read                            | all   | —                                   | —                             |
+| Resource                                                                    | Action                          | Admin | Owner                               | Cleaner                       |
+| --------------------------------------------------------------------------- | ------------------------------- | ----- | ----------------------------------- | ----------------------------- |
+| Me                                                                          | read / update                   | self  | self                                | self                          |
+| Cleaner earnings                                                            | read                            | —     | —                                   | self                          |
+| Config                                                                      | read                            | ✓     | ✓                                   | ✓                             |
+| User, Invite                                                                | any                             | all   | —                                   | —                             |
+| Property                                                                    | list / read                     | all   | own                                 | own (no money or plan fields) |
+| Property                                                                    | create / update / archive       | all   | —                                   | —                             |
+| Property admin fields (default cleaner, cleaner pay, standard cleaning fee) | read                            | all   | —                                   | —                             |
+| Membership                                                                  | list / create / revoke          | all   | —                                   | —                             |
+| Room                                                                        | list / read                     | all   | own                                 | own                           |
+| Room                                                                        | write                           | all   | —                                   | —                             |
+| Plan                                                                        | any                             | all   | —                                   | —                             |
+| Property plan                                                               | read                            | all   | own                                 | —                             |
+| Property plan                                                               | assign                          | all   | —                                   | —                             |
+| Booking                                                                     | list / read                     | all   | own (no guest PII; ownerGross only) | —                             |
+| Booking                                                                     | create / update / cancel        | all   | —                                   | —                             |
+| Calendar                                                                    | read                            | all   | own                                 | —                             |
+| Expense                                                                     | list / read                     | all   | own, `bearer = OWNER`               | —                             |
+| Expense                                                                     | write / void                    | all   | —                                   | —                             |
+| Receipt                                                                     | list / read file                | all   | own, OWNER-borne                    | —                             |
+| Receipt                                                                     | create / void                   | all   | —                                   | —                             |
+| Upload URL                                                                  | create                          | all   | —                                   | own (photo purposes)          |
+| Statement                                                                   | list / read                     | all   | own, FINALIZED or RELEASED          | —                             |
+| Statement                                                                   | create / finalize / release     | all   | —                                   | —                             |
+| Adjustment                                                                  | any                             | all   | — (seen as statement lines)         | —                             |
+| Property summary                                                            | read                            | all   | own                                 | —                             |
+| Portfolio and TruHost reports                                               | read                            | all   | —                                   | —                             |
+| Clean                                                                       | list / read                     | all   | own (no pay fields)                 | own                           |
+| Clean                                                                       | create / update / cancel        | all   | —                                   | —                             |
+| Clean                                                                       | start / complete / add photo    | all   | —                                   | own + assigned                |
+| Clean pay fields                                                            | read                            | all   | —                                   | assigned (self)               |
+| Cleaner payment                                                             | create / list / void            | all   | —                                   | —                             |
+| Clean photo                                                                 | read file                       | all   | own                                 | own                           |
+| Clean photo, damage photo                                                   | update / delete                 | —     | —                                   | —                             |
+| Supply item                                                                 | list / read                     | all   | own                                 | own                           |
+| Supply item                                                                 | write                           | all   | —                                   | —                             |
+| Supply status                                                               | create                          | all   | —                                   | own                           |
+| Supply status                                                               | history                         | all   | own                                 | —                             |
+| Damage report                                                               | list / read                     | all   | own, not DRAFT                      | own submitted + self drafts   |
+| Damage report                                                               | create                          | all   | —                                   | own                           |
+| Damage report                                                               | edit draft / submit / add photo | all   | —                                   | self                          |
+| Damage report                                                               | change status                   | all   | —                                   | —                             |
+| iCal feeds and imports                                                      | any                             | all   | —                                   | —                             |
+| Audit log                                                                   | read                            | all   | —                                   | —                             |
 
 **Required negative tests** (built in Phase 1 and extended each phase):
 
@@ -1216,15 +1300,15 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 - **A11** The monthly fee is rounded once, half-up, on the month total, not
   per booking.
 - **A12** Plan changes start on the 1st of a month.
-- **A13** Cancelled bookings count no nights. A cancelled GUEST booking with
-  a payout still contributes ownerGross, all of it attributed to the
-  check-in month [N3].
+- **A13** _(Decided 2026-10-06.)_ A cancelled stay that still pays out
+  counts as revenue in its check-in month, with zero nights booked.
 - **A14** Statements are finalized in month order per property.
 - **A15** The cleaner owed for a clean is the assignee at completion. Admins
   can complete on a cleaner's behalf, but the pay still goes to the
   assignee.
-- **A16** OWNER_STAY cleans use the same cleaner pay. Since there is no guest
-  cleaning fee, TruHost absorbs the cost for now [N1].
+- **A16** _(Decided 2026-10-06.)_ OWNER_STAY cleans pay the cleaner as
+  usual, and the owner is charged the property's standard cleaning fee as an
+  owner-borne expense ([§4](#4-computed-metrics-and-statements)).
 - **A17** The web app is a static SPA: no SSR or SEO, and only signed-in
   users use it.
 
@@ -1232,36 +1316,33 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 
 ## 9. Open questions (non-blocking)
 
-- **N1 Owner stays:** who pays the cleaner for the turnover after an owner
-  stay? Should it become an owner-borne expense automatically?
-- **N2 ADR:** with gross defined as payout − cleaning fee, ADR comes out net
-  of Airbnb's fee and lower than the nightly price owners see on Airbnb.
-  Is that the figure you want to show, or should ADR be labelled
-  "average nightly earnings"?
-- **N3 Cancellation payouts:** is the check-in month right for a cancelled
-  stay that still paid out?
-- **N4 Airbnb fee on the cleaning fee:** Airbnb's host fee is charged on the
-  cleaning fee too. Subtracting the full cleaning fee from the payout
-  means the owner bears Airbnb's fee on TruHost's cleaning revenue (about 3%
-  of the fee). This follows your formula. Just confirm it's intended.
+Still open:
+
 - **N5 Negative months:** when expenses exceed revenue, release is blocked.
   The owner-owes flow (carry forward vs. request payment) is in "Later".
-- **N6 Expense timing:** is an expense's month its purchase date
-  (`incurredOn`) or the date it was reimbursed?
-- **N7 Access instructions:** should owners see lockbox codes for their own
-  property?
-- **N8 Clean timing:** can a cleaner start before the scheduled date or
-  checkout time? Should each property have a default cleaner?
-- **N9 Payment mistakes:** should a mistaken cleaner payment be voidable
-  (audited), or corrected only by a reversing entry?
-- **N10 Bad photos:** is "add another photo" enough, or do admins need a
-  "flag as invalid with reason" action?
-- **N11 Damage cost recovery:** should AirCover payouts against damage be
-  tracked (they may flow into an adjustment)?
-- **N12 Supplies:** does TruHost restock and bill owners (expense), and
-  should LOW/OUT notify someone?
-- **N13 Domains:** what are the web and API domains (needed for CORS and the
-  Clerk production instance), and who sends the invite emails?
+- **N12b Low supplies:** should LOW/OUT readings notify someone, and who?
+  (Notifications are in "Later".)
+- **N14 Owner-stay charge timing:** the charge is created when the clean
+  completes. If an owner stay is cancelled after its clean was done, the
+  charge stands unless an admin voids it. Is that right?
+
+Resolved 2026-10-06 (kept for traceability):
+
+| #   | Question                                    | Decision                                                                                                   |
+| --- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Q1  | Several owners per property?                | Yes, as built.                                                                                             |
+| N1  | Who pays for the clean after an owner stay? | The owner: an owner-borne CLEANING expense at the property's standard cleaning fee.                        |
+| N2  | "ADR" label                                 | Show "Avg. nightly earnings", not ADR.                                                                     |
+| N3  | Cancelled stay that still pays out          | Revenue in its check-in month, zero nights.                                                                |
+| N4  | Airbnb's fee on the cleaning fee            | Owners absorb it; gross = payout − full cleaning fee.                                                      |
+| N6  | Expense month                               | Purchase date (the date on the receipt).                                                                   |
+| N7  | Lockbox codes                               | Not stored in the app. Revisit with proper secret handling ("Later").                                      |
+| N8  | Clean assignment and timing                 | Default cleaner per property, admin override per clean; a cleaner may start any time on the scheduled day. |
+| N9  | Mistaken cleaner payment                    | Voidable with a required reason; never deleted; audited.                                                   |
+| N10 | Bad photos                                  | Later: a separate flag record; photos stay immutable.                                                      |
+| N11 | Damage cost recovery                        | Later: claim status and amount recovered on damage reports.                                                |
+| N12 | Supplies                                    | TruHost restocks and records an owner-borne SUPPLIES expense with a receipt.                               |
+| N13 | Domains and invite email                    | Not chosen: env vars with placeholders. Invite emails sent by us through Resend, not Clerk.                |
 
 ---
 
@@ -1326,9 +1407,23 @@ property.
 
 ### Phase 2a: Bookings, expenses, receipts, owner dashboard + first deploy
 
-Booking (with the overlap constraint and its tests), Expense, Receipt,
-StoredFile and R2. The reporting functions. Owner dashboard (nights,
-gross, fee, expenses, net, ADR, calendar, receipts). Deploy: Railway (API),
+First, Phase 1 follow-ups from the 2026-10-06 answers:
+
+- Migration to drop `Property.accessInstructions`, and its removal from the
+  API, policy (`property:readAccessInstructions`), web forms, fixtures and
+  tests (N7).
+- Add `Property.defaultCleanerId` and `standardCleaningFeeCents`, with
+  validation (the default cleaner must be an active cleaner of the
+  property). Revoking that cleaner's membership clears the default (N8).
+- Invites through Resend: an `EmailSender` interface with a Resend
+  implementation and a fake for tests; Clerk invitations with
+  `notify: false`; `WEB_URL`, `EMAIL_FROM` and `RESEND_API_KEY` env vars with
+  placeholders (N13).
+
+Then: Booking (with the overlap constraint and its tests), Expense
+(including `source`/`cleanId`), Receipt, StoredFile and R2. The reporting
+functions, including cancelled-with-payout handling. Owner dashboard (nights,
+gross, fee, expenses, net, avg. nightly earnings, calendar, receipts). Deploy: Railway (API),
 Neon (prod), Cloudflare Pages (web), R2 bucket.
 **Run:** on the deployed site, enter last month's real bookings for your
 property and see the owner dashboard.
@@ -1342,8 +1437,10 @@ locked booking (409) and add an adjustment that lands on the next month.
 
 ### Phase 3: Cleaning and cleaner pay
 
-Clean (auto from bookings), CleanPhoto, the state machine and its guard,
-supplies, cleaner pay and payments. Mobile-first cleaner screens: schedule,
+Clean (auto from bookings, assigned to the property's default cleaner),
+CleanPhoto, the state machine and its guard (including the scheduled-day
+start rule), supplies, cleaner pay, payments with void, and the owner-stay
+cleaning charge. Mobile-first cleaner screens: schedule,
 room checklist with camera upload, supplies, earnings. Admin schedule
 board, assignment and pay run.
 **Run:** a booking creates a clean, a cleaner completes it on a phone
@@ -1373,8 +1470,16 @@ UI, and a "needs financials" queue.
   month.
 - Expo app (`apps/mobile`) on the same API.
 - PMS integration (`source = PMS`).
-- Notifications.
+- Notifications (including LOW/OUT supplies, N12b).
 - Clerk webhook for `user.deleted`.
+- **Access codes** (lockbox and door) with proper secret handling: encrypted
+  at rest, revealed per request to the assigned cleaner on the clean's day,
+  and every reveal audited (N7).
+- **Photo flags:** an admin can flag a clean or damage photo as invalid
+  with a reason. The flag is a separate record (`PhotoFlag`), so photos stay
+  immutable (N10).
+- **Damage claims:** claim status and `amountRecoveredCents` on damage reports
+  (e.g. AirCover), possibly flowing into a statement adjustment (N11).
 
 ---
 
@@ -1392,3 +1497,18 @@ UI, and a "needs financials" queue.
 | 2026-10-05 | Tests on local Postgres (WSL), Neon branch for dev, Postgres service in CI.                                                                                    |
 | 2026-10-05 | iCal imports go through an `IcalImport` staging table. Conflicts are resolved by an admin and never hit the overlap constraint.                                |
 | 2026-10-05 | Invited users are linked on first authenticated request (no webhook dependency).                                                                               |
+| 2026-10-05 | Prisma 7.10 (stable). Prisma 8 is still a release candidate; revisit when it is GA.                                                                            |
+| 2026-10-05 | No `nestjs-zod` (it doesn't support Nest 12). zod 4's `z.toJSONSchema` feeds `@nestjs/swagger`, with a small `ZodPipe` and `@ZodResponse`.                     |
+| 2026-10-05 | The typed client lives in `packages/api-client` (generated from OpenAPI, committed, drift-checked in CI) so web and mobile share it.                           |
+| 2026-10-05 | Rate limiting uses two throttler guards around auth: `ip-*` tiers before it and `user-*` tiers after it.                                                       |
+| 2026-10-06 | Several owners per property (Q1).                                                                                                                              |
+| 2026-10-06 | Owner stays: owner is charged the property's standard cleaning fee as an owner-borne expense (N1).                                                             |
+| 2026-10-06 | "Avg. nightly earnings" replaces "ADR" in all UI and API naming (N2).                                                                                          |
+| 2026-10-06 | Cancelled stays that still pay out: revenue in the check-in month, zero nights (N3).                                                                           |
+| 2026-10-06 | Owners absorb Airbnb's fee on the cleaning fee (N4).                                                                                                           |
+| 2026-10-06 | Expenses dated by purchase date (N6).                                                                                                                          |
+| 2026-10-06 | No lockbox/door codes in the app until proper secret handling exists; `accessInstructions` is removed (N7).                                                    |
+| 2026-10-06 | Default cleaner per property with per-clean override; cleaners start on the scheduled day (N8).                                                                |
+| 2026-10-06 | Cleaner payments are voidable with a required reason; payment lines are immutable history (N9).                                                                |
+| 2026-10-06 | TruHost restocks supplies as owner-borne receipted expenses (N12).                                                                                             |
+| 2026-10-06 | Invite emails sent by us via Resend (Clerk invitations with `notify: false`); URLs and sender are env vars with placeholders until domains are chosen (N13).   |

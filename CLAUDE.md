@@ -52,9 +52,12 @@ Change the spec in the same PR as the code that departs from it.
    (`apps/api/test/authz/`), and that test fails if a route is missing.
 2. **No entered totals.** Admins enter per-booking payout and cleaning fee,
    and per-expense amounts. Nights, owner gross (payout − cleaning fee),
-   the TruPlan fee (22% of the month's gross), net and ADR are always
-   computed in the `reporting` module. The only stored totals are the copy
-   the server writes into a FINALIZED statement.
+   the TruPlan fee (22% of the month's gross), net and avg. nightly earnings
+   (never labelled "ADR") are always computed in the `reporting` module. The
+   only stored totals are the copy the server writes into a FINALIZED
+   statement.
+   - **No secrets in the app:** lockbox and door codes are not stored until
+     proper secret handling exists (see the spec's "Later" section).
 3. **Bookings have `source`** (`MANUAL | ICAL | PMS`) and `channel` (where the
    guest booked). Data is manual now, iCal next, a PMS API later.
 4. **Money is integer cents** (`Int`, CAD). Never floats, never `Decimal` in JS
