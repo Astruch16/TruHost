@@ -16,8 +16,15 @@ export interface AuthzCase {
   body?: (w: World) => object;
   allow: readonly ActorKey[] | 'everyone';
   public?: boolean;
+  /** Status an admin gets when the request is allowed but can't succeed with the fixture data. */
+  adminGets?: number;
   /** Re-seed before each actor because the request changes state. */
   mutates?: boolean;
+  /**
+   * For routes authorised by something other than sign-in (signed storage links): every caller, signed in or
+   * not, gets exactly this status.
+   */
+  everyoneGets?: number;
 }
 
 const A_READERS = ['admin', 'ownerA', 'cleanerA'] as const;
@@ -252,6 +259,137 @@ export const CASES: AuthzCase[] = [
     allow: ADMIN,
     mutates: true,
   },
+
+  // ── expenses & receipts ──
+  { route: 'GET /v1/expenses', path: () => '/v1/expenses?from=2026-11-01&to=2026-12-01', allow: ADMIN },
+  {
+    route: 'GET /v1/properties/:id/expenses',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/expenses?from=2026-11-01&to=2026-12-01`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/properties/:id/expenses',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/expenses?from=2026-11-01&to=2026-12-01`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    route: 'POST /v1/properties/:id/expenses',
+    path: (w) => `/v1/properties/${w.propertyA.id}/expenses`,
+    body: () => ({ category: 'SUPPLIES', incurredOn: '2026-11-06', description: 'Soap', amountCents: 899 }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'PATCH /v1/expenses/:id',
+    path: (w) => `/v1/expenses/${w.expenses.a}`,
+    body: () => ({ version: 0, vendor: 'Other vendor' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/expenses/:id/void',
+    path: (w) => `/v1/expenses/${w.expenses.a}/void`,
+    body: () => ({ reason: 'Entered twice' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/properties/:id/receipts',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/receipts?from=2026-11-01&to=2026-12-01`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/properties/:id/receipts',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/receipts?from=2026-11-01&to=2026-12-01`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    // Admins reach validation (the file was never uploaded); everyone else is denied before that.
+    route: 'POST /v1/properties/:id/receipts',
+    path: (w) => `/v1/properties/${w.propertyA.id}/receipts`,
+    body: () => ({ fileId: '00000000-0000-7000-8000-000000000000', receiptDate: '2026-11-05' }),
+    allow: [],
+    adminGets: 422,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/receipts/:id/void',
+    path: (w) => `/v1/receipts/${w.receipts.a}/void`,
+    body: () => ({ reason: 'Wrong file' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+
+  // ── files ──
+  {
+    route: 'POST /v1/uploads',
+    path: () => '/v1/uploads',
+    body: (w) => ({
+      purpose: 'RECEIPT',
+      propertyId: w.propertyA.id,
+      contentType: 'application/pdf',
+      sizeBytes: 10,
+      sha256: 'b'.repeat(64),
+    }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/files/:id/url',
+    label: 'owner receipt A',
+    path: (w) => `/v1/files/${w.files.a}/url`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/files/:id/url',
+    label: 'TruHost-borne receipt A',
+    path: (w) => `/v1/files/${w.files.truhostA}/url`,
+    allow: ['admin'],
+  },
+  {
+    route: 'GET /v1/files/:id/url',
+    label: 'owner receipt B',
+    path: (w) => `/v1/files/${w.files.b}/url`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    route: 'PUT /v1/local-storage/*key',
+    label: 'unsigned',
+    path: () => '/v1/local-storage/properties/x/receipt/y',
+    allow: [],
+    everyoneGets: 403,
+  },
+  {
+    route: 'GET /v1/local-storage/*key',
+    label: 'unsigned',
+    path: () => '/v1/local-storage/properties/x/receipt/y',
+    allow: [],
+    everyoneGets: 403,
+  },
+
+  // ── reports ──
+  {
+    route: 'GET /v1/properties/:id/summary',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/summary?month=2026-11`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/properties/:id/summary',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/summary?month=2026-11`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    route: 'GET /v1/properties/:id/summary/monthly',
+    path: (w) => `/v1/properties/${w.propertyA.id}/summary/monthly?year=2026`,
+    allow: ['admin', 'ownerA'],
+  },
+  { route: 'GET /v1/reports/portfolio', path: () => '/v1/reports/portfolio?month=2026-11', allow: ADMIN },
 
   // ── audit ──
   { route: 'GET /v1/audit-logs', path: () => '/v1/audit-logs', allow: ADMIN },

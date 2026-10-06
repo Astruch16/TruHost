@@ -61,6 +61,28 @@ export const queries = {
       queryFn: () =>
         unwrap(api.GET('/v1/properties/{id}/bookings', { params: { path: { id: propertyId }, query: range } })),
     }),
+  expenses: (api: ApiClient, range: { from: string; to: string }, propertyId?: string) =>
+    queryOptions({
+      queryKey: ['expenses', { ...range, propertyId: propertyId ?? null }],
+      queryFn: () =>
+        unwrap(api.GET('/v1/expenses', { params: { query: { ...range, propertyId, includeVoided: 'true' } } })),
+    }),
+  propertyExpenses: (api: ApiClient, propertyId: string, range: { from: string; to: string }) =>
+    queryOptions({
+      queryKey: ['expenses', { ...range, propertyId }, 'property'],
+      queryFn: () =>
+        unwrap(
+          api.GET('/v1/properties/{id}/expenses', {
+            params: { path: { id: propertyId }, query: { ...range, includeVoided: 'false' } },
+          }),
+        ),
+    }),
+  propertySummary: (api: ApiClient, propertyId: string, month: string) =>
+    queryOptions({
+      queryKey: ['summary', propertyId, month],
+      queryFn: () =>
+        unwrap(api.GET('/v1/properties/{id}/summary', { params: { path: { id: propertyId }, query: { month } } })),
+    }),
   plans: (api: ApiClient) => queryOptions({ queryKey: ['plans'], queryFn: () => unwrap(api.GET('/v1/plans')) }),
   users: (api: ApiClient) =>
     queryOptions({

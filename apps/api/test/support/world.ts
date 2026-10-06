@@ -19,6 +19,11 @@ export interface World {
   invitedUserId: string;
   /** A confirmed, complete guest stay on each property: 2026-11-10 → 2026-11-13. */
   bookings: { a: string; b: string };
+  /** Owner-borne expense with one receipt on each property (2026-11-05), plus a TruHost-borne one on A. */
+  expenses: { a: string; b: string; truhostA: string };
+  receipts: { a: string; b: string; truhostA: string };
+  /** File ids behind the receipts above. */
+  files: { a: string; b: string; truhostA: string };
 }
 
 export async function seedWorld(prisma: PrismaService): Promise<World> {
@@ -93,8 +98,55 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     ).id;
   const bookings = { a: await guestStay(a.id), b: await guestStay(b.id) };
 
+  const expenseWithReceipt = async (propertyId: string, bearer: 'OWNER' | 'TRUHOST') => {
+    const expense = await prisma.expense.create({
+      data: {
+        propertyId,
+        bearer,
+        category: 'SUPPLIES',
+        incurredOn: new Date('2026-11-05T00:00:00Z'),
+        vendor: 'Sample Supply Co',
+        description: 'Paper towels and coffee',
+        amountCents: 4_199,
+        enteredById: users.admin.id,
+      },
+    });
+    const fileId = crypto.randomUUID();
+    await prisma.storedFile.create({
+      data: {
+        id: fileId,
+        purpose: 'RECEIPT',
+        propertyId,
+        objectKey: `properties/${propertyId}/receipt/${fileId}`,
+        contentType: 'application/pdf',
+        sizeBytes: 1234,
+        sha256: 'a'.repeat(64),
+        status: 'VERIFIED',
+        verifiedAt: new Date(),
+        uploadedById: users.admin.id,
+        originalFilename: 'receipt.pdf',
+      },
+    });
+    const receipt = await prisma.receipt.create({
+      data: {
+        propertyId,
+        expenseId: expense.id,
+        fileId,
+        receiptDate: new Date('2026-11-05T00:00:00Z'),
+        uploadedById: users.admin.id,
+      },
+    });
+    return { expense: expense.id, receipt: receipt.id, file: fileId };
+  };
+  const ea = await expenseWithReceipt(a.id, 'OWNER');
+  const eb = await expenseWithReceipt(b.id, 'OWNER');
+  const et = await expenseWithReceipt(a.id, 'TRUHOST');
+
   return {
     bookings,
+    expenses: { a: ea.expense, b: eb.expense, truhostA: et.expense },
+    receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },
+    files: { a: ea.file, b: eb.file, truhostA: et.file },
     propertyA: { id: a.id, roomIds: a.rooms.map((r) => r.id) },
     propertyB: { id: b.id, roomIds: b.rooms.map((r) => r.id) },
     users: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, { id: u.id, subject: k }])) as World['users'],

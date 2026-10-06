@@ -57,7 +57,11 @@ describe('authorization matrix', () => {
     it.each(ACTORS)('as %s', async (who) => {
       if (c.mutates) await freshWorld();
       const res = await send(c, world.users[who].subject);
-      if (allowed(c, who)) {
+      if (c.everyoneGets !== undefined) {
+        expect(res.status, JSON.stringify(res.body)).toBe(c.everyoneGets);
+      } else if (who === 'admin' && c.adminGets !== undefined) {
+        expect(res.status, JSON.stringify(res.body)).toBe(c.adminGets);
+      } else if (allowed(c, who)) {
         expect(res.status, JSON.stringify(res.body)).toBeLessThan(300);
       } else {
         expect(res.status, JSON.stringify(res.body)).toBe(404);
@@ -68,7 +72,7 @@ describe('authorization matrix', () => {
     it('as anonymous', async () => {
       if (c.mutates) await freshWorld();
       const res = await send(c, null);
-      expect(res.status).toBe(c.public ? 200 : 401);
+      expect(res.status).toBe(c.everyoneGets ?? (c.public ? 200 : 401));
     });
   });
 });

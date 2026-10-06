@@ -24,6 +24,18 @@ export const POLICY = {
   /** Guest details, raw payout and cleaning fee, notes. */
   'booking:readAdminFields': { admin: true, roles: [] },
   'booking:write': { admin: true, roles: [] },
+  /** Owners see owner-borne, non-voided expenses only (filtered in the service). */
+  'expense:read': { admin: true, roles: ['OWNER'] },
+  /** TruHost-borne and voided expenses, void reasons, versions. */
+  'expense:readAdminFields': { admin: true, roles: [] },
+  'expense:write': { admin: true, roles: [] },
+  /** Owners see receipts on their owner-borne, non-voided expenses. */
+  'receipt:read': { admin: true, roles: ['OWNER'] },
+  'receipt:write': { admin: true, roles: [] },
+  'report:property': { admin: true, roles: ['OWNER'] },
+  /** TruHost-side figures (cleaning fees collected). */
+  'report:adminFields': { admin: true, roles: [] },
+  'report:portfolio': { admin: true, roles: [] },
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },

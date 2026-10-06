@@ -41,3 +41,26 @@ export type BookingKind = z.infer<typeof BookingKind>;
 
 export const BookingStatus = z.enum(['CONFIRMED', 'CANCELLED']);
 export type BookingStatus = z.infer<typeof BookingStatus>;
+
+export const ExpenseCategory = z.enum([
+  'CLEANING',
+  'SUPPLIES',
+  'REPAIRS_MAINTENANCE',
+  'FURNISHINGS',
+  'UTILITIES',
+  'INTERNET',
+  'LICENSING_PERMITS',
+  'INSURANCE',
+  'STRATA',
+  'OTHER',
+]);
+export type ExpenseCategory = z.infer<typeof ExpenseCategory>;
+
+export const ExpenseBearer = z.enum(['OWNER', 'TRUHOST']);
+export type ExpenseBearer = z.infer<typeof ExpenseBearer>;
+
+export const FilePurpose = z.enum(['RECEIPT', 'CLEAN_PHOTO', 'DAMAGE_PHOTO']);
+export type FilePurpose = z.infer<typeof FilePurpose>;
+
+export const FileStatus = z.enum(['PENDING', 'VERIFIED']);
+export type FileStatus = z.infer<typeof FileStatus>;
