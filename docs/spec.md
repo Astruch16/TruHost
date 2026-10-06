@@ -720,6 +720,37 @@ model SupplyStatus {
   @@index([supplyItemId, reportedAt(sort: Desc)])
 }
 
+// ───────────────────────── Notifications ─────────────────────────  (Phase 3)
+
+enum NotificationKind {
+  SUPPLY_LOW
+  SUPPLY_OUT
+}
+
+/// In-app notification for one user. Created in the same transaction as the event that causes it. Email, when the
+/// kind calls for it, is sent after commit and recorded in emailSentAt.
+model Notification {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String           @db.Uuid
+  kind        NotificationKind
+  propertyId  String           @db.Uuid
+  /// What it is about, for linking from the UI (e.g. SupplyItem + id).
+  entityType  String
+  entityId    String           @db.Uuid
+  /// The SupplyStatus reading that triggered it.
+  sourceId    String           @db.Uuid
+  title       String
+  body        String?
+  readAt      DateTime?        @db.Timestamptz
+  /// Null if no email was due, or if sending failed (retried by a job).
+  emailSentAt DateTime?        @db.Timestamptz
+  createdAt   DateTime         @default(now()) @db.Timestamptz
+
+  /// One notification per user per triggering reading, so retries can't duplicate.
+  @@unique([userId, sourceId])
+  @@index([userId, readAt, createdAt])
+}
+
 // ───────────────────────── Damage ─────────────────────────  (Phase 4)
 
 enum DamageSeverity {
@@ -1058,11 +1089,13 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 
 ### Me
 
-| Method | Path           | Roles | Notes                                                                                               |
-| ------ | -------------- | ----- | --------------------------------------------------------------------------------------------------- |
-| GET    | `/me`          | A O C | Profile, staffRole, active memberships with property names. Drives navigation. [1]                  |
-| PATCH  | `/me`          | A O C | Name and phone. [1]                                                                                 |
-| GET    | `/me/earnings` | C     | Completed cleans with pay and paid/unpaid status (voided payments show as unpaid), plus totals. [3] |
+| Method | Path                     | Roles | Notes                                                                                               |
+| ------ | ------------------------ | ----- | --------------------------------------------------------------------------------------------------- |
+| GET    | `/me`                    | A O C | Profile, staffRole, active memberships with property names. Drives navigation. [1]                  |
+| PATCH  | `/me`                    | A O C | Name and phone. [1]                                                                                 |
+| GET    | `/me/earnings`           | C     | Completed cleans with pay and paid/unpaid status (voided payments show as unpaid), plus totals. [3] |
+| GET    | `/me/notifications`      | A O C | `?unread=true`. Own notifications only. [3]                                                         |
+| POST   | `/me/notifications/read` | A O C | `{ ids[] }` or `{ all: true }`. Marks own notifications read. [3]                                   |
 
 ### Users & invites
 
@@ -1119,16 +1152,16 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 
 ### Expenses & receipts [2]
 
-| Method | Path                       | Roles | Notes                                                         |
-| ------ | -------------------------- | ----- | ------------------------------------------------------------- |
-| GET    | `/expenses`                | A     | Cross-property.                                               |
-| GET    | `/properties/:id/expenses` | A O   | O: `bearer = OWNER` only.                                     |
-| POST   | `/properties/:id/expenses` | A     | Audited.                                                      |
-| PATCH  | `/expenses/:id`            | A     | Requires `version`. Audited.                                  |
-| POST   | `/expenses/:id/void`       | A     | Audited.                                                      |
-| GET    | `/properties/:id/receipts` | A O   | O: receipts on OWNER-borne expenses.                          |
-| POST   | `/properties/:id/receipts` | A     | `{ fileId, expenseId?, receiptDate, description? }`. Audited. |
-| POST   | `/receipts/:id/void`       | A     | Audited.                                                      |
+| Method | Path                       | Roles | Notes                                                                                                                             |
+| ------ | -------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/expenses`                | A     | Cross-property.                                                                                                                   |
+| GET    | `/properties/:id/expenses` | A O   | O: `bearer = OWNER` only.                                                                                                         |
+| POST   | `/properties/:id/expenses` | A     | Audited.                                                                                                                          |
+| PATCH  | `/expenses/:id`            | A     | Requires `version`. Audited.                                                                                                      |
+| POST   | `/expenses/:id/void`       | A     | `{ reason }` (required). Applies to system-created owner-stay cleaning charges too, which is the only way to remove one. Audited. |
+| GET    | `/properties/:id/receipts` | A O   | O: receipts on OWNER-borne expenses.                                                                                              |
+| POST   | `/properties/:id/receipts` | A     | `{ fileId, expenseId?, receiptDate, description? }`. Audited.                                                                     |
+| POST   | `/receipts/:id/void`       | A     | Audited.                                                                                                                          |
 
 ### Files [2]
 
@@ -1184,6 +1217,18 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 | GET    | `/supply-items/:id/history`       | A O   |                                |
 | GET    | `/supplies/restock`               | A     | LOW and OUT across properties. |
 
+**Supply alerts.** A `SupplyStatus` reading creates notifications only when
+the item's level **changes into** LOW or OUT (FULL/OK → LOW, anything → OUT).
+Repeating the same level, or LOW → LOW, sends nothing. Recipients:
+
+| Level | Admins                  | Owners of the property |
+| ----- | ----------------------- | ---------------------- |
+| LOW   | in-app                  | in-app                 |
+| OUT   | in-app + email (Resend) | in-app                 |
+
+Owners also see current LOW and OUT items on their dashboard, read from
+`GET /properties/:id/supplies`. Cleaners get no notifications.
+
 ### Damage reports [4]
 
 | Method | Path                             | Roles           | Notes                                                                 |
@@ -1224,6 +1269,7 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 | --------------------------------------------------------------------------- | ------------------------------- | ----- | ----------------------------------- | ----------------------------- |
 | Me                                                                          | read / update                   | self  | self                                | self                          |
 | Cleaner earnings                                                            | read                            | —     | —                                   | self                          |
+| Notification                                                                | list / mark read                | self  | self                                | self                          |
 | Config                                                                      | read                            | ✓     | ✓                                   | ✓                             |
 | User, Invite                                                                | any                             | all   | —                                   | —                             |
 | Property                                                                    | list / read                     | all   | own                                 | own (no money or plan fields) |
@@ -1319,30 +1365,27 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 Still open:
 
 - **N5 Negative months:** when expenses exceed revenue, release is blocked.
-  The owner-owes flow (carry forward vs. request payment) is in "Later".
-- **N12b Low supplies:** should LOW/OUT readings notify someone, and who?
-  (Notifications are in "Later".)
-- **N14 Owner-stay charge timing:** the charge is created when the clean
-  completes. If an owner stay is cancelled after its clean was done, the
-  charge stands unless an admin voids it. Is that right?
+  The owner-owes flow (carry forward vs. request payment) stays in "Later".
 
 Resolved 2026-10-06 (kept for traceability):
 
-| #   | Question                                    | Decision                                                                                                   |
-| --- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Q1  | Several owners per property?                | Yes, as built.                                                                                             |
-| N1  | Who pays for the clean after an owner stay? | The owner: an owner-borne CLEANING expense at the property's standard cleaning fee.                        |
-| N2  | "ADR" label                                 | Show "Avg. nightly earnings", not ADR.                                                                     |
-| N3  | Cancelled stay that still pays out          | Revenue in its check-in month, zero nights.                                                                |
-| N4  | Airbnb's fee on the cleaning fee            | Owners absorb it; gross = payout − full cleaning fee.                                                      |
-| N6  | Expense month                               | Purchase date (the date on the receipt).                                                                   |
-| N7  | Lockbox codes                               | Not stored in the app. Revisit with proper secret handling ("Later").                                      |
-| N8  | Clean assignment and timing                 | Default cleaner per property, admin override per clean; a cleaner may start any time on the scheduled day. |
-| N9  | Mistaken cleaner payment                    | Voidable with a required reason; never deleted; audited.                                                   |
-| N10 | Bad photos                                  | Later: a separate flag record; photos stay immutable.                                                      |
-| N11 | Damage cost recovery                        | Later: claim status and amount recovered on damage reports.                                                |
-| N12 | Supplies                                    | TruHost restocks and records an owner-borne SUPPLIES expense with a receipt.                               |
-| N13 | Domains and invite email                    | Not chosen: env vars with placeholders. Invite emails sent by us through Resend, not Clerk.                |
+| #    | Question                                    | Decision                                                                                                               |
+| ---- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Q1   | Several owners per property?                | Yes, as built.                                                                                                         |
+| N1   | Who pays for the clean after an owner stay? | The owner: an owner-borne CLEANING expense at the property's standard cleaning fee.                                    |
+| N2   | "ADR" label                                 | Show "Avg. nightly earnings", not ADR.                                                                                 |
+| N3   | Cancelled stay that still pays out          | Revenue in its check-in month, zero nights.                                                                            |
+| N4   | Airbnb's fee on the cleaning fee            | Owners absorb it; gross = payout − full cleaning fee.                                                                  |
+| N6   | Expense month                               | Purchase date (the date on the receipt).                                                                               |
+| N7   | Lockbox codes                               | Not stored in the app. Revisit with proper secret handling ("Later").                                                  |
+| N8   | Clean assignment and timing                 | Default cleaner per property, admin override per clean; a cleaner may start any time on the scheduled day.             |
+| N9   | Mistaken cleaner payment                    | Voidable with a required reason; never deleted; audited.                                                               |
+| N10  | Bad photos                                  | Later: a separate flag record; photos stay immutable.                                                                  |
+| N11  | Damage cost recovery                        | Later: claim status and amount recovered on damage reports.                                                            |
+| N12  | Supplies                                    | TruHost restocks and records an owner-borne SUPPLIES expense with a receipt.                                           |
+| N13  | Domains and invite email                    | Not chosen: env vars with placeholders. Invite emails sent by us through Resend, not Clerk.                            |
+| N12b | Low supply alerts                           | Admins in-app on LOW and OUT, plus email on OUT; owners in-app and on their dashboard. Built with supplies in Phase 3. |
+| N14  | Owner stay cancelled after its clean        | The cleaning charge stands unless an admin voids it, with a reason, audited.                                           |
 
 ---
 
@@ -1439,13 +1482,16 @@ locked booking (409) and add an adjustment that lands on the next month.
 
 Clean (auto from bookings, assigned to the property's default cleaner),
 CleanPhoto, the state machine and its guard (including the scheduled-day
-start rule), supplies, cleaner pay, payments with void, and the owner-stay
-cleaning charge. Mobile-first cleaner screens: schedule,
-room checklist with camera upload, supplies, earnings. Admin schedule
-board, assignment and pay run.
+start rule), supplies, cleaner pay, payments with void, the owner-stay
+cleaning charge, and supply alerts (`Notification` model, in-app list and
+unread badge for admins and owners, email via Resend for OUT). Mobile-first
+cleaner screens: schedule, room checklist with camera upload, supplies,
+earnings. Admin schedule board, assignment, pay run and notifications. Owner
+dashboard shows LOW/OUT supplies.
 **Run:** a booking creates a clean, a cleaner completes it on a phone
 (completion is refused while a photo is missing), and the admin records the
-payment.
+payment. Marking an item OUT shows an alert to admins and owners and emails
+the admins.
 
 ### Phase 4: Damage reports and audit viewer
 
@@ -1470,7 +1516,7 @@ UI, and a "needs financials" queue.
   month.
 - Expo app (`apps/mobile`) on the same API.
 - PMS integration (`source = PMS`).
-- Notifications (including LOW/OUT supplies, N12b).
+- Notifications for other events (new damage reports, statement released, …), reusing the Phase 3 `Notification` model.
 - Clerk webhook for `user.deleted`.
 - **Access codes** (lockbox and door) with proper secret handling: encrypted
   at rest, revealed per request to the assigned cleaner on the clean's day,
@@ -1512,3 +1558,5 @@ UI, and a "needs financials" queue.
 | 2026-10-06 | Cleaner payments are voidable with a required reason; payment lines are immutable history (N9).                                                                |
 | 2026-10-06 | TruHost restocks supplies as owner-borne receipted expenses (N12).                                                                                             |
 | 2026-10-06 | Invite emails sent by us via Resend (Clerk invitations with `notify: false`); URLs and sender are env vars with placeholders until domains are chosen (N13).   |
+| 2026-10-06 | Supply alerts on a change into LOW/OUT: admins in-app (email too on OUT), owners in-app and on their dashboard; built in Phase 3 (N12b).                       |
+| 2026-10-06 | System-created owner-stay cleaning charges stand if the stay is later cancelled; only an admin void (reason required, audited) removes them (N14).             |
