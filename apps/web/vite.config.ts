@@ -5,11 +5,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
 export default defineConfig({
   // The router plugin must run before the React plugin.
-  plugins: [
-    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [tanstackRouter({ target: 'react', autoCodeSplitting: true }), react(), tailwindcss()],
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],

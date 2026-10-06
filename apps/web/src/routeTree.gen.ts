@@ -9,50 +9,299 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAccountRouteImport } from './routes/_app/account'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
+import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
+import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
+import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
+import { Route as AppPropertiesIndexRouteImport } from './routes/_app/properties/index'
+import { Route as AppPropertiesPropertyIdRouteImport } from './routes/_app/properties/$propertyId'
+import { Route as AppAdminPropertiesIndexRouteImport } from './routes/_app/admin/properties/index'
+import { Route as AppAdminPropertiesPropertyIdRouteImport } from './routes/_app/admin/properties/$propertyId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAccountRoute = AppAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const SignInSplatRoute = SignInSplatRouteImport.update({
+  id: '/sign-in/$',
+  path: '/sign-in/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignUpSplatRoute = SignUpSplatRouteImport.update({
+  id: '/sign-up/$',
+  path: '/sign-up/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminPlansRoute = AppAdminPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminTeamRoute = AppAdminTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppPropertiesIndexRoute = AppPropertiesIndexRouteImport.update({
+  id: '/properties/',
+  path: '/properties/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPropertiesPropertyIdRoute = AppPropertiesPropertyIdRouteImport.update({
+  id: '/properties/$propertyId',
+  path: '/properties/$propertyId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminPropertiesIndexRoute = AppAdminPropertiesIndexRouteImport.update({
+  id: '/properties/',
+  path: '/properties/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminPropertiesPropertyIdRoute =
+  AppAdminPropertiesPropertyIdRouteImport.update({
+    id: '/properties/$propertyId',
+    path: '/properties/$propertyId',
+    getParentRoute: () => AppAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
+  '/account': typeof AppAccountRoute
+  '/admin': typeof AppAdminRouteWithChildren
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
+  '/admin/plans': typeof AppAdminPlansRoute
+  '/admin/team': typeof AppAdminTeamRoute
+  '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/properties/': typeof AppPropertiesIndexRoute
+  '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/admin/properties/': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/account': typeof AppAccountRoute
+  '/admin': typeof AppAdminRouteWithChildren
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
+  '/': typeof AppIndexRoute
+  '/admin/plans': typeof AppAdminPlansRoute
+  '/admin/team': typeof AppAdminTeamRoute
+  '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/properties': typeof AppPropertiesIndexRoute
+  '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/admin/properties': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/_app/account': typeof AppAccountRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/admin/plans': typeof AppAdminPlansRoute
+  '/_app/admin/team': typeof AppAdminTeamRoute
+  '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/_app/properties/': typeof AppPropertiesIndexRoute
+  '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/_app/admin/properties/': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/admin'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/admin/plans'
+    | '/admin/team'
+    | '/properties/$propertyId'
+    | '/properties/'
+    | '/admin/properties/$propertyId'
+    | '/admin/properties/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/account'
+    | '/admin'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/'
+    | '/admin/plans'
+    | '/admin/team'
+    | '/properties/$propertyId'
+    | '/properties'
+    | '/admin/properties/$propertyId'
+    | '/admin/properties'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_app/account'
+    | '/_app/admin'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/_app/'
+    | '/_app/admin/plans'
+    | '/_app/admin/team'
+    | '/_app/properties/$propertyId'
+    | '/_app/properties/'
+    | '/_app/admin/properties/$propertyId'
+    | '/_app/admin/properties/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  SignInSplatRoute: typeof SignInSplatRoute
+  SignUpSplatRoute: typeof SignUpSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/account': {
+      id: '/_app/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AppAccountRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/sign-in/$': {
+      id: '/sign-in/$'
+      path: '/sign-in/$'
+      fullPath: '/sign-in/$'
+      preLoaderRoute: typeof SignInSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/sign-up/$': {
+      id: '/sign-up/$'
+      path: '/sign-up/$'
+      fullPath: '/sign-up/$'
+      preLoaderRoute: typeof SignUpSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/admin/plans': {
+      id: '/_app/admin/plans'
+      path: '/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AppAdminPlansRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/team': {
+      id: '/_app/admin/team'
+      path: '/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AppAdminTeamRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/properties/': {
+      id: '/_app/properties/'
+      path: '/properties'
+      fullPath: '/properties/'
+      preLoaderRoute: typeof AppPropertiesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/properties/$propertyId': {
+      id: '/_app/properties/$propertyId'
+      path: '/properties/$propertyId'
+      fullPath: '/properties/$propertyId'
+      preLoaderRoute: typeof AppPropertiesPropertyIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/properties/': {
+      id: '/_app/admin/properties/'
+      path: '/properties'
+      fullPath: '/admin/properties/'
+      preLoaderRoute: typeof AppAdminPropertiesIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/properties/$propertyId': {
+      id: '/_app/admin/properties/$propertyId'
+      path: '/properties/$propertyId'
+      fullPath: '/admin/properties/$propertyId'
+      preLoaderRoute: typeof AppAdminPropertiesPropertyIdRouteImport
+      parentRoute: typeof AppAdminRoute
     }
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminPlansRoute: typeof AppAdminPlansRoute
+  AppAdminTeamRoute: typeof AppAdminTeamRoute
+  AppAdminPropertiesPropertyIdRoute: typeof AppAdminPropertiesPropertyIdRoute
+  AppAdminPropertiesIndexRoute: typeof AppAdminPropertiesIndexRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminPlansRoute: AppAdminPlansRoute,
+  AppAdminTeamRoute: AppAdminTeamRoute,
+  AppAdminPropertiesPropertyIdRoute: AppAdminPropertiesPropertyIdRoute,
+  AppAdminPropertiesIndexRoute: AppAdminPropertiesIndexRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
+  AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppIndexRoute: typeof AppIndexRoute
+  AppPropertiesPropertyIdRoute: typeof AppPropertiesPropertyIdRoute
+  AppPropertiesIndexRoute: typeof AppPropertiesIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
+  AppAdminRoute: AppAdminRouteWithChildren,
+  AppIndexRoute: AppIndexRoute,
+  AppPropertiesPropertyIdRoute: AppPropertiesPropertyIdRoute,
+  AppPropertiesIndexRoute: AppPropertiesIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  SignInSplatRoute: SignInSplatRoute,
+  SignUpSplatRoute: SignUpSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

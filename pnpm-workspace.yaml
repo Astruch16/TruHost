@@ -3,5 +3,9 @@ packages:
   - packages/*
 
 allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  esbuild: true
+  '@scarf/scarf': false
   sharp: false
   unrs-resolver: false

@@ -21,11 +21,13 @@ Change the spec in the same PR as the code that departs from it.
   - `packages/shared`: zod schemas and TS types used by api, web and mobile.
     Contains no business logic that needs to be trusted. The API recomputes and
     re-validates everything.
+  - `packages/api-client`: typed API client (`openapi-fetch`) generated from
+    the API's OpenAPI document. Web and mobile call the API only through it.
   - `apps/mobile` (later): Expo. Reuses the same API unchanged, so never build
     a web-only backend path.
 - **Auth:** Clerk proves identity only. The SPA uses `@clerk/react` and sends
   `Authorization: Bearer <session token>` on every call. The API verifies it
-  on every request. Roles and property access live in *our* database
+  on every request. Roles and property access live in _our_ database
   (`User.staffRole`, `Membership`). Never read roles from Clerk metadata.
   An invited user is linked to their Clerk account on their first
   authenticated request, by verified email.
@@ -68,7 +70,9 @@ Change the spec in the same PR as the code that departs from it.
 7. **Audit log** for every admin mutation of money or documents. It is
    written in the same transaction as the change and is append-only.
 8. **Rate limiting** on every endpoint, with stricter tiers on auth-adjacent
-   routes (invites, webhooks, upload URL issuance).
+   routes (invites, webhooks, upload URL issuance). The tiers live in
+   `apps/api/src/throttling/`. Put a route on the strict tier with
+   `@RateTier('auth')`.
 
 Also:
 
@@ -86,59 +90,108 @@ Also:
 ## Layout
 
 ```
-apps/api/src/
-  access/        AccessService + policy table (the single authz source)
-  auth/          Clerk token guard, @Actor() decorator, Clerk webhook
-  audit/         AuditService (call inside the mutating transaction)
-  prisma/        PrismaService
-  files/         R2 presign, verification, signed view URLs
-  <domain>/      controller (thin) + service (logic + access) + *.spec.ts
-apps/api/test/   e2e and authz matrix tests (*.e2e-spec.ts)
+apps/api/
+  prisma/schema.prisma   data model; raw SQL constraints live in migrations
+  src/access/            policy.ts (THE authz table) + AccessService
+  src/auth/              AuthGuard (token → our User), IdentityProvider (Clerk), @Public
+  src/audit/             AuditService.record(tx, …), called inside the mutating transaction
+  src/common/            problem+json errors, ZodPipe/ZodBody/ZodResponse, pagination, dates
+  src/throttling/        rate-limit tiers and guards
+  src/<domain>/          controller (thin) + service (logic + access checks)
+  src/cli/               bootstrap (first-run setup), emit-openapi
+  src/generated/prisma/  generated client (gitignored; `pnpm db:generate`)
+  test/authz/            authorization matrix, one entry per route (meta-test enforces coverage)
+  test/support/          test app, fake identity provider, seeded "world", DB reset
 apps/web/src/
-  routes/        TanStack Router file routes (routeTree.gen.ts is generated
-                 by the Vite plugin and committed)
-  lib/api.ts     typed API client (openapi-fetch) with the Clerk token
-packages/shared/src/  zod schemas, enums, types
-docs/spec.md     data model, API, permissions, phases, open questions
+  routes/                TanStack Router file routes (routeTree.gen.ts is generated and committed)
+  lib/api-context.ts     useApi(): the typed client with the Clerk token
+  lib/queries.ts         TanStack Query definitions, one per API read
+packages/shared/src/     zod schemas (request/response contracts), enums, primitives
+packages/api-client/     openapi.json + generated schema.ts (committed; CI checks drift)
+docs/spec.md             data model, API, permissions, phases, open questions
 ```
 
-Controllers parse input with zod schemas from `@truhost/shared`, take the
-actor from `@Actor()`, call one service method, and return its result. They
-contain no queries and no authorization logic.
+Controllers validate input with `@Body(new ZodPipe(schema))`, take the caller
+from `@CurrentActor()`, call one service method, and declare the response with
+`@ZodResponse(schema)`. Responses are parsed through that schema, so undeclared
+fields are stripped. Controllers contain no queries and no authorization
+logic. Services start with `this.access.assert(...)` or scope queries with
+`this.access.propertyIds(...)`.
+
+**Adding a route:**
+
+1. Add the zod schemas to `packages/shared`.
+2. Add a policy row if the route needs a new action.
+3. Write the controller and service.
+4. Add the route's case to `test/authz/cases.ts`.
+5. Regenerate the client with `pnpm --filter @truhost/api openapi`.
+
+**Update schemas must never carry `.default()`.** In zod 4, `.partial()`
+keeps defaults, which would silently reset fields on PATCH. Put defaults on
+create schemas only. `packages/shared` has a test for this.
 
 ## Commands
 
 Requires Node 24+ and pnpm (`corepack enable`). Run from the repo root.
 
-| Task | All packages | One package |
-|---|---|---|
-| Install | `pnpm install` | |
-| Dev servers | `pnpm dev` (api :3000, web :3001) | `pnpm --filter @truhost/api dev` |
-| Build | `pnpm build` | `pnpm --filter @truhost/web build` (static output in `apps/web/dist`) |
-| Lint | `pnpm lint` | `pnpm --filter @truhost/api lint` |
-| Typecheck | `pnpm typecheck` | `pnpm --filter @truhost/shared typecheck` |
-| Unit tests | `pnpm test` | `pnpm --filter @truhost/api test` |
-| E2E tests (api) | `pnpm test:e2e` | `pnpm --filter @truhost/api test:e2e` |
-| Single test file | | `pnpm --filter @truhost/api exec vitest run src/health` |
-| Format | `pnpm format` | |
+| Task             | All packages                      | One package                                                           |
+| ---------------- | --------------------------------- | --------------------------------------------------------------------- |
+| Install          | `pnpm install`                    |                                                                       |
+| Dev servers      | `pnpm dev` (api :3000, web :3001) | `pnpm --filter @truhost/api dev`                                      |
+| Build            | `pnpm build`                      | `pnpm --filter @truhost/web build` (static output in `apps/web/dist`) |
+| Lint             | `pnpm lint`                       | `pnpm --filter @truhost/api lint`                                     |
+| Typecheck        | `pnpm typecheck`                  | `pnpm --filter @truhost/shared typecheck`                             |
+| Unit tests       | `pnpm test`                       | `pnpm --filter @truhost/api test`                                     |
+| E2E tests (api)  | `pnpm test:e2e`                   | `pnpm --filter @truhost/api test:e2e`                                 |
+| Single test file |                                   | `pnpm --filter @truhost/api exec vitest run src/access`               |
+| Format           | `pnpm format`                     | CI runs `prettier --check .`                                          |
 
 Tooling per package:
 
 - **api:** NestJS 12 (ESM, `nodenext`, so relative imports use `.js`
-  suffixes), Vitest (`*.spec.ts` unit, `test/*.e2e-spec.ts` e2e), oxlint
-  (type-aware).
+  suffixes), Prisma 7 (`prisma-client` generator + `@prisma/adapter-pg`;
+  config in `prisma.config.ts`), Vitest (`src/**/*.spec.ts` unit,
+  `test/**/*.e2e-spec.ts` e2e against real Postgres), oxlint (type-aware).
 - **web:** Vite 8, React 19, TanStack Router (file-based, via
   `@tanstack/router-plugin`) and TanStack Query, Tailwind 4 (`@tailwindcss/vite`),
   `@clerk/react` v6 (use `<Show when="signed-in">`, which replaced
   `SignedIn`/`SignedOut`), ESLint, Vitest with jsdom. Env vars must be
-  prefixed `VITE_` and are public.
-- **shared:** compiled with `tsc` to `dist/`. Turbo builds it before
-  dependents. Run `pnpm --filter @truhost/shared dev` for watch mode
-  (`pnpm dev` does this already).
+  prefixed `VITE_` and are public. Files under `routes/` and `components/` may
+  export only components (fast refresh). Helpers go in `lib/`.
+- **shared, api-client:** compiled with `tsc` to `dist/`. Turbo builds them
+  before dependents.
 
-Prisma commands (after Phase 1 adds Prisma) will be documented here.
+### Database (apps/api)
+
+| Task                  | Command (from `apps/api`, or `pnpm --filter @truhost/api <script>`)                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Generate client       | `pnpm db:generate` (Turbo runs it before build, lint, typecheck and test)                                                  |
+| New migration         | `pnpm db:migrate --name <change>`. For raw SQL, add `--create-only`, append the SQL, then run `pnpm db:migrate`            |
+| Apply migrations      | `pnpm db:deploy` (CI and prod)                                                                                             |
+| Browse data           | `pnpm db:studio`                                                                                                           |
+| First-run setup       | `pnpm bootstrap --admin-email … --first-name … --last-name … [--property-name … --address … --postal-code …]` (idempotent) |
+| Regenerate API client | `pnpm openapi` (builds, writes `packages/api-client/openapi.json`, regenerates types)                                      |
+
+E2E tests use `TEST_DATABASE_URL` (default
+`postgresql://postgres:postgres@localhost:5432/truhost_test`). They apply
+migrations once, then truncate tables between tests. Every DB-level guarantee
+(triggers, exclusion constraints) gets an e2e test that hits it with raw SQL.
+
+**Local Postgres in WSL** (one-time setup):
+
+```bash
+# Postgres 17 (matches CI and Neon); Ubuntu 24.04's own archive only has 16.
+sudo apt install -y postgresql-common
+sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+sudo apt install -y postgresql-17
+sudo service postgresql start          # WSL without systemd: run after each restart
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+sudo -u postgres createdb truhost_test
+sudo -u postgres createdb truhost_dev   # or point DATABASE_URL at a Neon dev branch
+```
 
 ## Environment
 
 Each app has an `.env.example`. Copy it to `.env` and never commit `.env`
-files.
+files. The API refuses to start with a missing or invalid variable (see
+`apps/api/src/config/env.ts`).

@@ -1,0 +1,247 @@
+// TruHost data model. docs/spec.md §3 is the design reference; keep the two in step.
+// Constraints Prisma cannot express (partial uniques, exclusions, CHECKs, immutability triggers)
+// live in raw SQL inside the migrations; see docs/spec.md "Constraints added as raw SQL".
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────── Identity & access ─────────────────────────
+
+enum StaffRole {
+  ADMIN
+}
+
+enum UserStatus {
+  /// Created by an admin or the bootstrap CLI; Clerk account not linked yet.
+  INVITED
+  ACTIVE
+  DEACTIVATED
+}
+
+model User {
+  id            String     @id @default(uuid(7)) @db.Uuid
+  /// Null until first sign-in; linked on the first authenticated request by Clerk's verified email.
+  clerkUserId   String?    @unique
+  /// Stored lower-cased.
+  email         String     @unique
+  firstName     String
+  lastName      String
+  phone         String?
+  /// Null = not staff. Company-wide; owner/cleaner access lives in Membership.
+  staffRole     StaffRole?
+  status        UserStatus @default(INVITED)
+  deactivatedAt DateTime?  @db.Timestamptz
+  createdAt     DateTime   @default(now()) @db.Timestamptz
+  updatedAt     DateTime   @updatedAt @db.Timestamptz
+
+  memberships        Membership[]   @relation("MembershipUser")
+  membershipsCreated Membership[]   @relation("MembershipCreatedBy")
+  membershipsRevoked Membership[]   @relation("MembershipRevokedBy")
+  invites            Invite[]       @relation("InviteUser")
+  invitesSent        Invite[]       @relation("InviteInvitedBy")
+  propertyPlansSet   PropertyPlan[]
+  auditLogs          AuditLog[]
+  idempotencyKeys    IdempotencyKey[]
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+model Invite {
+  id                String       @id @default(uuid(7)) @db.Uuid
+  userId            String       @db.Uuid
+  user              User         @relation("InviteUser", fields: [userId], references: [id], onDelete: Restrict)
+  /// Clerk invitation id, used to revoke/resend. Null when Clerk was not configured (local dev bootstrap).
+  clerkInvitationId String?      @unique
+  status            InviteStatus @default(PENDING)
+  /// Null when created by the bootstrap CLI.
+  invitedById       String?      @db.Uuid
+  invitedBy         User?        @relation("InviteInvitedBy", fields: [invitedById], references: [id], onDelete: Restrict)
+  acceptedAt        DateTime?    @db.Timestamptz
+  revokedAt         DateTime?    @db.Timestamptz
+  createdAt         DateTime     @default(now()) @db.Timestamptz
+
+  @@index([userId, status])
+}
+
+enum MembershipRole {
+  OWNER
+  CLEANER
+}
+
+/// The single source of property-scoped access. Every non-admin query is scoped through it.
+model Membership {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  userId      String         @db.Uuid
+  user        User           @relation("MembershipUser", fields: [userId], references: [id], onDelete: Restrict)
+  propertyId  String         @db.Uuid
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  role        MembershipRole
+  createdById String?        @db.Uuid
+  createdBy   User?          @relation("MembershipCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime       @default(now()) @db.Timestamptz
+  /// Soft revoke keeps a history of who had access when.
+  revokedAt   DateTime?      @db.Timestamptz
+  revokedById String?        @db.Uuid
+  revokedBy   User?          @relation("MembershipRevokedBy", fields: [revokedById], references: [id], onDelete: Restrict)
+
+  @@index([userId, revokedAt])
+  @@index([propertyId, role])
+  // + partial unique index membership_active_unique (raw SQL)
+}
+
+// ───────────────────────── Properties ─────────────────────────
+
+model Property {
+  id                           String    @id @default(uuid(7)) @db.Uuid
+  /// Internal nickname shown in the UI, e.g. "Kits 2BR".
+  name                         String
+  addressLine1                 String
+  addressLine2                 String?
+  city                         String
+  province                     String    @default("BC")
+  postalCode                   String
+  country                      String    @default("CA")
+  /// IANA zone; turns stay dates/times into instants and buckets statement months.
+  timeZone                     String    @default("America/Vancouver")
+  /// Default "HH:mm" times used to build clean windows.
+  checkInTime                  String    @default("16:00")
+  checkOutTime                 String    @default("11:00")
+  /// BC Short-Term Rental Registry number (platforms must display it).
+  provincialRegistrationNumber String?
+  /// Municipal business licence, distinct from the provincial registration.
+  businessLicenceNumber        String?
+  /// Lockbox/door codes. Admins and this property's cleaners only.
+  accessInstructions           String?
+  /// Default amount owed to the cleaner per turnover; copied onto each Clean at creation.
+  defaultCleanerPayCents       Int       @default(0)
+  archivedAt                   DateTime? @db.Timestamptz
+  createdAt                    DateTime  @default(now()) @db.Timestamptz
+  updatedAt                    DateTime  @updatedAt @db.Timestamptz
+
+  memberships Membership[]
+  rooms       Room[]
+  plans       PropertyPlan[]
+}
+
+enum RoomType {
+  BEDROOM
+  BATHROOM
+  KITCHEN
+  LIVING
+  DINING
+  LAUNDRY
+  OUTDOOR
+  ENTRY
+  OTHER
+}
+
+model Room {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  propertyId String    @db.Uuid
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// e.g. "Primary bedroom", "Ensuite".
+  name       String
+  type       RoomType
+  /// Order in the cleaner's photo checklist (walk-through order).
+  sortOrder  Int       @default(0)
+  /// Archived rooms drop out of the clean-completion requirement but keep historic photos.
+  archivedAt DateTime? @db.Timestamptz
+  createdAt  DateTime  @default(now()) @db.Timestamptz
+
+  /// Target of CleanPhoto's composite FK (Phase 3), proving the room belongs to the clean's property.
+  @@unique([propertyId, id])
+  @@index([propertyId, sortOrder])
+}
+
+// ───────────────────────── Plans ─────────────────────────
+
+/// A management plan (e.g. TruPlan, 2200 bps). The rate is immutable once referenced (trigger) so
+/// historic statements stay reproducible; new terms mean a new plan.
+model Plan {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  name             String    @unique
+  description      String?
+  /// Basis points of the month's owner gross (2200 = 22%).
+  managementFeeBps Int
+  archivedAt       DateTime? @db.Timestamptz
+  createdAt        DateTime  @default(now()) @db.Timestamptz
+
+  properties PropertyPlan[]
+}
+
+/// Which plan applied to a property from which month. Starts on the 1st so each statement month has one rate.
+model PropertyPlan {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  propertyId    String    @db.Uuid
+  property      Property  @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  planId        String    @db.Uuid
+  plan          Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  /// First day of a month (CHECK).
+  effectiveFrom DateTime  @db.Date
+  /// Exclusive; first day of a month (CHECK); null = current.
+  effectiveTo   DateTime? @db.Date
+  createdById   String?   @db.Uuid
+  createdBy     User?     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt     DateTime  @default(now()) @db.Timestamptz
+
+  @@index([propertyId, effectiveFrom])
+  // + EXCLUDE constraint property_plan_no_overlap (raw SQL)
+}
+
+// ───────────────────────── Audit & infrastructure ─────────────────────────
+
+enum ActorType {
+  USER
+  /// Jobs and the bootstrap CLI.
+  SYSTEM
+}
+
+/// Append-only (trigger). Written in the same transaction as the change it records.
+model AuditLog {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  actorType  ActorType
+  actorId    String?   @db.Uuid
+  actor      User?     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  /// Dotted verb, e.g. "property.update", "membership.revoke".
+  action     String
+  entityType String
+  entityId   String    @db.Uuid
+  /// Denormalised so "everything on property X" is one indexed query.
+  propertyId String?   @db.Uuid
+  /// Changed fields only.
+  before     Json?
+  after      Json?
+  requestId  String?
+  ipAddress  String?
+  createdAt  DateTime  @default(now()) @db.Timestamptz
+
+  @@index([entityType, entityId])
+  @@index([propertyId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+/// Makes POST retries safe on flaky connections; same key replays the stored response.
+model IdempotencyKey {
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  key            String
+  /// Hash of method + path + body; reusing a key for a different request is a 422.
+  requestHash    String
+  responseStatus Int
+  responseBody   Json
+  createdAt      DateTime @default(now()) @db.Timestamptz
+
+  @@id([userId, key])
+  /// Purged after 24h.
+  @@index([createdAt])
+}

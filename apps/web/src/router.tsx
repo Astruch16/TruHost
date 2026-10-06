@@ -1,17 +1,22 @@
 import { createRouter } from '@tanstack/react-router';
 import { QueryClient } from '@tanstack/react-query';
+import { ApiError } from '@truhost/api-client';
 import { routeTree } from './routeTree.gen';
 
 export const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      // Don't retry what won't change: auth, permission, validation and not-found errors.
+      retry: (count, error) => !(error instanceof ApiError && error.status < 500) && count < 2,
+    },
+  },
 });
 
 export const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreload: 'intent',
-  // Let TanStack Query own caching; the router just triggers loaders.
-  defaultPreloadStaleTime: 0,
   scrollRestoration: true,
 });
 
