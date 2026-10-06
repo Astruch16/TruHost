@@ -205,6 +205,54 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
 
+  // ── bookings ──
+  { route: 'GET /v1/bookings', path: () => '/v1/bookings?from=2026-11-01&to=2026-12-01', allow: ADMIN },
+  {
+    route: 'GET /v1/properties/:id/bookings',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/bookings?from=2026-11-01&to=2026-12-01`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/properties/:id/bookings',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/bookings?from=2026-11-01&to=2026-12-01`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    route: 'POST /v1/properties/:id/bookings',
+    path: (w) => `/v1/properties/${w.propertyA.id}/bookings`,
+    body: () => ({ channel: 'AIRBNB', checkInDate: '2026-12-01', checkOutDate: '2026-12-04' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/bookings/:id',
+    label: 'A',
+    path: (w) => `/v1/bookings/${w.bookings.a}`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/bookings/:id',
+    label: 'B',
+    path: (w) => `/v1/bookings/${w.bookings.b}`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    route: 'PATCH /v1/bookings/:id',
+    path: (w) => `/v1/bookings/${w.bookings.a}`,
+    body: () => ({ version: 0, guestCount: 2 }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/bookings/:id/cancel',
+    path: (w) => `/v1/bookings/${w.bookings.a}/cancel`,
+    body: () => ({ version: 0 }),
+    allow: ADMIN,
+    mutates: true,
+  },
+
   // ── audit ──
   { route: 'GET /v1/audit-logs', path: () => '/v1/audit-logs', allow: ADMIN },
 ];

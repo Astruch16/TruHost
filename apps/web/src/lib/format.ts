@@ -24,3 +24,8 @@ export function percentToBps(input: string): number | null {
   const bps = Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0'));
   return bps <= 10_000 ? bps : null;
 }
+
+export const CHANNELS = ['AIRBNB', 'VRBO', 'BOOKING_COM', 'DIRECT', 'OTHER'] as const;
+export const channelLabel = (c: string) =>
+  ({ AIRBNB: 'Airbnb', VRBO: 'Vrbo', BOOKING_COM: 'Booking.com', DIRECT: 'Direct', OTHER: 'Other' })[c] ?? c;
+export const kindLabel = (k: string) => ({ GUEST: 'Guest stay', OWNER_STAY: 'Owner stay', BLOCK: 'Block' })[k] ?? k;

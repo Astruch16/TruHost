@@ -17,6 +17,8 @@ export interface World {
   planId: string;
   pendingInviteId: string;
   invitedUserId: string;
+  /** A confirmed, complete guest stay on each property: 2026-11-10 → 2026-11-13. */
+  bookings: { a: string; b: string };
 }
 
 export async function seedWorld(prisma: PrismaService): Promise<World> {
@@ -74,7 +76,25 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
   await prisma.membership.create({ data: { userId: invited.id, propertyId: a.id, role: 'CLEANER' } });
   const invite = await prisma.invite.create({ data: { userId: invited.id, clerkInvitationId: 'inv_seed' } });
 
+  const guestStay = async (propertyId: string) =>
+    (
+      await prisma.booking.create({
+        data: {
+          propertyId,
+          source: 'MANUAL',
+          channel: 'AIRBNB',
+          checkInDate: new Date('2026-11-10T00:00:00Z'),
+          checkOutDate: new Date('2026-11-13T00:00:00Z'),
+          guestName: 'Guest Person',
+          payoutCents: 60_000,
+          guestCleaningFeeCents: 9_000,
+        },
+      })
+    ).id;
+  const bookings = { a: await guestStay(a.id), b: await guestStay(b.id) };
+
   return {
+    bookings,
     propertyA: { id: a.id, roomIds: a.rooms.map((r) => r.id) },
     propertyB: { id: b.id, roomIds: b.rooms.map((r) => r.id) },
     users: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, { id: u.id, subject: k }])) as World['users'],

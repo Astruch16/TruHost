@@ -356,6 +356,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/bookings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Bookings_listAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/bookings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Bookings_list'];
+    put?: never;
+    post: operations['Bookings_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bookings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Bookings_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['Bookings_update'];
+    trace?: never;
+  };
+  '/v1/bookings/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Bookings_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/audit-logs': {
     parameters: {
       query?: never;
@@ -1683,6 +1747,420 @@ export interface operations {
               /** Format: date */
               effectiveTo: string | null;
             }[];
+          };
+        };
+      };
+    };
+  };
+  Bookings_listAll: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        status?: 'CONFIRMED' | 'CANCELLED';
+        kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              source: 'MANUAL' | 'ICAL' | 'PMS';
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** @enum {string} */
+              status: 'CONFIRMED' | 'CANCELLED';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              nights: number;
+              ownerGrossCents: number | null;
+              complete: boolean;
+              /** Format: date-time */
+              cancelledAt: string | null;
+              externalId?: string | null;
+              checkInTimeOverride?: string | null;
+              checkOutTimeOverride?: string | null;
+              guestName?: string | null;
+              guestCount?: number | null;
+              payoutCents?: number | null;
+              guestCleaningFeeCents?: number | null;
+              taxesCollectedCents?: number | null;
+              cancellationNote?: string | null;
+              notes?: string | null;
+              version?: number;
+              /** Format: date-time */
+              createdAt?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Bookings_list: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        status?: 'CONFIRMED' | 'CANCELLED';
+        kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              source: 'MANUAL' | 'ICAL' | 'PMS';
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** @enum {string} */
+              status: 'CONFIRMED' | 'CANCELLED';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              nights: number;
+              ownerGrossCents: number | null;
+              complete: boolean;
+              /** Format: date-time */
+              cancelledAt: string | null;
+              externalId?: string | null;
+              checkInTimeOverride?: string | null;
+              checkOutTimeOverride?: string | null;
+              guestName?: string | null;
+              guestCount?: number | null;
+              payoutCents?: number | null;
+              guestCleaningFeeCents?: number | null;
+              taxesCollectedCents?: number | null;
+              cancellationNote?: string | null;
+              notes?: string | null;
+              version?: number;
+              /** Format: date-time */
+              createdAt?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Bookings_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+          /**
+           * @default GUEST
+           * @enum {string}
+           */
+          kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+          /** Format: date */
+          checkInDate: string;
+          /** Format: date */
+          checkOutDate: string;
+          /** @default null */
+          externalId?: string | null;
+          /** @default null */
+          checkInTimeOverride?: string | null;
+          /** @default null */
+          checkOutTimeOverride?: string | null;
+          /** @default null */
+          guestName?: string | null;
+          /** @default null */
+          guestCount?: number | null;
+          /** @default null */
+          payoutCents?: number | null;
+          /** @default null */
+          guestCleaningFeeCents?: number | null;
+          /** @default null */
+          taxesCollectedCents?: number | null;
+          /** @default null */
+          notes?: string | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Bookings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Bookings_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          channel?: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+          /** @enum {string} */
+          kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+          /** Format: date */
+          checkInDate?: string;
+          /** Format: date */
+          checkOutDate?: string;
+          externalId?: string | null;
+          checkInTimeOverride?: string | null;
+          checkOutTimeOverride?: string | null;
+          guestName?: string | null;
+          guestCount?: number | null;
+          payoutCents?: number | null;
+          guestCleaningFeeCents?: number | null;
+          taxesCollectedCents?: number | null;
+          notes?: string | null;
+          version: number;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Bookings_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          version: number;
+          /** @default null */
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
           };
         };
       };

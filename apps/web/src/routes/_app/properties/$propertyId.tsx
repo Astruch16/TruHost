@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, MapPin } from 'lucide-react';
@@ -6,8 +7,12 @@ import { Card } from '../../../components/ui/card';
 import { PageHeader } from '../../../components/ui/page-header';
 import { Pill } from '../../../components/ui/pill';
 import { LoadingBlock, Skeleton } from '../../../components/ui/skeleton';
+import { MonthStepper } from '../../../components/ui/month-stepper';
+import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../components/ui/table';
 import { useApi } from '../../../lib/api-context';
-import { formatBps } from '../../../lib/format';
+import { formatCents } from '../../../lib/money';
+import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
+import { formatBps, kindLabel } from '../../../lib/format';
 import { queries } from '../../../lib/queries';
 
 /**
@@ -73,6 +78,7 @@ function PropertyView() {
             )}
           </Card>
         )}
+        {isOwner && <OwnerBookings propertyId={propertyId} />}
         <Card title="Rooms" description="In cleaning-checklist order.">
           {rooms.error ? (
             <ErrorAlert error={rooms.error} />
@@ -93,5 +99,56 @@ function PropertyView() {
         </Card>
       </div>
     </>
+  );
+}
+
+/** Owners see their stays and the gross each earned; guest details stay with TruHost. */
+function OwnerBookings({ propertyId }: { propertyId: string }) {
+  const api = useApi();
+  const [month, setMonth] = useState(monthKey);
+  const bookings = useQuery(queries.propertyBookings(api, propertyId, monthRange(month)));
+  const items = bookings.data?.items ?? [];
+  return (
+    <Card title="Bookings" actions={<MonthStepper month={month} onChange={setMonth} />} className="lg:col-span-2">
+      <Table>
+        <THead>
+          <tr>
+            <Th>Dates</Th>
+            <Th>Stay</Th>
+            <Th align="right">Your gross</Th>
+          </tr>
+        </THead>
+        <TBody>
+          <TableState
+            columns={3}
+            loading={bookings.isPending}
+            error={bookings.error}
+            empty={items.length === 0}
+            emptyMessage={`No stays in ${monthLabel(month)}.`}
+          />
+          {items.map((b) => (
+            <Tr key={b.id}>
+              <Td>
+                {shortDate(b.checkInDate)} → {shortDate(b.checkOutDate)}
+                <span className="block text-xs text-muted">
+                  {b.nights} night{b.nights === 1 ? '' : 's'}
+                </span>
+              </Td>
+              <Td>
+                {kindLabel(b.kind)}
+                {b.status === 'CANCELLED' && (
+                  <span className="ml-2">
+                    <Pill tone="neutral">Cancelled</Pill>
+                  </span>
+                )}
+              </Td>
+              <Td align="right" className="font-semibold">
+                {b.ownerGrossCents != null ? formatCents(b.ownerGrossCents) : b.complete ? '—' : 'Payout pending'}
+              </Td>
+            </Tr>
+          ))}
+        </TBody>
+      </Table>
+    </Card>
   );
 }

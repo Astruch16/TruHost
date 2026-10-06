@@ -3,6 +3,7 @@ import { ThrottlerException } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import type { Problem } from '@truhost/shared';
 import { Prisma } from '../generated/prisma/client.js';
+import { PG, pgErrorCode } from './pg-errors.js';
 import { ProblemException } from './problem.js';
 
 const TITLES: Partial<Record<number, string>> = {
@@ -71,6 +72,15 @@ export class ProblemFilter implements ExceptionFilter {
       case 'P2004':
       case 'P2010':
         return this.simple(HttpStatus.CONFLICT, 'CONSTRAINT_VIOLATION', 'The change violates a data constraint');
+      case 'P2039': {
+        // Driver-adapter errors: map the underlying Postgres constraint violations.
+        const pg = pgErrorCode(e);
+        if (pg === PG.exclusionViolation || pg === PG.checkViolation || pg === PG.uniqueViolation) {
+          return this.simple(HttpStatus.CONFLICT, 'CONSTRAINT_VIOLATION', 'The change violates a data constraint');
+        }
+        this.logger.error(`Unhandled driver error ${pg ?? '?'}: ${e.message}`);
+        return this.simple(HttpStatus.INTERNAL_SERVER_ERROR, 'INTERNAL', undefined);
+      }
       default:
         this.logger.error(`Unhandled Prisma error ${e.code}: ${e.message}`);
         return this.simple(HttpStatus.INTERNAL_SERVER_ERROR, 'INTERNAL', undefined);

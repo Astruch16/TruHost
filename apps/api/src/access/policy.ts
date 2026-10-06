@@ -20,6 +20,10 @@ export const POLICY = {
   'plan:manage': { admin: true, roles: [] },
   'propertyPlan:read': { admin: true, roles: ['OWNER'] },
   'propertyPlan:assign': { admin: true, roles: [] },
+  'booking:read': { admin: true, roles: ['OWNER'] },
+  /** Guest details, raw payout and cleaning fee, notes. */
+  'booking:readAdminFields': { admin: true, roles: [] },
+  'booking:write': { admin: true, roles: [] },
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },

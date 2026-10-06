@@ -6,6 +6,7 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { AuthModule } from './auth/auth.module.js';
+import { BookingsModule } from './bookings/bookings.module.js';
 import { ProblemFilter } from './common/problem.filter.js';
 import { ZodResponseInterceptor } from './common/zod.js';
 import { ConfigModule } from './config/config.module.js';
@@ -38,6 +39,7 @@ import { UsersModule } from './users/users.module.js';
     InvitesModule,
     PropertiesModule,
     PlansModule,
+    BookingsModule,
     AuditLogsModule,
   ],
   providers: [

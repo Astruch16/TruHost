@@ -6,3 +6,4 @@ export * from './api/me.js';
 export * from './api/users.js';
 export * from './api/properties.js';
 export * from './api/audit.js';
+export * from './api/bookings.js';

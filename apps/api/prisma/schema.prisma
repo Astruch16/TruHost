@@ -49,6 +49,7 @@ model User {
   auditLogs          AuditLog[]
   idempotencyKeys    IdempotencyKey[]
   defaultCleanerFor  Property[]       @relation("PropertyDefaultCleaner")
+  bookingsEntered    Booking[]
 }
 
 enum InviteStatus {
@@ -141,6 +142,7 @@ model Property {
   memberships Membership[]
   rooms       Room[]
   plans       PropertyPlan[]
+  bookings    Booking[]
 }
 
 enum RoomType {
@@ -206,6 +208,87 @@ model PropertyPlan {
 
   @@index([propertyId, effectiveFrom])
   // + EXCLUDE constraint property_plan_no_overlap (raw SQL)
+}
+
+// ───────────────────────── Bookings ─────────────────────────
+
+enum BookingSource {
+  /// Entered by an admin.
+  MANUAL
+  /// Created by the iCal sync (Phase 6): dates only; money is entered later.
+  ICAL
+  /// Created by a future PMS integration.
+  PMS
+}
+
+enum BookingChannel {
+  AIRBNB
+  VRBO
+  BOOKING_COM
+  DIRECT
+  OTHER
+}
+
+enum BookingKind {
+  /// Revenue stay.
+  GUEST
+  /// The owner is using the property: not revenue, still gets a turnover clean.
+  OWNER_STAY
+  /// Maintenance or hold: no revenue, no clean.
+  BLOCK
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id                    String         @id @default(uuid(7)) @db.Uuid
+  propertyId            String         @db.Uuid
+  property              Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// How the record got here (rule 3); separate from channel.
+  source                BookingSource
+  /// Where the guest booked.
+  channel               BookingChannel
+  kind                  BookingKind    @default(GUEST)
+  status                BookingStatus  @default(CONFIRMED)
+  /// Platform confirmation code or iCal UID; (propertyId, source, externalId) is unique so imports are idempotent.
+  externalId            String?
+  checkInDate           DateTime       @db.Date
+  /// nights = checkOutDate − checkInDate. CHECK (checkOut > checkIn).
+  checkOutDate          DateTime       @db.Date
+  /// Early check-in / late checkout ("HH:mm"); feed the clean window (Phase 3).
+  checkInTimeOverride   String?
+  checkOutTimeOverride  String?
+  /// PII: admin-only.
+  guestName             String?
+  guestCount            Int?
+
+  // Money (GUEST only; CHECKed). Null = not entered yet, which is different from 0: such bookings are "incomplete".
+  /// What the channel actually paid TruHost for the stay, after its host fee.
+  payoutCents           Int?
+  /// Cleaning fee charged to the guest: TruHost revenue, subtracted from payout for owner gross.
+  guestCleaningFeeCents Int?
+  /// Guest-paid taxes; must stay null unless TAX_FIELDS_ENABLED. Never revenue.
+  taxesCollectedCents   Int?
+
+  cancelledAt           DateTime?      @db.Timestamptz
+  cancellationNote      String?
+  /// Admin-only notes.
+  notes                 String?
+  /// Null for iCal/PMS records.
+  enteredById           String?        @db.Uuid
+  enteredBy             User?          @relation(fields: [enteredById], references: [id], onDelete: Restrict)
+  /// Optimistic concurrency: PATCH must send the current version; a stale one is a 409.
+  version               Int            @default(0)
+  createdAt             DateTime       @default(now()) @db.Timestamptz
+  updatedAt             DateTime       @updatedAt @db.Timestamptz
+
+  @@unique([propertyId, source, externalId])
+  @@index([propertyId, checkInDate])
+  @@index([propertyId, checkOutDate])
+  // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
 }
 
 // ───────────────────────── Audit & infrastructure ─────────────────────────

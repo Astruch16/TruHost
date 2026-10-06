@@ -16,6 +16,7 @@ import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
 import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
+import { Route as AppAdminBookingsRouteImport } from './routes/_app/admin/bookings'
 import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
 import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
 import { Route as AppPropertiesIndexRouteImport } from './routes/_app/properties/index'
@@ -57,6 +58,11 @@ const SignUpSplatRoute = SignUpSplatRouteImport.update({
   path: '/sign-up/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAdminBookingsRoute = AppAdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminPlansRoute = AppAdminPlansRouteImport.update({
   id: '/plans',
   path: '/plans',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/admin/bookings': typeof AppAdminBookingsRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/team': typeof AppAdminTeamRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/': typeof AppIndexRoute
+  '/admin/bookings': typeof AppAdminBookingsRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/team': typeof AppAdminTeamRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/bookings': typeof AppAdminBookingsRoute
   '/_app/admin/plans': typeof AppAdminPlansRoute
   '/_app/admin/team': typeof AppAdminTeamRoute
   '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/admin/bookings'
     | '/admin/plans'
     | '/admin/team'
     | '/properties/$propertyId'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/sign-in/$'
     | '/sign-up/$'
     | '/'
+    | '/admin/bookings'
     | '/admin/plans'
     | '/admin/team'
     | '/properties/$propertyId'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/sign-in/$'
     | '/sign-up/$'
     | '/_app/'
+    | '/_app/admin/bookings'
     | '/_app/admin/plans'
     | '/_app/admin/team'
     | '/_app/properties/$propertyId'
@@ -237,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/admin/bookings': {
+      id: '/_app/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AppAdminBookingsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/plans': {
       id: '/_app/admin/plans'
       path: '/plans'
@@ -283,6 +302,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAdminRouteChildren {
+  AppAdminBookingsRoute: typeof AppAdminBookingsRoute
   AppAdminPlansRoute: typeof AppAdminPlansRoute
   AppAdminTeamRoute: typeof AppAdminTeamRoute
   AppAdminPropertiesPropertyIdRoute: typeof AppAdminPropertiesPropertyIdRoute
@@ -290,6 +310,7 @@ interface AppAdminRouteChildren {
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminBookingsRoute: AppAdminBookingsRoute,
   AppAdminPlansRoute: AppAdminPlansRoute,
   AppAdminTeamRoute: AppAdminTeamRoute,
   AppAdminPropertiesPropertyIdRoute: AppAdminPropertiesPropertyIdRoute,
