@@ -10,5 +10,8 @@ export default function setup(): void {
 }
 
 export function testDatabaseUrl(): string {
-  return process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/truhost_test';
+  const url = process.env.TEST_DATABASE_URL;
+  // No default: these tests truncate every table, so they must never guess a database.
+  if (!url) throw new Error('TEST_DATABASE_URL is not set (see apps/api/.env.example)');
+  return url;
 }

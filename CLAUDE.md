@@ -175,23 +175,31 @@ Tooling per package:
 | First-run setup       | `pnpm bootstrap --admin-email … --first-name … --last-name … [--property-name … --address … --postal-code …]` (idempotent) |
 | Regenerate API client | `pnpm openapi` (builds, writes `packages/api-client/openapi.json`, regenerates types)                                      |
 
-E2E tests use `TEST_DATABASE_URL` (default
-`postgresql://postgres:postgres@localhost:5432/truhost_test`). They apply
-migrations once, then truncate tables between tests. Every DB-level guarantee
+E2E tests use `TEST_DATABASE_URL` from `apps/api/.env`. They apply
+migrations once, then truncate tables between tests, so never point it at a
+database you care about. Every DB-level guarantee
 (triggers, exclusion constraints) gets an e2e test that hits it with raw SQL.
 
-**Local Postgres in WSL** (one-time setup):
+**Local Postgres in WSL** (one-time setup). Ubuntu 24.04's packaged
+Postgres 16 is fine locally; CI and Neon run 17, and nothing in the schema
+needs 17.
 
 ```bash
-# Postgres 17 (matches CI and Neon); Ubuntu 24.04's own archive only has 16.
-sudo apt install -y postgresql-common
-sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-sudo apt install -y postgresql-17
-sudo service postgresql start          # WSL without systemd: run after each restart
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-sudo -u postgres createdb truhost_test
-sudo -u postgres createdb truhost_dev   # or point DATABASE_URL at a Neon dev branch
+sudo apt install -y postgresql
+sudo service postgresql start   # WSL without systemd: run after each restart
+# A dedicated, non-superuser role that owns both databases. CREATEDB is for
+# Prisma's shadow database during `prisma migrate dev`. btree_gist is a
+# trusted extension, so the database owner can install it.
+sudo -u postgres psql -v ON_ERROR_STOP=1 \
+  -c "CREATE ROLE truhost LOGIN CREATEDB PASSWORD '<generate one>';" \
+  -c "CREATE DATABASE truhost_dev OWNER truhost;" \
+  -c "CREATE DATABASE truhost_test OWNER truhost;"
 ```
+
+Then set `DATABASE_URL` and `TEST_DATABASE_URL` in `apps/api/.env` to
+`postgresql://truhost:<password>@localhost:5432/truhost_dev` (and
+`…/truhost_test`), run `pnpm --filter @truhost/api db:deploy`, then run
+`bootstrap`.
 
 ## Environment
 
