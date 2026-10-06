@@ -548,6 +548,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/properties/{id}/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Reports_month'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/summary/monthly': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Reports_year'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/reports/portfolio': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Reports_portfolio'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/audit-logs': {
     parameters: {
       query?: never;
@@ -2910,6 +2958,172 @@ export interface operations {
             voidReason?: string | null;
             /** Format: date-time */
             createdAt: string;
+          };
+        };
+      };
+    };
+  };
+  Reports_month: {
+    parameters: {
+      query: {
+        month: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            propertyId: string;
+            month: string;
+            daysInMonth: number;
+            nightsBooked: number;
+            ownerStayNights: number;
+            blockNights: number;
+            availableNights: number;
+            occupancyBps: number | null;
+            stays: number;
+            grossCents: number;
+            plan: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            } | null;
+            managementFeeBps: number | null;
+            managementFeeCents: number;
+            ownerExpensesCents: number;
+            netCents: number;
+            avgNightlyEarningsCents: number | null;
+            incompleteBookings: number;
+            expensesMissingReceipt: number;
+            cleaningFeesCents?: number;
+          };
+        };
+      };
+    };
+  };
+  Reports_year: {
+    parameters: {
+      query: {
+        year: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              propertyId: string;
+              month: string;
+              daysInMonth: number;
+              nightsBooked: number;
+              ownerStayNights: number;
+              blockNights: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              stays: number;
+              grossCents: number;
+              plan: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              } | null;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netCents: number;
+              avgNightlyEarningsCents: number | null;
+              incompleteBookings: number;
+              expensesMissingReceipt: number;
+              cleaningFeesCents?: number;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Reports_portfolio: {
+    parameters: {
+      query: {
+        month: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            totals: {
+              nightsBooked: number;
+              ownerStayNights: number;
+              blockNights: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              stays: number;
+              grossCents: number;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netCents: number;
+              avgNightlyEarningsCents: number | null;
+              incompleteBookings: number;
+              expensesMissingReceipt: number;
+              cleaningFeesCents: number;
+              properties: number;
+            };
+            properties: {
+              /** Format: uuid */
+              propertyId: string;
+              month: string;
+              daysInMonth: number;
+              nightsBooked: number;
+              ownerStayNights: number;
+              blockNights: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              stays: number;
+              grossCents: number;
+              plan: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              } | null;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netCents: number;
+              avgNightlyEarningsCents: number | null;
+              incompleteBookings: number;
+              expensesMissingReceipt: number;
+              cleaningFeesCents?: number;
+              name: string;
+              archived: boolean;
+            }[];
           };
         };
       };

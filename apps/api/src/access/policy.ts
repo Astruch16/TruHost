@@ -32,6 +32,10 @@ export const POLICY = {
   /** Owners see receipts on their owner-borne, non-voided expenses. */
   'receipt:read': { admin: true, roles: ['OWNER'] },
   'receipt:write': { admin: true, roles: [] },
+  'report:property': { admin: true, roles: ['OWNER'] },
+  /** TruHost-side figures (cleaning fees collected). */
+  'report:adminFields': { admin: true, roles: [] },
+  'report:portfolio': { admin: true, roles: [] },
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },

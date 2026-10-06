@@ -371,6 +371,26 @@ export const CASES: AuthzCase[] = [
     everyoneGets: 403,
   },
 
+  // ── reports ──
+  {
+    route: 'GET /v1/properties/:id/summary',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/summary?month=2026-11`,
+    allow: ['admin', 'ownerA'],
+  },
+  {
+    route: 'GET /v1/properties/:id/summary',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/summary?month=2026-11`,
+    allow: ['admin', 'ownerB'],
+  },
+  {
+    route: 'GET /v1/properties/:id/summary/monthly',
+    path: (w) => `/v1/properties/${w.propertyA.id}/summary/monthly?year=2026`,
+    allow: ['admin', 'ownerA'],
+  },
+  { route: 'GET /v1/reports/portfolio', path: () => '/v1/reports/portfolio?month=2026-11', allow: ADMIN },
+
   // ── audit ──
   { route: 'GET /v1/audit-logs', path: () => '/v1/audit-logs', allow: ADMIN },
 ];

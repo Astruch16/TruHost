@@ -20,6 +20,7 @@ import { MeModule } from './me/me.module.js';
 import { PlansModule } from './plans/plans.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { PropertiesModule } from './properties/properties.module.js';
+import { ReportingModule } from './reporting/reporting.module.js';
 import { PostAuthThrottlerGuard, PreAuthThrottlerGuard, throttlers } from './throttling/throttling.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -44,6 +45,7 @@ import { UsersModule } from './users/users.module.js';
     BookingsModule,
     FilesModule,
     ExpensesModule,
+    ReportingModule,
     AuditLogsModule,
   ],
   providers: [

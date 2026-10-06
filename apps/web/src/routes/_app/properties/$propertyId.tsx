@@ -13,7 +13,7 @@ import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../components
 import { useApi } from '../../../lib/api-context';
 import { formatCents } from '../../../lib/money';
 import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
-import { formatBps, kindLabel } from '../../../lib/format';
+import { formatBps, formatOccupancy, kindLabel } from '../../../lib/format';
 import { queries } from '../../../lib/queries';
 import { openFile } from '../../../lib/upload';
 
@@ -42,6 +42,7 @@ function PropertyView() {
     <>
       <PageHeader eyebrow="Property details" title={p.name} description={`${p.city}, ${p.province}`} />
       <div className="grid gap-5 lg:grid-cols-2">
+        {isOwner && <OwnerMonth propertyId={propertyId} />}
         <Card title="Address">
           <div className="flex flex-col gap-3 text-sm">
             <p className="flex gap-2.5">
@@ -213,6 +214,64 @@ function OwnerExpenses({ propertyId }: { propertyId: string }) {
           ))}
         </TBody>
       </Table>
+    </Card>
+  );
+}
+
+/** The owner's month at a glance. All figures come from the API's reporting module. */
+function OwnerMonth({ propertyId }: { propertyId: string }) {
+  const api = useApi();
+  const [month, setMonth] = useState(monthKey);
+  const summary = useQuery(queries.propertySummary(api, propertyId, month));
+  const f = summary.data;
+  const row = (label: string, value: string, strong = false) => (
+    <div className="flex items-baseline justify-between gap-4 py-2">
+      <dt className="text-muted">{label}</dt>
+      <dd className={strong ? 'figure text-lg font-bold text-ink' : 'figure font-semibold text-ink'}>{value}</dd>
+    </div>
+  );
+  return (
+    <Card
+      title="Month at a glance"
+      actions={<MonthStepper month={month} onChange={setMonth} />}
+      className="lg:col-span-2"
+    >
+      {summary.error ? (
+        <ErrorAlert error={summary.error} />
+      ) : !f ? (
+        <Skeleton className="h-40" />
+      ) : f.nightsBooked === 0 && f.grossCents === 0 && f.ownerExpensesCents === 0 ? (
+        <p className="py-6 text-center text-sm text-muted">No stays or expenses in {monthLabel(month)} yet.</p>
+      ) : (
+        <div className="grid gap-x-10 sm:grid-cols-2">
+          <dl className="divide-y divide-line-soft text-sm">
+            {row('Gross revenue', formatCents(f.grossCents))}
+            {row(
+              f.managementFeeBps === null
+                ? 'Management fee'
+                : `${f.plan?.name ?? 'Plan'} fee (${formatBps(f.managementFeeBps)})`,
+              `−${formatCents(f.managementFeeCents)}`,
+            )}
+            {row('Expenses', `−${formatCents(f.ownerExpensesCents)}`)}
+            {row('Net to you', formatCents(f.netCents), true)}
+          </dl>
+          <dl className="divide-y divide-line-soft text-sm">
+            {row('Nights booked', `${f.nightsBooked} of ${f.availableNights}`)}
+            {row('Occupancy', formatOccupancy(f.occupancyBps))}
+            {row(
+              'Avg. nightly earnings',
+              f.avgNightlyEarningsCents === null ? '—' : formatCents(f.avgNightlyEarningsCents),
+            )}
+            {row('Stays', String(f.stays))}
+          </dl>
+        </div>
+      )}
+      {f && f.incompleteBookings > 0 && (
+        <p className="mt-3 text-sm text-muted">
+          {f.incompleteBookings} stay{f.incompleteBookings === 1 ? ' is' : 's are'} waiting on a payout and not counted
+          yet.
+        </p>
+      )}
     </Card>
   );
 }
