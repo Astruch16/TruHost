@@ -1,0 +1,37 @@
+import { z } from 'zod';
+import { id, isoDateTime } from '../primitives.js';
+
+export const RECEIPT_CONTENT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'application/pdf',
+] as const;
+export const MAX_RECEIPT_BYTES = 20 * 1024 * 1024;
+
+/** Ask for an upload URL. Only receipts exist in this phase; photo purposes arrive with cleans (Phase 3). */
+export const createUpload = z.object({
+  purpose: z.literal('RECEIPT'),
+  propertyId: id,
+  contentType: z.enum(RECEIPT_CONTENT_TYPES),
+  sizeBytes: z.number().int().min(1).max(MAX_RECEIPT_BYTES),
+  /** Hex SHA-256 of the file; storage rejects any other body. */
+  sha256: z.string().regex(/^[0-9a-f]{64}$/, 'Expected a lowercase hex SHA-256'),
+  filename: z.string().trim().min(1).max(200).nullable().default(null),
+});
+export type CreateUpload = z.input<typeof createUpload>;
+
+export const uploadTarget = z.object({
+  fileId: id,
+  upload: z.object({
+    url: z.string(),
+    method: z.literal('PUT'),
+    headers: z.record(z.string(), z.string()),
+    expiresAt: isoDateTime,
+  }),
+});
+export type UploadTarget = z.infer<typeof uploadTarget>;
+
+export const fileUrl = z.object({ url: z.string(), expiresAt: isoDateTime });
+export type FileUrl = z.infer<typeof fileUrl>;

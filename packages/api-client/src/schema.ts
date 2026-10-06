@@ -356,6 +356,246 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/bookings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Bookings_listAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/bookings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Bookings_list'];
+    put?: never;
+    post: operations['Bookings_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bookings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Bookings_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['Bookings_update'];
+    trace?: never;
+  };
+  '/v1/bookings/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Bookings_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/uploads': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Files_createUpload'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/files/{id}/url': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Files_url'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/expenses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Expenses_listAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/expenses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Expenses_list'];
+    put?: never;
+    post: operations['Expenses_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/expenses/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['Expenses_update'];
+    trace?: never;
+  };
+  '/v1/expenses/{id}/void': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Expenses_void'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/receipts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Expenses_receipts'];
+    put?: never;
+    post: operations['Expenses_createReceipt'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/receipts/{id}/void': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Expenses_voidReceipt'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Reports_month'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/summary/monthly': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Reports_year'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/reports/portfolio': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Reports_portfolio'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/audit-logs': {
     parameters: {
       query?: never;
@@ -1682,6 +1922,1207 @@ export interface operations {
               effectiveFrom: string;
               /** Format: date */
               effectiveTo: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Bookings_listAll: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        status?: 'CONFIRMED' | 'CANCELLED';
+        kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              source: 'MANUAL' | 'ICAL' | 'PMS';
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** @enum {string} */
+              status: 'CONFIRMED' | 'CANCELLED';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              nights: number;
+              ownerGrossCents: number | null;
+              complete: boolean;
+              /** Format: date-time */
+              cancelledAt: string | null;
+              externalId?: string | null;
+              checkInTimeOverride?: string | null;
+              checkOutTimeOverride?: string | null;
+              guestName?: string | null;
+              guestCount?: number | null;
+              payoutCents?: number | null;
+              guestCleaningFeeCents?: number | null;
+              taxesCollectedCents?: number | null;
+              cancellationNote?: string | null;
+              notes?: string | null;
+              version?: number;
+              /** Format: date-time */
+              createdAt?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Bookings_list: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        status?: 'CONFIRMED' | 'CANCELLED';
+        kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              source: 'MANUAL' | 'ICAL' | 'PMS';
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** @enum {string} */
+              status: 'CONFIRMED' | 'CANCELLED';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              nights: number;
+              ownerGrossCents: number | null;
+              complete: boolean;
+              /** Format: date-time */
+              cancelledAt: string | null;
+              externalId?: string | null;
+              checkInTimeOverride?: string | null;
+              checkOutTimeOverride?: string | null;
+              guestName?: string | null;
+              guestCount?: number | null;
+              payoutCents?: number | null;
+              guestCleaningFeeCents?: number | null;
+              taxesCollectedCents?: number | null;
+              cancellationNote?: string | null;
+              notes?: string | null;
+              version?: number;
+              /** Format: date-time */
+              createdAt?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Bookings_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+          /**
+           * @default GUEST
+           * @enum {string}
+           */
+          kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+          /** Format: date */
+          checkInDate: string;
+          /** Format: date */
+          checkOutDate: string;
+          /** @default null */
+          externalId?: string | null;
+          /** @default null */
+          checkInTimeOverride?: string | null;
+          /** @default null */
+          checkOutTimeOverride?: string | null;
+          /** @default null */
+          guestName?: string | null;
+          /** @default null */
+          guestCount?: number | null;
+          /** @default null */
+          payoutCents?: number | null;
+          /** @default null */
+          guestCleaningFeeCents?: number | null;
+          /** @default null */
+          taxesCollectedCents?: number | null;
+          /** @default null */
+          notes?: string | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Bookings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Bookings_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          channel?: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+          /** @enum {string} */
+          kind?: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+          /** Format: date */
+          checkInDate?: string;
+          /** Format: date */
+          checkOutDate?: string;
+          externalId?: string | null;
+          checkInTimeOverride?: string | null;
+          checkOutTimeOverride?: string | null;
+          guestName?: string | null;
+          guestCount?: number | null;
+          payoutCents?: number | null;
+          guestCleaningFeeCents?: number | null;
+          taxesCollectedCents?: number | null;
+          notes?: string | null;
+          version: number;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Bookings_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          version: number;
+          /** @default null */
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            source: 'MANUAL' | 'ICAL' | 'PMS';
+            /** @enum {string} */
+            channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            /** @enum {string} */
+            kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+            /** @enum {string} */
+            status: 'CONFIRMED' | 'CANCELLED';
+            /** Format: date */
+            checkInDate: string;
+            /** Format: date */
+            checkOutDate: string;
+            nights: number;
+            ownerGrossCents: number | null;
+            complete: boolean;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            externalId?: string | null;
+            checkInTimeOverride?: string | null;
+            checkOutTimeOverride?: string | null;
+            guestName?: string | null;
+            guestCount?: number | null;
+            payoutCents?: number | null;
+            guestCleaningFeeCents?: number | null;
+            taxesCollectedCents?: number | null;
+            cancellationNote?: string | null;
+            notes?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Files_createUpload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          purpose: 'RECEIPT';
+          /** Format: uuid */
+          propertyId: string;
+          /** @enum {string} */
+          contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'application/pdf';
+          sizeBytes: number;
+          sha256: string;
+          /** @default null */
+          filename?: string | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            fileId: string;
+            upload: {
+              url: string;
+              /** @enum {string} */
+              method: 'PUT';
+              headers: {
+                [key: string]: string;
+              };
+              /** Format: date-time */
+              expiresAt: string;
+            };
+          };
+        };
+      };
+    };
+  };
+  Files_url: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+          };
+        };
+      };
+    };
+  };
+  Expenses_listAll: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        includeVoided?: 'true' | 'false';
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER';
+              /** @enum {string} */
+              bearer: 'OWNER' | 'TRUHOST';
+              /** Format: date */
+              incurredOn: string;
+              vendor: string | null;
+              description: string;
+              amountCents: number;
+              gstCents: number | null;
+              pstCents: number | null;
+              receipts: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+              missingReceipt: boolean;
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason?: string | null;
+              version?: number;
+              /** Format: date-time */
+              createdAt?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Expenses_list: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        includeVoided?: 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER';
+              /** @enum {string} */
+              bearer: 'OWNER' | 'TRUHOST';
+              /** Format: date */
+              incurredOn: string;
+              vendor: string | null;
+              description: string;
+              amountCents: number;
+              gstCents: number | null;
+              pstCents: number | null;
+              receipts: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+              missingReceipt: boolean;
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason?: string | null;
+              version?: number;
+              /** Format: date-time */
+              createdAt?: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Expenses_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          category:
+            | 'CLEANING'
+            | 'SUPPLIES'
+            | 'REPAIRS_MAINTENANCE'
+            | 'FURNISHINGS'
+            | 'UTILITIES'
+            | 'INTERNET'
+            | 'LICENSING_PERMITS'
+            | 'INSURANCE'
+            | 'STRATA'
+            | 'OTHER';
+          /**
+           * @default OWNER
+           * @enum {string}
+           */
+          bearer?: 'OWNER' | 'TRUHOST';
+          /** Format: date */
+          incurredOn: string;
+          /** @default null */
+          vendor?: string | null;
+          description: string;
+          amountCents: number;
+          /** @default null */
+          gstCents?: number | null;
+          /** @default null */
+          pstCents?: number | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            category:
+              | 'CLEANING'
+              | 'SUPPLIES'
+              | 'REPAIRS_MAINTENANCE'
+              | 'FURNISHINGS'
+              | 'UTILITIES'
+              | 'INTERNET'
+              | 'LICENSING_PERMITS'
+              | 'INSURANCE'
+              | 'STRATA'
+              | 'OTHER';
+            /** @enum {string} */
+            bearer: 'OWNER' | 'TRUHOST';
+            /** Format: date */
+            incurredOn: string;
+            vendor: string | null;
+            description: string;
+            amountCents: number;
+            gstCents: number | null;
+            pstCents: number | null;
+            receipts: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              fileId: string;
+              /** Format: date */
+              receiptDate: string;
+              description: string | null;
+              filename: string | null;
+              contentType: string;
+            }[];
+            missingReceipt: boolean;
+            /** Format: date-time */
+            voidedAt: string | null;
+            voidReason?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Expenses_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          category?:
+            | 'CLEANING'
+            | 'SUPPLIES'
+            | 'REPAIRS_MAINTENANCE'
+            | 'FURNISHINGS'
+            | 'UTILITIES'
+            | 'INTERNET'
+            | 'LICENSING_PERMITS'
+            | 'INSURANCE'
+            | 'STRATA'
+            | 'OTHER';
+          /** @enum {string} */
+          bearer?: 'OWNER' | 'TRUHOST';
+          /** Format: date */
+          incurredOn?: string;
+          vendor?: string | null;
+          description?: string;
+          amountCents?: number;
+          gstCents?: number | null;
+          pstCents?: number | null;
+          version: number;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            category:
+              | 'CLEANING'
+              | 'SUPPLIES'
+              | 'REPAIRS_MAINTENANCE'
+              | 'FURNISHINGS'
+              | 'UTILITIES'
+              | 'INTERNET'
+              | 'LICENSING_PERMITS'
+              | 'INSURANCE'
+              | 'STRATA'
+              | 'OTHER';
+            /** @enum {string} */
+            bearer: 'OWNER' | 'TRUHOST';
+            /** Format: date */
+            incurredOn: string;
+            vendor: string | null;
+            description: string;
+            amountCents: number;
+            gstCents: number | null;
+            pstCents: number | null;
+            receipts: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              fileId: string;
+              /** Format: date */
+              receiptDate: string;
+              description: string | null;
+              filename: string | null;
+              contentType: string;
+            }[];
+            missingReceipt: boolean;
+            /** Format: date-time */
+            voidedAt: string | null;
+            voidReason?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Expenses_void: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** @enum {string} */
+            category:
+              | 'CLEANING'
+              | 'SUPPLIES'
+              | 'REPAIRS_MAINTENANCE'
+              | 'FURNISHINGS'
+              | 'UTILITIES'
+              | 'INTERNET'
+              | 'LICENSING_PERMITS'
+              | 'INSURANCE'
+              | 'STRATA'
+              | 'OTHER';
+            /** @enum {string} */
+            bearer: 'OWNER' | 'TRUHOST';
+            /** Format: date */
+            incurredOn: string;
+            vendor: string | null;
+            description: string;
+            amountCents: number;
+            gstCents: number | null;
+            pstCents: number | null;
+            receipts: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              fileId: string;
+              /** Format: date */
+              receiptDate: string;
+              description: string | null;
+              filename: string | null;
+              contentType: string;
+            }[];
+            missingReceipt: boolean;
+            /** Format: date-time */
+            voidedAt: string | null;
+            voidReason?: string | null;
+            version?: number;
+            /** Format: date-time */
+            createdAt?: string;
+          };
+        };
+      };
+    };
+  };
+  Expenses_receipts: {
+    parameters: {
+      query: {
+        from: string;
+        to: string;
+        includeVoided?: 'true' | 'false';
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              fileId: string;
+              /** Format: date */
+              receiptDate: string;
+              description: string | null;
+              filename: string | null;
+              contentType: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason?: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Expenses_createReceipt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          fileId: string;
+          /**
+           * Format: uuid
+           * @default null
+           */
+          expenseId?: string | null;
+          /** Format: date */
+          receiptDate: string;
+          /** @default null */
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string;
+            /** Format: date */
+            receiptDate: string;
+            description: string | null;
+            filename: string | null;
+            contentType: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** Format: uuid */
+            expenseId: string | null;
+            /** Format: date-time */
+            voidedAt: string | null;
+            voidReason?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+    };
+  };
+  Expenses_voidReceipt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fileId: string;
+            /** Format: date */
+            receiptDate: string;
+            description: string | null;
+            filename: string | null;
+            contentType: string;
+            /** Format: uuid */
+            propertyId: string;
+            /** Format: uuid */
+            expenseId: string | null;
+            /** Format: date-time */
+            voidedAt: string | null;
+            voidReason?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+    };
+  };
+  Reports_month: {
+    parameters: {
+      query: {
+        month: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            propertyId: string;
+            month: string;
+            daysInMonth: number;
+            nightsBooked: number;
+            ownerStayNights: number;
+            blockNights: number;
+            availableNights: number;
+            occupancyBps: number | null;
+            stays: number;
+            grossCents: number;
+            plan: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            } | null;
+            managementFeeBps: number | null;
+            managementFeeCents: number;
+            ownerExpensesCents: number;
+            netCents: number;
+            avgNightlyEarningsCents: number | null;
+            incompleteBookings: number;
+            expensesMissingReceipt: number;
+            cleaningFeesCents?: number;
+          };
+        };
+      };
+    };
+  };
+  Reports_year: {
+    parameters: {
+      query: {
+        year: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              propertyId: string;
+              month: string;
+              daysInMonth: number;
+              nightsBooked: number;
+              ownerStayNights: number;
+              blockNights: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              stays: number;
+              grossCents: number;
+              plan: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              } | null;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netCents: number;
+              avgNightlyEarningsCents: number | null;
+              incompleteBookings: number;
+              expensesMissingReceipt: number;
+              cleaningFeesCents?: number;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Reports_portfolio: {
+    parameters: {
+      query: {
+        month: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            totals: {
+              nightsBooked: number;
+              ownerStayNights: number;
+              blockNights: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              stays: number;
+              grossCents: number;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netCents: number;
+              avgNightlyEarningsCents: number | null;
+              incompleteBookings: number;
+              expensesMissingReceipt: number;
+              cleaningFeesCents: number;
+              properties: number;
+            };
+            properties: {
+              /** Format: uuid */
+              propertyId: string;
+              month: string;
+              daysInMonth: number;
+              nightsBooked: number;
+              ownerStayNights: number;
+              blockNights: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              stays: number;
+              grossCents: number;
+              plan: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              } | null;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netCents: number;
+              avgNightlyEarningsCents: number | null;
+              incompleteBookings: number;
+              expensesMissingReceipt: number;
+              cleaningFeesCents?: number;
+              name: string;
+              archived: boolean;
             }[];
           };
         };

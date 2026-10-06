@@ -24,3 +24,37 @@ export function percentToBps(input: string): number | null {
   const bps = Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0'));
   return bps <= 10_000 ? bps : null;
 }
+
+export const CHANNELS = ['AIRBNB', 'VRBO', 'BOOKING_COM', 'DIRECT', 'OTHER'] as const;
+export const channelLabel = (c: string) =>
+  ({ AIRBNB: 'Airbnb', VRBO: 'Vrbo', BOOKING_COM: 'Booking.com', DIRECT: 'Direct', OTHER: 'Other' })[c] ?? c;
+export const kindLabel = (k: string) => ({ GUEST: 'Guest stay', OWNER_STAY: 'Owner stay', BLOCK: 'Block' })[k] ?? k;
+
+export const EXPENSE_CATEGORIES = [
+  'SUPPLIES',
+  'REPAIRS_MAINTENANCE',
+  'FURNISHINGS',
+  'UTILITIES',
+  'INTERNET',
+  'LICENSING_PERMITS',
+  'INSURANCE',
+  'STRATA',
+  'CLEANING',
+  'OTHER',
+] as const;
+export const categoryLabel = (c: string) =>
+  ({
+    SUPPLIES: 'Supplies',
+    REPAIRS_MAINTENANCE: 'Repairs',
+    FURNISHINGS: 'Furnishings',
+    UTILITIES: 'Utilities',
+    INTERNET: 'Internet',
+    LICENSING_PERMITS: 'Licences & permits',
+    INSURANCE: 'Insurance',
+    STRATA: 'Strata',
+    CLEANING: 'Cleaning',
+    OTHER: 'Other',
+  })[c] ?? c;
+
+/** Occupancy in basis points → "55%" (display only). */
+export const formatOccupancy = (bps: number | null) => (bps === null ? '—' : `${Math.round(bps / 100)}%`);

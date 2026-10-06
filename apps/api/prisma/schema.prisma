@@ -49,6 +49,12 @@ model User {
   auditLogs          AuditLog[]
   idempotencyKeys    IdempotencyKey[]
   defaultCleanerFor  Property[]       @relation("PropertyDefaultCleaner")
+  bookingsEntered    Booking[]
+  expensesEntered    Expense[]        @relation("ExpenseEnteredBy")
+  expensesVoided     Expense[]        @relation("ExpenseVoidedBy")
+  receiptsUploaded   Receipt[]        @relation("ReceiptUploadedBy")
+  receiptsVoided     Receipt[]        @relation("ReceiptVoidedBy")
+  filesUploaded      StoredFile[]
 }
 
 enum InviteStatus {
@@ -141,6 +147,10 @@ model Property {
   memberships Membership[]
   rooms       Room[]
   plans       PropertyPlan[]
+  bookings    Booking[]
+  expenses    Expense[]
+  receipts    Receipt[]
+  files       StoredFile[]
 }
 
 enum RoomType {
@@ -206,6 +216,212 @@ model PropertyPlan {
 
   @@index([propertyId, effectiveFrom])
   // + EXCLUDE constraint property_plan_no_overlap (raw SQL)
+}
+
+// ───────────────────────── Bookings ─────────────────────────
+
+enum BookingSource {
+  /// Entered by an admin.
+  MANUAL
+  /// Created by the iCal sync (Phase 6): dates only; money is entered later.
+  ICAL
+  /// Created by a future PMS integration.
+  PMS
+}
+
+enum BookingChannel {
+  AIRBNB
+  VRBO
+  BOOKING_COM
+  DIRECT
+  OTHER
+}
+
+enum BookingKind {
+  /// Revenue stay.
+  GUEST
+  /// The owner is using the property: not revenue, still gets a turnover clean.
+  OWNER_STAY
+  /// Maintenance or hold: no revenue, no clean.
+  BLOCK
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id                    String         @id @default(uuid(7)) @db.Uuid
+  propertyId            String         @db.Uuid
+  property              Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// How the record got here (rule 3); separate from channel.
+  source                BookingSource
+  /// Where the guest booked.
+  channel               BookingChannel
+  kind                  BookingKind    @default(GUEST)
+  status                BookingStatus  @default(CONFIRMED)
+  /// Platform confirmation code or iCal UID; (propertyId, source, externalId) is unique so imports are idempotent.
+  externalId            String?
+  checkInDate           DateTime       @db.Date
+  /// nights = checkOutDate − checkInDate. CHECK (checkOut > checkIn).
+  checkOutDate          DateTime       @db.Date
+  /// Early check-in / late checkout ("HH:mm"); feed the clean window (Phase 3).
+  checkInTimeOverride   String?
+  checkOutTimeOverride  String?
+  /// PII: admin-only.
+  guestName             String?
+  guestCount            Int?
+
+  // Money (GUEST only; CHECKed). Null = not entered yet, which is different from 0: such bookings are "incomplete".
+  /// What the channel actually paid TruHost for the stay, after its host fee.
+  payoutCents           Int?
+  /// Cleaning fee charged to the guest: TruHost revenue, subtracted from payout for owner gross.
+  guestCleaningFeeCents Int?
+  /// Guest-paid taxes; must stay null unless TAX_FIELDS_ENABLED. Never revenue.
+  taxesCollectedCents   Int?
+
+  cancelledAt           DateTime?      @db.Timestamptz
+  cancellationNote      String?
+  /// Admin-only notes.
+  notes                 String?
+  /// Null for iCal/PMS records.
+  enteredById           String?        @db.Uuid
+  enteredBy             User?          @relation(fields: [enteredById], references: [id], onDelete: Restrict)
+  /// Optimistic concurrency: PATCH must send the current version; a stale one is a 409.
+  version               Int            @default(0)
+  createdAt             DateTime       @default(now()) @db.Timestamptz
+  updatedAt             DateTime       @updatedAt @db.Timestamptz
+
+  @@unique([propertyId, source, externalId])
+  @@index([propertyId, checkInDate])
+  @@index([propertyId, checkOutDate])
+  // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
+}
+
+// ───────────────────────── Expenses & receipts ─────────────────────────
+
+enum ExpenseCategory {
+  /// Owner-stay cleans (system-created, Phase 3).
+  CLEANING
+  /// Restocks bought by TruHost (decision N12).
+  SUPPLIES
+  REPAIRS_MAINTENANCE
+  FURNISHINGS
+  UTILITIES
+  INTERNET
+  LICENSING_PERMITS
+  INSURANCE
+  STRATA
+  OTHER
+}
+
+enum ExpenseBearer {
+  /// Deducted on the owner's statement; needs a receipt before its month can be finalized.
+  OWNER
+  /// TruHost's own cost for this property; never shown to owners.
+  TRUHOST
+}
+
+model Expense {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  propertyId    String          @db.Uuid
+  property      Property        @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  category      ExpenseCategory
+  bearer        ExpenseBearer   @default(OWNER)
+  /// Purchase date (the date on the receipt). Decides which statement month it lands in.
+  incurredOn    DateTime        @db.Date
+  vendor        String?
+  description   String
+  /// Total paid including any tax: this is what is deducted. CHECK (>= 0).
+  amountCents   Int
+  /// Tax breakdown; must stay null unless TAX_FIELDS_ENABLED.
+  gstCents      Int?
+  pstCents      Int?
+  enteredById   String          @db.Uuid
+  enteredBy     User            @relation("ExpenseEnteredBy", fields: [enteredById], references: [id], onDelete: Restrict)
+  /// Void instead of delete; voided rows are excluded from every money computation. Reason required (CHECK).
+  voidedAt      DateTime?       @db.Timestamptz
+  voidedById    String?         @db.Uuid
+  voidedBy      User?           @relation("ExpenseVoidedBy", fields: [voidedById], references: [id], onDelete: Restrict)
+  voidReason    String?
+  version       Int             @default(0)
+  createdAt     DateTime        @default(now()) @db.Timestamptz
+  updatedAt     DateTime        @updatedAt @db.Timestamptz
+
+  receipts Receipt[]
+
+  /// Target of Receipt's composite FK, proving a receipt and its expense share a property.
+  @@unique([propertyId, id])
+  @@index([propertyId, incurredOn])
+}
+
+/// A receipt or invoice document. Usually attached to an expense (several per expense allowed).
+model Receipt {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  propertyId   String     @db.Uuid
+  property     Property   @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// Same property as the receipt (composite FK in raw SQL).
+  expenseId    String?    @db.Uuid
+  expense      Expense?   @relation(fields: [expenseId], references: [id], onDelete: Restrict)
+  fileId       String     @unique @db.Uuid
+  file         StoredFile @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  receiptDate  DateTime   @db.Date
+  description  String?
+  uploadedById String     @db.Uuid
+  uploadedBy   User       @relation("ReceiptUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+  /// Void instead of delete; the file stays in storage. Reason required (CHECK).
+  voidedAt     DateTime?  @db.Timestamptz
+  voidedById   String?    @db.Uuid
+  voidedBy     User?      @relation("ReceiptVoidedBy", fields: [voidedById], references: [id], onDelete: Restrict)
+  voidReason   String?
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+
+  @@index([propertyId, receiptDate])
+  @@index([expenseId])
+}
+
+// ───────────────────────── Files ─────────────────────────
+
+enum FilePurpose {
+  RECEIPT
+  CLEAN_PHOTO
+  DAMAGE_PHOTO
+}
+
+enum FileStatus {
+  /// Upload URL issued; the object may not exist yet.
+  PENDING
+  /// Object confirmed in storage with the declared size, type and SHA-256.
+  VERIFIED
+}
+
+/// Every stored object. Access is decided by the row it is attached to (Receipt, later photos), never by this row.
+model StoredFile {
+  id               String      @id @default(uuid(7)) @db.Uuid
+  purpose          FilePurpose
+  /// Scoping key and object-key prefix: properties/{propertyId}/{purpose}/{id}.
+  propertyId       String      @db.Uuid
+  property         Property    @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  objectKey        String      @unique
+  /// Allow-listed per purpose (images and PDF for receipts).
+  contentType      String
+  sizeBytes        Int
+  /// Hex SHA-256 declared by the client; storage rejects a body that doesn't match.
+  sha256           String
+  status           FileStatus  @default(PENDING)
+  uploadedById     String      @db.Uuid
+  uploadedBy       User        @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  /// Server time the upload was authorised (evidence timestamp).
+  createdAt        DateTime    @default(now()) @db.Timestamptz
+  /// Server time the object was confirmed in storage.
+  verifiedAt       DateTime?   @db.Timestamptz
+  originalFilename String?
+
+  receipt Receipt?
+
+  /// Nightly purge of PENDING rows older than 24h (job comes with deploy).
+  @@index([status, createdAt])
 }
 
 // ───────────────────────── Audit & infrastructure ─────────────────────────
