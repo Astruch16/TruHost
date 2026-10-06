@@ -77,6 +77,12 @@ export const queries = {
           }),
         ),
     }),
+  propertySummary: (api: ApiClient, propertyId: string, month: string) =>
+    queryOptions({
+      queryKey: ['summary', propertyId, month],
+      queryFn: () =>
+        unwrap(api.GET('/v1/properties/{id}/summary', { params: { path: { id: propertyId }, query: { month } } })),
+    }),
   plans: (api: ApiClient) => queryOptions({ queryKey: ['plans'], queryFn: () => unwrap(api.GET('/v1/plans')) }),
   users: (api: ApiClient) =>
     queryOptions({

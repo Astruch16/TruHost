@@ -945,9 +945,19 @@ For a property and month `M` (property-local):
 | **Avg. nightly earnings** | Gross from CONFIRMED stays in `M` ÷ nights booked, to the nearest cent. Labelled "Avg. nightly earnings", never "ADR": it is net of Airbnb's fee and the cleaning fee, so it is lower than the listed nightly price. |
 | **Occupancy**             | Nights booked ÷ (days in `M` − owner-stay nights − block nights).                                                                                                                                                    |
 
-Reports for arbitrary ranges use the same per-night allocation. The fee for a
-range is the sum of each month's fee, so ranges always agree with
-statements.
+Reports are per calendar month (`?month=YYYY-MM`), the unit statements use, so a report and its statement always
+agree. A multi-month view is the sum of its months. Implemented in `apps/api/src/reporting/monthly.ts` with
+table-driven tests.
+
+Refinements made while building (2026-10-06):
+
+- **Avg. nightly earnings** divides gross from _complete_ confirmed stays by _their_ nights, so a stay still
+  waiting on its payout doesn't drag the average down. Incomplete stays still count toward nights booked and
+  occupancy, and are reported as `incompleteBookings`.
+- **Occupancy** is returned in basis points (`occupancyBps`), rounded half up. It is null when the whole month
+  was owner stays or blocks.
+- **Cleaning fees collected** (TruHost revenue) count guest stays by checkout date, using the amounts as
+  entered, including cancelled stays. They're admin-only in the API.
 
 **Statement lifecycle:**
 
@@ -1173,20 +1183,20 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 
 ### Statements, adjustments, reports [2b]
 
-| Method | Path                              | Roles | Notes                                                                                                  |
-| ------ | --------------------------------- | ----- | ------------------------------------------------------------------------------------------------------ |
-| GET    | `/properties/:id/statements`      | A O   | O: FINALIZED and RELEASED only.                                                                        |
-| POST   | `/properties/:id/statements`      | A     | `{ periodMonth }`. Creates the DRAFT (idempotent).                                                     |
-| GET    | `/statements/:id`                 | A O   | DRAFT: live lines plus blockers. Otherwise the stored copy.                                            |
-| POST   | `/statements/:id/finalize`        | A     | 422 with a list of blockers. Audited.                                                                  |
-| POST   | `/statements/:id/release`         | A     | `{ releasedOn, paymentReference }`. Audited.                                                           |
-| GET    | `/properties/:id/adjustments`     | A     |                                                                                                        |
-| POST   | `/properties/:id/adjustments`     | A     | Audited.                                                                                               |
-| POST   | `/adjustments/:id/void`           | A     | Only before it is applied. Audited.                                                                    |
-| GET    | `/properties/:id/summary`         | A O   | `?from&to`. Nights, gross, fee, expenses, net, avg. nightly earnings, occupancy, `incompleteBookings`. |
-| GET    | `/properties/:id/summary/monthly` | A O   | `?year`                                                                                                |
-| GET    | `/reports/portfolio`              | A     |                                                                                                        |
-| GET    | `/reports/truhost`                | A     | TruHost revenue: cleaning fees, plan fees, cleaner pay.                                                |
+| Method | Path                              | Roles | Notes                                                                                                                                                                                                   |
+| ------ | --------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/properties/:id/statements`      | A O   | O: FINALIZED and RELEASED only.                                                                                                                                                                         |
+| POST   | `/properties/:id/statements`      | A     | `{ periodMonth }`. Creates the DRAFT (idempotent).                                                                                                                                                      |
+| GET    | `/statements/:id`                 | A O   | DRAFT: live lines plus blockers. Otherwise the stored copy.                                                                                                                                             |
+| POST   | `/statements/:id/finalize`        | A     | 422 with a list of blockers. Audited.                                                                                                                                                                   |
+| POST   | `/statements/:id/release`         | A     | `{ releasedOn, paymentReference }`. Audited.                                                                                                                                                            |
+| GET    | `/properties/:id/adjustments`     | A     |                                                                                                                                                                                                         |
+| POST   | `/properties/:id/adjustments`     | A     | Audited.                                                                                                                                                                                                |
+| POST   | `/adjustments/:id/void`           | A     | Only before it is applied. Audited.                                                                                                                                                                     |
+| GET    | `/properties/:id/summary`         | A O   | `?month=YYYY-MM`. Nights, occupancy (bps), stays, gross, plan and fee, owner expenses, net, avg. nightly earnings, incomplete bookings, expenses missing receipts; `cleaningFeesCents` admin-only. [2a] |
+| GET    | `/properties/:id/summary/monthly` | A O   | `?year`. Twelve monthly summaries. [2a]                                                                                                                                                                 |
+| GET    | `/reports/portfolio`              | A     | `?month=YYYY-MM`. Per-property summaries plus totals (fees rounded per property-month, then summed). [2a]                                                                                               |
+| GET    | `/reports/truhost`                | A     | TruHost revenue: cleaning fees, plan fees, cleaner pay.                                                                                                                                                 |
 
 ### Cleans & cleaner pay [3]
 

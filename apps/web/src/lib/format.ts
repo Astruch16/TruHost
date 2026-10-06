@@ -55,3 +55,6 @@ export const categoryLabel = (c: string) =>
     CLEANING: 'Cleaning',
     OTHER: 'Other',
   })[c] ?? c;
+
+/** Occupancy in basis points → "55%" (display only). */
+export const formatOccupancy = (bps: number | null) => (bps === null ? '—' : `${Math.round(bps / 100)}%`);
