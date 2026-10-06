@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createFileRoute, Navigate, Outlet, useNavigate, useParams } from '@tanstack/react-router';
+import { createFileRoute, Navigate, Outlet, useMatchRoute, useNavigate, useParams } from '@tanstack/react-router';
 import { useAuth, useClerk } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
@@ -12,7 +12,7 @@ import { useApi } from '../lib/api-context';
 import { clerkAppearance } from '../lib/clerk-appearance';
 import { initials, navItems, roleLabel } from '../lib/nav';
 import { queries } from '../lib/queries';
-import { readSelectedProperty, writeSelectedProperty } from '../lib/selected-property';
+import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
 
 /** Everything behind sign-in. Our API (not Clerk) decides who the user is and what they see. */
 export const Route = createFileRoute('/_app')({
@@ -40,8 +40,13 @@ function SignedInShell() {
   const navigate = useNavigate();
   const me = useQuery(queries.me(api));
   const properties = useQuery({ ...queries.properties(api), enabled: me.isSuccess });
+  const matchRoute = useMatchRoute();
   const { propertyId: routePropertyId } = useParams({ strict: false });
-  const [picked, setPicked] = useState(readSelectedProperty);
+  const [scope, setScopeState] = useState(readStoredScope);
+  const setScope = (id: string | null) => {
+    setScopeState(id);
+    storeScope(id);
+  };
   const handleSignOut = () => void signOut({ redirectUrl: '/sign-in' });
 
   if (me.isPending) return <FullPageLoading />;
@@ -67,14 +72,25 @@ function SignedInShell() {
   const user = me.data;
   const isAdmin = user.staffRole === 'ADMIN';
   const list = properties.data?.items ?? [];
-  const selectedId = [routePropertyId, picked].find((id) => id && list.some((p) => p.id === id)) ?? list[0]?.id ?? null;
+  const known = (id: string | null | undefined): id is string => !!id && list.some((p) => p.id === id);
 
-  const selectProperty = (id: string) => {
-    setPicked(id);
-    writeSelectedProperty(id);
-    void (isAdmin
-      ? navigate({ to: '/admin/properties/$propertyId', params: { propertyId: id } })
-      : navigate({ to: '/properties/$propertyId', params: { propertyId: id } }));
+  // Admins: the switcher narrows the admin pages (null = all properties); on a property's own page it follows it.
+  // Owners and cleaners: the switcher takes them to that property's page.
+  const adminScope = known(routePropertyId) ? routePropertyId : known(scope) ? scope : null;
+  const memberSelected = [routePropertyId, scope].find(known) ?? list[0]?.id ?? null;
+  const selectedId = isAdmin ? adminScope : memberSelected;
+
+  const selectProperty = (id: string | null) => {
+    setScope(id);
+    if (!isAdmin) {
+      if (id) void navigate({ to: '/properties/$propertyId', params: { propertyId: id } });
+      return;
+    }
+    if (matchRoute({ to: '/admin/properties/$propertyId' })) {
+      void (id
+        ? navigate({ to: '/admin/properties/$propertyId', params: { propertyId: id } })
+        : navigate({ to: '/admin/properties' }));
+    }
   };
 
   return (
@@ -89,10 +105,13 @@ function SignedInShell() {
       properties={list}
       selectedPropertyId={selectedId}
       onSelectProperty={selectProperty}
+      allowAllProperties={isAdmin}
       onSignOut={handleSignOut}
       onManageSignIn={() => openUserProfile({ appearance: clerkAppearance })}
     >
-      <Outlet />
+      <ScopeContext.Provider value={{ propertyId: selectedId, setPropertyId: setScope }}>
+        <Outlet />
+      </ScopeContext.Provider>
     </AppShell>
   );
 }

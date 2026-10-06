@@ -80,7 +80,7 @@ export class ReportsService {
   }
 
   /** Figures for each property in `propertyIds`, in the same order. Three queries regardless of property count. */
-  private async compute(propertyIds: string[], month: string) {
+  async compute(propertyIds: string[], month: string) {
     const { first, next } = monthBounds(month);
     const firstDate = fromIsoDate(first);
     const nextDate = fromIsoDate(next);

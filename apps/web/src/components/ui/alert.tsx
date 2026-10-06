@@ -8,7 +8,9 @@ export function ErrorAlert({ error, action }: { error: unknown; action?: ReactNo
   const message =
     error instanceof ApiError
       ? (error.problem.detail ?? error.problem.title)
-      : 'Something went wrong. Please try again.';
+      : error instanceof Error && error.name === 'UploadError'
+        ? error.message
+        : 'Something went wrong. Please try again.';
   return (
     <div
       role="alert"

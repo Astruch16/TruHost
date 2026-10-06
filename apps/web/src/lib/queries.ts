@@ -83,6 +83,12 @@ export const queries = {
       queryFn: () =>
         unwrap(api.GET('/v1/properties/{id}/summary', { params: { path: { id: propertyId }, query: { month } } })),
     }),
+  dashboard: (api: ApiClient, month: string, propertyId: string | null) =>
+    queryOptions({
+      queryKey: ['dashboard', month, propertyId],
+      queryFn: () =>
+        unwrap(api.GET('/v1/dashboard', { params: { query: { month, propertyId: propertyId ?? undefined } } })),
+    }),
   plans: (api: ApiClient) => queryOptions({ queryKey: ['plans'], queryFn: () => unwrap(api.GET('/v1/plans')) }),
   users: (api: ApiClient) =>
     queryOptions({

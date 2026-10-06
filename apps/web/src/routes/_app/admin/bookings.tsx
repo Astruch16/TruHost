@@ -10,7 +10,7 @@ import { Card } from '../../../components/ui/card';
 import { Dialog } from '../../../components/ui/dialog';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { Field } from '../../../components/ui/field';
-import { Input, Select } from '../../../components/ui/input';
+import { Input } from '../../../components/ui/input';
 import { MonthStepper } from '../../../components/ui/month-stepper';
 import { PageHeader } from '../../../components/ui/page-header';
 import { Pill } from '../../../components/ui/pill';
@@ -21,8 +21,10 @@ import { channelLabel, kindLabel } from '../../../lib/format';
 import { formatCents } from '../../../lib/money';
 import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
 import { queries } from '../../../lib/queries';
+import { monthSearch, useScope } from '../../../lib/scope';
 
 export const Route = createFileRoute('/_app/admin/bookings')({
+  validateSearch: monthSearch,
   component: Bookings,
 });
 
@@ -30,8 +32,11 @@ const money = (cents: number | null | undefined) => (cents == null ? '—' : for
 
 function Bookings() {
   const api = useApi();
-  const [month, setMonth] = useState(monthKey);
-  const [propertyId, setPropertyId] = useState('');
+  const navigate = Route.useNavigate();
+  const month = Route.useSearch().month ?? monthKey();
+  const setMonth = (m: string) => void navigate({ search: { month: m } });
+  const { propertyId: scopedId } = useScope();
+  const propertyId = scopedId ?? '';
   const [editing, setEditing] = useState<Booking | 'new' | null>(null);
   const [cancelling, setCancelling] = useState<Booking | null>(null);
   const properties = useQuery(queries.properties(api));
@@ -56,18 +61,6 @@ function Bookings() {
       <Card>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <MonthStepper month={month} onChange={setMonth} />
-          {propertyList.length > 1 && (
-            <Field label="Property" className="w-full sm:w-64">
-              <Select value={propertyId} onChange={(e) => setPropertyId(e.target.value)}>
-                <option value="">All properties</option>
-                {propertyList.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          )}
         </div>
         {noProperties ? (
           <EmptyState icon={CalendarPlus} title="Add a property first">

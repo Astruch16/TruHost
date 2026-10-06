@@ -36,6 +36,7 @@ export const POLICY = {
   /** TruHost-side figures (cleaning fees collected). */
   'report:adminFields': { admin: true, roles: [] },
   'report:portfolio': { admin: true, roles: [] },
+  'dashboard:read': { admin: true, roles: [] },
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },

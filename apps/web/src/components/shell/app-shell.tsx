@@ -24,6 +24,7 @@ export function AppShell({
   properties,
   selectedPropertyId,
   onSelectProperty,
+  allowAllProperties = false,
   unreadNotifications = 0,
   onSignOut,
   onManageSignIn,
@@ -33,7 +34,9 @@ export function AppShell({
   user: ShellUser;
   properties: SwitcherProperty[];
   selectedPropertyId: string | null;
-  onSelectProperty: (id: string) => void;
+  onSelectProperty: (id: string | null) => void;
+  /** Offer "All properties" in the switcher (admins). */
+  allowAllProperties?: boolean;
   unreadNotifications?: number;
   onSignOut: () => void;
   onManageSignIn: () => void;
@@ -85,7 +88,12 @@ export function AppShell({
           </button>
           <div className="min-w-0 flex-1">
             {properties.length > 0 && (
-              <PropertySwitcher properties={properties} selectedId={selectedPropertyId} onSelect={onSelectProperty} />
+              <PropertySwitcher
+                properties={properties}
+                selectedId={selectedPropertyId}
+                onSelect={onSelectProperty}
+                allowAll={allowAllProperties}
+              />
             )}
           </div>
           <NotificationsBell unread={unreadNotifications} />

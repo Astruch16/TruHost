@@ -10,6 +10,7 @@ import { BookingsModule } from './bookings/bookings.module.js';
 import { ProblemFilter } from './common/problem.filter.js';
 import { ZodResponseInterceptor } from './common/zod.js';
 import { ConfigModule } from './config/config.module.js';
+import { DashboardModule } from './dashboard/dashboard.module.js';
 import { ENV, type Env } from './config/env.js';
 import { EmailModule } from './email/email.module.js';
 import { ExpensesModule } from './expenses/expenses.module.js';
@@ -46,6 +47,7 @@ import { UsersModule } from './users/users.module.js';
     FilesModule,
     ExpensesModule,
     ReportingModule,
+    DashboardModule,
     AuditLogsModule,
   ],
   providers: [

@@ -148,3 +148,16 @@ describe('TableState', () => {
     expect(screen.queryByRole('row')).toBeNull();
   });
 });
+
+describe('ErrorAlert', () => {
+  it('shows API problem details, user-facing upload errors, and hides anything else', async () => {
+    const { ErrorAlert } = await import('./alert');
+    const { UploadError } = await import('../../lib/upload');
+    const { rerender } = render(<ErrorAlert error={new UploadError('Files can be at most 20 MB.')} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Files can be at most 20 MB.');
+    rerender(<ErrorAlert error={new Error('ECONNRESET at socket 0x1f')} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Please try again.');
+    rerender(<ErrorAlert error={null} />);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
