@@ -4,7 +4,7 @@ import type { createProperty, updateProperty } from '@truhost/shared';
 import { AccessService } from '../access/access.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { Actor } from '../auth/actor.js';
-import { notFound } from '../common/problem.js';
+import { notFound, unprocessable } from '../common/problem.js';
 import type { Property } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -56,8 +56,27 @@ export class PropertiesService {
   async update(actor: Actor, id: string, input: UpdateInput) {
     this.access.assert(actor, 'property:write', id, 'Property');
     return this.prisma.$transaction(async (tx) => {
+      // Lock the row so a concurrent membership revoke can't leave a stale default cleaner.
+      await tx.$queryRaw`SELECT id FROM "Property" WHERE id = ${id}::uuid FOR UPDATE`;
       const before = await tx.property.findUnique({ where: { id } });
       if (!before) throw notFound('Property');
+      if (input.defaultCleanerId) {
+        const cleaner = await tx.membership.findFirst({
+          where: {
+            propertyId: id,
+            userId: input.defaultCleanerId,
+            role: 'CLEANER',
+            revokedAt: null,
+            user: { status: { not: 'DEACTIVATED' } },
+          },
+        });
+        if (!cleaner) {
+          throw unprocessable(
+            'DEFAULT_CLEANER_NOT_MEMBER',
+            'The default cleaner must be an active cleaner of this property',
+          );
+        }
+      }
       const row = await tx.property.update({ where: { id }, data: input });
       await this.audit.recordUpdate(
         tx,
@@ -105,11 +124,12 @@ export class PropertiesService {
       provincialRegistrationNumber: p.provincialRegistrationNumber,
       businessLicenceNumber: p.businessLicenceNumber,
       archivedAt: p.archivedAt,
-      ...(this.access.can(actor, 'property:readAccessInstructions', p.id)
-        ? { accessInstructions: p.accessInstructions }
-        : {}),
-      ...(this.access.can(actor, 'property:readCleanerPay', p.id)
-        ? { defaultCleanerPayCents: p.defaultCleanerPayCents }
+      ...(this.access.can(actor, 'property:readAdminFields', p.id)
+        ? {
+            defaultCleanerId: p.defaultCleanerId,
+            defaultCleanerPayCents: p.defaultCleanerPayCents,
+            standardCleaningFeeCents: p.standardCleaningFeeCents,
+          }
         : {}),
     };
   }

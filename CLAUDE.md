@@ -79,6 +79,12 @@ Change the spec in the same PR as the code that departs from it.
 
 Also:
 
+- **CHECK constraints and NULL:** a CHECK passes when its expression is NULL. Wrap anything that can be NULL
+  (`coalesce(x, '')`) when the rule is "must be present".
+- **Files:** never trust the client. An upload declares type, size and SHA-256. Storage (R2, or the local driver
+  in dev and tests) refuses other bytes, and the API re-checks with `head()` when attaching. Viewing goes
+  through `GET /v1/files/:id/url`, authorised by what the file is attached to.
+
 - Tests are required for anything touching permissions, money or state
   machines. Money calculations get table-driven tests with exact expected cents.
 - Money formulas, allocation (per-night split, largest remainder) and

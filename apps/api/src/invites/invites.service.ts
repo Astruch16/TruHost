@@ -1,11 +1,14 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import type { PageQuery } from '@truhost/shared';
 import { AccessService } from '../access/access.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { Actor } from '../auth/actor.js';
 import { IDENTITY_PROVIDER, type IdentityProvider } from '../auth/identity-provider.js';
 import { cursorPage } from '../common/pagination.js';
-import { conflict, notFound, unprocessable } from '../common/problem.js';
+import { conflict, notFound, ProblemException, unprocessable } from '../common/problem.js';
+import { ENV, type Env } from '../config/env.js';
+import { EMAIL_SENDER, type EmailSender } from '../email/email-sender.js';
+import { inviteEmail } from '../email/templates.js';
 import type { MembershipRole, StaffRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -31,7 +34,29 @@ export class InvitesService {
     private readonly access: AccessService,
     private readonly audit: AuditService,
     @Inject(IDENTITY_PROVIDER) private readonly identity: IdentityProvider,
+    @Inject(EMAIL_SENDER) private readonly email: EmailSender,
+    @Inject(ENV) private readonly env: Env,
   ) {}
+
+  /**
+   * Creates a provider invitation (which sends nothing) and emails its link through our own sender. If the email
+   * fails, the provider invitation is revoked so no live link exists that we never delivered.
+   */
+  private async issue(user: { email: string; firstName: string }) {
+    const invitation = await this.identity.createInvitation(user.email, `${this.env.WEB_URL}/sign-up`);
+    try {
+      const sent = await this.email.send(inviteEmail(user, invitation.url));
+      return { clerkInvitationId: invitation.id, emailMessageId: sent.id, lastSentAt: new Date() };
+    } catch (e) {
+      this.logger.error(`Invite email to ${user.email} failed: ${String(e)}`);
+      await this.revokeQuietly(invitation.id);
+      throw new ProblemException({
+        status: HttpStatus.BAD_GATEWAY,
+        code: 'EMAIL_FAILED',
+        detail: 'The invite email could not be sent. Nothing was saved; please try again.',
+      });
+    }
+  }
 
   /**
    * Creates (or re-invites) an INVITED user with their memberships, then asks the identity
@@ -90,9 +115,9 @@ export class InvitesService {
           }
         }
 
-        const sent = await this.identity.sendInvitation(user.email);
+        const issued = await this.issue(user);
         const created = await tx.invite.create({
-          data: { userId: user.id, invitedById: actor.userId, clerkInvitationId: sent?.id ?? null },
+          data: { userId: user.id, invitedById: actor.userId, ...issued },
           include: INVITE_INCLUDE,
         });
         await this.audit.record(tx, actor, {
@@ -124,11 +149,11 @@ export class InvitesService {
     if (invite.status !== 'PENDING') throw conflict('INVITE_NOT_PENDING', 'Only pending invites can be resent');
 
     if (invite.clerkInvitationId) await this.revokeQuietly(invite.clerkInvitationId);
-    const sent = await this.identity.sendInvitation(invite.user.email);
+    const issued = await this.issue(invite.user);
     const updated = await this.prisma.$transaction(async (tx) => {
       const row = await tx.invite.update({
         where: { id },
-        data: { clerkInvitationId: sent?.id ?? null },
+        data: issued,
         include: INVITE_INCLUDE,
       });
       await this.audit.record(tx, actor, { action: 'invite.resend', entityType: 'Invite', entityId: id });
@@ -189,7 +214,7 @@ function dedupe<T extends { propertyId: string; role: string }>(items: T[]): T[]
 function present(invite: {
   id: string;
   status: 'PENDING' | 'ACCEPTED' | 'REVOKED';
-  clerkInvitationId: string | null;
+  emailMessageId: string | null;
   acceptedAt: Date | null;
   revokedAt: Date | null;
   createdAt: Date;
@@ -199,7 +224,8 @@ function present(invite: {
     id: invite.id,
     status: invite.status,
     user: invite.user,
-    emailSent: invite.clerkInvitationId !== null,
+    // Only true when the provider accepted it; locally (no Resend key) emails are logged, not sent.
+    emailSent: invite.emailMessageId !== null,
     acceptedAt: invite.acceptedAt,
     revokedAt: invite.revokedAt,
     createdAt: invite.createdAt,

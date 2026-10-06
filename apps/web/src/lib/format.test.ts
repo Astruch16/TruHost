@@ -18,3 +18,13 @@ describe('formatBps', () => {
     expect(formatBps(1250)).toBe('12.5%');
   });
 });
+
+describe('formatOccupancy', () => {
+  it('shows whole percents and handles no availability', async () => {
+    const { formatOccupancy } = await import('./format');
+    expect(formatOccupancy(5500)).toBe('55%');
+    expect(formatOccupancy(968)).toBe('10%'); // 9.68% rounds, not truncates
+    expect(formatOccupancy(2333)).toBe('23%');
+    expect(formatOccupancy(null)).toBe('—');
+  });
+});

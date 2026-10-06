@@ -8,6 +8,7 @@ import { cursorPage } from '../common/pagination.js';
 import { notFound, ProblemException, unprocessable } from '../common/problem.js';
 import type { User } from '../generated/prisma/client.js';
 import { PrismaService, type Tx } from '../prisma/prisma.service.js';
+import { clearDefaultCleaner } from '../properties/memberships.service.js';
 
 const USER_FIELDS = {
   id: true,
@@ -90,6 +91,7 @@ export class UsersService {
         where: { userId: id, status: 'PENDING' },
         data: { status: 'REVOKED', revokedAt: new Date() },
       });
+      await clearDefaultCleaner(tx, this.audit, actor, id);
       await this.audit.record(tx, actor, {
         action: 'user.deactivate',
         entityType: 'User',

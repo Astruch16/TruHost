@@ -79,8 +79,8 @@ function AdminProperty() {
             key={p.id}
             initial={{
               ...p,
-              accessInstructions: p.accessInstructions ?? null,
               defaultCleanerPayCents: p.defaultCleanerPayCents ?? 0,
+              standardCleaningFeeCents: p.standardCleaningFeeCents ?? 0,
             }}
             submitLabel={update.isSuccess && !update.isPending ? 'Saved' : 'Save changes'}
             pending={update.isPending}
@@ -92,7 +92,7 @@ function AdminProperty() {
           <RoomsCard propertyId={propertyId} />
           <PlanCard propertyId={propertyId} />
         </div>
-        <MembersCard propertyId={propertyId} />
+        <MembersCard propertyId={propertyId} defaultCleanerId={p.defaultCleanerId ?? null} />
       </div>
     </>
   );
@@ -295,7 +295,7 @@ function PlanCard({ propertyId }: { propertyId: string }) {
   );
 }
 
-function MembersCard({ propertyId }: { propertyId: string }) {
+function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; defaultCleanerId: string | null }) {
   const api = useApi();
   const qc = useQueryClient();
   const members = useQuery(queries.memberships(api, propertyId));
@@ -322,10 +322,44 @@ function MembersCard({ propertyId }: { propertyId: string }) {
     },
   });
   const items = members.data?.items ?? [];
+  const cleaners = items.filter((m) => m.role === 'CLEANER');
+  const setDefault = useMutation({
+    mutationFn: (cleanerId: string | null) =>
+      unwrap(
+        api.PATCH('/v1/properties/{id}', {
+          params: { path: { id: propertyId } },
+          body: { defaultCleanerId: cleanerId },
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['properties'] }),
+  });
 
   return (
     <Card title="Owners and cleaners">
       <div className="flex flex-col gap-5">
+        <Field
+          label="Default cleaner"
+          hint={
+            cleaners.length
+              ? 'New cleans are assigned to them. You can change it for any single clean.'
+              : 'Add a cleaner below first.'
+          }
+          className="max-w-md"
+        >
+          <Select
+            value={defaultCleanerId ?? ''}
+            disabled={cleaners.length === 0 || setDefault.isPending}
+            onChange={(e) => setDefault.mutate(e.target.value || null)}
+          >
+            <option value="">No default</option>
+            {cleaners.map((m) => (
+              <option key={m.user.id} value={m.user.id}>
+                {m.user.firstName} {m.user.lastName}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <ErrorAlert error={setDefault.error} />
         <Table>
           <THead>
             <tr>
@@ -352,7 +386,10 @@ function MembersCard({ propertyId }: { propertyId: string }) {
                 </Td>
                 <Td className="text-muted">{m.user.email}</Td>
                 <Td>
-                  <Pill tone={m.role === 'OWNER' ? 'sage' : 'blue'}>{titleCase(m.role)}</Pill>
+                  <span className="flex flex-wrap gap-1.5">
+                    <Pill tone={m.role === 'OWNER' ? 'sage' : 'blue'}>{titleCase(m.role)}</Pill>
+                    {m.role === 'CLEANER' && m.user.id === defaultCleanerId && <Pill tone="lavender">Default</Pill>}
+                  </span>
                 </Td>
                 <Td align="right">
                   <Button
@@ -404,7 +441,7 @@ function MembersCard({ propertyId }: { propertyId: string }) {
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title="Remove access?"
-        description={`This removes ${removing?.label ?? 'their access'} immediately. Their history is kept.`}
+        description={`This removes ${removing?.label ?? 'their access'} immediately. Their history is kept. If they are the default cleaner, the default is cleared.`}
         confirmLabel="Remove access"
         destructive
         pending={revoke.isPending}

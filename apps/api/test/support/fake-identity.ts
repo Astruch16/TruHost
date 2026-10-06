@@ -6,10 +6,9 @@ import type { IdentityProvider } from '../../src/auth/identity-provider.js';
  */
 export class FakeIdentityProvider implements IdentityProvider {
   readonly users = new Map<string, string | null>();
-  readonly invitations: { id: string; email: string }[] = [];
+  readonly invitations: { id: string; email: string; redirectUrl: string; url: string }[] = [];
   readonly revokedInvitations: string[] = [];
   readonly revokedAccess: string[] = [];
-  sendInvitations = true;
   private seq = 0;
 
   verifySessionToken(token: string): Promise<string | null> {
@@ -20,11 +19,11 @@ export class FakeIdentityProvider implements IdentityProvider {
     return Promise.resolve(this.users.get(subject) ?? null);
   }
 
-  sendInvitation(email: string): Promise<{ id: string } | null> {
-    if (!this.sendInvitations) return Promise.resolve(null);
-    const invitation = { id: `inv_${++this.seq}`, email };
+  createInvitation(email: string, redirectUrl: string): Promise<{ id: string; url: string }> {
+    const id = `inv_${++this.seq}`;
+    const invitation = { id, email, redirectUrl, url: `${redirectUrl}?__clerk_ticket=${id}` };
     this.invitations.push(invitation);
-    return Promise.resolve(invitation);
+    return Promise.resolve({ id, url: invitation.url });
   }
 
   revokeInvitation(invitationId: string): Promise<void> {
@@ -42,6 +41,6 @@ export class FakeIdentityProvider implements IdentityProvider {
     this.invitations.length = 0;
     this.revokedInvitations.length = 0;
     this.revokedAccess.length = 0;
-    this.sendInvitations = true;
+    this.seq = 0;
   }
 }
