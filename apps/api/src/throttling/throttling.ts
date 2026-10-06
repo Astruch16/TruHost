@@ -10,7 +10,7 @@ import type { Env } from '../config/env.js';
  * - PostAuthThrottlerGuard runs after authentication and applies per-user `user-*` tiers.
  */
 export const RATE_TIER = 'truhost:rate-tier';
-export type RateTier = 'auth';
+export type RateTier = 'auth' | 'upload';
 /** Puts a route on a stricter tier (e.g. invites, profile changes). */
 export const RateTier = (tier: RateTier) => SetMetadata(RATE_TIER, tier);
 
@@ -36,6 +36,13 @@ export function throttlers(env: Env): ThrottlerOptions[] {
     },
     { name: 'user-default', ttl: 60_000, limit: n(120), getTracker: byUser },
     { name: 'user-write', ttl: 60_000, limit: n(30), getTracker: byUser, skipIf: (ctx) => !isWrite(ctx) },
+    {
+      name: 'user-upload',
+      ttl: 10 * 60_000,
+      limit: n(60),
+      getTracker: byUser,
+      skipIf: (ctx) => meta<RateTier>(ctx, RATE_TIER) !== 'upload',
+    },
     {
       name: 'user-auth',
       ttl: 60_000,

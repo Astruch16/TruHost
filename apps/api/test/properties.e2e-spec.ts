@@ -29,21 +29,85 @@ describe('properties', () => {
     expect(ids(res.body)).toEqual(expected().sort());
   });
 
-  it('shows access instructions to admins and the property cleaner, never to owners', async () => {
-    const get = (who: string) => t.as(who).get(`/v1/properties/${w.propertyA.id}`).expect(200);
-    expect((await get('admin')).body.accessInstructions).toBe('Lockbox for Property A: 1234');
-    expect((await get('cleanerA')).body.accessInstructions).toBe('Lockbox for Property A: 1234');
-    expect((await get('ownerA')).body).not.toHaveProperty('accessInstructions');
+  it('shows admin-only fields (default cleaner, cleaner pay, cleaning fee) to admins only', async () => {
+    const admin = (await t.as('admin').get(`/v1/properties/${w.propertyA.id}`).expect(200)).body;
+    expect(admin).toMatchObject({ defaultCleanerId: null, defaultCleanerPayCents: 9000, standardCleaningFeeCents: 0 });
+    for (const who of ['ownerA', 'cleanerA']) {
+      const body = (await t.as(who).get(`/v1/properties/${w.propertyA.id}`).expect(200)).body;
+      expect(body).not.toHaveProperty('defaultCleanerId');
+      expect(body).not.toHaveProperty('defaultCleanerPayCents');
+      expect(body).not.toHaveProperty('standardCleaningFeeCents');
+    }
   });
 
-  it('shows the default cleaner pay to admins only', async () => {
-    expect((await t.as('admin').get(`/v1/properties/${w.propertyA.id}`)).body.defaultCleanerPayCents).toBe(9000);
-    expect((await t.as('cleanerA').get(`/v1/properties/${w.propertyA.id}`)).body).not.toHaveProperty(
-      'defaultCleanerPayCents',
-    );
-    expect((await t.as('ownerA').get(`/v1/properties/${w.propertyA.id}`)).body).not.toHaveProperty(
-      'defaultCleanerPayCents',
-    );
+  it('never stores access codes: the old field is gone and unknown fields are ignored', async () => {
+    const res = await t
+      .as('admin')
+      .patch(`/v1/properties/${w.propertyA.id}`, { accessInstructions: 'Lockbox 1234' })
+      .expect(200);
+    expect(res.body).not.toHaveProperty('accessInstructions');
+    const columns = await t.prisma.$queryRaw<{ column_name: string }[]>`
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'Property'`;
+    expect(columns.map((c) => c.column_name)).not.toContain('accessInstructions');
+  });
+
+  describe('default cleaner', () => {
+    it('can be set to an active cleaner of the property', async () => {
+      const res = await t
+        .as('admin')
+        .patch(`/v1/properties/${w.propertyA.id}`, {
+          defaultCleanerId: w.users.cleanerA.id,
+          standardCleaningFeeCents: 12000,
+        })
+        .expect(200);
+      expect(res.body).toMatchObject({ defaultCleanerId: w.users.cleanerA.id, standardCleaningFeeCents: 12000 });
+    });
+
+    it.each([
+      ['a cleaner of another property', () => w.users.cleanerB.id],
+      ['an owner', () => w.users.ownerA.id],
+      ['an unknown user', () => '00000000-0000-7000-8000-000000000000'],
+    ])('rejects %s', async (_, id) => {
+      const res = await t.as('admin').patch(`/v1/properties/${w.propertyA.id}`, { defaultCleanerId: id() }).expect(422);
+      expect(res.body.code).toBe('DEFAULT_CLEANER_NOT_MEMBER');
+    });
+
+    it('is cleared, with an audit entry, when their cleaner membership is revoked', async () => {
+      await t
+        .as('admin')
+        .patch(`/v1/properties/${w.propertyA.id}`, { defaultCleanerId: w.users.cleanerA.id })
+        .expect(200);
+      await t.as('admin').post(`/v1/memberships/${w.memberships.cleanerA}/revoke`).expect(200);
+      expect((await t.as('admin').get(`/v1/properties/${w.propertyA.id}`)).body.defaultCleanerId).toBeNull();
+      const audit = await t.prisma.auditLog.findFirstOrThrow({
+        where: { entityId: w.propertyA.id, action: 'property.update' },
+        orderBy: { id: 'desc' },
+      });
+      expect(audit.after).toEqual({ defaultCleanerId: null });
+    });
+
+    it('is cleared when the cleaner is deactivated', async () => {
+      await t
+        .as('admin')
+        .patch(`/v1/properties/${w.propertyA.id}`, { defaultCleanerId: w.users.cleanerA.id })
+        .expect(200);
+      await t.as('admin').post(`/v1/users/${w.users.cleanerA.id}/deactivate`).expect(200);
+      expect((await t.as('admin').get(`/v1/properties/${w.propertyA.id}`)).body.defaultCleanerId).toBeNull();
+    });
+
+    it('cannot be set on create', async () => {
+      const res = await t
+        .as('admin')
+        .post('/v1/properties', {
+          name: 'X',
+          addressLine1: '1 X St',
+          city: 'Chilliwack',
+          postalCode: 'V2P 1A1',
+          defaultCleanerId: w.users.cleanerA.id,
+        })
+        .expect(201);
+      expect(res.body.defaultCleanerId).toBeNull();
+    });
   });
 
   it('creates a property with defaults and audits it', async () => {

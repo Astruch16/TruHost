@@ -4,9 +4,8 @@ import { MembershipRole, RoomType } from '../enums.js';
 import { bps, id, isoDate, isoDateTime, monthStart, text, timeOfDay } from '../primitives.js';
 
 /**
- * Property as returned to any caller. Fields that only some roles may see are optional and
- * omitted (not null) when the caller lacks access: accessInstructions (admin, cleaner),
- * defaultCleanerPayCents (admin).
+ * Property as returned to any caller. Admin-only fields (default cleaner, cleaner pay, standard cleaning fee) are
+ * optional and omitted (not null) for everyone else.
  */
 export const property = z.object({
   id,
@@ -23,8 +22,9 @@ export const property = z.object({
   provincialRegistrationNumber: z.string().nullable(),
   businessLicenceNumber: z.string().nullable(),
   archivedAt: isoDateTime.nullable(),
-  accessInstructions: z.string().nullable().optional(),
+  defaultCleanerId: id.nullable().optional(),
   defaultCleanerPayCents: nonNegativeCents.optional(),
+  standardCleaningFeeCents: nonNegativeCents.optional(),
 });
 export type Property = z.infer<typeof property>;
 
@@ -46,8 +46,8 @@ const propertyFields = {
   checkOutTime: timeOfDay,
   provincialRegistrationNumber: text(50).nullable(),
   businessLicenceNumber: text(50).nullable(),
-  accessInstructions: z.string().trim().max(2000).nullable(),
   defaultCleanerPayCents: nonNegativeCents,
+  standardCleaningFeeCents: nonNegativeCents,
 };
 
 export const createProperty = z.object({
@@ -59,12 +59,13 @@ export const createProperty = z.object({
   checkOutTime: propertyFields.checkOutTime.default('11:00'),
   provincialRegistrationNumber: propertyFields.provincialRegistrationNumber.default(null),
   businessLicenceNumber: propertyFields.businessLicenceNumber.default(null),
-  accessInstructions: propertyFields.accessInstructions.default(null),
   defaultCleanerPayCents: propertyFields.defaultCleanerPayCents.default(0),
+  standardCleaningFeeCents: propertyFields.standardCleaningFeeCents.default(0),
 });
 export type CreateProperty = z.input<typeof createProperty>;
 
-export const updateProperty = z.object(propertyFields).partial();
+/** The default cleaner can only be set once the property has cleaners, so it is update-only. */
+export const updateProperty = z.object({ ...propertyFields, defaultCleanerId: id.nullable() }).partial();
 export type UpdateProperty = z.input<typeof updateProperty>;
 
 export const propertyListQuery = z.object({

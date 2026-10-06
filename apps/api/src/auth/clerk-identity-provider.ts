@@ -33,14 +33,15 @@ export class ClerkIdentityProvider implements IdentityProvider {
     return primary.emailAddress.toLowerCase();
   }
 
-  async sendInvitation(email: string): Promise<{ id: string }> {
+  async createInvitation(email: string, redirectUrl: string): Promise<{ id: string; url: string }> {
     const invitation = await this.clerk.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: this.env.INVITE_REDIRECT_URL,
-      notify: true,
+      redirectUrl,
+      notify: false,
       ignoreExisting: true,
     });
-    return { id: invitation.id };
+    if (!invitation.url) throw new Error('Clerk returned an invitation without a URL');
+    return { id: invitation.id, url: invitation.url };
   }
 
   async revokeInvitation(invitationId: string): Promise<void> {

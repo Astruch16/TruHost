@@ -32,3 +32,6 @@ export type PageQuery = z.infer<typeof pageQuery>;
 
 export const page = <T extends z.ZodType>(item: T) =>
   z.object({ items: z.array(item), nextCursor: z.uuid().nullable() });
+
+/** "YYYY-MM". */
+export const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Expected YYYY-MM');

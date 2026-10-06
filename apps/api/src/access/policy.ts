@@ -12,14 +12,30 @@ import type { MembershipRole } from '../generated/prisma/enums.js';
 export const POLICY = {
   'property:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
   'property:write': { admin: true, roles: [] },
-  'property:readAccessInstructions': { admin: true, roles: ['CLEANER'] },
-  'property:readCleanerPay': { admin: true, roles: [] },
+  /** Default cleaner, cleaner pay and standard cleaning fee. */
+  'property:readAdminFields': { admin: true, roles: [] },
   'membership:manage': { admin: true, roles: [] },
   'room:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
   'room:write': { admin: true, roles: [] },
   'plan:manage': { admin: true, roles: [] },
   'propertyPlan:read': { admin: true, roles: ['OWNER'] },
   'propertyPlan:assign': { admin: true, roles: [] },
+  'booking:read': { admin: true, roles: ['OWNER'] },
+  /** Guest details, raw payout and cleaning fee, notes. */
+  'booking:readAdminFields': { admin: true, roles: [] },
+  'booking:write': { admin: true, roles: [] },
+  /** Owners see owner-borne, non-voided expenses only (filtered in the service). */
+  'expense:read': { admin: true, roles: ['OWNER'] },
+  /** TruHost-borne and voided expenses, void reasons, versions. */
+  'expense:readAdminFields': { admin: true, roles: [] },
+  'expense:write': { admin: true, roles: [] },
+  /** Owners see receipts on their owner-borne, non-voided expenses. */
+  'receipt:read': { admin: true, roles: ['OWNER'] },
+  'receipt:write': { admin: true, roles: [] },
+  'report:property': { admin: true, roles: ['OWNER'] },
+  /** TruHost-side figures (cleaning fees collected). */
+  'report:adminFields': { admin: true, roles: [] },
+  'report:portfolio': { admin: true, roles: [] },
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },

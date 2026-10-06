@@ -2,23 +2,23 @@ import { useState, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Badge, Button, Card, ErrorBanner, Field, Input, Loading, PageHeader } from '../../../components/ui';
-import { fieldErrors } from '../../../lib/errors';
+import { Lock, Plus } from 'lucide-react';
+import { ErrorAlert } from '../../../components/ui/alert';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Field } from '../../../components/ui/field';
+import { Input } from '../../../components/ui/input';
+import { PageHeader } from '../../../components/ui/page-header';
+import { Pill } from '../../../components/ui/pill';
+import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../components/ui/table';
 import { useApi } from '../../../lib/api-context';
-import { formatBps } from '../../../lib/format';
+import { fieldErrors } from '../../../lib/errors';
+import { formatBps, percentToBps } from '../../../lib/format';
 import { queries } from '../../../lib/queries';
 
 export const Route = createFileRoute('/_app/admin/plans')({
   component: Plans,
 });
-
-/** "22" or "12.5" (percent) → basis points, without floating point. */
-function percentToBps(input: string): number | null {
-  const m = /^(\d{1,3})(?:\.(\d{1,2}))?$/.exec(input.trim());
-  if (!m) return null;
-  const bps = Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0'));
-  return bps <= 10_000 ? bps : null;
-}
 
 function Plans() {
   const api = useApi();
@@ -49,48 +49,76 @@ function Plans() {
 
   return (
     <>
-      <PageHeader title="Plans" />
-      <div className="grid gap-4">
+      <PageHeader title="Plans" description="Management plans. A plan’s rate is locked once a property uses it." />
+      <div className="flex flex-col gap-5">
         <Card title="Plans">
-          <ErrorBanner error={plans.error} />
-          {!plans.data ? (
-            <Loading />
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {plans.data.items.map((p) => (
-                <li key={p.id} className="flex items-center gap-2 py-2 text-sm">
-                  <span className="flex-1">
-                    <strong>{p.name}</strong> · {formatBps(p.managementFeeBps)} of monthly owner gross
-                    {p.description && <span className="block text-slate-500">{p.description}</span>}
-                  </span>
-                  {p.inUse && <Badge tone="green">In use (rate locked)</Badge>}
-                  {p.archivedAt && <Badge tone="amber">Archived</Badge>}
-                </li>
+          <Table>
+            <THead>
+              <tr>
+                <Th>Plan</Th>
+                <Th align="right">Fee</Th>
+                <Th>Status</Th>
+              </tr>
+            </THead>
+            <TBody>
+              <TableState
+                columns={3}
+                loading={plans.isPending}
+                error={plans.error}
+                empty={plans.data?.items.length === 0}
+              />
+              {plans.data?.items.map((p) => (
+                <Tr key={p.id} interactive>
+                  <Td>
+                    <span className="font-semibold">{p.name}</span>
+                    {p.description && <span className="block text-sm text-muted">{p.description}</span>}
+                  </Td>
+                  <Td align="right" className="font-semibold">
+                    {formatBps(p.managementFeeBps)}
+                    <span className="block text-xs font-normal text-muted">of monthly gross</span>
+                  </Td>
+                  <Td>
+                    <div className="flex flex-wrap gap-1.5">
+                      {p.archivedAt ? <Pill tone="neutral">Archived</Pill> : <Pill tone="sage">Active</Pill>}
+                      {p.inUse && (
+                        <Pill tone="lavender">
+                          <Lock aria-hidden className="size-3" /> Rate locked
+                        </Pill>
+                      )}
+                    </div>
+                  </Td>
+                </Tr>
               ))}
-            </ul>
-          )}
+            </TBody>
+          </Table>
         </Card>
         <Card title="New plan">
-          <form onSubmit={submit} className="grid gap-3 sm:grid-cols-3">
-            <Field label="Name" error={errors.name}>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <form
+            onSubmit={submit}
+            noValidate
+            className="grid gap-4 sm:grid-cols-[1fr_10rem] lg:grid-cols-[1fr_10rem_1.5fr]"
+          >
+            <Field label="Name" error={errors.name} required>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </Field>
-            <Field label="Management fee (%)" error={percentError ?? errors.managementFeeBps}>
+            <Field label="Fee (%)" error={percentError ?? errors.managementFeeBps} required>
               <Input
                 value={form.percent}
                 onChange={(e) => setForm({ ...form, percent: e.target.value })}
                 inputMode="decimal"
-                required
+                className="figure"
               />
             </Field>
-            <Field label="Description" error={errors.description}>
+            <Field label="Description" error={errors.description} className="sm:col-span-2 lg:col-span-1">
               <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </Field>
-            <div className="sm:col-span-3">
-              <ErrorBanner error={Object.keys(errors).length ? null : create.error} />
-              <Button type="submit" disabled={create.isPending}>
-                Create plan
-              </Button>
+            <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-3">
+              <ErrorAlert error={Object.keys(errors).length ? null : create.error} />
+              <div>
+                <Button type="submit" loading={create.isPending}>
+                  <Plus aria-hidden className="size-4" /> Create plan
+                </Button>
+              </div>
             </div>
           </form>
         </Card>

@@ -2,9 +2,16 @@ import { useState, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Button, Card, ErrorBanner, Field, Input, Loading, PageHeader } from '../../components/ui';
-import { fieldErrors } from '../../lib/errors';
+import { CircleCheck } from 'lucide-react';
+import { ErrorAlert } from '../../components/ui/alert';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
+import { Field } from '../../components/ui/field';
+import { Input } from '../../components/ui/input';
+import { PageHeader } from '../../components/ui/page-header';
+import { LoadingBlock } from '../../components/ui/skeleton';
 import { useApi } from '../../lib/api-context';
+import { fieldErrors } from '../../lib/errors';
 import { queries } from '../../lib/queries';
 
 export const Route = createFileRoute('/_app/account')({
@@ -12,13 +19,11 @@ export const Route = createFileRoute('/_app/account')({
 });
 
 function Account() {
-  const api = useApi();
-  const me = useQuery(queries.me(api));
-  if (!me.data) return <Loading />;
+  const me = useQuery(queries.me(useApi()));
   return (
     <>
-      <PageHeader title="Account" />
-      <ProfileForm initial={me.data} />
+      <PageHeader title="Settings" description="Your profile and sign-in." />
+      {me.error ? <ErrorAlert error={me.error} /> : !me.data ? <LoadingBlock /> : <ProfileForm initial={me.data} />}
     </>
   );
 }
@@ -46,26 +51,49 @@ function ProfileForm({
   };
 
   return (
-    <Card title="Profile">
-      <form onSubmit={submit} className="grid max-w-md gap-3">
-        <Field label="Email" hint="Change your email from the account menu (top right).">
+    <Card title="Profile" className="max-w-2xl">
+      <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="Email"
+          hint="Change your email or password from Sign-in & security in the profile menu (top right)."
+          className="sm:col-span-2"
+        >
           <Input value={initial.email} disabled />
         </Field>
-        <Field label="First name" error={errors.firstName}>
-          <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+        <Field label="First name" error={errors.firstName} required>
+          <Input
+            value={form.firstName}
+            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+            autoComplete="given-name"
+          />
         </Field>
-        <Field label="Last name" error={errors.lastName}>
-          <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
+        <Field label="Last name" error={errors.lastName} required>
+          <Input
+            value={form.lastName}
+            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+            autoComplete="family-name"
+          />
         </Field>
         <Field label="Phone" error={errors.phone}>
-          <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} inputMode="tel" />
+          <Input
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            inputMode="tel"
+            autoComplete="tel"
+          />
         </Field>
-        <ErrorBanner error={Object.keys(errors).length ? null : save.error} />
-        <div className="flex items-center gap-3">
-          <Button type="submit" disabled={save.isPending}>
-            Save
-          </Button>
-          {save.isSuccess && <span className="text-sm text-green-700">Saved</span>}
+        <div className="flex flex-col gap-3 sm:col-span-2">
+          <ErrorAlert error={Object.keys(errors).length ? null : save.error} />
+          <div className="flex items-center gap-3">
+            <Button type="submit" loading={save.isPending}>
+              Save changes
+            </Button>
+            {save.isSuccess && (
+              <span role="status" className="flex items-center gap-1.5 text-sm text-sage-deep">
+                <CircleCheck aria-hidden className="size-4" /> Saved
+              </span>
+            )}
+          </div>
         </div>
       </form>
     </Card>

@@ -1,1 +1,111 @@
+@import '@fontsource-variable/hanken-grotesk';
+@import '@fontsource/caveat/500.css';
 @import 'tailwindcss';
+
+/*
+ * Design tokens (from docs/design mockups). Use the semantic names below in components; never raw hex values.
+ * Tailwind exposes each as utilities: bg-surface, text-ink, border-line, bg-sage-tint, text-sage-deep, rounded-card, …
+ */
+@theme {
+  --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-hand: 'Caveat', 'Segoe Script', cursive;
+
+  /* Surfaces and text */
+  --color-sidebar: #173f3a;
+  --color-sidebar-hover: #1f4b45;
+  --color-sidebar-active: #2c5a53;
+  --color-sidebar-ink: #eef3f1;
+  --color-sidebar-muted: #b9cbc6;
+  --color-ground: #f6f6f3;
+  --color-surface: #ffffff;
+  --color-ink: #1a1d21;
+  --color-muted: #5b6068;
+  --color-line: #e3e4e1;
+  --color-line-soft: #eeeeeb;
+
+  /* Primary action = sidebar green */
+  --color-primary: #173f3a;
+  --color-primary-hover: #21544d;
+  --color-primary-ink: #ffffff;
+
+  /* Soft accent pairs: tint (background) / deep (text, icon) */
+  --color-blue-tint: #dce8f5;
+  --color-blue-deep: #24456b;
+  --color-lavender-tint: #e6e0f5;
+  --color-lavender-deep: #3f3470;
+  --color-sage-tint: #ddebdf;
+  --color-sage-deep: #23442f;
+
+  /* Error/destructive (not in the mockup palette; kept muted to sit with the pairs above) */
+  --color-danger-tint: #f8e1de;
+  --color-danger-deep: #8a2c24;
+  --color-danger-line: #e6b3ad;
+
+  /* Radii */
+  --radius-card: 18px;
+  --radius-inner: 14px;
+  --radius-control: 12px;
+  --radius-control-sm: 10px;
+
+  /* Motion: state changes only */
+  --default-transition-duration: 160ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Figures line up in columns everywhere numbers appear. */
+  .figure,
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-blue-deep);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
+/* Radix popover/dialog enter animations (disabled by the reduced-motion rule above). */
+@keyframes th-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes th-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@keyframes th-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@utility animate-fade-in {
+  animation: th-fade-in 160ms ease-out;
+}
+@utility animate-pop-in {
+  animation: th-pop-in 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+@utility animate-slide-in {
+  animation: th-slide-in 200ms cubic-bezier(0.2, 0, 0, 1);
+}

@@ -6,12 +6,15 @@ import { AppModule } from '../../src/app.module.js';
 import { IDENTITY_PROVIDER } from '../../src/auth/identity-provider.js';
 import { PrismaService } from '../../src/prisma/prisma.service.js';
 import { configureApp } from '../../src/setup.js';
+import { FakeEmailSender } from './fake-email.js';
 import { FakeIdentityProvider } from './fake-identity.js';
+import { EMAIL_SENDER } from '../../src/email/email-sender.js';
 
 export interface TestApp {
   app: NestExpressApplication;
   prisma: PrismaService;
   identity: FakeIdentityProvider;
+  email: FakeEmailSender;
   http: () => ReturnType<typeof request>;
   /** Supertest agent with `Authorization: Bearer test:<subject>` preset. */
   as: (subject: string | null) => {
@@ -26,9 +29,12 @@ export interface TestApp {
 
 export async function createTestApp(): Promise<TestApp> {
   const identity = new FakeIdentityProvider();
+  const email = new FakeEmailSender();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(IDENTITY_PROVIDER)
     .useValue(identity)
+    .overrideProvider(EMAIL_SENDER)
+    .useValue(email)
     .compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ logger: ['error', 'warn'] });
@@ -43,6 +49,7 @@ export async function createTestApp(): Promise<TestApp> {
     app,
     prisma: app.get(PrismaService),
     identity,
+    email,
     http: () => request(server),
     as: (subject) => ({
       get: (path) => auth(request(server).get(path), subject),

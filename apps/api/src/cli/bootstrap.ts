@@ -18,6 +18,8 @@ import { createClerkClient } from '@clerk/backend';
 import { createProperty, email as emailSchema } from '@truhost/shared';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { currentMonthStart, fromIsoDate } from '../common/dates.js';
+import { ResendEmailSender } from '../email/resend-email-sender.js';
+import { inviteEmail } from '../email/templates.js';
 
 const TRUPLAN = { name: 'TruPlan', managementFeeBps: 2200, description: '22% of the month’s owner gross revenue' };
 const DEFAULT_ROOMS = [
@@ -122,21 +124,37 @@ async function main() {
 
   if (admin.status === 'INVITED' && !args['no-invite']) {
     const pending = await prisma.invite.findFirst({ where: { userId: admin.id, status: 'PENDING' } });
-    if (pending) {
-      log('admin invite already pending');
+    if (pending?.lastSentAt) {
+      log('admin invite already sent');
     } else if (!process.env.CLERK_SECRET_KEY) {
-      await prisma.invite.create({ data: { userId: admin.id } });
-      log('CLERK_SECRET_KEY not set: recorded the invite without emailing. Sign up in Clerk with this email to link.');
+      if (!pending) await prisma.invite.create({ data: { userId: admin.id } });
+      log('CLERK_SECRET_KEY not set: invite recorded, nothing sent. Sign up in Clerk with this email to link.');
     } else {
+      // Same flow as POST /v1/invites: Clerk creates the invitation silently; we email its link via Resend.
+      const webUrl = process.env.WEB_URL ?? 'http://localhost:3001';
       const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
       const invitation = await clerk.invitations.createInvitation({
         emailAddress: adminEmail,
-        redirectUrl: process.env.INVITE_REDIRECT_URL,
-        notify: true,
+        redirectUrl: `${webUrl}/sign-up`,
+        notify: false,
         ignoreExisting: true,
       });
-      await prisma.invite.create({ data: { userId: admin.id, clerkInvitationId: invitation.id } });
-      log(`emailed a Clerk invitation to ${adminEmail}`);
+      if (!invitation.url) throw new Error('Clerk returned an invitation without a URL');
+      const sender = process.env.RESEND_API_KEY
+        ? new ResendEmailSender(
+            process.env.RESEND_API_KEY,
+            process.env.EMAIL_FROM ?? 'TruHost <no-reply@truhost.example>',
+          )
+        : null;
+      const sent = sender ? await sender.send(inviteEmail(admin, invitation.url)) : { id: null };
+      const data = { clerkInvitationId: invitation.id, emailMessageId: sent.id, lastSentAt: new Date() };
+      if (pending) await prisma.invite.update({ where: { id: pending.id }, data });
+      else await prisma.invite.create({ data: { userId: admin.id, ...data } });
+      log(
+        sender
+          ? `emailed an invitation to ${adminEmail}`
+          : `RESEND_API_KEY not set, so no email was sent. Open this link to create your account:\n  ${invitation.url}`,
+      );
     }
   }
 }

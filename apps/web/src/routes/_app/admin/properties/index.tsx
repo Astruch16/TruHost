@@ -2,10 +2,17 @@ import { useState } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
+import { Building2, ChevronRight, Plus } from 'lucide-react';
 import { PropertyForm } from '../../../../components/property-form';
-import { emptyProperty, type PropertyFormValues } from '../../../../lib/property-values';
-import { Badge, Button, Card, ErrorBanner, Loading, PageHeader } from '../../../../components/ui';
+import { ErrorAlert } from '../../../../components/ui/alert';
+import { Button } from '../../../../components/ui/button';
+import { Card } from '../../../../components/ui/card';
+import { EmptyState } from '../../../../components/ui/empty-state';
+import { PageHeader } from '../../../../components/ui/page-header';
+import { Pill } from '../../../../components/ui/pill';
+import { Skeleton } from '../../../../components/ui/skeleton';
 import { useApi } from '../../../../lib/api-context';
+import { emptyProperty, type PropertyFormValues } from '../../../../lib/property-values';
 import { queries } from '../../../../lib/queries';
 
 export const Route = createFileRoute('/_app/admin/properties/')({
@@ -31,17 +38,22 @@ function AdminProperties() {
     <>
       <PageHeader
         title="Properties"
+        description="Every property TruHost manages."
         actions={
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setShowArchived(!showArchived)}>
+          <>
+            <Button variant="quiet" onClick={() => setShowArchived(!showArchived)} aria-pressed={showArchived}>
               {showArchived ? 'Hide archived' : 'Show archived'}
             </Button>
-            <Button onClick={() => setCreating(!creating)}>{creating ? 'Cancel' : 'New property'}</Button>
-          </div>
+            {!creating && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus aria-hidden className="size-4" /> New property
+              </Button>
+            )}
+          </>
         }
       />
       {creating && (
-        <div className="mb-4">
+        <div className="mb-6">
           <Card title="New property">
             <PropertyForm
               initial={emptyProperty}
@@ -49,31 +61,51 @@ function AdminProperties() {
               pending={create.isPending}
               error={create.error}
               onSubmit={(v) => create.mutate(v)}
+              onCancel={() => setCreating(false)}
             />
           </Card>
         </div>
       )}
-      <ErrorBanner error={list.error} />
-      {!list.data ? (
-        <Loading />
+      {list.error ? (
+        <ErrorAlert error={list.error} />
+      ) : !list.data ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <Skeleton className="h-28 rounded-card" />
+          <Skeleton className="h-28 rounded-card" />
+        </div>
       ) : list.data.items.length === 0 ? (
-        <p className="text-sm text-slate-600">No properties yet.</p>
+        <EmptyState
+          icon={Building2}
+          title="No properties yet"
+          action={
+            !creating && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus aria-hidden className="size-4" /> New property
+              </Button>
+            )
+          }
+        >
+          Add the first property to start tracking bookings and cleans.
+        </EmptyState>
       ) : (
-        <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.data.items.map((p) => (
             <li key={p.id}>
               <Link
                 to="/admin/properties/$propertyId"
                 params={{ propertyId: p.id }}
-                className="flex items-center justify-between gap-2 p-4 hover:bg-slate-50"
+                className="group flex h-full min-h-28 items-start gap-4 rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-sm"
               >
-                <span>
-                  <span className="font-medium">{p.name}</span>
-                  <span className="block text-sm text-slate-500">
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-lg font-semibold text-ink">{p.name}</span>
+                    <Pill tone={p.archivedAt ? 'neutral' : 'sage'}>{p.archivedAt ? 'Archived' : 'Active'}</Pill>
+                  </span>
+                  <span className="mt-1 block text-sm text-muted">
                     {p.addressLine1}, {p.city}
                   </span>
                 </span>
-                {p.archivedAt && <Badge tone="amber">Archived</Badge>}
+                <ChevronRight aria-hidden className="mt-1 size-5 text-muted transition-colors group-hover:text-ink" />
               </Link>
             </li>
           ))}
