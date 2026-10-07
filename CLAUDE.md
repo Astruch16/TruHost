@@ -212,3 +212,18 @@ Then set `DATABASE_URL` and `TEST_DATABASE_URL` in `apps/api/.env` to
 Each app has an `.env.example`. Copy it to `.env` and never commit `.env`
 files. The API refuses to start with a missing or invalid variable (see
 `apps/api/src/config/env.ts`).
+
+## Branches and pull requests
+
+Stacked PRs stranded merged work outside `main` (#8, #9 and #10 all merged into branches that had already
+landed). So:
+
+- **No stacked PRs.** Cut every branch from an up-to-date `main` (`git fetch` first), and every PR targets
+  `main`.
+- **One PR open at a time**, unless two are truly independent (no shared files, either can merge first). If
+  work depends on an unmerged PR, wait for it to be merged before starting the dependent branch.
+- **Before opening a PR:** confirm the base is `main`, and that the head branch isn't already contained in
+  `main` (`git merge-base --is-ancestor <branch> origin/main` must fail).
+- **After a merge:** delete the branch (remote and local), then confirm `main` contains the change
+  (`git merge-base --is-ancestor <commit> origin/main`).
+- Commit or push only when asked. PR descriptions have no "Generated with Claude Code" footer.
