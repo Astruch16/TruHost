@@ -9,12 +9,15 @@ import { configureApp } from '../../src/setup.js';
 import { FakeEmailSender } from './fake-email.js';
 import { FakeIdentityProvider } from './fake-identity.js';
 import { EMAIL_SENDER } from '../../src/email/email-sender.js';
+import { CLOCK, type Clock } from '../../src/common/clock.js';
 
 export interface TestApp {
   app: NestExpressApplication;
   prisma: PrismaService;
   identity: FakeIdentityProvider;
   email: FakeEmailSender;
+  /** Fixed time for date-dependent features; defaults to 2026-11-20 12:00 Vancouver. */
+  clock: { set: (iso: string) => void; reset: () => void };
   http: () => ReturnType<typeof request>;
   /** Supertest agent with `Authorization: Bearer test:<subject>` preset. */
   as: (subject: string | null) => {
@@ -30,11 +33,16 @@ export interface TestApp {
 export async function createTestApp(): Promise<TestApp> {
   const identity = new FakeIdentityProvider();
   const email = new FakeEmailSender();
+  const DEFAULT_NOW = '2026-11-20T20:00:00Z';
+  let now = new Date(DEFAULT_NOW);
+  const clock: Clock = { now: () => new Date(now) };
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(IDENTITY_PROVIDER)
     .useValue(identity)
     .overrideProvider(EMAIL_SENDER)
     .useValue(email)
+    .overrideProvider(CLOCK)
+    .useValue(clock)
     .compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ logger: ['error', 'warn'] });
@@ -50,6 +58,14 @@ export async function createTestApp(): Promise<TestApp> {
     prisma: app.get(PrismaService),
     identity,
     email,
+    clock: {
+      set: (iso) => {
+        now = new Date(iso);
+      },
+      reset: () => {
+        now = new Date(DEFAULT_NOW);
+      },
+    },
     http: () => request(server),
     as: (subject) => ({
       get: (path) => auth(request(server).get(path), subject),

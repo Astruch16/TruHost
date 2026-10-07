@@ -41,11 +41,11 @@ const sampleError = new ApiError(409, {
 });
 
 function StyleGuide() {
-  const [selected, setSelected] = useState('a');
+  const [selected, setSelected] = useState<string | null>('a');
   const [dialog, setDialog] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const nav = navItems({ staffRole: 'ADMIN', memberships: [{}] }).map((item, i) =>
-    i === 1 ? { ...item, badge: 2 } : item,
+    i === 3 ? { ...item, badge: 2 } : item,
   );
 
   return (
@@ -58,6 +58,7 @@ function StyleGuide() {
       unreadNotifications={1}
       onSignOut={() => undefined}
       onManageSignIn={() => undefined}
+      allowAllProperties
     >
       <PageHeader
         eyebrow="Style guide"

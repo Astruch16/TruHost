@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Check, ChevronsUpDown, Layers, Search } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { initials } from '../../lib/nav';
 
@@ -21,10 +21,13 @@ export function PropertySwitcher({
   properties,
   selectedId,
   onSelect,
+  allowAll = false,
 }: {
   properties: SwitcherProperty[];
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  /** null = all properties (only when `allowAll`). */
+  onSelect: (id: string | null) => void;
+  allowAll?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -47,18 +50,28 @@ export function PropertySwitcher({
           'flex min-h-12 w-full max-w-xs items-center gap-3 rounded-full border border-line bg-surface py-1.5 pr-4 pl-1.5 text-left',
           'transition-[border-color,box-shadow] hover:border-ink/25 data-[state=open]:border-ink/25 data-[state=open]:shadow-sm',
         )}
-        aria-label={selected ? `Property: ${selected.name}. Switch property` : 'Choose a property'}
+        aria-label={
+          selected
+            ? `Property: ${selected.name}. Switch property`
+            : allowAll
+              ? 'All properties. Switch property'
+              : 'Choose a property'
+        }
       >
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-blue-tint text-xs font-bold text-blue-deep">
-          {selected ? avatar(selected.name) : '—'}
+          {selected ? avatar(selected.name) : allowAll ? <Layers aria-hidden className="size-4" /> : '—'}
         </span>
         <span className="min-w-0 flex-1 leading-tight">
-          <span className="block truncate font-semibold text-ink">{selected?.name ?? 'Choose a property'}</span>
-          {selected && (
-            <span className="block truncate text-xs text-muted">
-              {selected.city}, {selected.province}
-            </span>
-          )}
+          <span className="block truncate font-semibold text-ink">
+            {selected?.name ?? (allowAll ? 'All properties' : 'Choose a property')}
+          </span>
+          <span className="block truncate text-xs text-muted">
+            {selected
+              ? `${selected.city}, ${selected.province}`
+              : allowAll
+                ? `${properties.length} propert${properties.length === 1 ? 'y' : 'ies'}`
+                : ''}
+          </span>
         </span>
         <ChevronsUpDown aria-hidden className="size-4 shrink-0 text-muted" />
       </Popover.Trigger>
@@ -83,6 +96,25 @@ export function PropertySwitcher({
             />
           </label>
           <ul aria-label="Properties" className="max-h-72 overflow-y-auto">
+            {allowAll && !query.trim() && (
+              <li>
+                <button
+                  type="button"
+                  aria-current={selectedId === null || undefined}
+                  onClick={() => {
+                    onSelect(null);
+                    setOpen(false);
+                  }}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-control-sm px-2 text-left transition-colors hover:bg-ground focus-visible:bg-ground focus-visible:outline-none"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sage-tint text-sage-deep">
+                    <Layers aria-hidden className="size-4" />
+                  </span>
+                  <span className="flex-1 text-sm font-semibold text-ink">All properties</span>
+                  {selectedId === null && <Check aria-label="Selected" className="size-4 shrink-0 text-sage-deep" />}
+                </button>
+              </li>
+            )}
             {filtered.map((p) => {
               const isSelected = p.id === selectedId;
               return (

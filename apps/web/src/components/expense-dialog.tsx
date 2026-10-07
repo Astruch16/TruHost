@@ -6,7 +6,7 @@ import type { Expense } from '../lib/api-types';
 import { fieldErrors } from '../lib/errors';
 import { categoryLabel, EXPENSE_CATEGORIES } from '../lib/format';
 import { centsToInput, parseDollarsToCents } from '../lib/money';
-import { uploadReceipt, UploadError } from '../lib/upload';
+import { uploadReceipt } from '../lib/upload';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
@@ -149,11 +149,7 @@ export function ExpenseDialog({
           </Field>
         )}
         <div className="flex flex-col gap-3 sm:col-span-2">
-          {save.error instanceof UploadError ? (
-            <ErrorAlert error={new Error(save.error.message)} />
-          ) : (
-            <ErrorAlert error={Object.keys(errors).length ? null : save.error} />
-          )}
+          <ErrorAlert error={Object.keys(errors).length ? null : save.error} />
           <div className="flex justify-end gap-2">
             <Button variant="secondary" disabled={save.isPending} onClick={onClose}>
               Cancel

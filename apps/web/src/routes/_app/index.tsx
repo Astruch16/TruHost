@@ -13,7 +13,7 @@ export const Route = createFileRoute('/_app/')({
 function Home() {
   const me = useQuery(queries.me(useApi()));
   if (!me.data) return <LoadingBlock />;
-  if (me.data.staffRole === 'ADMIN') return <Navigate to="/admin/properties" />;
+  if (me.data.staffRole === 'ADMIN') return <Navigate to="/admin" />;
   if (me.data.memberships.length > 0) return <Navigate to="/properties" />;
   return (
     <EmptyState icon={DoorClosed} title="No properties yet">

@@ -148,3 +148,39 @@ describe('TableState', () => {
     expect(screen.queryByRole('row')).toBeNull();
   });
 });
+
+describe('ErrorAlert and LoadError', () => {
+  const problem = (status: number, detail: string) =>
+    new ApiError(status, { type: 'about:blank', title: 'x', status, code: 'X', detail });
+
+  it('shows actionable problem details and user-facing upload errors', async () => {
+    const { ErrorAlert } = await import('./alert');
+    const { UploadError } = await import('../../lib/upload');
+    const { rerender } = render(<ErrorAlert error={problem(409, 'These dates overlap another booking')} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('These dates overlap another booking');
+    rerender(<ErrorAlert error={new UploadError('Files can be at most 20 MB.')} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Files can be at most 20 MB.');
+  });
+
+  it('never shows server or framework text for other failures', async () => {
+    const { ErrorAlert } = await import('./alert');
+    const { rerender } = render(<ErrorAlert error={problem(404, 'Cannot GET /v1/dashboard?month=2026-10')} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Please try again.');
+    expect(screen.getByRole('alert')).not.toHaveTextContent('Cannot GET');
+    rerender(<ErrorAlert error={problem(500, 'TypeError: x is undefined')} />);
+    expect(screen.getByRole('alert')).not.toHaveTextContent('TypeError');
+    rerender(<ErrorAlert error={new TypeError('Failed to fetch')} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Please try again.');
+    rerender(<ErrorAlert error={null} />);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('offers a retry for failed loads', async () => {
+    const { LoadError } = await import('./alert');
+    const onRetry = vi.fn();
+    render(<LoadError what="the dashboard" onRetry={onRetry} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('We couldn’t load the dashboard.');
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+});

@@ -73,7 +73,7 @@ function AdminProperty() {
         error={archive.error}
         onConfirm={() => archive.mutate()}
       />
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <Card title="Details">
           <PropertyForm
             key={p.id}
@@ -88,7 +88,7 @@ function AdminProperty() {
             onSubmit={(v) => update.mutate(v)}
           />
         </Card>
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-6 @4xl/content:grid-cols-2">
           <RoomsCard propertyId={propertyId} />
           <PlanCard propertyId={propertyId} />
         </div>
@@ -180,7 +180,7 @@ function RoomsCard({ propertyId }: { propertyId: string }) {
           ))}
           {rooms.data && items.length === 0 && <li className="py-4 text-sm text-muted">No rooms yet.</li>}
         </ol>
-        <form onSubmit={submit} className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+        <form onSubmit={submit} className="grid gap-3 @xl/content:grid-cols-[1fr_auto_auto] @xl/content:items-end">
           <Field label="Room name">
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ensuite" required />
           </Field>
@@ -256,7 +256,7 @@ function PlanCard({ propertyId }: { propertyId: string }) {
             e.preventDefault();
             assign.mutate();
           }}
-          className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end"
+          className="grid gap-3 @xl/content:grid-cols-[1fr_auto_auto] @xl/content:items-end"
         >
           <Field label="Plan">
             <Select value={planId} onChange={(e) => setPlanId(e.target.value)} required>
@@ -336,7 +336,7 @@ function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; def
 
   return (
     <Card title="Owners and cleaners">
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <Field
           label="Default cleaner"
           hint={
@@ -411,7 +411,7 @@ function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; def
             e.preventDefault();
             add.mutate();
           }}
-          className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end"
+          className="grid gap-3 @xl/content:grid-cols-[1fr_auto_auto] @xl/content:items-end"
         >
           <Field label="Person" hint="Invite new people from Team.">
             <Select value={userId} onChange={(e) => setUserId(e.target.value)} required>
@@ -431,7 +431,7 @@ function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; def
               <option value="OWNER">Owner</option>
             </Select>
           </Field>
-          <Button type="submit" variant="secondary" loading={add.isPending} className="sm:mb-[1.625rem]">
+          <Button type="submit" variant="secondary" loading={add.isPending} className="@xl/content:mb-[1.625rem]">
             <Plus aria-hidden className="size-4" /> Add
           </Button>
         </form>

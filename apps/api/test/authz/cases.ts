@@ -391,6 +391,9 @@ export const CASES: AuthzCase[] = [
   },
   { route: 'GET /v1/reports/portfolio', path: () => '/v1/reports/portfolio?month=2026-11', allow: ADMIN },
 
+  // ── dashboard ──
+  { route: 'GET /v1/dashboard', path: () => '/v1/dashboard?month=2026-11', allow: ADMIN },
+
   // ── audit ──
   { route: 'GET /v1/audit-logs', path: () => '/v1/audit-logs', allow: ADMIN },
 ];

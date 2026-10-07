@@ -109,3 +109,23 @@
 @utility animate-slide-in {
   animation: th-slide-in 200ms cubic-bezier(0.2, 0, 0, 1);
 }
+
+/* Sidebar foot: show the scene only with room for it, and the tagline only with room for both (no overlap with
+   the nav, whatever the viewport height or the number of nav items). */
+.sidebar-foot {
+  container: sidebar-foot / size;
+}
+.sidebar-scene,
+.sidebar-tagline {
+  display: none;
+}
+@container sidebar-foot (min-height: 220px) {
+  .sidebar-scene {
+    display: block;
+  }
+}
+@container sidebar-foot (min-height: 410px) {
+  .sidebar-tagline {
+    display: block;
+  }
+}

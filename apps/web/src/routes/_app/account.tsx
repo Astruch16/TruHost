@@ -52,11 +52,11 @@ function ProfileForm({
 
   return (
     <Card title="Profile" className="max-w-2xl">
-      <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={submit} noValidate className="grid gap-4 @xl/content:grid-cols-2">
         <Field
           label="Email"
           hint="Change your email or password from Sign-in & security in the profile menu (top right)."
-          className="sm:col-span-2"
+          className="@xl/content:col-span-2"
         >
           <Input value={initial.email} disabled />
         </Field>
@@ -82,7 +82,7 @@ function ProfileForm({
             autoComplete="tel"
           />
         </Field>
-        <div className="flex flex-col gap-3 sm:col-span-2">
+        <div className="flex flex-col gap-3 @xl/content:col-span-2">
           <ErrorAlert error={Object.keys(errors).length ? null : save.error} />
           <div className="flex items-center gap-3">
             <Button type="submit" loading={save.isPending}>

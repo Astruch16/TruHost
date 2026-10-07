@@ -9,7 +9,10 @@ export async function sha256Hex(data: ArrayBuffer): Promise<string> {
 export const RECEIPT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf'] as const;
 export const MAX_RECEIPT_BYTES = 20 * 1024 * 1024;
 
-export class UploadError extends Error {}
+/** A failure whose message is written for the user (shown as-is by ErrorAlert). */
+export class UploadError extends Error {
+  override name = 'UploadError';
+}
 
 /**
  * Uploads a receipt file straight to storage: ask the API for a signed PUT (declaring type, size and hash), then

@@ -13,10 +13,13 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
 import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
+import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAdminBookingsRouteImport } from './routes/_app/admin/bookings'
+import { Route as AppAdminCalendarRouteImport } from './routes/_app/admin/calendar'
 import { Route as AppAdminExpensesRouteImport } from './routes/_app/admin/expenses'
 import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
 import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
@@ -44,6 +47,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const DevDashboardRoute = DevDashboardRouteImport.update({
+  id: '/dev/dashboard',
+  path: '/dev/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevUiRoute = DevUiRouteImport.update({
   id: '/dev/ui',
   path: '/dev/ui',
@@ -59,9 +67,19 @@ const SignUpSplatRoute = SignUpSplatRouteImport.update({
   path: '/sign-up/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminBookingsRoute = AppAdminBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminCalendarRoute = AppAdminCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminExpensesRoute = AppAdminExpensesRouteImport.update({
@@ -105,30 +123,35 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/account': typeof AppAccountRoute
   '/admin': typeof AppAdminRouteWithChildren
+  '/dev/dashboard': typeof DevDashboardRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/admin/bookings': typeof AppAdminBookingsRoute
+  '/admin/calendar': typeof AppAdminCalendarRoute
   '/admin/expenses': typeof AppAdminExpensesRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/team': typeof AppAdminTeamRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/admin/': typeof AppAdminIndexRoute
   '/properties/': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/admin/properties/': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/account': typeof AppAccountRoute
-  '/admin': typeof AppAdminRouteWithChildren
+  '/dev/dashboard': typeof DevDashboardRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/': typeof AppIndexRoute
   '/admin/bookings': typeof AppAdminBookingsRoute
+  '/admin/calendar': typeof AppAdminCalendarRoute
   '/admin/expenses': typeof AppAdminExpensesRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/team': typeof AppAdminTeamRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/admin': typeof AppAdminIndexRoute
   '/properties': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/admin/properties': typeof AppAdminPropertiesIndexRoute
@@ -138,15 +161,18 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/account': typeof AppAccountRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
+  '/dev/dashboard': typeof DevDashboardRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/bookings': typeof AppAdminBookingsRoute
+  '/_app/admin/calendar': typeof AppAdminCalendarRoute
   '/_app/admin/expenses': typeof AppAdminExpensesRoute
   '/_app/admin/plans': typeof AppAdminPlansRoute
   '/_app/admin/team': typeof AppAdminTeamRoute
   '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/properties/': typeof AppPropertiesIndexRoute
   '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/_app/admin/properties/': typeof AppAdminPropertiesIndexRoute
@@ -157,30 +183,35 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/dev/dashboard'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/admin/bookings'
+    | '/admin/calendar'
     | '/admin/expenses'
     | '/admin/plans'
     | '/admin/team'
     | '/properties/$propertyId'
+    | '/admin/'
     | '/properties/'
     | '/admin/properties/$propertyId'
     | '/admin/properties/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account'
-    | '/admin'
+    | '/dev/dashboard'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/'
     | '/admin/bookings'
+    | '/admin/calendar'
     | '/admin/expenses'
     | '/admin/plans'
     | '/admin/team'
     | '/properties/$propertyId'
+    | '/admin'
     | '/properties'
     | '/admin/properties/$propertyId'
     | '/admin/properties'
@@ -189,15 +220,18 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_app/account'
     | '/_app/admin'
+    | '/dev/dashboard'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/_app/'
     | '/_app/admin/bookings'
+    | '/_app/admin/calendar'
     | '/_app/admin/expenses'
     | '/_app/admin/plans'
     | '/_app/admin/team'
     | '/_app/properties/$propertyId'
+    | '/_app/admin/'
     | '/_app/properties/'
     | '/_app/admin/properties/$propertyId'
     | '/_app/admin/properties/'
@@ -205,6 +239,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  DevDashboardRoute: typeof DevDashboardRoute
   DevUiRoute: typeof DevUiRoute
   SignInSplatRoute: typeof SignInSplatRoute
   SignUpSplatRoute: typeof SignUpSplatRoute
@@ -240,6 +275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/dev/dashboard': {
+      id: '/dev/dashboard'
+      path: '/dev/dashboard'
+      fullPath: '/dev/dashboard'
+      preLoaderRoute: typeof DevDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/ui': {
       id: '/dev/ui'
       path: '/dev/ui'
@@ -261,11 +303,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/admin/': {
+      id: '/_app/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/bookings': {
       id: '/_app/admin/bookings'
       path: '/bookings'
       fullPath: '/admin/bookings'
       preLoaderRoute: typeof AppAdminBookingsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/calendar': {
+      id: '/_app/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AppAdminCalendarRouteImport
       parentRoute: typeof AppAdminRoute
     }
     '/_app/admin/expenses': {
@@ -322,18 +378,22 @@ declare module '@tanstack/react-router' {
 
 interface AppAdminRouteChildren {
   AppAdminBookingsRoute: typeof AppAdminBookingsRoute
+  AppAdminCalendarRoute: typeof AppAdminCalendarRoute
   AppAdminExpensesRoute: typeof AppAdminExpensesRoute
   AppAdminPlansRoute: typeof AppAdminPlansRoute
   AppAdminTeamRoute: typeof AppAdminTeamRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAdminPropertiesPropertyIdRoute: typeof AppAdminPropertiesPropertyIdRoute
   AppAdminPropertiesIndexRoute: typeof AppAdminPropertiesIndexRoute
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminBookingsRoute: AppAdminBookingsRoute,
+  AppAdminCalendarRoute: AppAdminCalendarRoute,
   AppAdminExpensesRoute: AppAdminExpensesRoute,
   AppAdminPlansRoute: AppAdminPlansRoute,
   AppAdminTeamRoute: AppAdminTeamRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
   AppAdminPropertiesPropertyIdRoute: AppAdminPropertiesPropertyIdRoute,
   AppAdminPropertiesIndexRoute: AppAdminPropertiesIndexRoute,
 }
@@ -362,6 +422,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  DevDashboardRoute: DevDashboardRoute,
   DevUiRoute: DevUiRoute,
   SignInSplatRoute: SignInSplatRoute,
   SignUpSplatRoute: SignUpSplatRoute,

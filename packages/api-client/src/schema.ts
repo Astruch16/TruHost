@@ -596,6 +596,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/dashboard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Dashboard_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/audit-logs': {
     parameters: {
       query?: never;
@@ -3124,6 +3140,130 @@ export interface operations {
               name: string;
               archived: boolean;
             }[];
+          };
+        };
+      };
+    };
+  };
+  Dashboard_get: {
+    parameters: {
+      query: {
+        month: string;
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            /** Format: date */
+            today: string;
+            /** @enum {string} */
+            period: 'COMPLETE' | 'MONTH_TO_DATE' | 'UPCOMING';
+            scope: {
+              /** Format: uuid */
+              propertyId: string | null;
+              propertyCount: number;
+            };
+            kpis: {
+              grossCents: number;
+              stays: number;
+              incompleteBookings: number;
+              managementFeeCents: number;
+              feeRatesBps: number[];
+              nightsBooked: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              avgNightlyEarningsCents: number | null;
+              completeNights: number;
+            };
+            comparison: {
+              month: string;
+              grossCents: {
+                previous: number | null;
+                changeBps: number | null;
+              };
+              managementFeeCents: {
+                previous: number | null;
+                changeBps: number | null;
+              };
+              nightsBooked: {
+                previous: number | null;
+                changeBps: number | null;
+              };
+              occupancyBps: {
+                previous: number | null;
+                changeBps: number | null;
+              };
+              avgNightlyEarningsCents: {
+                previous: number | null;
+                changeBps: number | null;
+              };
+            } | null;
+            /** @enum {string|null} */
+            noComparisonReason:
+              'MONTH_NOT_ENDED' | 'NO_PLAN_IN_PREVIOUS_MONTH' | 'PREVIOUS_MONTH_INCOMPLETE' | 'NO_PROPERTIES' | null;
+            breakdown: {
+              grossCents: number;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netToOwnersCents: number;
+              cleaningFeesCents: number;
+            };
+            properties: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+              province: string;
+              archived: boolean;
+              hasPlan: boolean;
+              occupancyBps: number | null;
+              nightsBooked: number;
+              grossCents: number;
+            }[];
+            attention: {
+              total: number;
+              items: {
+                /** @enum {string} */
+                kind: 'PAYOUT_MISSING' | 'RECEIPT_MISSING' | 'NO_PLAN' | 'INVITE_PENDING';
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                propertyId: string | null;
+                propertyName: string | null;
+                title: string;
+                detail: string;
+                /** Format: date */
+                date: string | null;
+              }[];
+            };
+            upcoming: {
+              total: number;
+              items: {
+                /** @enum {string} */
+                type: 'CHECK_IN' | 'CHECK_OUT';
+                /** Format: date */
+                date: string;
+                /** Format: uuid */
+                bookingId: string;
+                /** Format: uuid */
+                propertyId: string;
+                propertyName: string;
+                /** @enum {string} */
+                kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+                nights: number;
+                guestName: string | null;
+              }[];
+            };
           };
         };
       };

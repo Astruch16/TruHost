@@ -1262,6 +1262,35 @@ Owners also see current LOW and OUT items on their dashboard, read from
 | GET        | `/ical-imports`              | A     | `?state=CONFLICT`                                         |
 | POST       | `/ical-imports/:id/resolve`  | A     | `{ action: LINK\|REPLACE\|IGNORE, bookingId? }`. Audited. |
 
+### Dashboard [2a]
+
+| Method | Path         | Roles | Notes                                                                                                                                                                          |
+| ------ | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/dashboard` | A     | `?month=YYYY-MM[&propertyId=]`. KPIs, "vs. previous month", revenue breakdown, property performance, needs attention, coming up. Every figure comes from the reporting module. |
+
+Dashboard rules (approved 2026-10-06):
+
+- **Period:** a past month is _complete_. The current month is _month to date_, and its cards say so. A future
+  month is _booked so far_.
+- **"vs. previous month"** shows only when all of these hold:
+  - the viewed month has ended, and so has the previous one;
+  - every property in scope had a plan in force for the whole previous month;
+  - the previous month has no stays waiting on a payout.
+
+  Otherwise the API returns `noComparisonReason`. Changes are relative, except occupancy, which is in points.
+
+- **Needs attention:**
+  - stays that have checked in with no payout or cleaning fee entered;
+  - owner-borne expenses with no receipt;
+  - properties with no plan in force this month;
+  - invites pending for more than 7 days.
+
+  "Months ready to finalize" joins in Phase 2b.
+
+- **Coming up:** confirmed check-ins and check-outs (guest stays and owner stays) in the next 14 days, each
+  property judged in its own time zone, at most 8 items, with a link to the full calendar. On the same day,
+  check-outs come first.
+
 ### Audit
 
 | Method | Path          | Roles | Notes                  |

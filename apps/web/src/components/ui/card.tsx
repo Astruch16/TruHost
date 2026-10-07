@@ -22,7 +22,9 @@ export function Card({
     <section
       className={cx(
         'border bg-surface',
-        inner ? 'rounded-inner border-line p-4' : 'rounded-card border-line-soft p-5 sm:p-6',
+        inner
+          ? 'rounded-inner border-line p-4'
+          : 'rounded-card border-line-soft p-5 @2xl/content:p-6 @[100rem]/content:p-7',
         className,
       )}
     >
