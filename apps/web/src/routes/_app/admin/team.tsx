@@ -2,13 +2,15 @@ import { useState, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { CircleCheck, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { ErrorAlert } from '../../../components/ui/alert';
+import { Confirmation } from '../../../components/ui/confirmation';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { ConfirmDialog } from '../../../components/ui/dialog';
 import { Field } from '../../../components/ui/field';
-import { Input, Select } from '../../../components/ui/input';
+import { Input } from '../../../components/ui/input';
+import { Select } from '../../../components/ui/select';
 import { PageHeader } from '../../../components/ui/page-header';
 import { Pill } from '../../../components/ui/pill';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../components/ui/table';
@@ -253,22 +255,24 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
           />
         </Field>
         <Field label="Role">
-          <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
-            <option value="CLEANER">Cleaner</option>
-            <option value="OWNER">Owner</option>
-            <option value="ADMIN">Admin (TruHost staff)</option>
-          </Select>
+          <Select
+            value={form.role}
+            onValueChange={(value) => setForm({ ...form, role: value as Role })}
+            options={[
+              { value: 'CLEANER', label: 'Cleaner' },
+              { value: 'OWNER', label: 'Owner' },
+              { value: 'ADMIN', label: 'Admin (TruHost staff)' },
+            ]}
+          />
         </Field>
         {form.role !== 'ADMIN' && (
           <Field label="Property" required>
-            <Select value={form.propertyId} onChange={(e) => setForm({ ...form, propertyId: e.target.value })}>
-              <option value="">Choose…</option>
-              {properties.data?.items.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={form.propertyId}
+              onValueChange={(value) => setForm({ ...form, propertyId: value })}
+              placeholder="Choose a property"
+              options={(properties.data?.items ?? []).map((p) => ({ value: p.id, label: p.name }))}
+            />
           </Field>
         )}
         <div className="flex flex-col gap-3 @xl/content:col-span-2 @4xl/content:col-span-3">
@@ -278,9 +282,11 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
               <Send aria-hidden className="size-4" /> Send invite
             </Button>
             {invite.isSuccess && (
-              <span role="status" className="flex items-center gap-1.5 text-sm text-sage-deep">
-                <CircleCheck aria-hidden className="size-4" /> Invite sent
-              </span>
+              <Confirmation>
+                {invite.data.emailSent
+                  ? `Invite sent to ${invite.data.user.email}`
+                  : `Invite created. Email isn’t set up here, so nothing was sent.`}
+              </Confirmation>
             )}
           </div>
         </div>

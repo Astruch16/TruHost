@@ -1,9 +1,10 @@
 import * as Menu from '@radix-ui/react-dropdown-menu';
 import { Link } from '@tanstack/react-router';
 import { KeyRound, LogOut, Settings } from 'lucide-react';
+import { cx } from '../../lib/cx';
+import { menuItemStyles, menuSurfaceStyles } from '../../lib/styles';
 
-const itemClass =
-  'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-control-sm px-2.5 text-sm text-ink outline-none transition-colors data-[highlighted]:bg-ground';
+const itemClass = menuItemStyles;
 
 export function ProfileMenu({
   name,
@@ -36,11 +37,7 @@ export function ProfileMenu({
         </span>
       </Menu.Trigger>
       <Menu.Portal>
-        <Menu.Content
-          align="end"
-          sideOffset={8}
-          className="z-50 min-w-56 rounded-inner border border-line bg-surface p-1.5 shadow-xl animate-pop-in"
-        >
+        <Menu.Content align="end" sideOffset={8} className={cx(menuSurfaceStyles, 'min-w-56')}>
           <div className="px-2.5 py-2">
             <p className="text-sm font-semibold text-ink">{name}</p>
             <p className="truncate text-xs text-muted">{email}</p>

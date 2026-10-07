@@ -1,6 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { Bell, BellOff } from 'lucide-react';
 import { cx } from '../../lib/cx';
+import { menuSurfaceStyles } from '../../lib/styles';
 
 /** Bell with an unread dot. Notifications arrive in Phase 3 (supply alerts); until then it shows an empty state. */
 export function NotificationsBell({ unread = 0 }: { unread?: number }) {
@@ -25,7 +26,7 @@ export function NotificationsBell({ unread = 0 }: { unread?: number }) {
         <Popover.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-[min(20rem,calc(100vw-2rem))] rounded-inner border border-line bg-surface p-4 shadow-xl animate-pop-in focus:outline-none"
+          className={cx(menuSurfaceStyles, 'w-[min(20rem,calc(100vw-2rem))] p-4 focus:outline-none')}
         >
           <p className="mb-3 font-semibold text-ink">Notifications</p>
           <div className="flex flex-col items-center gap-2 py-4 text-center text-sm text-muted">

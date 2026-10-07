@@ -52,3 +52,22 @@ export const pillStyles = (tone: PillTone) =>
     tone === 'neutral' && 'bg-line-soft text-muted',
     tone === 'danger' && 'bg-danger-tint text-danger-deep',
   );
+
+/**
+ * Shared look for every dropdown surface (selects, profile menu, property switcher, notifications): rounded
+ * panel, soft shadow, enter/exit animation. Motion is disabled under prefers-reduced-motion (styles.css).
+ */
+export const menuSurfaceStyles = cx(
+  'z-50 overflow-hidden rounded-inner border border-line bg-surface p-1.5',
+  'shadow-[0_16px_40px_-16px_rgba(26,29,33,0.28)]',
+  'data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out',
+);
+
+/** One row in a dropdown: rounded, with a faint sage tint that fades in on hover or keyboard highlight. */
+export const menuItemStyles = cx(
+  'relative flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-control-sm px-3 text-left text-sm text-ink outline-none select-none',
+  'transition-[background-color,color] duration-150 ease-out',
+  'hover:bg-sage-tint/60 hover:text-sage-deep focus-visible:bg-sage-tint/60 focus-visible:text-sage-deep',
+  'data-[highlighted]:bg-sage-tint/60 data-[highlighted]:text-sage-deep',
+  'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+);

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Check, ChevronsUpDown, Layers, Search } from 'lucide-react';
 import { cx } from '../../lib/cx';
+import { menuItemStyles, menuSurfaceStyles } from '../../lib/styles';
 import { initials } from '../../lib/nav';
 
 export interface SwitcherProperty {
@@ -79,7 +80,7 @@ export function PropertySwitcher({
         <Popover.Content
           align="start"
           sideOffset={8}
-          className="z-50 w-[min(22rem,calc(100vw-2rem))] rounded-inner border border-line bg-surface p-2 shadow-xl animate-pop-in focus:outline-none"
+          className={cx(menuSurfaceStyles, 'w-[min(22rem,calc(100vw-2rem))] p-2 focus:outline-none')}
         >
           <label className="relative mb-1 block">
             <span className="sr-only">Search properties</span>
@@ -105,7 +106,7 @@ export function PropertySwitcher({
                     onSelect(null);
                     setOpen(false);
                   }}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-control-sm px-2 text-left transition-colors hover:bg-ground focus-visible:bg-ground focus-visible:outline-none"
+                  className={cx(menuItemStyles, 'min-h-11 gap-3 px-2')}
                 >
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sage-tint text-sage-deep">
                     <Layers aria-hidden className="size-4" />
@@ -127,7 +128,7 @@ export function PropertySwitcher({
                       setOpen(false);
                       setQuery('');
                     }}
-                    className="flex min-h-11 w-full items-center gap-3 rounded-control-sm px-2 text-left transition-colors hover:bg-ground focus-visible:bg-ground focus-visible:outline-none"
+                    className={cx(menuItemStyles, 'min-h-11 gap-3 px-2')}
                   >
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-tint text-[0.7rem] font-bold text-blue-deep">
                       {avatar(p.name)}

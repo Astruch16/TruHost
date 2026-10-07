@@ -8,6 +8,9 @@ export type StaffRole = z.infer<typeof StaffRole>;
 export const UserStatus = z.enum(['INVITED', 'ACTIVE', 'DEACTIVATED']);
 export type UserStatus = z.infer<typeof UserStatus>;
 
+export const Guide = z.enum(['SAGE', 'JUNIPER', 'PIP']);
+export type Guide = z.infer<typeof Guide>;
+
 export const InviteStatus = z.enum(['PENDING', 'ACCEPTED', 'REVOKED']);
 export type InviteStatus = z.infer<typeof InviteStatus>;
 

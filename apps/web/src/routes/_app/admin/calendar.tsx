@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarPlus } from 'lucide-react';
 import { CalendarLegend, MonthCalendar } from '../../../components/dashboard/month-calendar';
 import { ErrorAlert } from '../../../components/ui/alert';
 import { Card } from '../../../components/ui/card';
@@ -44,7 +43,7 @@ function Calendar() {
         ) : !bookings.data ? (
           <Skeleton className="h-96" />
         ) : stays.length === 0 ? (
-          <EmptyState icon={CalendarPlus} title={`No stays in ${monthLabel(month)}`}>
+          <EmptyState title={`No stays in ${monthLabel(month)}`}>
             Add bookings from the Bookings page or the dashboard’s quick actions.
           </EmptyState>
         ) : (

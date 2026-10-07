@@ -52,6 +52,10 @@
                       "type": "string",
                       "enum": ["INVITED", "ACTIVE", "DEACTIVATED"]
                     },
+                    "guide": {
+                      "type": "string",
+                      "enum": ["SAGE", "JUNIPER", "PIP"]
+                    },
                     "memberships": {
                       "type": "array",
                       "items": {
@@ -87,7 +91,17 @@
                       }
                     }
                   },
-                  "required": ["id", "email", "firstName", "lastName", "phone", "staffRole", "status", "memberships"],
+                  "required": [
+                    "id",
+                    "email",
+                    "firstName",
+                    "lastName",
+                    "phone",
+                    "staffRole",
+                    "status",
+                    "guide",
+                    "memberships"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -121,6 +135,10 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 40
+                  },
+                  "guide": {
+                    "type": "string",
+                    "enum": ["SAGE", "JUNIPER", "PIP"]
                   }
                 }
               }
@@ -162,6 +180,10 @@
                       "type": "string",
                       "enum": ["INVITED", "ACTIVE", "DEACTIVATED"]
                     },
+                    "guide": {
+                      "type": "string",
+                      "enum": ["SAGE", "JUNIPER", "PIP"]
+                    },
                     "memberships": {
                       "type": "array",
                       "items": {
@@ -197,7 +219,17 @@
                       }
                     }
                   },
-                  "required": ["id", "email", "firstName", "lastName", "phone", "staffRole", "status", "memberships"],
+                  "required": [
+                    "id",
+                    "email",
+                    "firstName",
+                    "lastName",
+                    "phone",
+                    "staffRole",
+                    "status",
+                    "guide",
+                    "memberships"
+                  ],
                   "additionalProperties": false
                 }
               }

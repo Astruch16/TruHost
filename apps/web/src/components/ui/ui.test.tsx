@@ -5,7 +5,8 @@ import { ApiError } from '@truhost/api-client';
 import { Button } from './button';
 import { ConfirmDialog } from './dialog';
 import { Field } from './field';
-import { Input, Select } from './input';
+import { Input } from './input';
+import { Select } from './select';
 import { TableState } from './table';
 
 describe('Field', () => {
@@ -24,14 +25,73 @@ describe('Field', () => {
   it('uses the hint as the description when there is no error', () => {
     render(
       <Field label="Role" hint="What they can do">
-        <Select>
-          <option>Cleaner</option>
-        </Select>
+        <Select value="CLEANER" onValueChange={() => undefined} options={[{ value: 'CLEANER', label: 'Cleaner' }]} />
       </Field>,
     );
     const select = screen.getByLabelText('Role');
+    expect(select).toHaveRole('combobox');
     expect(select).not.toHaveAttribute('aria-invalid');
     expect(select).toHaveAccessibleDescription('What they can do');
+  });
+});
+
+describe('Select', () => {
+  const options = [
+    { value: 'CLEANER', label: 'Cleaner' },
+    { value: 'OWNER', label: 'Owner' },
+    { value: 'ADMIN', label: 'Admin', disabled: true },
+  ];
+
+  it('opens a styled listbox and reports the chosen value', async () => {
+    const onValueChange = vi.fn();
+    render(<Select aria-label="Role" value="CLEANER" onValueChange={onValueChange} options={options} />);
+    expect(screen.getByRole('combobox', { name: 'Role' })).toHaveTextContent('Cleaner');
+    await userEvent.click(screen.getByRole('combobox'));
+    const listbox = await screen.findByRole('listbox');
+    expect(listbox.closest('.rounded-inner')).not.toBeNull();
+    expect(screen.getByRole('option', { name: 'Cleaner' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('option', { name: 'Admin' })).toHaveAttribute('data-disabled');
+    await userEvent.click(screen.getByRole('option', { name: 'Owner' }));
+    expect(onValueChange).toHaveBeenCalledWith('OWNER');
+  });
+
+  it('works from the keyboard', async () => {
+    const onValueChange = vi.fn();
+    render(<Select aria-label="Role" value="CLEANER" onValueChange={onValueChange} options={options} />);
+    screen.getByRole('combobox').focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('listbox');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(onValueChange).toHaveBeenCalledWith('OWNER');
+  });
+
+  it('shows the placeholder until something is chosen', () => {
+    render(
+      <Select
+        aria-label="Plan"
+        value=""
+        onValueChange={() => undefined}
+        options={options}
+        placeholder="Choose a plan"
+      />,
+    );
+    expect(screen.getByRole('combobox')).toHaveTextContent('Choose a plan');
+  });
+
+  it('supports an empty option such as "No default"', async () => {
+    const onValueChange = vi.fn();
+    render(
+      <Select
+        aria-label="Default cleaner"
+        value=""
+        onValueChange={onValueChange}
+        options={[{ value: '', label: 'No default' }, ...options]}
+      />,
+    );
+    expect(screen.getByRole('combobox')).toHaveTextContent('No default');
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Owner' }));
+    expect(onValueChange).toHaveBeenCalledWith('OWNER');
   });
 });
 

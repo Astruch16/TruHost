@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TruHost onboarding screens</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{opacity:.8}
+@keyframes th-wave{0%,55%,100%{transform:rotate(0deg)}65%{transform:rotate(-16deg)}75%{transform:rotate(8deg)}85%{transform:rotate(-12deg)}93%{transform:rotate(4deg)}}
+@keyframes th-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.th-wave{animation:th-wave 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:0% 100%}
+.th-bob{animation:th-bob 3.2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.th-wave,.th-bob{animation:none}}
+</style>
+</helmet>
+<div style="width: 1200px; height: 800px; box-sizing: border-box; padding: 40px; background: #F6F6F3; color: #1A1D21; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-size: 15px; line-height: 1.45; display: flex; gap: 32px">
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+<defs>
+<radialGradient id="volS" gradientUnits="userSpaceOnUse" cx="76" cy="80" r="125"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"></stop><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="0.55" stop-color="#101412" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.42"></stop></radialGradient>
+<radialGradient id="volJ" gradientUnits="userSpaceOnUse" cx="82" cy="56" r="150"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38"></stop><stop offset="0.28" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="0.5" stop-color="#101412" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.44"></stop></radialGradient>
+<radialGradient id="volP" gradientUnits="userSpaceOnUse" cx="76" cy="72" r="125"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.4"></stop><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="0.55" stop-color="#101412" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.34"></stop></radialGradient>
+<clipPath id="owlK"><path d="M100 44 C62 44 46 78 46 112 C46 152 70 180 100 180 C130 180 154 152 154 112 C154 78 138 44 100 44Z"></path></clipPath>
+<clipPath id="marK"><path d="M100 92 C76 92 64 118 64 146 C64 168 78 182 100 182 C122 182 136 168 136 146 C136 118 124 92 100 92Z M100 30 C72 30 58 48 58 68 C58 76 54 80 50 84 C58 86 62 92 70 98 C80 104 90 106 100 106 C110 106 120 104 130 98 C138 92 142 86 150 84 C146 80 142 76 142 68 C142 48 128 30 100 30Z"></path></clipPath>
+<clipPath id="chiK"><path d="M100 40 C62 40 44 72 44 110 C44 150 68 178 100 178 C132 178 156 150 156 110 C156 72 138 40 100 40Z"></path></clipPath>
+</defs>
+<symbol id="g-sage" viewBox="0 0 200 200">
+<path class="th-wave" d="M150 106 C166 98 177 82 175 62 C162 68 150 80 143 96Z" fill="#2F5548"></path>
+<path d="M58 78 C52 60 52 46 58 32 C68 40 80 46 90 50Z M142 78 C148 60 148 46 142 32 C132 40 120 46 110 50Z" fill="#3E6B56"></path>
+<path d="M100 44 C62 44 46 78 46 112 C46 152 70 180 100 180 C130 180 154 152 154 112 C154 78 138 44 100 44Z" fill="#4F7A63"></path>
+<g clip-path="url(#owlK)"><rect width="200" height="200" fill="url(#volS)"></rect><ellipse cx="66" cy="68" rx="30" ry="20" fill="#FFFFFF" fill-opacity="0.1"></ellipse></g>
+<path d="M48 108 C40 128 44 152 58 166 C61 146 59 124 55 106Z" fill="#2F5548"></path>
+<path d="M100 106 C78 106 68 128 68 146 C68 166 82 177 100 177 C118 177 132 166 132 146 C132 128 122 106 100 106Z" fill="#F1F5EE"></path>
+<path d="M76 154 q6 6 12 0 M94 154 q6 6 12 0 M112 154 q6 6 12 0 M85 166 q6 6 12 0 M103 166 q6 6 12 0" fill="none" stroke="#B9D2BF" stroke-width="2.4" stroke-linecap="round"></path>
+<g clip-path="url(#owlK)" opacity="0.5"><rect width="200" height="200" fill="url(#volS)"></rect></g>
+<circle cx="79" cy="90" r="25" fill="#F6F6F3"></circle>
+<circle cx="121" cy="90" r="25" fill="#F6F6F3"></circle>
+<circle cx="81" cy="91" r="13" fill="#E2C15A"></circle>
+<circle cx="119" cy="91" r="13" fill="#E2C15A"></circle>
+<circle cx="81" cy="91" r="9" fill="#1A1D21"></circle>
+<circle cx="119" cy="91" r="9" fill="#1A1D21"></circle>
+<circle cx="84.500" cy="87.500" r="3.200" fill="#FFFFFF"></circle>
+<circle cx="122.500" cy="87.500" r="3.200" fill="#FFFFFF"></circle>
+<path d="M100 100 C94 100 93 105 100 115 C107 105 106 100 100 100Z" fill="#D9AE3C"></path>
+<ellipse cx="60" cy="110" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<ellipse cx="140" cy="110" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<path d="M76 116 Q100 132 124 116" fill="none" stroke="#173F3A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="100" cy="131" r="5" fill="none" stroke="#D9AE3C" stroke-width="3"></circle>
+<path d="M100 136 V147 M100 142 H105 M100 146.500 H104" fill="none" stroke="#D9AE3C" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="86" cy="181" rx="8" ry="4.500" fill="#D9AE3C"></ellipse>
+<ellipse cx="114" cy="181" rx="8" ry="4.500" fill="#D9AE3C"></ellipse>
+</symbol>
+<symbol id="g-juniper" viewBox="0 0 200 200">
+<path d="M126 170 C160 176 186 152 182 118 C180 100 166 92 157 101 C168 113 164 135 146 143 C134 148 126 154 126 170Z" fill="#553B30"></path>
+<path d="M176 108 C172 100 164 96 157 101 C162 106 165 113 166 120 C171 118 175 114 176 108Z" fill="#F3E7C4"></path>
+<g class="th-wave"><path d="M130 120 C144 112 153 98 151 82 C140 86 131 98 125 111Z" fill="#553B30"></path>
+<circle cx="148" cy="87" r="4" fill="#F3E7C4"></circle></g>
+<path d="M100 92 C76 92 64 118 64 146 C64 168 78 182 100 182 C122 182 136 168 136 146 C136 118 124 92 100 92Z" fill="#6B4E3D"></path>
+<path d="M100 100 C86 100 80 114 82 128 C84 142 92 152 100 152 C108 152 116 142 118 128 C120 114 114 100 100 100Z" fill="#F3E7C4"></path>
+<ellipse cx="100" cy="106" rx="34" ry="9" fill="#101412" fill-opacity="0.16"></ellipse>
+<path d="M70 122 C60 132 60 148 68 156 C74 148 77 134 77 124Z" fill="#553B30"></path>
+<circle cx="70" cy="41" r="13" fill="#6B4E3D"></circle>
+<circle cx="130" cy="41" r="13" fill="#6B4E3D"></circle>
+<circle cx="70" cy="42" r="7" fill="#F3E7C4"></circle>
+<circle cx="130" cy="42" r="7" fill="#F3E7C4"></circle>
+<path d="M100 30 C72 30 58 48 58 68 C58 76 54 80 50 84 C58 86 62 92 70 98 C80 104 90 106 100 106 C110 106 120 104 130 98 C138 92 142 86 150 84 C146 80 142 76 142 68 C142 48 128 30 100 30Z" fill="#6B4E3D"></path>
+<g clip-path="url(#marK)"><rect width="200" height="200" fill="url(#volJ)"></rect><ellipse cx="78" cy="44" rx="26" ry="14" fill="#FFFFFF" fill-opacity="0.1"></ellipse></g>
+<ellipse cx="100" cy="84" rx="23" ry="16" fill="#F3E7C4"></ellipse>
+<circle cx="82" cy="66" r="8" fill="#1A1D21"></circle>
+<circle cx="118" cy="66" r="8" fill="#1A1D21"></circle>
+<circle cx="84.800" cy="63.200" r="2.800" fill="#FFFFFF"></circle>
+<circle cx="120.800" cy="63.200" r="2.800" fill="#FFFFFF"></circle>
+<path d="M93 76 Q100 72 107 76 Q105 84 100 84 Q95 84 93 76Z" fill="#1A1D21"></path>
+<path d="M100 84 V88 M100 88 Q94 95 88 90 M100 88 Q106 95 112 90" fill="none" stroke="#1A1D21" stroke-width="2" stroke-linecap="round"></path>
+<ellipse cx="70" cy="82" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<ellipse cx="130" cy="82" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<path d="M84 114 Q100 126 116 114" fill="none" stroke="#173F3A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="100" cy="126" r="5" fill="none" stroke="#D9AE3C" stroke-width="3"></circle>
+<path d="M100 131 V142 M100 137 H105 M100 141.500 H104" fill="none" stroke="#D9AE3C" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="84" cy="182" rx="14" ry="7" fill="#553B30"></ellipse>
+<ellipse cx="116" cy="182" rx="14" ry="7" fill="#553B30"></ellipse>
+</symbol>
+<symbol id="g-pip" viewBox="0 0 200 200">
+<path d="M126 162 L162 186 L141 191 L116 172Z" fill="#5F6975"></path>
+<path class="th-wave" d="M150 100 C168 92 179 76 177 58 C164 62 152 74 145 90Z" fill="#6B7684"></path>
+<path d="M88 174 V186 M112 174 V186 M81 186 H95 M105 186 H119" fill="none" stroke="#3A3F47" stroke-width="3.500" stroke-linecap="round"></path>
+<path d="M100 40 C62 40 44 72 44 110 C44 150 68 178 100 178 C132 178 156 150 156 110 C156 72 138 40 100 40Z" fill="#F4EDE0"></path>
+<g clip-path="url(#chiK)">
+<ellipse cx="60" cy="154" rx="13" ry="18" fill="#EBDDC3" fill-opacity="0.75"></ellipse>
+<ellipse cx="140" cy="154" rx="13" ry="18" fill="#EBDDC3" fill-opacity="0.75"></ellipse>
+<ellipse cx="100" cy="96" rx="56" ry="27" fill="#FFFFFF"></ellipse>
+<path d="M40 100 C40 60 66 36 100 36 C134 36 160 60 160 100 C142 84 124 77 100 77 C76 77 58 84 40 100Z" fill="#1A1D21"></path>
+<rect width="200" height="200" fill="url(#volP)"></rect>
+</g>
+<path d="M46 102 C38 126 46 154 64 168 C61 146 60 122 58 100Z" fill="#7C8794"></path>
+<path d="M87 120 C93 116 107 116 113 120 C112 130 106 134 100 134 C94 134 88 130 87 120Z" fill="#1A1D21"></path>
+<path d="M93 103 H107 L100 115Z" fill="#D9AE3C"></path>
+<circle cx="78" cy="92" r="7.500" fill="#1A1D21"></circle>
+<circle cx="122" cy="92" r="7.500" fill="#1A1D21"></circle>
+<circle cx="80.600" cy="89.400" r="2.600" fill="#FFFFFF"></circle>
+<circle cx="124.600" cy="89.400" r="2.600" fill="#FFFFFF"></circle>
+<ellipse cx="64" cy="104" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<ellipse cx="136" cy="104" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<path d="M80 140 Q100 154 120 140" fill="none" stroke="#173F3A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="100" cy="153" r="5" fill="none" stroke="#D9AE3C" stroke-width="3"></circle>
+<path d="M100 158 V169 M100 164 H105 M100 168.500 H104" fill="none" stroke="#D9AE3C" stroke-width="3" stroke-linecap="round"></path>
+</symbol>
+</svg>
+
+<div style="flex: 1.15; min-width: 0; background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 20px; box-shadow: 0 18px 44px rgba(26, 29, 33, 0.10); padding: 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: flex-end; gap: 18px">
+<div style="flex: none; width: 132px; height: 132px; border-radius: 50%; background: {{current.tint}}; display: flex; align-items: center; justify-content: center">
+<svg class="th-bob" width="120" height="120" role="img" aria-label="Your guide waving"><use href="{{current.href}}"></use></svg>
+</div>
+<div style="flex: 1; min-width: 0; background: #F6F6F3; border-radius: 16px 16px 16px 4px; padding: 16px 18px">
+<div style="font-size: 20px; font-weight: 700; letter-spacing: -0.01em">Hi Jordan, I'm {{current.name}}.</div>
+<div style="color: #5B6068; margin-top: 4px">I'll show you around your owner portal. It takes about two minutes, and you can stop any time.</div>
+</div>
+</div>
+
+<div>
+<div style="font-size: 13px; font-weight: 600; margin-bottom: 10px">Choose your guide</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{guides}}" as="g" hint-placeholder-count="3">
+<button onClick="{{g.pick}}" style="display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; color: #1A1D21; background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 14px; padding: 8px 12px 8px 8px; min-height: 60px; cursor: pointer; box-shadow: {{g.ring}}">
+<span style="flex: none; width: 44px; height: 44px; border-radius: 50%; background: {{g.tint}}; display: flex; align-items: center; justify-content: center">
+<svg width="40" height="40" aria-hidden="true"><use href="{{g.href}}"></use></svg>
+</span>
+<span style="flex: 1; min-width: 0"><span style="display: block; font-weight: 600">{{g.name}}</span><span style="display: block; font-size: 12px; color: #5B6068">{{g.kind}}</span></span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 8px"><span>Getting started</span><span style="color: #5B6068">1 of 4 done</span></div>
+<div style="height: 6px; border-radius: 3px; background: #E3E4E1"><div style="width: 25%; height: 6px; border-radius: 3px; background: #173F3A"></div></div>
+</div>
+
+<div style="display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #EEEEEB">
+<span style="flex: none; width: 26px; height: 26px; border-radius: 50%; background: #173F3A; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-label="Done"><path d="M5 12l5 5 9-10"></path></svg>
+</span>
+<span style="flex: 1; color: #5B6068; text-decoration: line-through">Sign in and set your password</span>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #EEEEEB">
+<span style="flex: none; width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 2px solid #173F3A"></span>
+<span style="flex: 1"><span style="display: block; font-weight: 600">See this month's numbers</span><span style="display: block; font-size: 13px; color: #5B6068">What you earned and where it went</span></span>
+<span style="font-size: 12px; font-weight: 700; background: #DDEBDF; color: #23442F; border-radius: 999px; padding: 3px 10px">Next</span>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #EEEEEB">
+<span style="flex: none; width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 2px solid #C9CCC6"></span>
+<span style="flex: 1"><span style="display: block; font-weight: 600">Open your statement</span><span style="display: block; font-size: 13px; color: #5B6068">The record of each month's payout</span></span>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0">
+<span style="flex: none; width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 2px solid #C9CCC6"></span>
+<span style="flex: 1"><span style="display: block; font-weight: 600">Look at the latest clean</span><span style="display: block; font-size: 13px; color: #5B6068">Before and after photos, room by room</span></span>
+</div>
+</div>
+
+<div style="margin-top: auto; display: flex; align-items: center; gap: 12px">
+<button style="flex: 1; height: 50px; font: inherit; font-weight: 600; color: #FFFFFF; background: #173F3A; border: 0; border-radius: 12px; cursor: pointer">Start the tour</button>
+<button style="height: 50px; padding: 0 20px; font: inherit; font-weight: 600; color: #1A1D21; background: transparent; border: 0; border-radius: 12px; cursor: pointer">Skip for now</button>
+</div>
+</div>
+
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+
+<div style="flex: 1; background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px">
+<div style="width: 120px; height: 120px; border-radius: 50%; background: {{current.tint}}; display: flex; align-items: center; justify-content: center">
+<svg class="th-bob" width="108" height="108" role="img" aria-label="Your guide"><use href="{{current.href}}"></use></svg>
+</div>
+<div style="font-size: 19px; font-weight: 700; letter-spacing: -0.01em">No bookings yet this month</div>
+<div style="color: #5B6068; max-width: 340px">When a guest books, their stay shows up here with the dates and what you earn.</div>
+<button style="height: 46px; padding: 0 20px; font: inherit; font-weight: 600; color: #1A1D21; background: #FFFFFF; border: 1px solid #CDCFD3; border-radius: 10px; cursor: pointer; margin-top: 4px">View past months</button>
+</div>
+
+<div style="background: #173F3A; color: #FFFFFF; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 14px">
+<div style="flex: none; width: 56px; height: 56px; border-radius: 50%; background: {{current.tint}}; display: flex; align-items: center; justify-content: center">
+<svg width="50" height="50" role="img" aria-label="Your guide"><use href="{{current.href}}"></use></svg>
+</div>
+<div style="flex: 1; min-width: 0">
+<div style="font-weight: 700">Clean complete. Nice work.</div>
+<div style="font-size: 13px; color: #CFE0D8">All 6 rooms photographed. The owner and TruHost have been told.</div>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 16px; padding: 16px 18px; display: flex; align-items: center; gap: 14px">
+<div style="flex: none; width: 48px; height: 48px; border-radius: 50%; background: {{current.tint}}; display: flex; align-items: center; justify-content: center">
+<svg width="42" height="42" role="img" aria-label="Your guide"><use href="{{current.href}}"></use></svg>
+</div>
+<div style="flex: 1; min-width: 0">
+<div style="font-weight: 600">Need a hand?</div>
+<div style="font-size: 13px; color: #5B6068">Replay the tour or change your guide in Help.</div>
+</div>
+<button style="height: 44px; padding: 0 16px; font: inherit; font-weight: 600; color: #173F3A; background: transparent; border: 0; cursor: pointer">Replay</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":800}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { picked: 0 };
+}
+renderVals() {
+var self = this;
+var list = [
+{ name: 'Sage', kind: 'Owl', href: '#g-sage', tint: '#DDEBDF' },
+{ name: 'Juniper', kind: 'Pine marten', href: '#g-juniper', tint: '#E6E0F5' },
+{ name: 'Pip', kind: 'Chickadee', href: '#g-pip', tint: '#DCE8F5' }
+];
+var guides = list.map(function (g, i) {
+return Object.assign({}, g, {
+ring: i === self.state.picked ? '0 0 0 2px #173F3A' : 'none',
+pick: function () { self.setState({ picked: i }); }
+});
+});
+return { guides: guides, current: list[this.state.picked] };
+}
+}
+</script>
+</body>
+</html>

@@ -63,12 +63,11 @@ function Bookings() {
           <MonthStepper month={month} onChange={setMonth} />
         </div>
         {noProperties ? (
-          <EmptyState icon={CalendarPlus} title="Add a property first">
+          <EmptyState title="Add a property first">
             Bookings belong to a property. Create one under Properties, then come back here.
           </EmptyState>
         ) : bookings.isSuccess && items.length === 0 ? (
           <EmptyState
-            icon={CalendarPlus}
             title={`No bookings in ${monthLabel(month)}`}
             action={<Button onClick={() => setEditing('new')}>Add booking</Button>}
           >
