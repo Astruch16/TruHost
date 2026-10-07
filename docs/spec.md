@@ -1300,6 +1300,15 @@ Dashboard rules (approved 2026-10-06):
   property judged in its own time zone, at most 8 items, with a link to the full calendar. On the same day,
   check-outs come first.
 
+### Onboarding [4b]
+
+| Method | Path                              | Roles | Notes                                                                                                                   |
+| ------ | --------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/me/onboarding`                  | A O C | The caller's tours and checklists. One per role they hold, with each step's done state derived from records.            |
+| POST   | `/me/onboarding/tours/:role`      | A O C | `{ action: START \| STEP \| COMPLETE \| SKIP \| RESET, step? }`. Own progress only. `RESET` replays the tour from Help. |
+| POST   | `/me/onboarding/checklists/:role` | A O C | `{ hidden: boolean }`. Hide or restore the checklist.                                                                   |
+| POST   | `/me/onboarding/events`           | A O C | `{ key }`. Records a step that leaves no record of its own (e.g. "opened a statement"). Keys are allow-listed per role. |
+
 ### Audit
 
 | Method | Path          | Roles | Notes                  |
@@ -1360,6 +1369,7 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 | Damage report                                                               | change status                   | all   | —                                   | —                             |
 | iCal feeds and imports                                                      | any                             | all   | —                                   | —                             |
 | Audit log                                                                   | read                            | all   | —                                   | —                             |
+| Onboarding progress                                                         | read / update                   | self  | self                                | self                          |
 
 **Required negative tests** (built in Phase 1 and extended each phase):
 
@@ -1415,8 +1425,9 @@ Still open:
 
 - **N5 Negative months:** when expenses exceed revenue, release is blocked.
   The owner-owes flow (carry forward vs. request payment) stays in "Later".
+- **N16 Tour copy:** who writes and reviews the tour and checklist wording for each role?
 
-Resolved 2026-10-06 (kept for traceability):
+Resolved (kept for traceability; 2026-10-06 unless noted):
 
 | #    | Question                                    | Decision                                                                                                               |
 | ---- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -1435,6 +1446,7 @@ Resolved 2026-10-06 (kept for traceability):
 | N13  | Domains and invite email                    | Not chosen: env vars with placeholders. Invite emails sent by us through Resend, not Clerk.                            |
 | N12b | Low supply alerts                           | Admins in-app on LOW and OUT, plus email on OUT; owners in-app and on their dashboard. Built with supplies in Phase 3. |
 | N14  | Owner stay cancelled after its clean        | The cleaning charge stands unless an admin voids it, with a reason, audited.                                           |
+| N15  | Mascot design                               | Resolved 2026-10-07: three guides (Sage, Juniper, Pip) from `docs/design`, chosen per user; built in PR #9.            |
 
 ---
 
@@ -1550,6 +1562,136 @@ the admins.
 **Run:** file a report from a phone, triage it as admin and see it as the
 owner.
 
+### Phase 4b: Guided onboarding (with the guides)
+
+**When:** after Phase 4, and before the first owner outside TruHost is invited. By then every feature the tours
+describe exists, and the first outside owner gets the guided experience.
+
+**Goal:** a new user of any role understands their portal in a few minutes without a call from us. Onboarding
+never blocks work: every tour can be skipped, and anything skipped can be replayed.
+
+**Guides (already built, PR #9).** The characters, the saved choice and their everyday placements exist
+before this phase. Phase 4b adds the tours and checklists around them and reuses what is there:
+
+- **Characters:** Sage (owl), Juniper (pine marten) and Pip (chickadee), from `docs/design/Mascots.dc.html`. Each
+  user picks one; it is `User.guide` (default Sage), shown on `GET /me` and changed with `PATCH /me`.
+- **Component:** `Guide` in `apps/web/src/components/guide/`, with `character`, `pose` and `size`. One base
+  drawing per character; poses swap only arms, eyes and props (`docs/design/Poses.dc.html`). Every pose has a
+  text alternative (`decorative` hides it where the name is already shown). The idle animations stop under
+  `prefers-reduced-motion`.
+- **Poses and what they are for:**
+  - waving: the role's welcome screen;
+  - pointing: tour steps;
+  - sleeping: page-level empty states;
+  - celebrating: milestones;
+  - thinking: drawn, not used yet.
+- **Picker:** `GuidePicker` ("Choose your guide", `docs/design/Onboarding.dc.html`) is in Settings. The welcome
+  screen reuses it, so a new user can pick before the tour starts.
+- **Empty states:** `EmptyState` has two sizes. The default, page-level size shows the sleeping guide, at most one
+  per screen. `size="compact"` (inside panels such as the dashboard cards) keeps a small icon and no guide.
+- **Success:** routine actions (saved, updated, invite sent) get the small plain `Confirmation`. `SuccessNotice`,
+  the celebrating guide on the deep-green banner, is reserved for milestones:
+  - completing a clean with every photo (Phase 3);
+  - finalizing a statement (Phase 2b);
+  - finishing a role's checklist (this phase).
+
+  "Firsts" such as the first booking entered are checklist steps that tick off, not banners.
+
+- **Restraint:** no guide on money figures, statements' contents or error messages, where it would undercut
+  trust.
+
+**This phase adds:** the welcome screen (waving guide, picker, "Start the tour"), the tour steps (pointing guide)
+and the checklist completion milestone.
+
+**Welcome tours, one per role.** Shown on first sign-in for each role a user holds. An admin who also owns a
+property gets the admin tour first; the owner tour is offered from the checklist afterwards.
+
+- **Steps** are anchored to real UI through `data-tour="…"` attributes: a highlighted element and a popover with
+  text, Back/Next, step count and Skip.
+- **Phones** (most cleaners) get a bottom sheet instead of an anchored popover.
+- **Keyboard:** fully usable. Focus moves into the step, Escape skips, and focus returns where it was.
+- **Missing anchors:** a step whose element isn't on screen (e.g. no bookings yet) shows centred, without a
+  highlight.
+- **Content:**
+  - **Owner:** month at a glance and what each figure means (gross, TruPlan fee, net), statements and when
+    money is released, receipts, the calendar, before/after photos, damage reports, profile.
+  - **Cleaner:** today's schedule, starting a clean on its day, the room photo checklist (before and after,
+    every room), supply levels, reporting damage with photos, earnings and pay status.
+  - **Admin:** dashboard and the property switcher, properties and rooms, plans, inviting owners and cleaners,
+    entering bookings and payouts, expenses with receipts, statements, needs attention.
+
+**Checklists, one per role, completing from real actions.** A checklist card on the role's home screen (admin
+dashboard rail, owner property page, cleaner schedule) with a progress count. Step completion is **derived from
+records** wherever a record exists, the same principle as rule 2, so it can't drift from reality:
+
+| Role    | Steps (done when …)                                                                                                                                                                                                                     |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin   | A property exists · it has rooms · a plan is in force · default cleaner and fees are set · an owner is invited · a cleaner is invited · a booking has a payout entered · an expense has a receipt · a statement is finalized (Phase 2b) |
+| Owner   | Phone number added · a statement for their property has been opened* · a receipt has been viewed* · the cleaning photos for a clean have been opened*                                                                                   |
+| Cleaner | Phone number added · a clean has been started · a clean is COMPLETE with every photo · supply levels recorded · the earnings page has been opened*                                                                                      |
+
+\* Steps that leave no record of their own are recorded once, as an allow-listed `OnboardingEvent`, when the user
+does the thing. They are never inferred from page views elsewhere.
+
+- When the last step is done, the card shows a `SuccessNotice` milestone once, then hides itself.
+- Users can also hide it themselves, and restore it from Help.
+
+**Help.** A "Help" item in the profile menu and the sidebar with:
+
+- "Replay the welcome tour" (per role held);
+- "Show my checklist";
+- short "How do I…" answers per role (static content in the web app for now).
+
+**Data model** (progress per user, per role):
+
+```prisma
+enum OnboardingRole { ADMIN OWNER CLEANER }
+enum TourStatus { NOT_STARTED IN_PROGRESS COMPLETED SKIPPED }
+
+/// UI progress only; checklist completion is derived from records (or OnboardingEvent), never stored here.
+model OnboardingProgress {
+  userId            String         @db.Uuid
+  role              OnboardingRole
+  tourStatus        TourStatus     @default(NOT_STARTED)
+  /// Last step seen, so an interrupted tour resumes where it stopped.
+  tourStep          Int?
+  /// Bumped in code when a tour changes materially; a lower stored version re-offers the tour once.
+  tourVersion       Int            @default(1)
+  checklistHiddenAt DateTime?      @db.Timestamptz
+  updatedAt         DateTime       @updatedAt @db.Timestamptz
+
+  @@id([userId, role])
+}
+
+/// One-time facts that have no record elsewhere (e.g. "owner opened a statement"). Keys are allow-listed per role.
+model OnboardingEvent {
+  userId     String   @db.Uuid
+  key        String
+  occurredAt DateTime @default(now()) @db.Timestamptz
+
+  @@id([userId, key])
+}
+```
+
+**Rules:**
+
+- Progress is per user and visible only to that user. Admins don't read other users' onboarding state.
+- No analytics or third-party tracking.
+- Checklist logic lives in the API (`onboarding` module), like every other derived figure, and the web app only
+  renders it.
+
+**Tests:**
+
+- Unit tests for each role's checklist derivation from records.
+- e2e for progress per user and role, skip/replay/resume, hidden checklist, event allow-listing, and that one
+  user can't read or change another's progress (authz matrix).
+- Component tests for tour focus management, Escape, reduced motion and the missing-anchor fallback.
+- Screenshots of each role's tour on desktop and phone.
+
+**Run:** invite a test owner and a test cleaner. Each sees their welcome tour on first sign-in, and their
+checklist ticks off as they do real things. Skip a tour, replay it from Help, and sign in on a phone as the
+cleaner to see the bottom-sheet tour.
+
 ### Phase 5: Hardening
 
 Sentry, backups and PITR drill, R2 bucket lock for evidence prefixes,
@@ -1613,3 +1755,4 @@ UI, and a "needs financials" queue.
 | 2026-10-06 | Supply alerts on a change into LOW/OUT: admins in-app (email too on OUT), owners in-app and on their dashboard; built in Phase 3 (N12b).                                                                                                                                                                                           |
 | 2026-10-06 | System-created owner-stay cleaning charges stand if the stay is later cancelled; only an admin void (reason required, audited) removes them (N14).                                                                                                                                                                                 |
 | 2026-10-07 | Guide characters (Sage, Juniper, Pip), chosen per user. Sparing use: a sleeping guide only in page-level empty states (one per screen at most), compact empty states inside panels; routine actions get a plain confirmation; the celebrating `SuccessNotice` is for milestones only (completing a clean, finalizing a statement). |
+| 2026-10-07 | Guided onboarding is Phase 4b: role-specific tours (with the user's chosen guide), checklists derived from real records, skippable and replayable from Help, progress stored per user. Ships before the first outside owner is invited.                                                                                            |
