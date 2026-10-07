@@ -57,6 +57,10 @@ export class ProblemFilter implements ExceptionFilter {
     }
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
+      // Nest's router answers unmatched paths with "Cannot GET /path"; never echo framework text to clients.
+      if (status === HttpStatus.NOT_FOUND && /^Cannot [A-Z]+ /.test(exception.message)) {
+        return this.simple(status, 'ROUTE_NOT_FOUND', 'This endpoint does not exist');
+      }
       return this.simple(status, HttpStatus[status] ?? 'ERROR', exception.message);
     }
     return this.simple(HttpStatus.INTERNAL_SERVER_ERROR, 'INTERNAL', undefined);

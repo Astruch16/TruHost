@@ -5,7 +5,7 @@ import { formatChange, formatPoints, greeting, longDate, TINTS } from '../../lib
 import { formatBps, formatOccupancy } from '../../lib/format';
 import { formatCents } from '../../lib/money';
 import { monthLabel } from '../../lib/months';
-import { ErrorAlert } from '../ui/alert';
+import { LoadError } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
@@ -23,10 +23,16 @@ export type DashboardAction = 'booking' | 'expense' | 'receipt';
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const shortMonth = (month: string) => monthLabel(month).split(' ')[0]!.slice(0, 3);
 
+/** Two by two on narrow content, four across from medium up (container query on the content area). */
+const KPI_GRID = 'grid grid-cols-2 gap-3 @2xl/content:grid-cols-4 @2xl/content:gap-4';
+
 /**
  * The admin dashboard's layout, from data alone (no fetching), so the real page and the dev preview render the
- * same thing. Sections: greeting, KPIs, property performance, revenue breakdown, calendar; then quick actions,
- * needs attention and coming up.
+ * same thing. Layout follows the width of the content area (container queries), not the viewport:
+ * - narrow: one column; rail panels stack under the main content
+ * - medium (≥ 42rem): KPIs four across; rail panels in a two-column grid below
+ * - wide (≥ 68.75rem ≈ 1100px of content): main column plus a 380px right rail
+ * - extra wide (≥ 100rem): performance and breakdown side by side, calendar full width beneath
  */
 export function DashboardView({
   firstName,
@@ -37,8 +43,12 @@ export function DashboardView({
   properties,
   dashboard: d,
   dashboardError,
+  onRetryDashboard,
+  retryingDashboard,
   stays,
   staysError,
+  onRetryStays,
+  retryingStays,
   onAction,
   onAddProperty,
 }: {
@@ -52,23 +62,31 @@ export function DashboardView({
   properties: { id: string; name: string }[] | undefined;
   dashboard: Dashboard | undefined;
   dashboardError: unknown;
+  onRetryDashboard: () => void;
+  retryingDashboard: boolean;
   /** Confirmed stays overlapping the month; undefined while loading. */
   stays: CalendarStay[] | undefined;
   staysError: unknown;
+  onRetryStays: () => void;
+  retryingStays: boolean;
   onAction: (action: DashboardAction) => void;
   onAddProperty: () => void;
 }) {
   const propertyList = properties ?? [];
   const noProperties = properties !== undefined && properties.length === 0;
   const multi = !scope.propertyId && propertyList.length > 1;
+  // After a failed load, sections that depend on the data show nothing (the KPI area offers a retry), never a
+  // skeleton that suggests it is still loading.
+  const failed = Boolean(dashboardError) && !d;
   const tintIndex = (id: string, fallback: number) => {
     const i = propertyList.findIndex((p) => p.id === id);
     return i === -1 ? fallback : i;
   };
+  const railSkeleton = failed ? null : <Skeleton className="h-40 rounded-card" />;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="flex min-w-0 flex-col gap-5">
+    <div className="grid gap-6 @[68.75rem]/content:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="flex min-w-0 flex-col gap-6">
         <Card>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -87,18 +105,21 @@ export function DashboardView({
             </div>
             <MonthStepper month={month} onChange={onMonthChange} />
           </div>
-          <div className="mt-6">
-            <ErrorAlert error={dashboardError} />
-            {noProperties ? null : !d ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-                {[0, 1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-36 rounded-inner" />
-                ))}
-              </div>
-            ) : (
-              <Kpis d={d} />
-            )}
-          </div>
+          {!noProperties && (
+            <div className="mt-6">
+              {failed ? (
+                <LoadError what="the dashboard" onRetry={onRetryDashboard} retrying={retryingDashboard} />
+              ) : !d ? (
+                <div className={KPI_GRID}>
+                  {[0, 1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-36 rounded-inner" />
+                  ))}
+                </div>
+              ) : (
+                <Kpis d={d} />
+              )}
+            </div>
+          )}
         </Card>
 
         {noProperties ? (
@@ -111,48 +132,50 @@ export function DashboardView({
               Once a property exists you can add bookings and expenses, and this dashboard fills in from them.
             </EmptyState>
           </Card>
-        ) : (
+        ) : failed ? null : (
           <>
-            <Card title="Property performance" description={monthLabel(month)}>
-              {!d ? (
-                <Skeleton className="h-56 rounded-inner" />
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                  {d.properties.map((p, i) => (
-                    <PropertyCard
-                      key={p.id}
-                      property={p}
-                      index={tintIndex(p.id, i)}
-                      revenueLabel={`Gross, ${shortMonth(month)}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </Card>
+            <div className="grid gap-6 @[100rem]/content:grid-cols-2">
+              <Card title="Property performance" description={monthLabel(month)}>
+                {!d ? (
+                  <Skeleton className="h-56 rounded-inner" />
+                ) : (
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4">
+                    {d.properties.map((p, i) => (
+                      <PropertyCard
+                        key={p.id}
+                        property={p}
+                        index={tintIndex(p.id, i)}
+                        revenueLabel={`Gross, ${shortMonth(month)}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Card>
 
-            <Card title="Where the revenue went" description={monthLabel(month)}>
-              {!d ? (
-                <Skeleton className="h-40" />
-              ) : d.breakdown.grossCents === 0 &&
-                d.breakdown.ownerExpensesCents === 0 &&
-                d.breakdown.cleaningFeesCents === 0 ? (
-                <EmptyState
-                  icon={Wallet}
-                  title={`No revenue recorded for ${monthLabel(month)}`}
-                  action={<Button onClick={() => onAction('booking')}>Add booking</Button>}
-                >
-                  Add the month’s stays with their payouts and cleaning fees, and expenses with receipts.
-                  {d.kpis.incompleteBookings > 0 &&
-                    ` ${plural(d.kpis.incompleteBookings, 'stay is', 'stays are')} waiting on a payout.`}
-                </EmptyState>
-              ) : (
-                <RevenueBreakdown breakdown={d.breakdown} feeRatesBps={d.kpis.feeRatesBps} />
-              )}
-            </Card>
+              <Card title="Where the revenue went" description={monthLabel(month)}>
+                {!d ? (
+                  <Skeleton className="h-40" />
+                ) : d.breakdown.grossCents === 0 &&
+                  d.breakdown.ownerExpensesCents === 0 &&
+                  d.breakdown.cleaningFeesCents === 0 ? (
+                  <EmptyState
+                    icon={Wallet}
+                    title={`No revenue recorded for ${monthLabel(month)}`}
+                    action={<Button onClick={() => onAction('booking')}>Add booking</Button>}
+                  >
+                    Add the month’s stays with their payouts and cleaning fees, and expenses with receipts.
+                    {d.kpis.incompleteBookings > 0 &&
+                      ` ${plural(d.kpis.incompleteBookings, 'stay is', 'stays are')} waiting on a payout.`}
+                  </EmptyState>
+                ) : (
+                  <RevenueBreakdown breakdown={d.breakdown} feeRatesBps={d.kpis.feeRatesBps} />
+                )}
+              </Card>
+            </div>
 
             <Card title="Bookings" description={monthLabel(month)} actions={<CalendarLegend />}>
-              {staysError ? (
-                <ErrorAlert error={staysError} />
+              {staysError && !stays ? (
+                <LoadError what="the calendar" onRetry={onRetryStays} retrying={retryingStays} />
               ) : !stays ? (
                 <Skeleton className="h-72" />
               ) : stays.length === 0 ? (
@@ -177,7 +200,8 @@ export function DashboardView({
         )}
       </div>
 
-      <aside className="flex min-w-0 flex-col gap-5">
+      {/* Rail: stacks under the main content (narrow), two columns below it (medium), right rail (wide). */}
+      <aside className="grid min-w-0 content-start items-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
         <Card title="Quick actions">
           <div className="flex flex-col gap-2">
             <Button block disabled={noProperties} onClick={() => onAction('booking')}>
@@ -191,16 +215,8 @@ export function DashboardView({
             </Button>
           </div>
         </Card>
-        {d ? (
-          <NeedsAttention items={d.attention.items} total={d.attention.total} showProperty={multi} />
-        ) : (
-          <Skeleton className="h-40 rounded-card" />
-        )}
-        {d ? (
-          <ComingUp items={d.upcoming.items} total={d.upcoming.total} showProperty={multi} />
-        ) : (
-          <Skeleton className="h-40 rounded-card" />
-        )}
+        {d ? <NeedsAttention items={d.attention.items} total={d.attention.total} showProperty={multi} /> : railSkeleton}
+        {d ? <ComingUp items={d.upcoming.items} total={d.upcoming.total} showProperty={multi} /> : railSkeleton}
       </aside>
     </div>
   );
@@ -218,7 +234,7 @@ function Kpis({ d }: { d: Dashboard }) {
   const k = d.kpis;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+    <div className={KPI_GRID}>
       <KpiCard
         icon={Banknote}
         tint={TINTS[0]}

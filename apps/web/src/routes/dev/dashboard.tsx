@@ -16,7 +16,7 @@ export const Route = createFileRoute('/dev/dashboard')({
     if (!import.meta.env.DEV) throw notFound();
   },
   validateSearch: (s: Record<string, unknown>) => ({
-    state: s.state === 'empty' || s.state === 'new' ? s.state : 'data',
+    state: s.state === 'empty' || s.state === 'new' || s.state === 'error' ? s.state : 'data',
   }),
   component: Preview,
 });
@@ -256,10 +256,14 @@ function Preview() {
         onMonthChange={setMonth}
         scope={{ propertyId: null, name: null }}
         properties={props}
-        dashboard={state === 'empty' ? undefined : state === 'new' ? EMPTY_SINGLE : FIXTURE}
-        dashboardError={null}
-        stays={state === 'data' ? FIXTURE_STAYS : []}
-        staysError={null}
+        dashboard={state === 'empty' || state === 'error' ? undefined : state === 'new' ? EMPTY_SINGLE : FIXTURE}
+        dashboardError={state === 'error' ? new Error('preview') : null}
+        onRetryDashboard={() => undefined}
+        retryingDashboard={false}
+        stays={state === 'data' ? FIXTURE_STAYS : state === 'error' ? undefined : []}
+        staysError={state === 'error' ? new Error('preview') : null}
+        onRetryStays={() => undefined}
+        retryingStays={false}
         onAction={() => undefined}
         onAddProperty={() => undefined}
       />

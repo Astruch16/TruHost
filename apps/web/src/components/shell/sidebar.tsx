@@ -53,13 +53,14 @@ export function Sidebar({
         </ul>
       </nav>
 
-      {/* Decorative foot: tagline over the mountain scene. Shrinks away on short screens. */}
+      {/* Decorative foot: a size container, so the scene and tagline appear only when there is real room below the
+          nav (styles.css: .sidebar-foot). It never overlaps nav items, whatever the screen height or item count. */}
       <div
         aria-hidden
-        className="pointer-events-none relative mt-auto min-h-0 flex-1 basis-0 [@media(max-height:820px)]:hidden"
+        className="sidebar-foot pointer-events-none relative mt-auto min-h-0 flex-1 basis-0 overflow-hidden"
       >
-        <MountainScene className="absolute inset-x-0 bottom-0 h-[330px] w-full" />
-        <p className="absolute inset-x-0 bottom-[296px] -rotate-3 px-6 text-center font-hand text-[1.75rem] leading-[1.15] text-sidebar-ink/90">
+        <MountainScene className="sidebar-scene absolute inset-x-0 bottom-0 h-[min(330px,100%)] w-full" />
+        <p className="sidebar-tagline absolute inset-x-0 bottom-[296px] -rotate-3 px-6 text-center font-hand text-[1.75rem] leading-[1.15] text-sidebar-ink/90">
           Better stays.
           <br />
           Higher returns.

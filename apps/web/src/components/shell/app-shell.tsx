@@ -76,8 +76,10 @@ export function AppShell({
         </RadixDialog.Portal>
       </RadixDialog.Root>
 
-      <div className="flex min-w-0 flex-col">
-        <header className="flex items-center gap-2 px-4 pt-4 sm:px-6 lg:px-8 lg:pt-5">
+      {/* The content area is a container: pages lay out against its width, not the viewport's, because the
+          sidebar takes a fixed share of the screen. */}
+      <div className="@container/content flex min-w-0 flex-col">
+        <header className="mx-auto flex w-full max-w-[1680px] items-center gap-2 px-4 pt-4 @2xl/content:px-8 @2xl/content:pt-6 @[100rem]/content:px-10">
           <button
             type="button"
             aria-label="Open menu"
@@ -99,7 +101,11 @@ export function AppShell({
           <NotificationsBell unread={unreadNotifications} />
           <ProfileMenu {...user} onSignOut={onSignOut} onManageSignIn={onManageSignIn} />
         </header>
-        <main id="main" tabIndex={-1} className="w-full max-w-6xl flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[1680px] flex-1 px-4 py-6 focus:outline-none @2xl/content:px-8 @2xl/content:py-8 @[100rem]/content:px-10"
+        >
           {children}
         </main>
       </div>

@@ -69,7 +69,7 @@ function AdminProperties() {
       {list.error ? (
         <ErrorAlert error={list.error} />
       ) : !list.data ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
           <Skeleton className="h-28 rounded-card" />
           <Skeleton className="h-28 rounded-card" />
         </div>
@@ -88,7 +88,7 @@ function AdminProperties() {
           Add the first property to start tracking bookings and cleans.
         </EmptyState>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
           {list.data.items.map((p) => (
             <li key={p.id}>
               <Link

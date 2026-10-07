@@ -59,7 +59,7 @@ export function PropertyForm({
   };
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={submit} noValidate className="grid max-w-4xl gap-4 @xl/content:grid-cols-2">
       <Field label="Name" error={errors.name} hint="Internal nickname, e.g. “Cedar Suite”" required>
         <Input value={v.name} onChange={set('name')} autoComplete="off" />
       </Field>
@@ -105,7 +105,7 @@ export function PropertyForm({
       >
         <Input value={v.pay} onChange={set('pay')} inputMode="decimal" className="figure" />
       </Field>
-      <div className="flex flex-col gap-3 sm:col-span-2">
+      <div className="flex flex-col gap-3 @xl/content:col-span-2">
         <ErrorAlert error={Object.keys(errors).length ? null : error} />
         <div className="flex flex-wrap gap-2">
           <Button type="submit" loading={pending}>

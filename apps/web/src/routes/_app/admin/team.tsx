@@ -61,7 +61,7 @@ function Team() {
   return (
     <>
       <PageHeader title="Team" description="Admins, owners and cleaners. TruHost is invite-only." />
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <InviteForm onDone={refresh} />
         <Card title="People">
           <Table>
@@ -225,7 +225,11 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
 
   return (
     <Card title="Invite someone" description="They’ll get an email with a link to create their account.">
-      <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <form
+        onSubmit={submit}
+        noValidate
+        className="grid max-w-5xl gap-4 @xl/content:grid-cols-2 @4xl/content:grid-cols-3"
+      >
         <Field label="Email" error={errors.email} required>
           <Input
             type="email"
@@ -267,7 +271,7 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
             </Select>
           </Field>
         )}
-        <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-3">
+        <div className="flex flex-col gap-3 @xl/content:col-span-2 @4xl/content:col-span-3">
           <ErrorAlert error={Object.keys(errors).length ? null : invite.error} />
           <div className="flex items-center gap-3">
             <Button type="submit" loading={invite.isPending}>

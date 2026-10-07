@@ -50,7 +50,7 @@ function Plans() {
   return (
     <>
       <PageHeader title="Plans" description="Management plans. A plan’s rate is locked once a property uses it." />
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <Card title="Plans">
           <Table>
             <THead>
@@ -96,7 +96,7 @@ function Plans() {
           <form
             onSubmit={submit}
             noValidate
-            className="grid gap-4 sm:grid-cols-[1fr_10rem] lg:grid-cols-[1fr_10rem_1.5fr]"
+            className="grid max-w-4xl gap-4 @xl/content:grid-cols-[1fr_10rem] @4xl/content:grid-cols-[1fr_10rem_1.5fr]"
           >
             <Field label="Name" error={errors.name} required>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -109,10 +109,14 @@ function Plans() {
                 className="figure"
               />
             </Field>
-            <Field label="Description" error={errors.description} className="sm:col-span-2 lg:col-span-1">
+            <Field
+              label="Description"
+              error={errors.description}
+              className="@xl/content:col-span-2 @4xl/content:col-span-1"
+            >
               <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </Field>
-            <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-3">
+            <div className="flex flex-col gap-3 @xl/content:col-span-2 @4xl/content:col-span-3">
               <ErrorAlert error={Object.keys(errors).length ? null : create.error} />
               <div>
                 <Button type="submit" loading={create.isPending}>

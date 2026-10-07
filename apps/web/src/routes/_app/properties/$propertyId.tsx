@@ -41,7 +41,7 @@ function PropertyView() {
   return (
     <>
       <PageHeader eyebrow="Property details" title={p.name} description={`${p.city}, ${p.province}`} />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 @4xl/content:grid-cols-2">
         {isOwner && <OwnerMonth propertyId={propertyId} />}
         <Card title="Address">
           <div className="flex flex-col gap-3 text-sm">
@@ -113,7 +113,11 @@ function OwnerBookings({ propertyId }: { propertyId: string }) {
   const bookings = useQuery(queries.propertyBookings(api, propertyId, monthRange(month)));
   const items = bookings.data?.items ?? [];
   return (
-    <Card title="Bookings" actions={<MonthStepper month={month} onChange={setMonth} />} className="lg:col-span-2">
+    <Card
+      title="Bookings"
+      actions={<MonthStepper month={month} onChange={setMonth} />}
+      className="@4xl/content:col-span-2"
+    >
       <Table>
         <THead>
           <tr>
@@ -165,7 +169,11 @@ function OwnerExpenses({ propertyId }: { propertyId: string }) {
   const expenses = useQuery(queries.propertyExpenses(api, propertyId, monthRange(month)));
   const items = expenses.data?.items ?? [];
   return (
-    <Card title="Expenses" actions={<MonthStepper month={month} onChange={setMonth} />} className="lg:col-span-2">
+    <Card
+      title="Expenses"
+      actions={<MonthStepper month={month} onChange={setMonth} />}
+      className="@4xl/content:col-span-2"
+    >
       <ErrorAlert error={viewError} />
       <Table>
         <THead>
@@ -234,7 +242,7 @@ function OwnerMonth({ propertyId }: { propertyId: string }) {
     <Card
       title="Month at a glance"
       actions={<MonthStepper month={month} onChange={setMonth} />}
-      className="lg:col-span-2"
+      className="@4xl/content:col-span-2"
     >
       {summary.error ? (
         <ErrorAlert error={summary.error} />
@@ -243,7 +251,7 @@ function OwnerMonth({ propertyId }: { propertyId: string }) {
       ) : f.nightsBooked === 0 && f.grossCents === 0 && f.ownerExpensesCents === 0 ? (
         <p className="py-6 text-center text-sm text-muted">No stays or expenses in {monthLabel(month)} yet.</p>
       ) : (
-        <div className="grid gap-x-10 sm:grid-cols-2">
+        <div className="grid gap-x-10 @xl/content:grid-cols-2">
           <dl className="divide-y divide-line-soft text-sm">
             {row('Gross revenue', formatCents(f.grossCents))}
             {row(

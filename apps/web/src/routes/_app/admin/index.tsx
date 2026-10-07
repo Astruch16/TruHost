@@ -43,8 +43,12 @@ function Dashboard() {
         properties={properties.data?.items}
         dashboard={dash.data}
         dashboardError={dash.error}
+        onRetryDashboard={() => void dash.refetch()}
+        retryingDashboard={dash.isFetching}
         stays={calendar.data?.items.filter((b) => b.status === 'CONFIRMED')}
         staysError={calendar.error}
+        onRetryStays={() => void calendar.refetch()}
+        retryingStays={calendar.isFetching}
         onAction={setAction}
         onAddProperty={() => void navigate({ to: '/admin/properties' })}
       />

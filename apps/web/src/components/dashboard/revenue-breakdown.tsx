@@ -55,7 +55,7 @@ export function RevenueBreakdown({
             <span key={p.key} className={`${p.color} rounded-full`} style={{ width: `${(p.width / whole) * 100}%` }} />
           ))}
       </div>
-      <dl className="grid gap-4 sm:grid-cols-3">
+      <dl className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-4">
         {parts.map((p) => (
           <div key={p.key}>
             <dt className="flex items-center gap-2 text-sm text-muted">

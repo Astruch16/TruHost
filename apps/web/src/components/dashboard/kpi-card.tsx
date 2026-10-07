@@ -31,9 +31,11 @@ export function KpiCard({
   change?: KpiChange | null;
 }) {
   return (
-    <section className="flex min-w-0 flex-col gap-3 rounded-inner border border-line bg-surface p-3.5 sm:p-4">
+    <section className="flex min-w-0 flex-col gap-3 rounded-inner border border-line bg-surface p-3.5 @2xl/content:p-4">
       <header className="flex flex-col gap-2.5">
-        <span className={cx('grid size-9 shrink-0 place-items-center rounded-full sm:size-10', tint.bg, tint.fg)}>
+        <span
+          className={cx('grid size-9 shrink-0 place-items-center rounded-full @2xl/content:size-10', tint.bg, tint.fg)}
+        >
           <Icon aria-hidden className="size-[18px]" />
         </span>
         <div className="min-w-0 leading-tight">
@@ -41,7 +43,7 @@ export function KpiCard({
           <p className="min-h-4 text-xs text-muted">{periodNote}</p>
         </div>
       </header>
-      <p className="figure flex flex-wrap items-baseline gap-x-1.5 text-xl leading-none font-bold tracking-tight text-ink sm:text-[1.75rem] xl:text-[1.6rem]">
+      <p className="figure flex flex-wrap items-baseline gap-x-1.5 text-xl leading-none font-bold tracking-tight text-ink @2xl/content:text-[1.5rem] @[100rem]/content:text-[1.75rem]">
         {value}
         {suffix && <span className="text-base font-normal text-muted">{suffix}</span>}
       </p>

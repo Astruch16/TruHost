@@ -28,7 +28,7 @@ function MyProperties() {
           A TruHost admin will add you to a property.
         </EmptyState>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
           {me.data.memberships.map((m) => (
             <li key={m.id}>
               <Link
