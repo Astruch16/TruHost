@@ -27,6 +27,7 @@
   --color-primary: #173f3a;
   --color-primary-hover: #21544d;
   --color-primary-ink: #ffffff;
+  --color-primary-ink-muted: #cfe0d8;
 
   /* Soft accent pairs: tint (background) / deep (text, icon) */
   --color-blue-tint: #dce8f5;
@@ -117,6 +118,165 @@
 }
 @utility animate-slide-in {
   animation: th-slide-in 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Guide characters (components/guide). Keyframes and classes copied from docs/design/Mascots.dc.html and
+   docs/design/Poses.dc.html. Under reduced motion they stop outright: the global rule above would otherwise leave
+   th-float on its last frame, where the sleeping zzz are invisible. */
+@keyframes th-wave {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0deg);
+  }
+  65% {
+    transform: rotate(-16deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+  85% {
+    transform: rotate(-12deg);
+  }
+  93% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes th-blink {
+  0%,
+  91%,
+  100% {
+    transform: scaleY(1);
+  }
+  94.5% {
+    transform: scaleY(0.08);
+  }
+}
+@keyframes th-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes th-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}
+@keyframes th-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-9px);
+  }
+  60% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes th-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+@keyframes th-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+}
+@keyframes th-float {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+@keyframes th-pop {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.th-wave {
+  animation: th-wave 3.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+}
+.th-blink {
+  animation: th-blink 4.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.th-bob {
+  animation: th-bob 3.2s ease-in-out infinite;
+}
+.th-sway {
+  animation: th-sway 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+}
+.th-point {
+  animation: th-bob 3.2s ease-in-out infinite;
+}
+.th-celebrate {
+  animation: th-hop 1.3s ease-in-out infinite;
+}
+.th-think {
+  animation: th-bob 4s ease-in-out infinite;
+}
+.th-sleep {
+  animation: th-breathe 3.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.th-nudge {
+  animation: th-nudge 1.4s ease-in-out infinite;
+}
+.th-float {
+  animation: th-float 2.8s ease-in-out infinite;
+}
+.th-pop {
+  animation: th-pop 1.3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .th-wave,
+  .th-blink,
+  .th-bob,
+  .th-sway,
+  .th-point,
+  .th-celebrate,
+  .th-think,
+  .th-sleep,
+  .th-nudge,
+  .th-float,
+  .th-pop {
+    animation: none !important;
+  }
 }
 
 /* Sidebar foot: show the scene only with room for it, and the tagline only with room for both (no overlap with

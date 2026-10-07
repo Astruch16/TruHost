@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, DoorClosed } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { ErrorAlert } from '../../../components/ui/alert';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { PageHeader } from '../../../components/ui/page-header';
@@ -24,9 +24,7 @@ function MyProperties() {
       ) : !me.data ? (
         <LoadingBlock />
       ) : me.data.memberships.length === 0 ? (
-        <EmptyState icon={DoorClosed} title="No properties yet">
-          A TruHost admin will add you to a property.
-        </EmptyState>
+        <EmptyState title="No properties yet">A TruHost admin will add you to a property.</EmptyState>
       ) : (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
           {me.data.memberships.map((m) => (

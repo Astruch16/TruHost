@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { SearchX } from 'lucide-react';
 import { EmptyState } from '../../components/ui/empty-state';
 import { LoadingBlock } from '../../components/ui/skeleton';
 import { useApi } from '../../lib/api-context';
@@ -14,6 +13,6 @@ export const Route = createFileRoute('/_app/admin')({
 function AdminLayout() {
   const me = useQuery(queries.me(useApi()));
   if (!me.data) return <LoadingBlock />;
-  if (me.data.staffRole !== 'ADMIN') return <EmptyState icon={SearchX} title="Page not found" />;
+  if (me.data.staffRole !== 'ADMIN') return <EmptyState title="Page not found" />;
   return <Outlet />;
 }

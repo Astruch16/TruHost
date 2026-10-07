@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MembershipRole, StaffRole, UserStatus } from '../enums.js';
+import { Guide, MembershipRole, StaffRole, UserStatus } from '../enums.js';
 import { id, text } from '../primitives.js';
 
 export const meMembership = z.object({
@@ -16,6 +16,8 @@ export const me = z.object({
   phone: z.string().nullable(),
   staffRole: StaffRole.nullable(),
   status: UserStatus,
+  /** The guide character shown in empty states and success messages. */
+  guide: Guide,
   memberships: z.array(meMembership),
 });
 export type Me = z.infer<typeof me>;
@@ -25,6 +27,7 @@ export const updateMe = z
     firstName: text(100),
     lastName: text(100),
     phone: text(40).nullable(),
+    guide: Guide,
   })
   .partial();
 export type UpdateMe = z.infer<typeof updateMe>;

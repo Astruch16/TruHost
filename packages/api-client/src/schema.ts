@@ -682,6 +682,8 @@ export interface operations {
             staffRole: 'ADMIN' | null;
             /** @enum {string} */
             status: 'INVITED' | 'ACTIVE' | 'DEACTIVATED';
+            /** @enum {string} */
+            guide: 'SAGE' | 'JUNIPER' | 'PIP';
             memberships: {
               /** Format: uuid */
               id: string;
@@ -711,6 +713,8 @@ export interface operations {
           firstName?: string;
           lastName?: string;
           phone?: string | null;
+          /** @enum {string} */
+          guide?: 'SAGE' | 'JUNIPER' | 'PIP';
         };
       };
     };
@@ -731,6 +735,8 @@ export interface operations {
             staffRole: 'ADMIN' | null;
             /** @enum {string} */
             status: 'INVITED' | 'ACTIVE' | 'DEACTIVATED';
+            /** @enum {string} */
+            guide: 'SAGE' | 'JUNIPER' | 'PIP';
             memberships: {
               /** Format: uuid */
               id: string;
