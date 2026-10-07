@@ -9,7 +9,8 @@ import { Button } from '../../../../components/ui/button';
 import { Card } from '../../../../components/ui/card';
 import { ConfirmDialog } from '../../../../components/ui/dialog';
 import { Field } from '../../../../components/ui/field';
-import { Input, Select } from '../../../../components/ui/input';
+import { Input } from '../../../../components/ui/input';
+import { Select } from '../../../../components/ui/select';
 import { PageHeader } from '../../../../components/ui/page-header';
 import { Pill } from '../../../../components/ui/pill';
 import { LoadingBlock } from '../../../../components/ui/skeleton';
@@ -185,13 +186,11 @@ function RoomsCard({ propertyId }: { propertyId: string }) {
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ensuite" required />
           </Field>
           <Field label="Type">
-            <Select value={type} onChange={(e) => setType(e.target.value as typeof type)}>
-              {ROOM_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {titleCase(t)}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={type}
+              onValueChange={(value) => setType(value as typeof type)}
+              options={ROOM_TYPES.map((t) => ({ value: t, label: titleCase(t) }))}
+            />
           </Field>
           <Button type="submit" variant="secondary" loading={add.isPending}>
             <Plus aria-hidden className="size-4" /> Add room
@@ -259,16 +258,15 @@ function PlanCard({ propertyId }: { propertyId: string }) {
           className="grid gap-3 @xl/content:grid-cols-[1fr_auto_auto] @xl/content:items-end"
         >
           <Field label="Plan">
-            <Select value={planId} onChange={(e) => setPlanId(e.target.value)} required>
-              <option value="">Choose…</option>
-              {plans.data?.items
+            <Select
+              value={planId}
+              onValueChange={setPlanId}
+              required
+              placeholder="Choose a plan"
+              options={(plans.data?.items ?? [])
                 .filter((p) => !p.archivedAt)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({formatBps(p.managementFeeBps)})
-                  </option>
-                ))}
-            </Select>
+                .map((p) => ({ value: p.id, label: `${p.name} (${formatBps(p.managementFeeBps)})` }))}
+            />
           </Field>
           <Field label="Starting month">
             <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} required />
@@ -349,15 +347,12 @@ function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; def
           <Select
             value={defaultCleanerId ?? ''}
             disabled={cleaners.length === 0 || setDefault.isPending}
-            onChange={(e) => setDefault.mutate(e.target.value || null)}
-          >
-            <option value="">No default</option>
-            {cleaners.map((m) => (
-              <option key={m.user.id} value={m.user.id}>
-                {m.user.firstName} {m.user.lastName}
-              </option>
-            ))}
-          </Select>
+            onValueChange={(value) => setDefault.mutate(value || null)}
+            options={[
+              { value: '', label: 'No default' },
+              ...cleaners.map((m) => ({ value: m.user.id, label: `${m.user.firstName} ${m.user.lastName}` })),
+            ]}
+          />
         </Field>
         <ErrorAlert error={setDefault.error} />
         <Table>
@@ -414,22 +409,25 @@ function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; def
           className="grid gap-3 @xl/content:grid-cols-[1fr_auto_auto] @xl/content:items-end"
         >
           <Field label="Person" hint="Invite new people from Team.">
-            <Select value={userId} onChange={(e) => setUserId(e.target.value)} required>
-              <option value="">Choose…</option>
-              {users.data?.items
+            <Select
+              value={userId}
+              onValueChange={setUserId}
+              required
+              placeholder="Choose a person"
+              options={(users.data?.items ?? [])
                 .filter((u) => u.status !== 'DEACTIVATED')
-                .map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.firstName} {u.lastName} ({u.email})
-                  </option>
-                ))}
-            </Select>
+                .map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
+            />
           </Field>
           <Field label="Role">
-            <Select value={role} onChange={(e) => setRole(e.target.value as typeof role)}>
-              <option value="CLEANER">Cleaner</option>
-              <option value="OWNER">Owner</option>
-            </Select>
+            <Select
+              value={role}
+              onValueChange={(value) => setRole(value as typeof role)}
+              options={[
+                { value: 'CLEANER', label: 'Cleaner' },
+                { value: 'OWNER', label: 'Owner' },
+              ]}
+            />
           </Field>
           <Button type="submit" variant="secondary" loading={add.isPending} className="@xl/content:mb-[1.625rem]">
             <Plus aria-hidden className="size-4" /> Add

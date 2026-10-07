@@ -9,7 +9,8 @@ import { Card } from '../../components/ui/card';
 import { ConfirmDialog, Dialog } from '../../components/ui/dialog';
 import { EmptyState } from '../../components/ui/empty-state';
 import { Field } from '../../components/ui/field';
-import { Input, Select, Textarea } from '../../components/ui/input';
+import { Input, Textarea } from '../../components/ui/input';
+import { Select } from '../../components/ui/select';
 import { PageHeader } from '../../components/ui/page-header';
 import { Pill } from '../../components/ui/pill';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../components/ui/table';
@@ -44,6 +45,7 @@ function StyleGuide() {
   const [selected, setSelected] = useState<string | null>('a');
   const [dialog, setDialog] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [role, setRole] = useState('CLEANER');
   const nav = navItems({ staffRole: 'ADMIN', memberships: [{}] }).map((item, i) =>
     i === 3 ? { ...item, badge: 2 } : item,
   );
@@ -110,10 +112,15 @@ function StyleGuide() {
               <Input defaultValue="12345" />
             </Field>
             <Field label="Role">
-              <Select defaultValue="CLEANER">
-                <option value="CLEANER">Cleaner</option>
-                <option value="OWNER">Owner</option>
-              </Select>
+              <Select
+                value={role}
+                onValueChange={setRole}
+                options={[
+                  { value: 'CLEANER', label: 'Cleaner' },
+                  { value: 'OWNER', label: 'Owner' },
+                  { value: 'ADMIN', label: 'Admin (TruHost staff)', disabled: true },
+                ]}
+              />
             </Field>
             <Field label="Disabled">
               <Input value="adam@example.test" disabled readOnly />

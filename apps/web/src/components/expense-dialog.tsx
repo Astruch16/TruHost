@@ -11,7 +11,8 @@ import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
-import { Input, Select } from './ui/input';
+import { Input } from './ui/input';
+import { Select } from './ui/select';
 
 /**
  * Add or edit an expense. When adding, a receipt file can be attached in the same step:
@@ -44,6 +45,7 @@ export function ExpenseDialog({
   const [file, setFile] = useState<File | null>(null);
   const [amountError, setAmountError] = useState<string>();
   const set = (key: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [key]: e.target.value });
+  const pick = (key: keyof typeof v) => (value: string) => setV({ ...v, [key]: value });
 
   const save = useMutation({
     mutationFn: async (amountCents: number) => {
@@ -102,13 +104,11 @@ export function ExpenseDialog({
       <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
         {!editing && properties.length > 1 && (
           <Field label="Property" className="sm:col-span-2" required>
-            <Select value={v.propertyId} onChange={set('propertyId')}>
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={v.propertyId}
+              onValueChange={pick('propertyId')}
+              options={properties.map((p) => ({ value: p.id, label: p.name }))}
+            />
           </Field>
         )}
         <Field label="Purchase date" error={errors.incurredOn} hint="The date on the receipt." required>
@@ -124,19 +124,21 @@ export function ExpenseDialog({
           <Input value={v.vendor} onChange={set('vendor')} />
         </Field>
         <Field label="Category" error={errors.category}>
-          <Select value={v.category} onChange={set('category')}>
-            {EXPENSE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {categoryLabel(c)}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={v.category}
+            onValueChange={pick('category')}
+            options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
+          />
         </Field>
         <Field label="Paid by" error={errors.bearer} className="sm:col-span-2">
-          <Select value={v.bearer} onChange={set('bearer')}>
-            <option value="OWNER">Owner (deducted on their statement)</option>
-            <option value="TRUHOST">TruHost (our own cost, not shown to owners)</option>
-          </Select>
+          <Select
+            value={v.bearer}
+            onValueChange={pick('bearer')}
+            options={[
+              { value: 'OWNER', label: 'Owner (deducted on their statement)' },
+              { value: 'TRUHOST', label: 'TruHost (our own cost, not shown to owners)' },
+            ]}
+          />
         </Field>
         {!editing && (
           <Field label="Receipt" hint="PDF or photo, up to 20 MB. You can also add it later." className="sm:col-span-2">

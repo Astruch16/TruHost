@@ -11,7 +11,8 @@ import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
-import { Input, Select } from './ui/input';
+import { Input } from './ui/input';
+import { Select } from './ui/select';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
@@ -72,17 +73,12 @@ export function ReceiptDialog({
           <Field label="Property" required>
             <Select
               value={propertyId}
-              onChange={(e) => {
-                setPropertyId(e.target.value);
+              onValueChange={(value) => {
+                setPropertyId(value);
                 setExpenseId('');
               }}
-            >
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+              options={properties.map((p) => ({ value: p.id, label: p.name }))}
+            />
           </Field>
         )}
         <Field label="File" hint="PDF or photo, up to 20 MB." required>
@@ -104,14 +100,18 @@ export function ReceiptDialog({
               : 'No expenses are missing a receipt.'
           }
         >
-          <Select value={expenseId} onChange={(e) => setExpenseId(e.target.value)} disabled={missing.length === 0}>
-            <option value="">Not linked to an expense</option>
-            {missing.map((e) => (
-              <option key={e.id} value={e.id}>
-                {shortDate(e.incurredOn)} · {e.description} · {formatCents(e.amountCents)}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={expenseId}
+            onValueChange={setExpenseId}
+            disabled={missing.length === 0}
+            options={[
+              { value: '', label: 'Not linked to an expense' },
+              ...missing.map((e) => ({
+                value: e.id,
+                label: `${shortDate(e.incurredOn)} · ${e.description} · ${formatCents(e.amountCents)}`,
+              })),
+            ]}
+          />
         </Field>
         <ErrorAlert error={Object.keys(errors).length ? null : save.error} />
         <div className="flex justify-end gap-2">

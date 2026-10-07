@@ -10,7 +10,8 @@ import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
-import { Input, Select, Textarea } from './ui/input';
+import { Input, Textarea } from './ui/input';
+import { Select } from './ui/select';
 
 const KINDS = ['GUEST', 'OWNER_STAY', 'BLOCK'] as const;
 
@@ -47,6 +48,7 @@ export function BookingDialog({
   });
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const set = (key: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [key]: e.target.value });
+  const pick = (key: keyof typeof v) => (value: string) => setV({ ...v, [key]: value });
   const isGuest = v.kind === 'GUEST';
 
   const save = useMutation({
@@ -104,32 +106,26 @@ export function BookingDialog({
       <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
         {!editing && properties.length > 1 && (
           <Field label="Property" className="sm:col-span-2" required>
-            <Select value={v.propertyId} onChange={set('propertyId')}>
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={v.propertyId}
+              onValueChange={pick('propertyId')}
+              options={properties.map((p) => ({ value: p.id, label: p.name }))}
+            />
           </Field>
         )}
         <Field label="Type">
-          <Select value={v.kind} onChange={set('kind')}>
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {kindLabel(k)}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={v.kind}
+            onValueChange={pick('kind')}
+            options={KINDS.map((k) => ({ value: k, label: kindLabel(k) }))}
+          />
         </Field>
         <Field label="Channel" error={errors.channel}>
-          <Select value={v.channel} onChange={set('channel')}>
-            {CHANNELS.map((c) => (
-              <option key={c} value={c}>
-                {channelLabel(c)}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={v.channel}
+            onValueChange={pick('channel')}
+            options={CHANNELS.map((c) => ({ value: c, label: channelLabel(c) }))}
+          />
         </Field>
         <Field label="Check-in" error={errors.checkInDate} required>
           <Input type="date" value={v.checkInDate} onChange={set('checkInDate')} />

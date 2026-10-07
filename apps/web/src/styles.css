@@ -100,6 +100,15 @@
     transform: translateX(-100%);
   }
 }
+@keyframes th-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+}
+@utility animate-pop-out {
+  animation: th-pop-out 120ms ease-in forwards;
+}
 @utility animate-fade-in {
   animation: th-fade-in 160ms ease-out;
 }
