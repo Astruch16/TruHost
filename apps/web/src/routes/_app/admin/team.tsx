@@ -2,8 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { CircleCheck, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { ErrorAlert } from '../../../components/ui/alert';
+import { Confirmation } from '../../../components/ui/confirmation';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { ConfirmDialog } from '../../../components/ui/dialog';
@@ -281,9 +282,11 @@ function InviteForm({ onDone }: { onDone: () => Promise<unknown> }) {
               <Send aria-hidden className="size-4" /> Send invite
             </Button>
             {invite.isSuccess && (
-              <span role="status" className="flex items-center gap-1.5 text-sm text-sage-deep">
-                <CircleCheck aria-hidden className="size-4" /> Invite sent
-              </span>
+              <Confirmation>
+                {invite.data.emailSent
+                  ? `Invite sent to ${invite.data.user.email}`
+                  : `Invite created. Email isn’t set up here, so nothing was sent.`}
+              </Confirmation>
             )}
           </div>
         </div>

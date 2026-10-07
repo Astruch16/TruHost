@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TruHost guide poses</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{opacity:.8}
+@keyframes th-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes th-hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-9px)}60%{transform:translateY(-7px)}}
+@keyframes th-nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes th-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+@keyframes th-float{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes th-pop{0%,100%{opacity:.35}50%{opacity:1}}
+.th-point{animation:th-bob 3.2s ease-in-out infinite}
+.th-celebrate{animation:th-hop 1.3s ease-in-out infinite}
+.th-think{animation:th-bob 4s ease-in-out infinite}
+.th-sleep{animation:th-breathe 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.th-nudge{animation:th-nudge 1.4s ease-in-out infinite}
+.th-float{animation:th-float 2.8s ease-in-out infinite}
+.th-pop{animation:th-pop 1.3s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.th-point,.th-celebrate,.th-think,.th-sleep,.th-nudge,.th-float,.th-pop{animation:none}}
+</style>
+</helmet>
+<div style="width: 1200px; height: 960px; box-sizing: border-box; padding: 40px; background: #F6F6F3; color: #1A1D21; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-size: 15px; line-height: 1.45; display: flex; flex-direction: column; gap: 24px">
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+<defs>
+<radialGradient id="volS" gradientUnits="userSpaceOnUse" cx="76" cy="80" r="125"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"></stop><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="0.55" stop-color="#101412" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.42"></stop></radialGradient>
+<radialGradient id="volJ" gradientUnits="userSpaceOnUse" cx="82" cy="56" r="150"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.38"></stop><stop offset="0.28" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="0.5" stop-color="#101412" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.44"></stop></radialGradient>
+<radialGradient id="volP" gradientUnits="userSpaceOnUse" cx="76" cy="72" r="125"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.4"></stop><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="0.55" stop-color="#101412" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.34"></stop></radialGradient>
+<radialGradient id="gnd"><stop offset="0" stop-color="#101412" stop-opacity="0.32"></stop><stop offset="1" stop-color="#101412" stop-opacity="0"></stop></radialGradient>
+<linearGradient id="limb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.24"></stop><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"></stop><stop offset="1" stop-color="#101412" stop-opacity="0.3"></stop></linearGradient>
+<clipPath id="pOwl"><path d="M100 44 C62 44 46 78 46 112 C46 152 70 180 100 180 C130 180 154 152 154 112 C154 78 138 44 100 44Z"></path></clipPath>
+<clipPath id="pMar"><path d="M100 92 C76 92 64 118 64 146 C64 168 78 182 100 182 C122 182 136 168 136 146 C136 118 124 92 100 92Z M100 30 C72 30 58 48 58 68 C58 76 54 80 50 84 C58 86 62 92 70 98 C80 104 90 106 100 106 C110 106 120 104 130 98 C138 92 142 86 150 84 C146 80 142 76 142 68 C142 48 128 30 100 30Z"></path></clipPath>
+<clipPath id="pChi"><path d="M100 40 C62 40 44 72 44 110 C44 150 68 178 100 178 C132 178 156 150 156 110 C156 72 138 40 100 40Z"></path></clipPath>
+</defs>
+
+<symbol id="b-sage" viewBox="0 0 200 200">
+<path d="M58 78 C52 60 52 46 58 32 C68 40 80 46 90 50Z M142 78 C148 60 148 46 142 32 C132 40 120 46 110 50Z" fill="#3E6B56"></path>
+<path d="M100 44 C62 44 46 78 46 112 C46 152 70 180 100 180 C130 180 154 152 154 112 C154 78 138 44 100 44Z" fill="#4F7A63"></path>
+<g clip-path="url(#pOwl)"><rect width="200" height="200" fill="url(#volS)"></rect><ellipse cx="66" cy="68" rx="30" ry="20" fill="#FFFFFF" fill-opacity="0.1"></ellipse></g>
+<path d="M100 106 C78 106 68 128 68 146 C68 166 82 177 100 177 C118 177 132 166 132 146 C132 128 122 106 100 106Z" fill="#F1F5EE"></path>
+<path d="M76 154 q6 6 12 0 M94 154 q6 6 12 0 M112 154 q6 6 12 0 M85 166 q6 6 12 0 M103 166 q6 6 12 0" fill="none" stroke="#B9D2BF" stroke-width="2.4" stroke-linecap="round"></path>
+<g clip-path="url(#pOwl)" opacity="0.5"><rect width="200" height="200" fill="url(#volS)"></rect></g>
+<circle cx="79" cy="90" r="25" fill="#F6F6F3"></circle>
+<circle cx="121" cy="90" r="25" fill="#F6F6F3"></circle>
+<path d="M100 100 C94 100 93 105 100 115 C107 105 106 100 100 100Z" fill="#D9AE3C"></path>
+<ellipse cx="60" cy="110" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<ellipse cx="140" cy="110" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<path d="M76 116 Q100 132 124 116" fill="none" stroke="#173F3A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="100" cy="131" r="5" fill="none" stroke="#D9AE3C" stroke-width="3"></circle>
+<path d="M100 136 V147 M100 142 H105 M100 146.500 H104" fill="none" stroke="#D9AE3C" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="86" cy="181" rx="8" ry="4.500" fill="#D9AE3C"></ellipse>
+<ellipse cx="114" cy="181" rx="8" ry="4.500" fill="#D9AE3C"></ellipse>
+</symbol>
+<symbol id="e-sage" viewBox="0 0 200 200">
+<circle cx="81" cy="91" r="13" fill="#E2C15A"></circle>
+<circle cx="119" cy="91" r="13" fill="#E2C15A"></circle>
+<circle cx="81" cy="91" r="9" fill="#1A1D21"></circle>
+<circle cx="119" cy="91" r="9" fill="#1A1D21"></circle>
+<circle cx="84.500" cy="87.500" r="3.200" fill="#FFFFFF"></circle>
+<circle cx="122.500" cy="87.500" r="3.200" fill="#FFFFFF"></circle>
+</symbol>
+
+<symbol id="b-juniper" viewBox="0 0 200 200">
+<path d="M126 170 C160 176 186 152 182 118 C180 100 166 92 157 101 C168 113 164 135 146 143 C134 148 126 154 126 170Z" fill="#553B30"></path>
+<path d="M176 108 C172 100 164 96 157 101 C162 106 165 113 166 120 C171 118 175 114 176 108Z" fill="#F3E7C4"></path>
+<path d="M100 92 C76 92 64 118 64 146 C64 168 78 182 100 182 C122 182 136 168 136 146 C136 118 124 92 100 92Z" fill="#6B4E3D"></path>
+<path d="M100 100 C86 100 80 114 82 128 C84 142 92 152 100 152 C108 152 116 142 118 128 C120 114 114 100 100 100Z" fill="#F3E7C4"></path>
+<ellipse cx="100" cy="106" rx="34" ry="9" fill="#101412" fill-opacity="0.16"></ellipse>
+<circle cx="70" cy="41" r="13" fill="#6B4E3D"></circle>
+<circle cx="130" cy="41" r="13" fill="#6B4E3D"></circle>
+<circle cx="70" cy="42" r="7" fill="#F3E7C4"></circle>
+<circle cx="130" cy="42" r="7" fill="#F3E7C4"></circle>
+<path d="M100 30 C72 30 58 48 58 68 C58 76 54 80 50 84 C58 86 62 92 70 98 C80 104 90 106 100 106 C110 106 120 104 130 98 C138 92 142 86 150 84 C146 80 142 76 142 68 C142 48 128 30 100 30Z" fill="#6B4E3D"></path>
+<g clip-path="url(#pMar)"><rect width="200" height="200" fill="url(#volJ)"></rect><ellipse cx="78" cy="44" rx="26" ry="14" fill="#FFFFFF" fill-opacity="0.1"></ellipse></g>
+<ellipse cx="100" cy="84" rx="23" ry="16" fill="#F3E7C4"></ellipse>
+<path d="M93 76 Q100 72 107 76 Q105 84 100 84 Q95 84 93 76Z" fill="#1A1D21"></path>
+<path d="M100 84 V88 M100 88 Q94 95 88 90 M100 88 Q106 95 112 90" fill="none" stroke="#1A1D21" stroke-width="2" stroke-linecap="round"></path>
+<ellipse cx="70" cy="82" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<ellipse cx="130" cy="82" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<path d="M84 114 Q100 126 116 114" fill="none" stroke="#173F3A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="100" cy="126" r="5" fill="none" stroke="#D9AE3C" stroke-width="3"></circle>
+<path d="M100 131 V142 M100 137 H105 M100 141.500 H104" fill="none" stroke="#D9AE3C" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="84" cy="182" rx="14" ry="7" fill="#553B30"></ellipse>
+<ellipse cx="116" cy="182" rx="14" ry="7" fill="#553B30"></ellipse>
+</symbol>
+<symbol id="e-juniper" viewBox="0 0 200 200">
+<circle cx="82" cy="66" r="8" fill="#1A1D21"></circle>
+<circle cx="118" cy="66" r="8" fill="#1A1D21"></circle>
+<circle cx="84.800" cy="63.200" r="2.800" fill="#FFFFFF"></circle>
+<circle cx="120.800" cy="63.200" r="2.800" fill="#FFFFFF"></circle>
+</symbol>
+
+<symbol id="b-pip" viewBox="0 0 200 200">
+<path d="M126 162 L162 186 L141 191 L116 172Z" fill="#5F6975"></path>
+<path d="M88 174 V186 M112 174 V186 M81 186 H95 M105 186 H119" fill="none" stroke="#3A3F47" stroke-width="3.500" stroke-linecap="round"></path>
+<path d="M100 40 C62 40 44 72 44 110 C44 150 68 178 100 178 C132 178 156 150 156 110 C156 72 138 40 100 40Z" fill="#F4EDE0"></path>
+<g clip-path="url(#pChi)">
+<ellipse cx="60" cy="154" rx="13" ry="18" fill="#EBDDC3" fill-opacity="0.75"></ellipse>
+<ellipse cx="140" cy="154" rx="13" ry="18" fill="#EBDDC3" fill-opacity="0.75"></ellipse>
+<ellipse cx="100" cy="96" rx="56" ry="27" fill="#FFFFFF"></ellipse>
+<path d="M40 100 C40 60 66 36 100 36 C134 36 160 60 160 100 C142 84 124 77 100 77 C76 77 58 84 40 100Z" fill="#1A1D21"></path>
+<rect width="200" height="200" fill="url(#volP)"></rect>
+</g>
+<path d="M87 120 C93 116 107 116 113 120 C112 130 106 134 100 134 C94 134 88 130 87 120Z" fill="#1A1D21"></path>
+<path d="M93 103 H107 L100 115Z" fill="#D9AE3C"></path>
+<ellipse cx="64" cy="104" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<ellipse cx="136" cy="104" rx="7" ry="4.500" fill="#E79AA8" fill-opacity="0.6"></ellipse>
+<path d="M80 140 Q100 154 120 140" fill="none" stroke="#173F3A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="100" cy="153" r="5" fill="none" stroke="#D9AE3C" stroke-width="3"></circle>
+<path d="M100 158 V169 M100 164 H105 M100 168.500 H104" fill="none" stroke="#D9AE3C" stroke-width="3" stroke-linecap="round"></path>
+</symbol>
+<symbol id="e-pip" viewBox="0 0 200 200">
+<circle cx="78" cy="92" r="7.500" fill="#1A1D21"></circle>
+<circle cx="122" cy="92" r="7.500" fill="#1A1D21"></circle>
+<circle cx="80.600" cy="89.400" r="2.600" fill="#FFFFFF"></circle>
+<circle cx="124.600" cy="89.400" r="2.600" fill="#FFFFFF"></circle>
+</symbol>
+</svg>
+
+<div>
+<h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Poses</h1>
+<div style="color: #5B6068; margin-top: 4px">Four moments each guide needs: showing where to look, a win, loading, and nothing here yet.</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; flex: 1">
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="12">
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="flex: 1; border-radius: 12px; background: {{c.tint}}; display: flex; align-items: center; justify-content: center">
+<svg width="168" height="168" viewBox="0 0 200 200" role="img" aria-label="{{c.alt}}">
+<ellipse cx="102" cy="189" rx="58" ry="9" fill="url(#gnd)"></ellipse>
+<g class="{{c.motion}}">
+<g transform="{{c.tilt}}">
+<use href="{{c.base}}"></use>
+<path d="{{c.armL}}" fill="{{c.armFill}}"></path>
+<path d="{{c.armL}}" fill="url(#limb)"></path>
+<g class="{{c.armRClass}}">
+<path d="{{c.armR}}" fill="{{c.armFill}}"></path>
+<path d="{{c.armR}}" fill="url(#limb)"></path>
+</g>
+<path d="{{c.paws}}" fill="#F3E7C4"></path>
+<sc-if value="{{c.eyesOpen}}" hint-placeholder-val="{{true}}">
+<use href="{{c.eyes}}" transform="{{c.eyeShift}}"></use>
+</sc-if>
+<path d="{{c.eyeArcs}}" fill="none" stroke="#1A1D21" stroke-width="3.500" stroke-linecap="round"></path>
+</g>
+</g>
+<sc-if value="{{c.confetti}}" hint-placeholder-val="{{false}}">
+<g class="th-pop">
+<rect x="24" y="38" width="9" height="9" rx="2" transform="rotate(20 28 42)" fill="#A99BD6"></rect>
+<circle cx="174" cy="36" r="5" fill="#7FA9DC"></circle>
+<rect x="14" y="98" width="8" height="8" rx="2" transform="rotate(-15 18 102)" fill="#E2C15A"></rect>
+<circle cx="186" cy="110" r="4.500" fill="#93BFA0"></circle>
+<circle cx="52" cy="14" r="4" fill="#7FA9DC"></circle>
+<rect x="142" y="8" width="9" height="9" rx="2" transform="rotate(30 146 12)" fill="#E2C15A"></rect>
+<circle cx="100" cy="8" r="3.500" fill="#A99BD6"></circle>
+</g>
+</sc-if>
+<sc-if value="{{c.thought}}" hint-placeholder-val="{{false}}">
+<g class="th-pop">
+<circle cx="152" cy="50" r="4" fill="#FFFFFF"></circle>
+<circle cx="164" cy="36" r="6" fill="#FFFFFF"></circle>
+<circle cx="180" cy="18" r="10" fill="#FFFFFF"></circle>
+</g>
+</sc-if>
+<sc-if value="{{c.zzz}}" hint-placeholder-val="{{false}}">
+<g class="th-float" fill="#5B6068" font-family="Hanken Grotesk, sans-serif" font-weight="700">
+<text x="146" y="58" font-size="16">z</text>
+<text x="158" y="42" font-size="21">z</text>
+<text x="172" y="24" font-size="27">Z</text>
+</g>
+</sc-if>
+</svg>
+</div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 0 4px 2px">
+<span style="font-weight: 700">{{c.pose}}</span>
+<span style="font-size: 13px; color: #5B6068">{{c.name}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":960}}'>
+class Component extends DCLogic {
+renderVals() {
+var dot = function (x, y) { return 'M' + (x - 4) + ' ' + y + ' a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 '; };
+var chars = [
+{ name: 'Sage', base: '#b-sage', eyes: '#e-sage', tint: '#DDEBDF', arm: '#2F5548',
+restL: 'M48 108 C40 128 44 152 58 166 C61 146 59 124 55 106Z',
+restR: 'M152 108 C160 128 156 152 142 166 C139 146 141 124 145 106Z',
+upL: 'M50 106 C34 98 23 82 25 62 C38 68 50 80 57 96Z',
+upR: 'M150 106 C166 98 177 82 175 62 C162 68 150 80 143 96Z',
+pointR: 'M146 104 C162 100 178 100 192 105 C178 113 162 117 146 119Z',
+thinkR: 'M150 106 C160 124 154 142 138 144 C122 146 110 134 106 120 C112 115 119 118 125 125 C131 130 139 126 141 112Z',
+pawUp: '', pawPoint: '', pawThink: '',
+happy: 'M70 94 Q81 82 92 94 M108 94 Q119 82 130 94',
+sleep: 'M70 89 Q81 99 92 89 M108 89 Q119 99 130 89' },
+{ name: 'Juniper', base: '#b-juniper', eyes: '#e-juniper', tint: '#E6E0F5', arm: '#553B30',
+restL: 'M70 122 C60 132 60 148 68 156 C74 148 77 134 77 124Z',
+restR: 'M130 122 C140 132 140 148 132 156 C126 148 123 134 123 124Z',
+upL: 'M70 120 C56 112 47 98 49 82 C60 86 69 98 75 111Z',
+upR: 'M130 120 C144 112 153 98 151 82 C140 86 131 98 125 111Z',
+pointR: 'M74 114 C58 108 40 106 20 110 C36 120 56 126 74 128Z',
+thinkR: 'M126 114 C140 124 140 142 126 147 C112 150 104 134 103 110 C109 105 114 109 116 119 C118 127 122 125 121 116Z',
+pawUp: dot(52, 87) + dot(148, 87), pawPoint: dot(24, 111), pawThink: dot(108, 109),
+happy: 'M74 69 Q82 60 90 69 M110 69 Q118 60 126 69',
+sleep: 'M74 64 Q82 72 90 64 M110 64 Q118 72 126 64' },
+{ name: 'Pip', base: '#b-pip', eyes: '#e-pip', tint: '#DCE8F5', arm: '#7C8794',
+restL: 'M46 102 C38 126 46 154 64 168 C61 146 60 122 58 100Z',
+restR: 'M154 102 C162 126 154 154 136 168 C139 146 140 122 142 100Z',
+upL: 'M50 100 C32 92 21 76 23 58 C36 62 48 74 55 90Z',
+upR: 'M150 100 C168 92 179 76 177 58 C164 62 152 74 145 90Z',
+pointR: 'M150 108 C166 104 180 104 194 109 C180 117 166 121 150 123Z',
+thinkR: 'M152 104 C164 124 158 144 140 146 C124 148 112 136 108 124 C114 119 121 122 127 129 C133 134 141 130 143 114Z',
+pawUp: '', pawPoint: '', pawThink: '',
+happy: 'M71 96 Q78 87 85 96 M115 96 Q122 87 129 96',
+sleep: 'M71 90 Q78 98 85 90 M115 90 Q122 98 129 90' }
+];
+var cells = [];
+chars.forEach(function (ch) {
+var common = { name: ch.name, base: ch.base, eyes: ch.eyes, tint: ch.tint, armFill: ch.arm, tilt: '', eyeShift: '', eyeArcs: '', paws: '', armRClass: '', confetti: false, thought: false, zzz: false, eyesOpen: true };
+cells.push(Object.assign({}, common, { pose: 'Pointing', alt: ch.name + ' pointing to one side', motion: 'th-point', armL: ch.name === 'Juniper' ? ch.restR : ch.restL, armR: ch.pointR, paws: ch.pawPoint, armRClass: 'th-nudge' }));
+cells.push(Object.assign({}, common, { pose: 'Celebrating', alt: ch.name + ' celebrating with both arms up', motion: 'th-celebrate', armL: ch.upL, armR: ch.upR, paws: ch.pawUp, eyesOpen: false, eyeArcs: ch.happy, confetti: true }));
+cells.push(Object.assign({}, common, { pose: 'Thinking', alt: ch.name + ' thinking', motion: 'th-think', armL: ch.restL, armR: ch.thinkR, paws: ch.pawThink, eyeShift: 'translate(2 -3)', thought: true }));
+cells.push(Object.assign({}, common, { pose: 'Sleeping', alt: ch.name + ' asleep', motion: 'th-sleep', armL: ch.restL, armR: ch.restR, eyesOpen: false, eyeArcs: ch.sleep, zzz: true, tilt: 'rotate(-5 100 184)' }));
+});
+return { cells: cells };
+}
+}
+</script>
+</body>
+</html>

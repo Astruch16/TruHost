@@ -10,6 +10,8 @@ import { Button } from '../components/ui/button';
 import { LoadingBlock } from '../components/ui/skeleton';
 import { useApi } from '../lib/api-context';
 import { clerkAppearance } from '../lib/clerk-appearance';
+import { GuideContext } from '../lib/guide-context';
+import { guideFromApi } from '../lib/guides';
 import { initials, navItems, roleLabel } from '../lib/nav';
 import { queries } from '../lib/queries';
 import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
@@ -110,7 +112,9 @@ function SignedInShell() {
       onManageSignIn={() => openUserProfile({ appearance: clerkAppearance })}
     >
       <ScopeContext.Provider value={{ propertyId: selectedId, setPropertyId: setScope }}>
-        <Outlet />
+        <GuideContext.Provider value={guideFromApi(user.guide)}>
+          <Outlet />
+        </GuideContext.Provider>
       </ScopeContext.Provider>
     </AppShell>
   );

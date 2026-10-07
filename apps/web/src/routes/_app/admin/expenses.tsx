@@ -67,12 +67,11 @@ function Expenses() {
           <ErrorAlert error={actionError} />
         </div>
         {noProperties ? (
-          <EmptyState icon={ReceiptText} title="Add a property first">
+          <EmptyState title="Add a property first">
             Expenses belong to a property. Create one under Properties, then come back here.
           </EmptyState>
         ) : expenses.isSuccess && items.length === 0 ? (
           <EmptyState
-            icon={ReceiptText}
             title={`No expenses in ${monthLabel(month)}`}
             action={<Button onClick={() => setEditing('new')}>Add expense</Button>}
           >

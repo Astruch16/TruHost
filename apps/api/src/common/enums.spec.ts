@@ -11,7 +11,8 @@ const checks: [
   Same<shared.MembershipRole, db.MembershipRole>,
   Same<shared.RoomType, db.RoomType>,
   Same<shared.ActorType, db.ActorType>,
-] = [true, true, true, true, true, true];
+  Same<shared.Guide, db.Guide>,
+] = [true, true, true, true, true, true, true];
 
 describe('shared enums', () => {
   it('match the database enums', () => {

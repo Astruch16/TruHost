@@ -1,4 +1,4 @@
-import { Banknote, Building2, CalendarPlus, Moon, ReceiptText, Star, Upload, Wallet } from 'lucide-react';
+import { Banknote, CalendarPlus, Moon, ReceiptText, Star, Upload, Wallet } from 'lucide-react';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { formatChange, formatPoints, greeting, longDate, TINTS } from '../../lib/dashboard-format';
@@ -125,7 +125,6 @@ export function DashboardView({
         {noProperties ? (
           <Card>
             <EmptyState
-              icon={Building2}
               title="Add your first property"
               action={<Button onClick={onAddProperty}>Go to Properties</Button>}
             >
@@ -159,6 +158,7 @@ export function DashboardView({
                   d.breakdown.ownerExpensesCents === 0 &&
                   d.breakdown.cleaningFeesCents === 0 ? (
                   <EmptyState
+                    size="compact"
                     icon={Wallet}
                     title={`No revenue recorded for ${monthLabel(month)}`}
                     action={<Button onClick={() => onAction('booking')}>Add booking</Button>}
@@ -180,6 +180,7 @@ export function DashboardView({
                 <Skeleton className="h-72" />
               ) : stays.length === 0 ? (
                 <EmptyState
+                  size="compact"
                   icon={CalendarPlus}
                   title={`No stays in ${monthLabel(month)}`}
                   action={<Button onClick={() => onAction('booking')}>Add booking</Button>}

@@ -37,6 +37,8 @@ model User {
   staffRole     StaffRole?
   status        UserStatus @default(INVITED)
   deactivatedAt DateTime?  @db.Timestamptz
+  /// The guide character this user picked (Settings). Purely a display preference.
+  guide         Guide      @default(SAGE)
   createdAt     DateTime   @default(now()) @db.Timestamptz
   updatedAt     DateTime   @updatedAt @db.Timestamptz
 
@@ -55,6 +57,13 @@ model User {
   receiptsUploaded   Receipt[]        @relation("ReceiptUploadedBy")
   receiptsVoided     Receipt[]        @relation("ReceiptVoidedBy")
   filesUploaded      StoredFile[]
+}
+
+/// The three guide characters (docs/design/Mascots.dc.html).
+enum Guide {
+  SAGE
+  JUNIPER
+  PIP
 }
 
 enum InviteStatus {

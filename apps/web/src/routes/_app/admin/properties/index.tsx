@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Building2, ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { PropertyForm } from '../../../../components/property-form';
 import { ErrorAlert } from '../../../../components/ui/alert';
 import { Button } from '../../../../components/ui/button';
@@ -75,7 +75,6 @@ function AdminProperties() {
         </div>
       ) : list.data.items.length === 0 ? (
         <EmptyState
-          icon={Building2}
           title="No properties yet"
           action={
             !creating && (

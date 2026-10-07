@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { CircleCheck } from 'lucide-react';
+import { GuidePicker } from '../../components/guide/guide-picker';
 import { ErrorAlert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
@@ -10,8 +10,10 @@ import { Field } from '../../components/ui/field';
 import { Input } from '../../components/ui/input';
 import { PageHeader } from '../../components/ui/page-header';
 import { LoadingBlock } from '../../components/ui/skeleton';
+import { Confirmation } from '../../components/ui/confirmation';
 import { useApi } from '../../lib/api-context';
 import { fieldErrors } from '../../lib/errors';
+import { guideFromApi, guideToApi, type GuideCharacter } from '../../lib/guides';
 import { queries } from '../../lib/queries';
 
 export const Route = createFileRoute('/_app/account')({
@@ -22,8 +24,17 @@ function Account() {
   const me = useQuery(queries.me(useApi()));
   return (
     <>
-      <PageHeader title="Settings" description="Your profile and sign-in." />
-      {me.error ? <ErrorAlert error={me.error} /> : !me.data ? <LoadingBlock /> : <ProfileForm initial={me.data} />}
+      <PageHeader title="Settings" description="Your profile, sign-in and guide." />
+      {me.error ? (
+        <ErrorAlert error={me.error} />
+      ) : !me.data ? (
+        <LoadingBlock />
+      ) : (
+        <div className="flex flex-col gap-6">
+          <ProfileForm initial={me.data} />
+          <GuideCard firstName={me.data.firstName} saved={guideFromApi(me.data.guide)} />
+        </div>
+      )}
     </>
   );
 }
@@ -88,14 +99,39 @@ function ProfileForm({
             <Button type="submit" loading={save.isPending}>
               Save changes
             </Button>
-            {save.isSuccess && (
-              <span role="status" className="flex items-center gap-1.5 text-sm text-sage-deep">
-                <CircleCheck aria-hidden className="size-4" /> Saved
-              </span>
-            )}
+            {save.isSuccess && <Confirmation>Saved</Confirmation>}
           </div>
         </div>
       </form>
+    </Card>
+  );
+}
+
+/** Picking a guide saves it straight away; the choice shows at once and rolls back if the save fails. */
+function GuideCard({ firstName, saved }: { firstName: string; saved: GuideCharacter }) {
+  const api = useApi();
+  const qc = useQueryClient();
+  const [picked, setPicked] = useState<GuideCharacter | null>(null);
+  const save = useMutation({
+    mutationFn: (guide: GuideCharacter) => unwrap(api.PATCH('/v1/me', { body: { guide: guideToApi(guide) } })),
+    onSuccess: (data) => qc.setQueryData(queries.me(api).queryKey, data),
+    onSettled: () => setPicked(null),
+  });
+  const pick = (guide: GuideCharacter) => {
+    setPicked(guide);
+    save.mutate(guide);
+  };
+
+  return (
+    <Card
+      title="Your guide"
+      description="Your guide keeps you company in empty pages and cheers when something goes well."
+      className="max-w-2xl"
+    >
+      <div className="flex flex-col gap-4">
+        <GuidePicker value={picked ?? saved} onChange={pick} firstName={firstName} disabled={save.isPending} />
+        <ErrorAlert error={save.error} />
+      </div>
     </Card>
   );
 }

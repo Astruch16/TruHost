@@ -127,8 +127,17 @@ model User {
   staffRole     StaffRole?
   status        UserStatus @default(INVITED)
   deactivatedAt DateTime?  @db.Timestamptz
+  /// The guide character the user picked in Settings. A display preference only.
+  guide         Guide      @default(SAGE)
   createdAt     DateTime   @default(now()) @db.Timestamptz
   updatedAt     DateTime   @updatedAt @db.Timestamptz
+}
+
+/// The three guide characters (docs/design/Mascots.dc.html).
+enum Guide {
+  SAGE
+  JUNIPER
+  PIP
 }
 
 enum InviteStatus {
@@ -1103,7 +1112,7 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 | Method | Path                     | Roles | Notes                                                                                               |
 | ------ | ------------------------ | ----- | --------------------------------------------------------------------------------------------------- |
 | GET    | `/me`                    | A O C | Profile, staffRole, active memberships with property names. Drives navigation. [1]                  |
-| PATCH  | `/me`                    | A O C | Name and phone. [1]                                                                                 |
+| PATCH  | `/me`                    | A O C | Name, phone and guide character (`SAGE`, `JUNIPER`, `PIP`). [1]                                     |
 | GET    | `/me/earnings`           | C     | Completed cleans with pay and paid/unpaid status (voided payments show as unpaid), plus totals. [3] |
 | GET    | `/me/notifications`      | A O C | `?unread=true`. Own notifications only. [3]                                                         |
 | POST   | `/me/notifications/read` | A O C | `{ ids[] }` or `{ all: true }`. Marks own notifications read. [3]                                   |
@@ -1515,6 +1524,8 @@ property and see the owner dashboard.
 
 OwnerStatement, lines, adjustments, finalize/lock/release, the TruHost
 revenue report, and statement screens for admin and owner.
+Finalizing a statement is a milestone: the admin sees the celebrating guide
+(`SuccessNotice`), not the plain confirmation.
 **Run:** finalize and release last month's statement, then try to edit a
 locked booking (409) and add an adjustment that lands on the next month.
 
@@ -1527,7 +1538,8 @@ cleaning charge, and supply alerts (`Notification` model, in-app list and
 unread badge for admins and owners, email via Resend for OUT). Mobile-first
 cleaner screens: schedule, room checklist with camera upload, supplies,
 earnings. Admin schedule board, assignment, pay run and notifications. Owner
-dashboard shows LOW/OUT supplies.
+dashboard shows LOW/OUT supplies. Completing a clean is a milestone: the
+cleaner sees the celebrating guide (`SuccessNotice`).
 **Run:** a booking creates a clean, a cleaner completes it on a phone
 (completion is refused while a photo is missing), and the admin records the
 payment. Marking an item OUT shows an alert to admins and owners and emails
@@ -1571,32 +1583,33 @@ UI, and a "needs financials" queue.
 
 ## 11. Decision log
 
-| Date       | Decision                                                                                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-05 | Web is a Vite + React SPA (TanStack Router/Query, Tailwind 4) on Cloudflare Pages, replacing Next.js. Clerk React SDK in the browser, bearer token to the API. |
-| 2026-10-05 | TruHost keeps the guest cleaning fee and pays cleaners per clean. Owner gross = payout − cleaning fee.                                                         |
-| 2026-10-05 | One plan, TruPlan, at 22% of the month's owner gross. Net = gross − fee − owner-borne expenses ± adjustments.                                                  |
-| 2026-10-05 | Monthly owner statements (DRAFT → FINALIZED → RELEASED) replace invoicing. Stripe Invoicing dropped.                                                           |
-| 2026-10-05 | Per-night revenue split across month boundaries.                                                                                                               |
-| 2026-10-05 | Not GST-registered. Tax fields kept but disabled by `TAX_FIELDS_ENABLED`.                                                                                      |
-| 2026-10-05 | API on Railway US West. Neon in the same region. No Canadian residency requirement.                                                                            |
-| 2026-10-05 | Tests on local Postgres (WSL), Neon branch for dev, Postgres service in CI.                                                                                    |
-| 2026-10-05 | iCal imports go through an `IcalImport` staging table. Conflicts are resolved by an admin and never hit the overlap constraint.                                |
-| 2026-10-05 | Invited users are linked on first authenticated request (no webhook dependency).                                                                               |
-| 2026-10-05 | Prisma 7.10 (stable). Prisma 8 is still a release candidate; revisit when it is GA.                                                                            |
-| 2026-10-05 | No `nestjs-zod` (it doesn't support Nest 12). zod 4's `z.toJSONSchema` feeds `@nestjs/swagger`, with a small `ZodPipe` and `@ZodResponse`.                     |
-| 2026-10-05 | The typed client lives in `packages/api-client` (generated from OpenAPI, committed, drift-checked in CI) so web and mobile share it.                           |
-| 2026-10-05 | Rate limiting uses two throttler guards around auth: `ip-*` tiers before it and `user-*` tiers after it.                                                       |
-| 2026-10-06 | Several owners per property (Q1).                                                                                                                              |
-| 2026-10-06 | Owner stays: owner is charged the property's standard cleaning fee as an owner-borne expense (N1).                                                             |
-| 2026-10-06 | "Avg. nightly earnings" replaces "ADR" in all UI and API naming (N2).                                                                                          |
-| 2026-10-06 | Cancelled stays that still pay out: revenue in the check-in month, zero nights (N3).                                                                           |
-| 2026-10-06 | Owners absorb Airbnb's fee on the cleaning fee (N4).                                                                                                           |
-| 2026-10-06 | Expenses dated by purchase date (N6).                                                                                                                          |
-| 2026-10-06 | No lockbox/door codes in the app until proper secret handling exists; `accessInstructions` is removed (N7).                                                    |
-| 2026-10-06 | Default cleaner per property with per-clean override; cleaners start on the scheduled day (N8).                                                                |
-| 2026-10-06 | Cleaner payments are voidable with a required reason; payment lines are immutable history (N9).                                                                |
-| 2026-10-06 | TruHost restocks supplies as owner-borne receipted expenses (N12).                                                                                             |
-| 2026-10-06 | Invite emails sent by us via Resend (Clerk invitations with `notify: false`); URLs and sender are env vars with placeholders until domains are chosen (N13).   |
-| 2026-10-06 | Supply alerts on a change into LOW/OUT: admins in-app (email too on OUT), owners in-app and on their dashboard; built in Phase 3 (N12b).                       |
-| 2026-10-06 | System-created owner-stay cleaning charges stand if the stay is later cancelled; only an admin void (reason required, audited) removes them (N14).             |
+| Date       | Decision                                                                                                                                                                                                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | Web is a Vite + React SPA (TanStack Router/Query, Tailwind 4) on Cloudflare Pages, replacing Next.js. Clerk React SDK in the browser, bearer token to the API.                                                                                                                                                                     |
+| 2026-10-05 | TruHost keeps the guest cleaning fee and pays cleaners per clean. Owner gross = payout − cleaning fee.                                                                                                                                                                                                                             |
+| 2026-10-05 | One plan, TruPlan, at 22% of the month's owner gross. Net = gross − fee − owner-borne expenses ± adjustments.                                                                                                                                                                                                                      |
+| 2026-10-05 | Monthly owner statements (DRAFT → FINALIZED → RELEASED) replace invoicing. Stripe Invoicing dropped.                                                                                                                                                                                                                               |
+| 2026-10-05 | Per-night revenue split across month boundaries.                                                                                                                                                                                                                                                                                   |
+| 2026-10-05 | Not GST-registered. Tax fields kept but disabled by `TAX_FIELDS_ENABLED`.                                                                                                                                                                                                                                                          |
+| 2026-10-05 | API on Railway US West. Neon in the same region. No Canadian residency requirement.                                                                                                                                                                                                                                                |
+| 2026-10-05 | Tests on local Postgres (WSL), Neon branch for dev, Postgres service in CI.                                                                                                                                                                                                                                                        |
+| 2026-10-05 | iCal imports go through an `IcalImport` staging table. Conflicts are resolved by an admin and never hit the overlap constraint.                                                                                                                                                                                                    |
+| 2026-10-05 | Invited users are linked on first authenticated request (no webhook dependency).                                                                                                                                                                                                                                                   |
+| 2026-10-05 | Prisma 7.10 (stable). Prisma 8 is still a release candidate; revisit when it is GA.                                                                                                                                                                                                                                                |
+| 2026-10-05 | No `nestjs-zod` (it doesn't support Nest 12). zod 4's `z.toJSONSchema` feeds `@nestjs/swagger`, with a small `ZodPipe` and `@ZodResponse`.                                                                                                                                                                                         |
+| 2026-10-05 | The typed client lives in `packages/api-client` (generated from OpenAPI, committed, drift-checked in CI) so web and mobile share it.                                                                                                                                                                                               |
+| 2026-10-05 | Rate limiting uses two throttler guards around auth: `ip-*` tiers before it and `user-*` tiers after it.                                                                                                                                                                                                                           |
+| 2026-10-06 | Several owners per property (Q1).                                                                                                                                                                                                                                                                                                  |
+| 2026-10-06 | Owner stays: owner is charged the property's standard cleaning fee as an owner-borne expense (N1).                                                                                                                                                                                                                                 |
+| 2026-10-06 | "Avg. nightly earnings" replaces "ADR" in all UI and API naming (N2).                                                                                                                                                                                                                                                              |
+| 2026-10-06 | Cancelled stays that still pay out: revenue in the check-in month, zero nights (N3).                                                                                                                                                                                                                                               |
+| 2026-10-06 | Owners absorb Airbnb's fee on the cleaning fee (N4).                                                                                                                                                                                                                                                                               |
+| 2026-10-06 | Expenses dated by purchase date (N6).                                                                                                                                                                                                                                                                                              |
+| 2026-10-06 | No lockbox/door codes in the app until proper secret handling exists; `accessInstructions` is removed (N7).                                                                                                                                                                                                                        |
+| 2026-10-06 | Default cleaner per property with per-clean override; cleaners start on the scheduled day (N8).                                                                                                                                                                                                                                    |
+| 2026-10-06 | Cleaner payments are voidable with a required reason; payment lines are immutable history (N9).                                                                                                                                                                                                                                    |
+| 2026-10-06 | TruHost restocks supplies as owner-borne receipted expenses (N12).                                                                                                                                                                                                                                                                 |
+| 2026-10-06 | Invite emails sent by us via Resend (Clerk invitations with `notify: false`); URLs and sender are env vars with placeholders until domains are chosen (N13).                                                                                                                                                                       |
+| 2026-10-06 | Supply alerts on a change into LOW/OUT: admins in-app (email too on OUT), owners in-app and on their dashboard; built in Phase 3 (N12b).                                                                                                                                                                                           |
+| 2026-10-06 | System-created owner-stay cleaning charges stand if the stay is later cancelled; only an admin void (reason required, audited) removes them (N14).                                                                                                                                                                                 |
+| 2026-10-07 | Guide characters (Sage, Juniper, Pip), chosen per user. Sparing use: a sleeping guide only in page-level empty states (one per screen at most), compact empty states inside panels; routine actions get a plain confirmation; the celebrating `SuccessNotice` is for milestones only (completing a clean, finalizing a statement). |
