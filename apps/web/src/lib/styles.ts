@@ -65,7 +65,7 @@ export const menuSurfaceStyles = cx(
 
 /** One row in a dropdown: rounded, with a faint sage tint that fades in on hover or keyboard highlight. */
 export const menuItemStyles = cx(
-  'relative flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-control-sm px-3 text-left text-sm text-ink outline-none select-none',
+  'relative flex min-h-10 w-full items-center gap-2.5 rounded-control-sm px-3 text-left text-sm text-ink outline-none select-none',
   'transition-[background-color,color] duration-150 ease-out',
   'hover:bg-sage-tint/60 hover:text-sage-deep focus-visible:bg-sage-tint/60 focus-visible:text-sage-deep',
   'data-[highlighted]:bg-sage-tint/60 data-[highlighted]:text-sage-deep',
