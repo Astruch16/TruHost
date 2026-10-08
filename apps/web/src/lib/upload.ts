@@ -1,4 +1,5 @@
 import { unwrap, type ApiClient } from '@truhost/api-client';
+import type { CreateUpload } from '@truhost/shared';
 
 /** Lowercase hex SHA-256 of a file, computed in the browser. Storage refuses any other bytes. */
 export async function sha256Hex(data: ArrayBuffer): Promise<string> {
@@ -14,31 +15,34 @@ export class UploadError extends Error {
   override name = 'UploadError';
 }
 
-/**
- * Uploads a receipt file straight to storage: ask the API for a signed PUT (declaring type, size and hash), then
- * PUT the bytes. Returns the file id to attach with POST /receipts.
- */
-export async function uploadReceipt(api: ApiClient, propertyId: string, file: File): Promise<string> {
-  const contentType = file.type as (typeof RECEIPT_TYPES)[number];
-  if (!RECEIPT_TYPES.includes(contentType)) throw new UploadError('Use a PDF or a photo (JPEG, PNG, WebP or HEIC).');
-  if (file.size > MAX_RECEIPT_BYTES) throw new UploadError('Files can be at most 20 MB.');
+/** What the client declares before uploading; size and hash are computed from the bytes. */
+type Declared<T = CreateUpload> = T extends unknown ? Omit<T, 'sizeBytes' | 'sha256'> : never;
 
-  const bytes = await file.arrayBuffer();
+/**
+ * Uploads bytes straight to storage: ask the API for a signed PUT (declaring type, size and hash), then PUT the
+ * bytes. Returns the file id to attach to its domain row.
+ */
+export async function uploadBytes(api: ApiClient, declare: Declared, bytes: ArrayBuffer): Promise<string> {
   const target = await unwrap(
     api.POST('/v1/uploads', {
-      body: {
-        purpose: 'RECEIPT',
-        propertyId,
-        contentType,
-        sizeBytes: file.size,
-        sha256: await sha256Hex(bytes),
-        filename: file.name,
-      },
+      body: { ...declare, sizeBytes: bytes.byteLength, sha256: await sha256Hex(bytes) } satisfies CreateUpload,
     }),
   );
   const res = await fetch(target.upload.url, { method: 'PUT', headers: target.upload.headers, body: bytes });
   if (!res.ok) throw new UploadError('The upload failed. Please try again.');
   return target.fileId;
+}
+
+/** Uploads a receipt file. Returns the file id to attach with POST /receipts. */
+export async function uploadReceipt(api: ApiClient, propertyId: string, file: File): Promise<string> {
+  const contentType = file.type as (typeof RECEIPT_TYPES)[number];
+  if (!RECEIPT_TYPES.includes(contentType)) throw new UploadError('Use a PDF or a photo (JPEG, PNG, WebP or HEIC).');
+  if (file.size > MAX_RECEIPT_BYTES) throw new UploadError('Files can be at most 20 MB.');
+  return uploadBytes(
+    api,
+    { purpose: 'RECEIPT', propertyId, contentType, filename: file.name },
+    await file.arrayBuffer(),
+  );
 }
 
 /** Opens a short-lived viewing link for a stored file in a new tab. */

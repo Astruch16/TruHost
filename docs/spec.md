@@ -213,8 +213,22 @@ model Property {
   /// Default amount owed to the cleaner per turnover. Copied onto each Clean at creation.
   defaultCleanerPayCents       Int       @default(0)
   archivedAt                   DateTime? @db.Timestamptz
+  /// Current cover photo (one of this property's PropertyPhotos; trigger-enforced). Null = none.
+  coverPhotoId                 String?   @unique @db.Uuid
   createdAt                    DateTime  @default(now()) @db.Timestamptz
   updatedAt                    DateTime  @updatedAt @db.Timestamptz
+}
+
+/// A property's photo as two JPEG renditions made in the browser: large (long edge ≤ 1600px) for the property page
+/// and card-sized (≤ 640px) for lists. Never updated or deleted (trigger); a new cover is a new row, and the old one
+/// stays as history. Both files must be VERIFIED PROPERTY_PHOTO uploads of the same property (trigger).
+model PropertyPhoto {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  propertyId   String   @db.Uuid
+  fileId       String   @unique @db.Uuid /// Large rendition.
+  thumbFileId  String   @unique @db.Uuid /// Card rendition. CHECK: differs from fileId.
+  uploadedById String   @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz
 }
 
 enum RoomType {
@@ -561,6 +575,7 @@ enum FilePurpose {
   RECEIPT
   CLEAN_PHOTO
   DAMAGE_PHOTO
+  PROPERTY_PHOTO /// Cover photo renditions; JPEG only, at most 5 MB each.
 }
 
 enum FileStatus {
@@ -568,8 +583,8 @@ enum FileStatus {
   VERIFIED  /// Object exists in R2 with the declared size, type and SHA-256.
 }
 
-/// Every R2 object. Access is decided by the domain row it's attached to (Receipt, CleanPhoto, DamagePhoto), never by
-/// this row alone.
+/// Every R2 object. Access is decided by the domain row it's attached to (Receipt, CleanPhoto, DamagePhoto,
+/// PropertyPhoto), never by this row alone.
 model StoredFile {
   id               String      @id @default(uuid(7)) @db.Uuid
   purpose          FilePurpose
@@ -1069,6 +1084,16 @@ sizeBytes, sha256}` and gets back a 10-minute presigned PUT URL that signs
   VERIFIED and creates the immutable row in one transaction. Viewing goes
   through `GET /files/:id/url` (5-minute signed GET, authorised via the
   attached row).
+- **Property photos** are resized and re-encoded as JPEG in the browser
+  before upload (large ≤ 1600px, card ≤ 640px), so lists download only small
+  images. Responses that include a property carry its photo links inline
+  (`coverPhoto: { url, thumbUrl, expiresAt }`), so a page of many properties
+  needs no extra request per photo. These links are signed per 4-minute
+  window and live 5 minutes from the window's start: everyone gets the
+  identical URL within a window, R2 serves it with
+  `Cache-Control: private, max-age=240, immutable`, and the browser reuses
+  the downloaded image. The bucket stays private. A link that has expired
+  by the time an image loads makes the web app refetch once for fresh links.
 - **Audit**: `AuditService.record(tx, …)` requires the transaction client.
   Every admin mutation of money (bookings, expenses, plans, statements,
   adjustments, cleaner pay), documents (receipts), access (memberships,
@@ -1139,6 +1164,8 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 | GET    | `/properties/:id`             | A O C | `defaultCleanerId`, `defaultCleanerPayCents` and `standardCleaningFeeCents` for A only. [1]                           |
 | PATCH  | `/properties/:id`             | A     | Audited. `defaultCleanerId` must hold an active CLEANER membership on the property (422 otherwise). [1, fields in 2a] |
 | POST   | `/properties/:id/archive`     | A     | Audited. [1]                                                                                                          |
+| PUT    | `/properties/:id/cover-photo` | A     | `{ fileId, thumbFileId }`: two PROPERTY_PHOTO uploads, verified and made the cover in one transaction. Audited. [2a]  |
+| DELETE | `/properties/:id/cover-photo` | A     | Clears the cover; the photo stays as history. Audited. [2a]                                                           |
 | GET    | `/properties/:id/memberships` | A     | [1]                                                                                                                   |
 | POST   | `/properties/:id/memberships` | A     | `{ userId, role }`. Audited. [1]                                                                                      |
 | POST   | `/memberships/:id/revoke`     | A     | Audited. [1]                                                                                                          |
@@ -1185,10 +1212,10 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 
 ### Files [2]
 
-| Method | Path             | Roles | Notes                                                    |
-| ------ | ---------------- | ----- | -------------------------------------------------------- |
-| POST   | `/uploads`       | A C   | Presigned PUT. C: photo purposes on own properties only. |
-| GET    | `/files/:id/url` | A O C | Signed GET (5 min), authorised via the attached row.     |
+| Method | Path             | Roles | Notes                                                                                                    |
+| ------ | ---------------- | ----- | -------------------------------------------------------------------------------------------------------- |
+| POST   | `/uploads`       | A C   | Presigned PUT. PROPERTY_PHOTO: A only. C: clean and damage photo purposes on own properties only.        |
+| GET    | `/files/:id/url` | A O C | Signed GET (5 min), authorised via the attached row (property photos: anyone who can read the property). |
 
 ### Statements, adjustments, reports [2b]
 
@@ -1346,7 +1373,9 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 | Expense                                                                     | write / void                    | all   | —                                   | —                             |
 | Receipt                                                                     | list / read file                | all   | own, OWNER-borne                    | —                             |
 | Receipt                                                                     | create / void                   | all   | —                                   | —                             |
-| Upload URL                                                                  | create                          | all   | —                                   | own (photo purposes)          |
+| Upload URL                                                                  | create                          | all   | —                                   | own (clean/damage photos)     |
+| Property cover photo                                                        | view                            | all   | own                                 | own                           |
+| Property cover photo                                                        | set / remove                    | all   | —                                   | —                             |
 | Statement                                                                   | list / read                     | all   | own, FINALIZED or RELEASED          | —                             |
 | Statement                                                                   | create / finalize / release     | all   | —                                   | —                             |
 | Adjustment                                                                  | any                             | all   | — (seen as statement lines)         | —                             |
@@ -1756,3 +1785,4 @@ UI, and a "needs financials" queue.
 | 2026-10-06 | System-created owner-stay cleaning charges stand if the stay is later cancelled; only an admin void (reason required, audited) removes them (N14).                                                                                                                                                                                 |
 | 2026-10-07 | Guide characters (Sage, Juniper, Pip), chosen per user. Sparing use: a sleeping guide only in page-level empty states (one per screen at most), compact empty states inside panels; routine actions get a plain confirmation; the celebrating `SuccessNotice` is for milestones only (completing a clean, finalizing a statement). |
 | 2026-10-07 | Guided onboarding is Phase 4b: role-specific tours (with the user's chosen guide), checklists derived from real records, skippable and replayable from Help, progress stored per user. Ships before the first outside owner is invited.                                                                                            |
+| 2026-10-08 | Property cover photos stay in the private R2 bucket (no public objects). Speed comes from browser-made renditions (card-sized for lists), links returned inline with the property, and links signed per 4-minute window so browsers cache them. A public CDN bucket was considered and not chosen.                                 |

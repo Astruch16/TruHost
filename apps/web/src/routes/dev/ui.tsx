@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { CalendarPlus, Plus } from 'lucide-react';
 import { ApiError } from '@truhost/api-client';
+import { CoverPhotoCard } from '../../components/cover-photo-card';
 import { Guide } from '../../components/guide/guide';
 import { GuidePicker } from '../../components/guide/guide-picker';
+import { PropertyCard } from '../../components/property-card';
 import { AppShell } from '../../components/shell/app-shell';
 import { ErrorAlert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
@@ -38,6 +40,34 @@ const sampleProperties = [
   { id: 'b', name: 'Lakeview Cabin', city: 'Cultus Lake', province: 'BC' },
   { id: 'c', name: 'Garden Loft', city: 'Chilliwack', province: 'BC' },
 ];
+
+/** Dev-only stand-in for an uploaded cover photo (an illustration, not a real property). */
+const SAMPLE_PHOTO = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e4"/><stop offset="1" stop-color="#e8f1f6"/></linearGradient></defs>
+<rect width="640" height="360" fill="url(#s)"/>
+<path d="M0 230 L120 120 L210 200 L320 90 L450 210 L540 140 L640 220 V360 H0Z" fill="#6f8f88"/>
+<path d="M0 270 L140 200 L260 260 L380 190 L520 260 L640 230 V360 H0Z" fill="#3f6b5a"/>
+<rect x="250" y="235" width="140" height="80" fill="#8a5a3c"/><path d="M235 240 L320 185 L405 240Z" fill="#5a3a28"/>
+<rect x="305" y="270" width="30" height="45" fill="#f3e7c4"/><rect x="0" y="310" width="640" height="50" fill="#2f5548"/>
+</svg>`)}`;
+
+const sampleProperty = {
+  id: '00000000-0000-7000-8000-000000000001',
+  name: 'Cedar Suite',
+  addressLine1: '1 Sample St',
+  addressLine2: null,
+  city: 'Chilliwack',
+  province: 'BC',
+  postalCode: 'V2P 1A1',
+  country: 'CA',
+  timeZone: 'America/Vancouver',
+  checkInTime: '16:00',
+  checkOutTime: '11:00',
+  provincialRegistrationNumber: null,
+  businessLicenceNumber: null,
+  archivedAt: null,
+  coverPhoto: { id: 'photo', url: SAMPLE_PHOTO, thumbUrl: SAMPLE_PHOTO, expiresAt: '2026-11-20T20:05:00Z' },
+};
 
 const sampleError = new ApiError(409, {
   type: 'about:blank',
@@ -240,6 +270,71 @@ function StyleGuide() {
                 </div>
               </div>
             </Card>
+          </div>
+
+          <Card
+            title="Property cards"
+            description="Cover photo (or initials), status and the month's figures: with a photo, without, loading, archived."
+          >
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-4">
+              <PropertyCard
+                property={{
+                  id: 'a',
+                  name: 'Cedar Suite',
+                  location: '1 Sample St, Chilliwack',
+                  archived: false,
+                  hasPlan: true,
+                  photoUrl: SAMPLE_PHOTO,
+                }}
+                figures={{ occupancyBps: 7200, grossCents: 431_000 }}
+                index={0}
+                revenueLabel="Gross, Oct"
+              />
+              <PropertyCard
+                property={{
+                  id: 'b',
+                  name: 'Lakeview Cabin',
+                  location: '2 Sample Rd, Cultus Lake',
+                  archived: false,
+                  hasPlan: false,
+                  photoUrl: null,
+                }}
+                figures={{ occupancyBps: 833, grossCents: 0 }}
+                index={1}
+                revenueLabel="Gross, Oct"
+              />
+              <PropertyCard
+                property={{
+                  id: 'c',
+                  name: 'Garden Loft',
+                  location: '3 Sample Ave, Chilliwack',
+                  archived: false,
+                  hasPlan: null,
+                  photoUrl: null,
+                }}
+                figures="loading"
+                index={2}
+                revenueLabel="Gross, Oct"
+              />
+              <PropertyCard
+                property={{
+                  id: 'd',
+                  name: 'Old Barn',
+                  location: '4 Sample Ln, Agassiz',
+                  archived: true,
+                  hasPlan: null,
+                  photoUrl: null,
+                }}
+                figures={null}
+                index={3}
+                revenueLabel="Gross, Oct"
+              />
+            </div>
+          </Card>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <CoverPhotoCard property={sampleProperty} />
+            <CoverPhotoCard property={{ ...sampleProperty, coverPhoto: null }} />
           </div>
 
           <Card

@@ -6,7 +6,9 @@ import {
   hexToBase64,
   inlineDisposition,
   PUT_TTL_SECONDS,
+  WINDOWED_CACHE_CONTROL,
   type FileStorage,
+  type LinkWindow,
   type ObjectInfo,
   type PutTarget,
 } from './storage.js';
@@ -70,7 +72,7 @@ export class R2Storage implements FileStorage {
     }
   }
 
-  async presignGet(key: string, o: { contentType: string; filename: string | null }) {
+  async presignGet(key: string, o: { contentType: string; filename: string | null; window?: LinkWindow }) {
     const url = await getSignedUrl(
       this.client,
       new GetObjectCommand({
@@ -78,9 +80,11 @@ export class R2Storage implements FileStorage {
         Key: key,
         ResponseContentType: o.contentType,
         ResponseContentDisposition: inlineDisposition(o.filename),
+        ...(o.window ? { ResponseCacheControl: WINDOWED_CACHE_CONTROL } : {}),
       }),
-      { expiresIn: GET_TTL_SECONDS },
+      o.window ? { expiresIn: GET_TTL_SECONDS, signingDate: o.window.signedAt } : { expiresIn: GET_TTL_SECONDS },
     );
-    return { url, expiresAt: new Date(Date.now() + GET_TTL_SECONDS * 1000).toISOString() };
+    const expiresAt = o.window ? o.window.expiresAt : new Date(Date.now() + GET_TTL_SECONDS * 1000);
+    return { url, expiresAt: expiresAt.toISOString() };
   }
 }

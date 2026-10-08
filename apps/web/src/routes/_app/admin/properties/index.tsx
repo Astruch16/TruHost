@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { ChevronRight, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { PropertyCard } from '../../../../components/property-card';
 import { PropertyForm } from '../../../../components/property-form';
-import { ErrorAlert } from '../../../../components/ui/alert';
+import { ErrorAlert, LoadError } from '../../../../components/ui/alert';
 import { Button } from '../../../../components/ui/button';
 import { Card } from '../../../../components/ui/card';
 import { EmptyState } from '../../../../components/ui/empty-state';
 import { PageHeader } from '../../../../components/ui/page-header';
-import { Pill } from '../../../../components/ui/pill';
 import { Skeleton } from '../../../../components/ui/skeleton';
 import { useApi } from '../../../../lib/api-context';
+import { monthKey, monthLabel } from '../../../../lib/months';
 import { emptyProperty, type PropertyFormValues } from '../../../../lib/property-values';
 import { queries } from '../../../../lib/queries';
 
@@ -26,6 +27,15 @@ function AdminProperties() {
   const [showArchived, setShowArchived] = useState(false);
   const [creating, setCreating] = useState(false);
   const list = useQuery(queries.properties(api, showArchived));
+  // This month's figures per property come from the reporting module, via the dashboard (archived properties
+  // have none and show dashes).
+  const month = monthKey();
+  const figures = useQuery({ ...queries.dashboard(api, month, null), enabled: list.isSuccess });
+  const figuresFor = (id: string) => {
+    if (figures.isPending) return 'loading' as const;
+    return figures.data?.properties.find((f) => f.id === id) ?? null;
+  };
+  const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-4';
   const create = useMutation({
     mutationFn: (body: PropertyFormValues) => unwrap(api.POST('/v1/properties', { body })),
     onSuccess: async (p) => {
@@ -69,9 +79,9 @@ function AdminProperties() {
       {list.error ? (
         <ErrorAlert error={list.error} />
       ) : !list.data ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
-          <Skeleton className="h-28 rounded-card" />
-          <Skeleton className="h-28 rounded-card" />
+        <div className={GRID}>
+          <Skeleton className="h-72 rounded-inner" />
+          <Skeleton className="h-72 rounded-inner" />
         </div>
       ) : list.data.items.length === 0 ? (
         <EmptyState
@@ -87,28 +97,37 @@ function AdminProperties() {
           Add the first property to start tracking bookings and cleans.
         </EmptyState>
       ) : (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
-          {list.data.items.map((p) => (
-            <li key={p.id}>
-              <Link
-                to="/admin/properties/$propertyId"
-                params={{ propertyId: p.id }}
-                className="group flex h-full min-h-28 items-start gap-4 rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-sm"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-lg font-semibold text-ink">{p.name}</span>
-                    <Pill tone={p.archivedAt ? 'neutral' : 'sage'}>{p.archivedAt ? 'Archived' : 'Active'}</Pill>
-                  </span>
-                  <span className="mt-1 block text-sm text-muted">
-                    {p.addressLine1}, {p.city}
-                  </span>
-                </span>
-                <ChevronRight aria-hidden className="mt-1 size-5 text-muted transition-colors group-hover:text-ink" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col gap-4">
+          {figures.error && (
+            <LoadError
+              what={`${monthLabel(month)}’s figures`}
+              onRetry={() => void figures.refetch()}
+              retrying={figures.isFetching}
+            />
+          )}
+          <ul className={GRID}>
+            {list.data.items.map((p, i) => {
+              const f = figuresFor(p.id);
+              return (
+                <li key={p.id}>
+                  <PropertyCard
+                    property={{
+                      id: p.id,
+                      name: p.name,
+                      location: `${p.addressLine1}, ${p.city}`,
+                      archived: p.archivedAt !== null,
+                      hasPlan: f && f !== 'loading' ? f.hasPlan : null,
+                      photoUrl: p.coverPhoto?.thumbUrl ?? null,
+                    }}
+                    figures={figures.error ? null : f}
+                    index={i}
+                    revenueLabel={`Gross, ${monthLabel(month).split(' ')[0]!.slice(0, 3)}`}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </>
   );

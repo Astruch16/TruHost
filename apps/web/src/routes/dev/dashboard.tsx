@@ -21,6 +21,18 @@ export const Route = createFileRoute('/dev/dashboard')({
   component: Preview,
 });
 
+/** Dev-only stand-in for an uploaded cover photo (an illustration, not a real property). */
+const SAMPLE_PHOTO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e4"/><stop offset="1" stop-color="#e8f1f6"/></linearGradient></defs>
+<rect width="640" height="360" fill="url(#s)"/>
+<path d="M0 230 L120 120 L210 200 L320 90 L450 210 L540 140 L640 220 V360 H0Z" fill="#6f8f88"/>
+<path d="M0 270 L140 200 L260 260 L380 190 L520 260 L640 230 V360 H0Z" fill="#3f6b5a"/>
+<rect x="250" y="235" width="140" height="80" fill="#8a5a3c"/><path d="M235 240 L320 185 L405 240Z" fill="#5a3a28"/>
+<rect x="305" y="270" width="30" height="45" fill="#f3e7c4"/><rect x="0" y="310" width="640" height="50" fill="#2f5548"/>
+</svg>`;
+const SAMPLE_PHOTO = `data:image/svg+xml,${encodeURIComponent(SAMPLE_PHOTO_SVG)}`;
+const samplePhoto = { id: 'photo-1', url: SAMPLE_PHOTO, thumbUrl: SAMPLE_PHOTO, expiresAt: '2026-11-20T20:05:00Z' };
+
 const FIXTURE_PROPERTIES = [
   { id: 'p1', name: 'Fixture Suite', city: 'Chilliwack', province: 'BC' },
   { id: 'p2', name: 'Fixture Cabin', city: 'Cultus Lake', province: 'BC' },
@@ -83,11 +95,20 @@ const FIXTURE: Dashboard = {
       ...FIXTURE_PROPERTIES[0]!,
       archived: false,
       hasPlan: true,
+      coverPhoto: samplePhoto,
       occupancyBps: 5484,
       nightsBooked: 17,
       grossCents: 412_340,
     },
-    { ...FIXTURE_PROPERTIES[1]!, archived: false, hasPlan: false, occupancyBps: 833, nightsBooked: 2, grossCents: 0 },
+    {
+      ...FIXTURE_PROPERTIES[1]!,
+      archived: false,
+      hasPlan: false,
+      coverPhoto: null,
+      occupancyBps: 833,
+      nightsBooked: 2,
+      grossCents: 0,
+    },
   ],
   attention: {
     total: 3,
@@ -225,7 +246,15 @@ const EMPTY_SINGLE: Dashboard = {
   },
   breakdown: { grossCents: 0, managementFeeCents: 0, ownerExpensesCents: 0, netToOwnersCents: 0, cleaningFeesCents: 0 },
   properties: [
-    { ...FIXTURE_PROPERTIES[0]!, archived: false, hasPlan: true, occupancyBps: 0, nightsBooked: 0, grossCents: 0 },
+    {
+      ...FIXTURE_PROPERTIES[0]!,
+      archived: false,
+      hasPlan: true,
+      coverPhoto: null,
+      occupancyBps: 0,
+      nightsBooked: 0,
+      grossCents: 0,
+    },
   ],
   attention: { total: 0, items: [] },
   upcoming: { total: 0, items: [] },
