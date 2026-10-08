@@ -82,7 +82,7 @@ export function CoverPhotoCard({ property }: { property: Property }) {
                 type="button"
                 onClick={() => input.current?.click()}
                 disabled={upload.isPending}
-                className="grid size-full cursor-pointer place-items-center text-sage-deep transition-colors hover:bg-sage-tint/70"
+                className="grid size-full place-items-center text-sage-deep transition-colors hover:bg-sage-tint/70"
               >
                 <span className="flex flex-col items-center gap-2">
                   <span aria-hidden className="text-5xl font-bold tracking-tight">

@@ -282,7 +282,7 @@ function PlanCard({ propertyId }: { propertyId: string }) {
         <ErrorAlert error={assign.error} />
         {current.data && current.data.history.length > 1 && (
           <details className="text-sm">
-            <summary className="cursor-pointer rounded-control-sm text-muted hover:text-ink">History</summary>
+            <summary className="rounded-control-sm text-muted hover:text-ink">History</summary>
             <ul className="figure mt-2 flex flex-col gap-1">
               {current.data.history.map((h) => (
                 <li key={h.id}>

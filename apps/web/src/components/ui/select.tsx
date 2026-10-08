@@ -56,7 +56,7 @@ export function Select({
         aria-invalid={field?.invalid || undefined}
         className={cx(
           controlStyles,
-          'flex cursor-pointer items-center justify-between gap-2 text-left',
+          'flex items-center justify-between gap-2 text-left',
           'data-[placeholder]:text-muted/80 data-[state=open]:border-blue-deep',
           className,
         )}
