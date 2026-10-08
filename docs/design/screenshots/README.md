@@ -7,3 +7,5 @@ default guide (Sage).
 
 `EmptyIcons.png` and `KpiCards.png` were made the same way (`KpiCards.dc.html` builds its nights strip in
 `renderVals()`).
+
+`Login.png` is `Login.dc.html` rendered the same way: its trees, stars, ripples and fireflies come from `renderVals()`.
