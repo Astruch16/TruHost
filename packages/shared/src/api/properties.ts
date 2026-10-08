@@ -4,6 +4,18 @@ import { MembershipRole, RoomType } from '../enums.js';
 import { bps, id, isoDate, isoDateTime, monthStart, text, timeOfDay } from '../primitives.js';
 
 /**
+ * Signed links to a property photo: `thumbUrl` (card-sized) for lists, `url` (large) for the property page. Links are
+ * private and short-lived; they are signed per time window, so they stay identical (and cacheable) within it.
+ */
+export const propertyPhotoLinks = z.object({
+  id,
+  url: z.string(),
+  thumbUrl: z.string(),
+  expiresAt: isoDateTime,
+});
+export type PropertyPhotoLinks = z.infer<typeof propertyPhotoLinks>;
+
+/**
  * Property as returned to any caller. Admin-only fields (default cleaner, cleaner pay, standard cleaning fee) are
  * optional and omitted (not null) for everyone else.
  */
@@ -22,6 +34,8 @@ export const property = z.object({
   provincialRegistrationNumber: z.string().nullable(),
   businessLicenceNumber: z.string().nullable(),
   archivedAt: isoDateTime.nullable(),
+  /** The current cover photo, or null. */
+  coverPhoto: propertyPhotoLinks.nullable(),
   defaultCleanerId: id.nullable().optional(),
   defaultCleanerPayCents: nonNegativeCents.optional(),
   standardCleaningFeeCents: nonNegativeCents.optional(),
@@ -67,6 +81,10 @@ export type CreateProperty = z.input<typeof createProperty>;
 /** The default cleaner can only be set once the property has cleaners, so it is update-only. */
 export const updateProperty = z.object({ ...propertyFields, defaultCleanerId: id.nullable() }).partial();
 export type UpdateProperty = z.input<typeof updateProperty>;
+
+/** Make two verified uploads (purpose PROPERTY_PHOTO) the property's cover: large and card renditions. */
+export const setCoverPhoto = z.object({ fileId: id, thumbFileId: id });
+export type SetCoverPhoto = z.infer<typeof setCoverPhoto>;
 
 export const propertyListQuery = z.object({
   includeArchived: z

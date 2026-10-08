@@ -1,6 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { createProperty, page, property, propertyListQuery, updateProperty } from '@truhost/shared';
+import { createProperty, page, property, propertyListQuery, setCoverPhoto, updateProperty } from '@truhost/shared';
 import type { z } from 'zod';
 import { CurrentActor, type Actor } from '../auth/actor.js';
 import { uuidParam } from '../common/params.js';
@@ -48,5 +48,22 @@ export class PropertiesController {
   @ZodResponse(property)
   archive(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
     return this.properties.archive(actor, id);
+  }
+
+  @Put(':id/cover-photo')
+  @ZodBody(setCoverPhoto)
+  @ZodResponse(property)
+  setCoverPhoto(
+    @CurrentActor() actor: Actor,
+    @Param('id', uuidParam) id: string,
+    @Body(new ZodPipe(setCoverPhoto)) body: z.output<typeof setCoverPhoto>,
+  ) {
+    return this.properties.setCoverPhoto(actor, id, body);
+  }
+
+  @Delete(':id/cover-photo')
+  @ZodResponse(property)
+  removeCoverPhoto(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
+    return this.properties.removeCoverPhoto(actor, id);
   }
 }

@@ -113,6 +113,21 @@ export const CASES: AuthzCase[] = [
     allow: ADMIN,
     mutates: true,
   },
+  {
+    route: 'PUT /v1/properties/:id/cover-photo',
+    path: (w) => `/v1/properties/${w.propertyA.id}/cover-photo`,
+    // The fixture photo is already attached, so even an admin can't reuse its files.
+    body: (w) => ({ fileId: w.photoA.fileId, thumbFileId: w.photoA.thumbFileId }),
+    allow: ADMIN,
+    adminGets: 422,
+    mutates: true,
+  },
+  {
+    route: 'DELETE /v1/properties/:id/cover-photo',
+    path: (w) => `/v1/properties/${w.propertyA.id}/cover-photo`,
+    allow: ADMIN,
+    mutates: true,
+  },
 
   // ── memberships ──
   {
@@ -337,6 +352,26 @@ export const CASES: AuthzCase[] = [
     }),
     allow: ADMIN,
     mutates: true,
+  },
+  {
+    route: 'POST /v1/uploads',
+    label: 'property photo',
+    path: () => '/v1/uploads',
+    body: (w) => ({
+      purpose: 'PROPERTY_PHOTO',
+      propertyId: w.propertyA.id,
+      contentType: 'image/jpeg',
+      sizeBytes: 10,
+      sha256: 'b'.repeat(64),
+    }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/files/:id/url',
+    label: 'property A photo',
+    path: (w) => `/v1/files/${w.photoA.thumbFileId}/url`,
+    allow: A_READERS,
   },
   {
     route: 'GET /v1/files/:id/url',

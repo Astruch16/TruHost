@@ -1,7 +1,15 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { GET_TTL_SECONDS, PUT_TTL_SECONDS, type FileStorage, type ObjectInfo, type PutTarget } from './storage.js';
+import {
+  GET_TTL_SECONDS,
+  PUT_TTL_SECONDS,
+  WINDOWED_CACHE_CONTROL,
+  type FileStorage,
+  type LinkWindow,
+  type ObjectInfo,
+  type PutTarget,
+} from './storage.js';
 
 interface StoredMeta {
   contentType: string;
@@ -40,9 +48,13 @@ export class LocalStorage implements FileStorage {
     return meta ? { sizeBytes: meta.sizeBytes, contentType: meta.contentType, sha256Hex: meta.sha256Hex } : null;
   }
 
-  presignGet(key: string, o: { contentType: string; filename: string | null }) {
-    const exp = Math.floor(Date.now() / 1000) + GET_TTL_SECONDS;
-    const url = this.url(key, { op: 'get', exp: String(exp), name: o.filename ?? '' });
+  presignGet(key: string, o: { contentType: string; filename: string | null; window?: LinkWindow }) {
+    const exp = o.window
+      ? Math.floor(o.window.expiresAt.getTime() / 1000)
+      : Math.floor(Date.now() / 1000) + GET_TTL_SECONDS;
+    const params: Record<string, string> = { op: 'get', exp: String(exp), name: o.filename ?? '' };
+    if (o.window) params.cc = WINDOWED_CACHE_CONTROL;
+    const url = this.url(key, params);
     return Promise.resolve({ url, expiresAt: new Date(exp * 1000).toISOString() });
   }
 

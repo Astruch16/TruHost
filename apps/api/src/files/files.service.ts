@@ -2,14 +2,24 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { createUpload } from '@truhost/shared';
 import type { z } from 'zod';
 import { AccessService } from '../access/access.service.js';
+import type { Action } from '../access/policy.js';
 import type { Actor } from '../auth/actor.js';
+import { CLOCK, type Clock } from '../common/clock.js';
 import { notFound, unprocessable } from '../common/problem.js';
 import { uuidv7 } from '../common/uuid.js';
 import type { FilePurpose, StoredFile } from '../generated/prisma/client.js';
 import { PrismaService, type Tx } from '../prisma/prisma.service.js';
-import { FILE_STORAGE, type FileStorage } from './storage.js';
+import { FILE_STORAGE, linkWindow, type FileStorage } from './storage.js';
 
 type UploadInput = z.output<typeof createUpload>;
+
+/** Who may upload a file of each purpose (and so to which properties). */
+const UPLOAD_ACTION: Record<UploadInput['purpose'], Action> = {
+  RECEIPT: 'receipt:write',
+  PROPERTY_PHOTO: 'property:write',
+};
+
+type FileRef = { objectKey: string; contentType: string };
 
 @Injectable()
 export class FilesService {
@@ -19,11 +29,12 @@ export class FilesService {
     private readonly prisma: PrismaService,
     private readonly access: AccessService,
     @Inject(FILE_STORAGE) private readonly storage: FileStorage,
+    @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
   /** Records a PENDING file and returns a signed PUT for exactly the declared bytes. */
   async createUpload(actor: Actor, input: UploadInput) {
-    this.access.assert(actor, 'receipt:write', input.propertyId, 'Property');
+    this.access.assert(actor, UPLOAD_ACTION[input.purpose], input.propertyId, 'Property');
     if (!(await this.prisma.property.count({ where: { id: input.propertyId } }))) throw notFound('Property');
 
     const id = uuidv7();
@@ -75,11 +86,27 @@ export class FilesService {
     return tx.storedFile.update({ where: { id: file.id }, data: { status: 'VERIFIED', verifiedAt: new Date() } });
   }
 
+  /**
+   * Links to a property photo, for anyone who may read the property (the caller has already checked that). Signed
+   * per window, so a list of many properties costs no extra requests and the browser can cache the images.
+   */
+  async photoLinks(photo: { id: string; file: FileRef; thumbFile: FileRef }) {
+    const window = linkWindow(this.clock.now());
+    const sign = (f: FileRef) =>
+      this.storage.presignGet(f.objectKey, { contentType: f.contentType, filename: null, window });
+    const [large, thumb] = await Promise.all([sign(photo.file), sign(photo.thumbFile)]);
+    return { id: photo.id, url: large.url, thumbUrl: thumb.url, expiresAt: large.expiresAt };
+  }
+
   /** Short-lived viewing link. Access is decided by what the file is attached to. */
   async viewUrl(actor: Actor, fileId: string) {
     const file = await this.prisma.storedFile.findUnique({
       where: { id: fileId },
-      include: { receipt: { include: { expense: { select: { bearer: true, voidedAt: true } } } } },
+      include: {
+        receipt: { include: { expense: { select: { bearer: true, voidedAt: true } } } },
+        propertyPhoto: { select: { id: true } },
+        propertyPhotoThumb: { select: { id: true } },
+      },
     });
     if (!file || !this.canView(actor, file)) throw notFound('File');
     if (file.status !== 'VERIFIED' && file.uploadedById !== actor.userId) throw notFound('File');
@@ -90,8 +117,12 @@ export class FilesService {
     actor: Actor,
     file: StoredFile & {
       receipt: { voidedAt: Date | null; expense: { bearer: string; voidedAt: Date | null } | null } | null;
+      propertyPhoto: { id: string } | null;
+      propertyPhotoThumb: { id: string } | null;
     },
   ): boolean {
+    // Property photos: anyone who can see the property.
+    if (file.propertyPhoto || file.propertyPhotoThumb) return this.access.can(actor, 'property:read', file.propertyId);
     // Unattached uploads are visible only to whoever uploaded them.
     if (!file.receipt) return file.uploadedById === actor.userId;
     if (this.access.can(actor, 'expense:readAdminFields', file.propertyId)) return true;

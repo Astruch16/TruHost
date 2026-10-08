@@ -24,6 +24,8 @@ export interface World {
   receipts: { a: string; b: string; truhostA: string };
   /** File ids behind the receipts above. */
   files: { a: string; b: string; truhostA: string };
+  /** A photo of property A (large and card files), not set as its cover. */
+  photoA: { id: string; fileId: string; thumbFileId: string };
 }
 
 export async function seedWorld(prisma: PrismaService): Promise<World> {
@@ -142,11 +144,36 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
   const eb = await expenseWithReceipt(b.id, 'OWNER');
   const et = await expenseWithReceipt(a.id, 'TRUHOST');
 
+  const photoFile = async (propertyId: string, sha: string) => {
+    const id = crypto.randomUUID();
+    await prisma.storedFile.create({
+      data: {
+        id,
+        purpose: 'PROPERTY_PHOTO',
+        propertyId,
+        objectKey: `properties/${propertyId}/property_photo/${id}`,
+        contentType: 'image/jpeg',
+        sizeBytes: 2048,
+        sha256: sha.repeat(64),
+        status: 'VERIFIED',
+        verifiedAt: new Date(),
+        uploadedById: users.admin.id,
+      },
+    });
+    return id;
+  };
+  const photoFileId = await photoFile(a.id, 'c');
+  const photoThumbId = await photoFile(a.id, 'd');
+  const photoA = await prisma.propertyPhoto.create({
+    data: { propertyId: a.id, fileId: photoFileId, thumbFileId: photoThumbId, uploadedById: users.admin.id },
+  });
+
   return {
     bookings,
     expenses: { a: ea.expense, b: eb.expense, truhostA: et.expense },
     receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },
     files: { a: ea.file, b: eb.file, truhostA: et.file },
+    photoA: { id: photoA.id, fileId: photoFileId, thumbFileId: photoThumbId },
     propertyA: { id: a.id, roomIds: a.rooms.map((r) => r.id) },
     propertyB: { id: b.id, roomIds: b.rooms.map((r) => r.id) },
     users: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, { id: u.id, subject: k }])) as World['users'],

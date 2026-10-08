@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { BookingKind } from '../enums.js';
 import { cents, nonNegativeCents } from '../money.js';
 import { bps, id, isoDate, month } from '../primitives.js';
+import { propertyPhotoLinks } from './properties.js';
 
 export const dashboardQuery = z.object({ month, propertyId: id.optional() });
 export type DashboardQuery = z.infer<typeof dashboardQuery>;
@@ -71,6 +72,7 @@ export const dashboard = z.object({
       province: z.string(),
       archived: z.boolean(),
       hasPlan: z.boolean(),
+      coverPhoto: propertyPhotoLinks.nullable(),
       occupancyBps: bps.nullable(),
       nightsBooked: z.number().int(),
       grossCents: nonNegativeCents,

@@ -196,6 +196,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/properties/{id}/cover-photo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['Properties_setCoverPhoto'];
+    post?: never;
+    delete: operations['Properties_removeCoverPhoto'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/properties/{id}/memberships': {
     parameters: {
       query?: never;
@@ -1153,6 +1169,14 @@ export interface operations {
               businessLicenceNumber: string | null;
               /** Format: date-time */
               archivedAt: string | null;
+              coverPhoto: {
+                /** Format: uuid */
+                id: string;
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+              } | null;
               /** Format: uuid */
               defaultCleanerId?: string | null;
               defaultCleanerPayCents?: number;
@@ -1223,6 +1247,14 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
+            coverPhoto: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
             /** Format: uuid */
             defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
@@ -1265,6 +1297,14 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
+            coverPhoto: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
             /** Format: uuid */
             defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
@@ -1327,6 +1367,14 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
+            coverPhoto: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
             /** Format: uuid */
             defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
@@ -1369,6 +1417,123 @@ export interface operations {
             businessLicenceNumber: string | null;
             /** Format: date-time */
             archivedAt: string | null;
+            coverPhoto: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
+            /** Format: uuid */
+            defaultCleanerId?: string | null;
+            defaultCleanerPayCents?: number;
+            standardCleaningFeeCents?: number;
+          };
+        };
+      };
+    };
+  };
+  Properties_setCoverPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          fileId: string;
+          /** Format: uuid */
+          thumbFileId: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            addressLine1: string;
+            addressLine2: string | null;
+            city: string;
+            province: string;
+            postalCode: string;
+            country: string;
+            timeZone: string;
+            checkInTime: string;
+            checkOutTime: string;
+            provincialRegistrationNumber: string | null;
+            businessLicenceNumber: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+            coverPhoto: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
+            /** Format: uuid */
+            defaultCleanerId?: string | null;
+            defaultCleanerPayCents?: number;
+            standardCleaningFeeCents?: number;
+          };
+        };
+      };
+    };
+  };
+  Properties_removeCoverPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            addressLine1: string;
+            addressLine2: string | null;
+            city: string;
+            province: string;
+            postalCode: string;
+            country: string;
+            timeZone: string;
+            checkInTime: string;
+            checkOutTime: string;
+            provincialRegistrationNumber: string | null;
+            businessLicenceNumber: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+            coverPhoto: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
             /** Format: uuid */
             defaultCleanerId?: string | null;
             defaultCleanerPayCents?: number;
@@ -2373,18 +2538,31 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': {
-          /** @enum {string} */
-          purpose: 'RECEIPT';
-          /** Format: uuid */
-          propertyId: string;
-          /** @enum {string} */
-          contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'application/pdf';
-          sizeBytes: number;
-          sha256: string;
-          /** @default null */
-          filename?: string | null;
-        };
+        'application/json':
+          | {
+              /** @enum {string} */
+              purpose: 'RECEIPT';
+              /** @enum {string} */
+              contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'application/pdf';
+              sizeBytes: number;
+              /** Format: uuid */
+              propertyId: string;
+              sha256: string;
+              /** @default null */
+              filename?: string | null;
+            }
+          | {
+              /** @enum {string} */
+              purpose: 'PROPERTY_PHOTO';
+              /** @enum {string} */
+              contentType: 'image/jpeg';
+              sizeBytes: number;
+              /** Format: uuid */
+              propertyId: string;
+              sha256: string;
+              /** @default null */
+              filename?: string | null;
+            };
       };
     };
     responses: {
@@ -3232,6 +3410,14 @@ export interface operations {
               province: string;
               archived: boolean;
               hasPlan: boolean;
+              coverPhoto: {
+                /** Format: uuid */
+                id: string;
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+              } | null;
               occupancyBps: number | null;
               nightsBooked: number;
               grossCents: number;

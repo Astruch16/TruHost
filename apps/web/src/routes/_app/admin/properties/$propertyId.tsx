@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
 import { Archive, ArrowDown, ArrowUp, Plus, UserMinus } from 'lucide-react';
+import { CoverPhotoCard } from '../../../../components/cover-photo-card';
 import { PropertyForm } from '../../../../components/property-form';
 import { ErrorAlert } from '../../../../components/ui/alert';
 import { Button } from '../../../../components/ui/button';
@@ -75,20 +76,23 @@ function AdminProperty() {
         onConfirm={() => archive.mutate()}
       />
       <div className="flex flex-col gap-6">
-        <Card title="Details">
-          <PropertyForm
-            key={p.id}
-            initial={{
-              ...p,
-              defaultCleanerPayCents: p.defaultCleanerPayCents ?? 0,
-              standardCleaningFeeCents: p.standardCleaningFeeCents ?? 0,
-            }}
-            submitLabel={update.isSuccess && !update.isPending ? 'Saved' : 'Save changes'}
-            pending={update.isPending}
-            error={update.error}
-            onSubmit={(v) => update.mutate(v)}
-          />
-        </Card>
+        <div className="grid items-start gap-6 @[68.75rem]/content:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <CoverPhotoCard property={p} />
+          <Card title="Details">
+            <PropertyForm
+              key={p.id}
+              initial={{
+                ...p,
+                defaultCleanerPayCents: p.defaultCleanerPayCents ?? 0,
+                standardCleaningFeeCents: p.standardCleaningFeeCents ?? 0,
+              }}
+              submitLabel={update.isSuccess && !update.isPending ? 'Saved' : 'Save changes'}
+              pending={update.isPending}
+              error={update.error}
+              onSubmit={(v) => update.mutate(v)}
+            />
+          </Card>
+        </div>
         <div className="grid gap-6 @4xl/content:grid-cols-2">
           <RoomsCard propertyId={propertyId} />
           <PlanCard propertyId={propertyId} />

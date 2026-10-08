@@ -42,21 +42,22 @@ model User {
   createdAt     DateTime   @default(now()) @db.Timestamptz
   updatedAt     DateTime   @updatedAt @db.Timestamptz
 
-  memberships        Membership[]   @relation("MembershipUser")
-  membershipsCreated Membership[]   @relation("MembershipCreatedBy")
-  membershipsRevoked Membership[]   @relation("MembershipRevokedBy")
-  invites            Invite[]       @relation("InviteUser")
-  invitesSent        Invite[]       @relation("InviteInvitedBy")
-  propertyPlansSet   PropertyPlan[]
-  auditLogs          AuditLog[]
-  idempotencyKeys    IdempotencyKey[]
-  defaultCleanerFor  Property[]       @relation("PropertyDefaultCleaner")
-  bookingsEntered    Booking[]
-  expensesEntered    Expense[]        @relation("ExpenseEnteredBy")
-  expensesVoided     Expense[]        @relation("ExpenseVoidedBy")
-  receiptsUploaded   Receipt[]        @relation("ReceiptUploadedBy")
-  receiptsVoided     Receipt[]        @relation("ReceiptVoidedBy")
-  filesUploaded      StoredFile[]
+  memberships            Membership[]     @relation("MembershipUser")
+  membershipsCreated     Membership[]     @relation("MembershipCreatedBy")
+  membershipsRevoked     Membership[]     @relation("MembershipRevokedBy")
+  invites                Invite[]         @relation("InviteUser")
+  invitesSent            Invite[]         @relation("InviteInvitedBy")
+  propertyPlansSet       PropertyPlan[]
+  auditLogs              AuditLog[]
+  idempotencyKeys        IdempotencyKey[]
+  defaultCleanerFor      Property[]       @relation("PropertyDefaultCleaner")
+  bookingsEntered        Booking[]
+  expensesEntered        Expense[]        @relation("ExpenseEnteredBy")
+  expensesVoided         Expense[]        @relation("ExpenseVoidedBy")
+  receiptsUploaded       Receipt[]        @relation("ReceiptUploadedBy")
+  receiptsVoided         Receipt[]        @relation("ReceiptVoidedBy")
+  filesUploaded          StoredFile[]
+  propertyPhotosUploaded PropertyPhoto[]
 }
 
 /// The three guide characters (docs/design/Mascots.dc.html).
@@ -113,29 +114,29 @@ model Membership {
   revokedAt   DateTime?      @db.Timestamptz
   revokedById String?        @db.Uuid
   revokedBy   User?          @relation("MembershipRevokedBy", fields: [revokedById], references: [id], onDelete: Restrict)
+  // + partial unique index membership_active_unique (raw SQL)
 
   @@index([userId, revokedAt])
   @@index([propertyId, role])
-  // + partial unique index membership_active_unique (raw SQL)
 }
 
 // ───────────────────────── Properties ─────────────────────────
 
 model Property {
-  id                           String    @id @default(uuid(7)) @db.Uuid
+  id                           String         @id @default(uuid(7)) @db.Uuid
   /// Internal nickname shown in the UI, e.g. "Kits 2BR".
   name                         String
   addressLine1                 String
   addressLine2                 String?
   city                         String
-  province                     String    @default("BC")
+  province                     String         @default("BC")
   postalCode                   String
-  country                      String    @default("CA")
+  country                      String         @default("CA")
   /// IANA zone; turns stay dates/times into instants and buckets statement months.
-  timeZone                     String    @default("America/Vancouver")
+  timeZone                     String         @default("America/Vancouver")
   /// Default "HH:mm" times used to build clean windows.
-  checkInTime                  String    @default("16:00")
-  checkOutTime                 String    @default("11:00")
+  checkInTime                  String         @default("16:00")
+  checkOutTime                 String         @default("11:00")
   /// BC Short-Term Rental Registry number (platforms must display it).
   provincialRegistrationNumber String?
   /// Municipal business licence, distinct from the provincial registration.
@@ -143,15 +144,19 @@ model Property {
   // No lockbox or door codes are stored in the app (docs/spec.md decision 2026-10-06).
   /// Cleaner assigned to new cleans by default. Must hold an active CLEANER membership here (checked in the
   /// service); cleared when that membership is revoked or the user is deactivated.
-  defaultCleanerId             String?   @db.Uuid
-  defaultCleaner               User?     @relation("PropertyDefaultCleaner", fields: [defaultCleanerId], references: [id], onDelete: Restrict)
+  defaultCleanerId             String?        @db.Uuid
+  defaultCleaner               User?          @relation("PropertyDefaultCleaner", fields: [defaultCleanerId], references: [id], onDelete: Restrict)
   /// Cleaning fee normally charged to guests; the owner-borne charge after an OWNER_STAY (Phase 3).
-  standardCleaningFeeCents     Int       @default(0)
+  standardCleaningFeeCents     Int            @default(0)
   /// Default amount owed to the cleaner per turnover; copied onto each Clean at creation.
-  defaultCleanerPayCents       Int       @default(0)
-  archivedAt                   DateTime? @db.Timestamptz
-  createdAt                    DateTime  @default(now()) @db.Timestamptz
-  updatedAt                    DateTime  @updatedAt @db.Timestamptz
+  defaultCleanerPayCents       Int            @default(0)
+  archivedAt                   DateTime?      @db.Timestamptz
+  /// The current cover photo, shown on property cards and the property page. Must be one of this property's
+  /// photos (trigger). Null = none; earlier photos stay as history.
+  coverPhotoId                 String?        @unique @db.Uuid
+  coverPhoto                   PropertyPhoto? @relation("PropertyCover", fields: [coverPhotoId], references: [id], onDelete: Restrict)
+  createdAt                    DateTime       @default(now()) @db.Timestamptz
+  updatedAt                    DateTime       @updatedAt @db.Timestamptz
 
   memberships Membership[]
   rooms       Room[]
@@ -160,6 +165,29 @@ model Property {
   expenses    Expense[]
   receipts    Receipt[]
   files       StoredFile[]
+  photos      PropertyPhoto[] @relation("PropertyPhotos")
+}
+
+/// A property's photo, as two JPEG renditions made in the browser before upload: a large one for the property page
+/// and a card-sized one for lists, so a page of many properties downloads only small images. Rows are never updated
+/// or deleted (trigger); a new cover is a new row, and Property.coverPhotoId points at the current one.
+model PropertyPhoto {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  propertyId   String     @db.Uuid
+  property     Property   @relation("PropertyPhotos", fields: [propertyId], references: [id], onDelete: Restrict)
+  /// Large rendition (long edge up to 1600px).
+  fileId       String     @unique @db.Uuid
+  file         StoredFile @relation("PropertyPhotoLarge", fields: [fileId], references: [id], onDelete: Restrict)
+  /// Card rendition (up to 640px wide).
+  thumbFileId  String     @unique @db.Uuid
+  thumbFile    StoredFile @relation("PropertyPhotoThumb", fields: [thumbFileId], references: [id], onDelete: Restrict)
+  uploadedById String     @db.Uuid
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+
+  coverOf Property? @relation("PropertyCover")
+
+  @@index([propertyId])
 }
 
 enum RoomType {
@@ -222,9 +250,9 @@ model PropertyPlan {
   createdById   String?   @db.Uuid
   createdBy     User?     @relation(fields: [createdById], references: [id], onDelete: Restrict)
   createdAt     DateTime  @default(now()) @db.Timestamptz
+  // + EXCLUDE constraint property_plan_no_overlap (raw SQL)
 
   @@index([propertyId, effectiveFrom])
-  // + EXCLUDE constraint property_plan_no_overlap (raw SQL)
 }
 
 // ───────────────────────── Bookings ─────────────────────────
@@ -261,26 +289,26 @@ enum BookingStatus {
 }
 
 model Booking {
-  id                    String         @id @default(uuid(7)) @db.Uuid
-  propertyId            String         @db.Uuid
-  property              Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  id                   String         @id @default(uuid(7)) @db.Uuid
+  propertyId           String         @db.Uuid
+  property             Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
   /// How the record got here (rule 3); separate from channel.
-  source                BookingSource
+  source               BookingSource
   /// Where the guest booked.
-  channel               BookingChannel
-  kind                  BookingKind    @default(GUEST)
-  status                BookingStatus  @default(CONFIRMED)
+  channel              BookingChannel
+  kind                 BookingKind    @default(GUEST)
+  status               BookingStatus  @default(CONFIRMED)
   /// Platform confirmation code or iCal UID; (propertyId, source, externalId) is unique so imports are idempotent.
-  externalId            String?
-  checkInDate           DateTime       @db.Date
+  externalId           String?
+  checkInDate          DateTime       @db.Date
   /// nights = checkOutDate − checkInDate. CHECK (checkOut > checkIn).
-  checkOutDate          DateTime       @db.Date
+  checkOutDate         DateTime       @db.Date
   /// Early check-in / late checkout ("HH:mm"); feed the clean window (Phase 3).
-  checkInTimeOverride   String?
-  checkOutTimeOverride  String?
+  checkInTimeOverride  String?
+  checkOutTimeOverride String?
   /// PII: admin-only.
-  guestName             String?
-  guestCount            Int?
+  guestName            String?
+  guestCount           Int?
 
   // Money (GUEST only; CHECKed). Null = not entered yet, which is different from 0: such bookings are "incomplete".
   /// What the channel actually paid TruHost for the stay, after its host fee.
@@ -290,22 +318,22 @@ model Booking {
   /// Guest-paid taxes; must stay null unless TAX_FIELDS_ENABLED. Never revenue.
   taxesCollectedCents   Int?
 
-  cancelledAt           DateTime?      @db.Timestamptz
-  cancellationNote      String?
+  cancelledAt      DateTime? @db.Timestamptz
+  cancellationNote String?
   /// Admin-only notes.
-  notes                 String?
+  notes            String?
   /// Null for iCal/PMS records.
-  enteredById           String?        @db.Uuid
-  enteredBy             User?          @relation(fields: [enteredById], references: [id], onDelete: Restrict)
+  enteredById      String?   @db.Uuid
+  enteredBy        User?     @relation(fields: [enteredById], references: [id], onDelete: Restrict)
   /// Optimistic concurrency: PATCH must send the current version; a stale one is a 409.
-  version               Int            @default(0)
-  createdAt             DateTime       @default(now()) @db.Timestamptz
-  updatedAt             DateTime       @updatedAt @db.Timestamptz
+  version          Int       @default(0)
+  createdAt        DateTime  @default(now()) @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @db.Timestamptz
+  // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
 
   @@unique([propertyId, source, externalId])
   @@index([propertyId, checkInDate])
   @@index([propertyId, checkOutDate])
-  // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
 }
 
 // ───────────────────────── Expenses & receipts ─────────────────────────
@@ -333,30 +361,30 @@ enum ExpenseBearer {
 }
 
 model Expense {
-  id            String          @id @default(uuid(7)) @db.Uuid
-  propertyId    String          @db.Uuid
-  property      Property        @relation(fields: [propertyId], references: [id], onDelete: Restrict)
-  category      ExpenseCategory
-  bearer        ExpenseBearer   @default(OWNER)
+  id          String          @id @default(uuid(7)) @db.Uuid
+  propertyId  String          @db.Uuid
+  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  category    ExpenseCategory
+  bearer      ExpenseBearer   @default(OWNER)
   /// Purchase date (the date on the receipt). Decides which statement month it lands in.
-  incurredOn    DateTime        @db.Date
-  vendor        String?
-  description   String
+  incurredOn  DateTime        @db.Date
+  vendor      String?
+  description String
   /// Total paid including any tax: this is what is deducted. CHECK (>= 0).
-  amountCents   Int
+  amountCents Int
   /// Tax breakdown; must stay null unless TAX_FIELDS_ENABLED.
-  gstCents      Int?
-  pstCents      Int?
-  enteredById   String          @db.Uuid
-  enteredBy     User            @relation("ExpenseEnteredBy", fields: [enteredById], references: [id], onDelete: Restrict)
+  gstCents    Int?
+  pstCents    Int?
+  enteredById String          @db.Uuid
+  enteredBy   User            @relation("ExpenseEnteredBy", fields: [enteredById], references: [id], onDelete: Restrict)
   /// Void instead of delete; voided rows are excluded from every money computation. Reason required (CHECK).
-  voidedAt      DateTime?       @db.Timestamptz
-  voidedById    String?         @db.Uuid
-  voidedBy      User?           @relation("ExpenseVoidedBy", fields: [voidedById], references: [id], onDelete: Restrict)
-  voidReason    String?
-  version       Int             @default(0)
-  createdAt     DateTime        @default(now()) @db.Timestamptz
-  updatedAt     DateTime        @updatedAt @db.Timestamptz
+  voidedAt    DateTime?       @db.Timestamptz
+  voidedById  String?         @db.Uuid
+  voidedBy    User?           @relation("ExpenseVoidedBy", fields: [voidedById], references: [id], onDelete: Restrict)
+  voidReason  String?
+  version     Int             @default(0)
+  createdAt   DateTime        @default(now()) @db.Timestamptz
+  updatedAt   DateTime        @updatedAt @db.Timestamptz
 
   receipts Receipt[]
 
@@ -396,6 +424,7 @@ enum FilePurpose {
   RECEIPT
   CLEAN_PHOTO
   DAMAGE_PHOTO
+  PROPERTY_PHOTO
 }
 
 enum FileStatus {
@@ -413,7 +442,7 @@ model StoredFile {
   propertyId       String      @db.Uuid
   property         Property    @relation(fields: [propertyId], references: [id], onDelete: Restrict)
   objectKey        String      @unique
-  /// Allow-listed per purpose (images and PDF for receipts).
+  /// Allow-listed per purpose (images and PDF for receipts; JPEG for property photos).
   contentType      String
   sizeBytes        Int
   /// Hex SHA-256 declared by the client; storage rejects a body that doesn't match.
@@ -427,7 +456,9 @@ model StoredFile {
   verifiedAt       DateTime?   @db.Timestamptz
   originalFilename String?
 
-  receipt Receipt?
+  receipt            Receipt?
+  propertyPhoto      PropertyPhoto? @relation("PropertyPhotoLarge")
+  propertyPhotoThumb PropertyPhoto? @relation("PropertyPhotoThumb")
 
   /// Nightly purge of PENDING rows older than 24h (job comes with deploy).
   @@index([status, createdAt])

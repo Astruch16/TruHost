@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
 import { Public } from '../auth/actor.js';
 import { ProblemException } from '../common/problem.js';
 import { LocalStorage } from './local-storage.js';
-import { FILE_STORAGE, inlineDisposition } from './storage.js';
+import { FILE_STORAGE, inlineDisposition, WINDOWED_CACHE_CONTROL } from './storage.js';
 
 const forbidden = (detail: string) => new ProblemException({ status: 403, code: 'BAD_SIGNATURE', detail });
 
@@ -45,7 +45,7 @@ export class LocalStorageController {
       .status(200)
       .type(object.meta.contentType)
       .setHeader('Content-Disposition', inlineDisposition(params.name || null))
-      .setHeader('Cache-Control', 'private, max-age=60')
+      .setHeader('Cache-Control', params.cc === WINDOWED_CACHE_CONTROL ? params.cc : 'private, max-age=60')
       .send(object.body);
   }
 }

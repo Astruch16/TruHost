@@ -12,10 +12,10 @@ import { EmptyState } from '../ui/empty-state';
 import { MonthStepper } from '../ui/month-stepper';
 import { Skeleton } from '../ui/skeleton';
 import { ComingUp } from './coming-up';
+import { PropertyCard } from '../property-card';
 import { KpiCard, type KpiChange } from './kpi-card';
 import { CalendarLegend, MonthCalendar } from './month-calendar';
 import { NeedsAttention } from './needs-attention';
-import { PropertyCard } from './property-card';
 import { RevenueBreakdown } from './revenue-breakdown';
 
 export type DashboardAction = 'booking' | 'expense' | 'receipt';
@@ -142,7 +142,15 @@ export function DashboardView({
                     {d.properties.map((p, i) => (
                       <PropertyCard
                         key={p.id}
-                        property={p}
+                        property={{
+                          id: p.id,
+                          name: p.name,
+                          location: `${p.city}, ${p.province}`,
+                          archived: p.archived,
+                          hasPlan: p.hasPlan,
+                          photoUrl: p.coverPhoto?.thumbUrl ?? null,
+                        }}
+                        figures={p}
                         index={tintIndex(p.id, i)}
                         revenueLabel={`Gross, ${shortMonth(month)}`}
                       />

@@ -5,6 +5,8 @@ import type { Actor } from '../auth/actor.js';
 import { addDays, addMonths, CLOCK, localDate, type Clock } from '../common/clock.js';
 import { fromIsoDate, toIsoDate } from '../common/dates.js';
 import { notFound } from '../common/problem.js';
+import { FilesService } from '../files/files.service.js';
+import { withCoverPhoto } from '../properties/properties.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { nightsBetween } from '../reporting/booking-money.js';
 import { divideHalfUp } from '../reporting/monthly.js';
@@ -33,6 +35,7 @@ export class DashboardService {
     private readonly prisma: PrismaService,
     private readonly access: AccessService,
     private readonly reports: ReportsService,
+    private readonly files: FilesService,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
@@ -40,7 +43,15 @@ export class DashboardService {
     this.access.assert(actor, 'dashboard:read');
     const properties = await this.prisma.property.findMany({
       where: q.propertyId ? { id: q.propertyId } : { archivedAt: null },
-      select: { id: true, name: true, city: true, province: true, timeZone: true, archivedAt: true },
+      select: {
+        id: true,
+        name: true,
+        city: true,
+        province: true,
+        timeZone: true,
+        archivedAt: true,
+        coverPhoto: { select: withCoverPhoto.coverPhoto.select },
+      },
       orderBy: { name: 'asc' },
     });
     if (q.propertyId && properties.length === 0) throw notFound('Property');
@@ -130,17 +141,20 @@ export class DashboardService {
         netToOwnersCents: sum('netCents'),
         cleaningFeesCents: sum('cleaningFeesCents'),
       },
-      properties: properties.map((p, i) => ({
-        id: p.id,
-        name: p.name,
-        city: p.city,
-        province: p.province,
-        archived: p.archivedAt !== null,
-        hasPlan: figures[i]!.plan !== null,
-        occupancyBps: figures[i]!.occupancyBps,
-        nightsBooked: figures[i]!.nightsBooked,
-        grossCents: figures[i]!.grossCents,
-      })),
+      properties: await Promise.all(
+        properties.map(async (p, i) => ({
+          id: p.id,
+          name: p.name,
+          city: p.city,
+          province: p.province,
+          archived: p.archivedAt !== null,
+          hasPlan: figures[i]!.plan !== null,
+          coverPhoto: p.coverPhoto ? await this.files.photoLinks(p.coverPhoto) : null,
+          occupancyBps: figures[i]!.occupancyBps,
+          nightsBooked: figures[i]!.nightsBooked,
+          grossCents: figures[i]!.grossCents,
+        })),
+      ),
       attention: await this.attention(properties, today, now, q.propertyId),
       upcoming: await this.upcoming(properties, now),
     };
