@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { createFileRoute, Navigate, Outlet, useMatchRoute, useNavigate, useParams } from '@tanstack/react-router';
-import { useAuth, useClerk } from '@clerk/react';
+import { useAuth, useClerk, useUser } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
+import { AuthButton, AuthCard } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
 import { AuthFrame } from '../components/shell/auth-frame';
 import { ErrorAlert } from '../components/ui/alert';
-import { Button } from '../components/ui/button';
 import { LoadingBlock } from '../components/ui/skeleton';
 import { useApi } from '../lib/api-context';
 import { clerkAppearance } from '../lib/clerk-appearance';
@@ -39,6 +39,7 @@ function FullPageLoading() {
 function SignedInShell() {
   const api = useApi();
   const { signOut, openUserProfile } = useClerk();
+  const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const me = useQuery(queries.me(api));
   const properties = useQuery({ ...queries.properties(api), enabled: me.isSuccess });
@@ -50,23 +51,31 @@ function SignedInShell() {
     storeScope(id);
   };
   const handleSignOut = () => void signOut({ redirectUrl: '/sign-in' });
+  const signedInAs = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
 
   if (me.isPending) return <FullPageLoading />;
   if (me.error) {
     const notInvited = me.error instanceof ApiError && me.error.problem.code === 'NOT_INVITED';
     return (
-      <AuthFrame
-        title={notInvited ? 'No access yet' : 'We couldn’t load your account'}
-        description={
-          notInvited
-            ? 'TruHost is invite-only. Ask a TruHost admin to invite this email address, then sign in again.'
-            : undefined
-        }
-      >
-        {!notInvited && <ErrorAlert error={me.error} />}
-        <Button variant="secondary" block onClick={handleSignOut}>
-          Sign out
-        </Button>
+      <AuthFrame>
+        <AuthCard
+          title={notInvited ? 'No access yet' : 'We couldn’t load your account'}
+          subtitle={
+            notInvited
+              ? 'TruHost is invite only. Ask your TruHost contact to invite this email address, then sign in again.'
+              : 'Something went wrong on our side. Try again in a moment.'
+          }
+        >
+          {signedInAs && (
+            <p className="text-center text-sm text-muted">
+              Signed in as <strong className="text-ink">{signedInAs}</strong>
+            </p>
+          )}
+          {!notInvited && <ErrorAlert error={me.error} />}
+          <AuthButton type="button" onClick={handleSignOut}>
+            Sign out
+          </AuthButton>
+        </AuthCard>
       </AuthFrame>
     );
   }

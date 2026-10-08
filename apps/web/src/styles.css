@@ -444,6 +444,230 @@
   }
 }
 
+/* Sign-in scene and card (components/auth). Keyframes and classes copied from docs/design/Login.dc.html. Extra:
+   everything pauses while the tab is hidden (data-paused, set by LoginScene), and reduced motion stops it outright
+   rather than leaving it on a last frame. */
+@keyframes lg-twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes lg-sway {
+  0%,
+  100% {
+    transform: rotate(-1.3deg);
+  }
+  50% {
+    transform: rotate(1.3deg);
+  }
+}
+@keyframes lg-shoot {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  10% {
+    transform: translate(-460px, 240px);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-460px, 240px);
+    opacity: 0;
+  }
+}
+@keyframes lg-fly {
+  0% {
+    transform: translate(-160px, 0);
+  }
+  50% {
+    transform: translate(760px, -30px);
+  }
+  100% {
+    transform: translate(1700px, 10px);
+  }
+}
+@keyframes lg-flap {
+  0%,
+  40%,
+  100% {
+    transform: scaleY(1);
+  }
+  10%,
+  30% {
+    transform: scaleY(-0.55);
+  }
+  20% {
+    transform: scaleY(1);
+  }
+}
+@keyframes lg-wave {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--wl));
+  }
+}
+@keyframes lg-drift {
+  0%,
+  100% {
+    transform: translateX(-40px);
+  }
+  50% {
+    transform: translateX(40px);
+  }
+}
+@keyframes lg-smoke {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(26px, -90px) scale(2);
+    opacity: 0;
+  }
+}
+@keyframes lg-firefly {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  35% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.7;
+    transform: translate(12px, -16px);
+  }
+}
+@keyframes lg-glow {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes lg-shimmer {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scaleX(0.7);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scaleX(1.1);
+  }
+}
+@keyframes lg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lg-twinkle {
+  animation: lg-twinkle 3s ease-in-out infinite;
+}
+.lg-sway {
+  animation: lg-sway 5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+/* Shooting stars and smoke start after a delay. "backwards" holds them on their first (invisible) frame until then;
+   without it they sit fully visible at their starting point (a bug on the board too). */
+.lg-shoot {
+  animation: lg-shoot 9s linear infinite backwards;
+}
+.lg-fly {
+  animation: lg-fly 34s linear infinite;
+}
+.lg-flap {
+  animation: lg-flap 2.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.lg-wave {
+  animation: lg-wave 8s linear infinite;
+}
+.lg-drift {
+  animation: lg-drift 22s ease-in-out infinite;
+}
+.lg-smoke {
+  animation: lg-smoke 6s ease-out infinite backwards;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.lg-firefly {
+  animation: lg-firefly 4s ease-in-out infinite;
+}
+.lg-glow {
+  animation: lg-glow 4s ease-in-out infinite;
+}
+.lg-shimmer {
+  animation: lg-shimmer 2.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.lg-rise {
+  animation: lg-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.lg-input:focus {
+  outline: none;
+  border-color: #173f3a;
+  box-shadow: 0 0 0 3px rgba(23, 63, 58, 0.18);
+}
+.lg-btn:hover {
+  filter: brightness(1.12);
+}
+.lg-btn:focus-visible,
+.lg-ghost:focus-visible {
+  outline: 3px solid rgba(23, 63, 58, 0.35);
+  outline-offset: 2px;
+}
+.lg-ghost:hover {
+  background: #f6f6f3;
+}
+.lg-scene[data-paused],
+.lg-scene[data-paused] * {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lg-twinkle,
+  .lg-sway,
+  .lg-shoot,
+  .lg-fly,
+  .lg-flap,
+  .lg-drift,
+  .lg-smoke,
+  .lg-firefly,
+  .lg-glow,
+  .lg-shimmer,
+  .lg-wave,
+  .lg-rise {
+    animation: none !important;
+  }
+  .lg-shoot,
+  .lg-fly {
+    display: none;
+  }
+}
+
 /* Sidebar foot: show the scene only with room for it, and the tagline only with room for both (no overlap with
    the nav, whatever the viewport height or the number of nav items). */
 .sidebar-foot {

@@ -1,49 +1,55 @@
-import type { ReactNode } from 'react';
-import { Logo } from './logo';
-import { MountainScene } from './mountain-scene';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { phoneCardOffset } from '../../lib/login-scene';
+import { useMediaQuery, useWindowSize } from '../../lib/use-viewport';
+import { AuthTagline } from '../auth/auth-card';
+import { LoginScene } from '../auth/login-scene';
 
 /**
- * Two-panel frame for sign-in, sign-up and account-state pages: brand panel with the scene on the left (desktop),
- * content on the right.
+ * Full-page frame for sign-in and account-state pages (docs/design/Login.dc.html): the night scene behind
+ * everything, the card centred, the tagline underneath. On phones the card is full width with 16px margins, sits
+ * a little below the top so the moon shows above it, and the scene is framed around it (cabin and lake below);
+ * the tagline is left out there, where it would cover the cabin. The page scrolls if a step is taller than the
+ * screen; the scene stays put.
  */
-export function AuthFrame({
-  title,
-  description,
-  children,
-}: {
-  title?: ReactNode;
-  description?: ReactNode;
-  children: ReactNode;
-}) {
+export function AuthFrame({ children }: { children: ReactNode }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [card, setCard] = useState<{ top: number; bottom: number } | null>(null);
+  const phone = useMediaQuery('(max-width: 640px)');
+  const { height } = useWindowSize();
+  // Phones: room above the card for the moon when the screen allows; short screens keep the form in view.
+  const offset = phone && card ? phoneCardOffset(height, card.bottom - card.top) : undefined;
+
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const next = { top: Math.round(r.top + window.scrollY), bottom: Math.round(r.bottom + window.scrollY) };
+      setCard((prev) => (prev && prev.top === next.top && prev.bottom === next.bottom ? prev : next));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
   return (
-    <div className="grid min-h-dvh bg-ground lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      <div className="relative hidden overflow-hidden bg-sidebar [--scene-w:41.6vw] lg:block">
-        <div className="relative z-10 p-10">
-          <Logo />
-        </div>
-        <p
-          aria-hidden
-          className="absolute inset-x-0 bottom-[max(330px,calc(var(--scene-w)*0.62))] z-10 -rotate-3 text-center font-hand text-4xl leading-tight text-sidebar-ink/90"
-        >
-          Better stays.
-          <br />
-          Higher returns.
-        </p>
-        <MountainScene width={600} className="absolute inset-x-0 bottom-0 aspect-[600/330] min-h-[330px] w-full" />
+    <div className="relative min-h-dvh bg-[#0B1A24]">
+      <div className="fixed inset-0 overflow-hidden">
+        <LoginScene card={card} />
       </div>
-      <main className="flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md">
-          <div className="mb-6 rounded-card bg-sidebar p-5 lg:hidden">
-            <Logo />
-          </div>
-          {(title || description) && (
-            <div className="mb-5">
-              {title && <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>}
-              {description && <p className="mt-2 text-muted">{description}</p>}
-            </div>
-          )}
-          <div className="flex flex-col gap-4">{children}</div>
+      <main
+        className="relative z-10 flex min-h-dvh flex-col items-center justify-start gap-[22px] px-4 pt-16 pb-8 sm:justify-center sm:p-6"
+        style={offset === undefined ? undefined : { paddingTop: offset }}
+      >
+        <div ref={cardRef} className="flex w-full justify-center">
+          {children}
         </div>
+        <AuthTagline />
       </main>
     </div>
   );
