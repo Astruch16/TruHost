@@ -43,6 +43,18 @@ export const dashboard = z.object({
     occupancyBps: bps.nullable(),
     avgNightlyEarningsCents: nonNegativeCents.nullable(),
     completeNights: z.number().int(),
+    /** The gross of each stay that makes up grossCents, in check-in order (they sum to grossCents). */
+    grossByStayCents: z.array(nonNegativeCents),
+    /** The fee as a share of gross, in bps, half up. Null when there is no gross. */
+    feeShareBps: bps.nullable(),
+    /**
+     * One entry per day of the month: how many properties had that night booked, and at how many it could be
+     * sold (not an owner stay or block). One property: 1/1 booked, 0/1 open, 0/0 unavailable.
+     */
+    nightsByDay: z.array(z.object({ booked: z.number().int(), available: z.number().int() })),
+    /** Lowest and highest nightly earnings among complete stays (each stay's gross ÷ its nights, half up). */
+    nightlyLowCents: nonNegativeCents.nullable(),
+    nightlyHighCents: nonNegativeCents.nullable(),
   }),
   /** Present only when both this month and the previous one are complete, fully planned and fully entered. */
   comparison: z

@@ -56,6 +56,21 @@ export interface MonthFigures {
   incompleteBookings: number;
   /** Owner-borne, non-voided expenses in the month with no receipt. */
   expensesMissingReceipt: number;
+  /**
+   * What makes up grossCents, one entry per booking that contributed, in check-in order: complete confirmed stays
+   * (their share of the month) and cancelled stays that still paid out. The entries sum exactly to grossCents.
+   */
+  grossByStay: { checkIn: string; grossCents: number }[];
+  /** One entry per day of the month: 1 if a confirmed guest stay covers that night, else 0. */
+  bookedByDay: number[];
+  /** One entry per day of the month: 1 if an owner stay or block covers that night (not sellable), else 0. */
+  unavailableByDay: number[];
+  /**
+   * Lowest and highest nightly earnings among complete confirmed stays in the month: each stay's gross in the month
+   * ÷ its nights in the month, half up (the same rule as avgNightlyEarningsCents). Null when there are none.
+   */
+  nightlyLowCents: number | null;
+  nightlyHighCents: number | null;
 }
 
 const DAY = 86_400_000;
@@ -121,6 +136,15 @@ export function computeMonth(input: {
   let completeNights = 0;
   let cleaningFeesCents = 0;
   let incompleteBookings = 0;
+  const grossByStay: { checkIn: string; grossCents: number }[] = [];
+  const bookedByDay = Array.from({ length: days }, () => 0);
+  const unavailableByDay = Array.from({ length: days }, () => 0);
+  const nightly: number[] = [];
+  /** Marks `count` nights starting `from` nights into a stay that checks in on `checkIn`. */
+  const mark = (byDay: number[], checkIn: string, from: number, count: number) => {
+    const start = toDay(checkIn) + from - toDay(first);
+    for (let d = start; d < start + count; d++) byDay[d] = 1;
+  };
 
   for (const b of input.bookings) {
     if (b.kind === 'GUEST' && b.guestCleaningFeeCents !== null && inMonth(b.checkOut)) {
@@ -130,7 +154,10 @@ export function computeMonth(input: {
     if (b.status === 'CANCELLED') {
       // Decision N3: a cancelled stay that still paid out counts in its check-in month, with zero nights.
       const gross = ownerGrossCents(b);
-      if (gross !== null && inMonth(b.checkIn)) grossCents += gross;
+      if (gross !== null && inMonth(b.checkIn)) {
+        grossCents += gross;
+        if (gross > 0) grossByStay.push({ checkIn: b.checkIn, grossCents: gross });
+      }
       continue;
     }
 
@@ -138,15 +165,18 @@ export function computeMonth(input: {
     if (count === 0) continue;
     if (b.kind === 'OWNER_STAY') {
       ownerStayNights += count;
+      mark(unavailableByDay, b.checkIn, from, count);
       continue;
     }
     if (b.kind === 'BLOCK') {
       blockNights += count;
+      mark(unavailableByDay, b.checkIn, from, count);
       continue;
     }
 
     stays += 1;
     nightsBooked += count;
+    mark(bookedByDay, b.checkIn, from, count);
     const gross = ownerGrossCents(b);
     if (gross === null) {
       incompleteBookings += 1;
@@ -159,7 +189,10 @@ export function computeMonth(input: {
     grossCents += share;
     completeGross += share;
     completeNights += count;
+    if (share > 0) grossByStay.push({ checkIn: b.checkIn, grossCents: share });
+    nightly.push(divideHalfUp(share, count));
   }
+  grossByStay.sort((a, b) => (a.checkIn < b.checkIn ? -1 : a.checkIn > b.checkIn ? 1 : 0));
 
   let ownerExpensesCents = 0;
   let expensesMissingReceipt = 0;
@@ -192,5 +225,10 @@ export function computeMonth(input: {
     cleaningFeesCents,
     incompleteBookings,
     expensesMissingReceipt,
+    grossByStay,
+    bookedByDay,
+    unavailableByDay,
+    nightlyLowCents: nightly.length > 0 ? Math.min(...nightly) : null,
+    nightlyHighCents: nightly.length > 0 ? Math.max(...nightly) : null,
   };
 }

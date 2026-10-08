@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { createFileRoute, notFound } from '@tanstack/react-router';
-import { CalendarPlus, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { ApiError } from '@truhost/api-client';
 import { CoverPhotoCard } from '../../components/cover-photo-card';
+import { KpiCard, KpiMoney, KpiOf } from '../../components/dashboard/kpi-card';
+import { NightlyRange, NightsStrip, ShareBar, StaysBar } from '../../components/dashboard/kpi-charts';
+import { AllClearIllustration } from '../../components/illustrations/all-clear';
+import { BookingsIllustration } from '../../components/illustrations/bookings';
+import { ComingUpIllustration } from '../../components/illustrations/coming-up';
+import { ExpensesIllustration } from '../../components/illustrations/expenses';
+import { ReceiptsIllustration } from '../../components/illustrations/receipts';
+import { RevenueIllustration } from '../../components/illustrations/revenue';
 import { Guide } from '../../components/guide/guide';
 import { GuidePicker } from '../../components/guide/guide-picker';
 import { PropertyCard } from '../../components/property-card';
@@ -68,6 +76,13 @@ const sampleProperty = {
   archivedAt: null,
   coverPhoto: { id: 'photo', url: SAMPLE_PHOTO, thumbUrl: SAMPLE_PHOTO, expiresAt: '2026-11-20T20:05:00Z' },
 };
+
+/** The board's sample month: 17 of 31 nights booked. */
+const SAMPLE_BOOKED = new Set([1, 2, 3, 8, 9, 10, 11, 15, 16, 17, 22, 23, 24, 25, 26, 30, 31]);
+const SAMPLE_NIGHTS = Array.from({ length: 31 }, (_, i) => ({
+  booked: SAMPLE_BOOKED.has(i + 1) ? 1 : 0,
+  available: 1,
+}));
 
 const sampleError = new ApiError(409, {
   type: 'about:blank',
@@ -224,19 +239,6 @@ function StyleGuide() {
                 Add the first property to start tracking bookings and cleans.
               </EmptyState>
             </Card>
-            <Card
-              title="Empty state: compact"
-              description="A panel among others, such as the dashboard cards. No guide."
-            >
-              <EmptyState
-                size="compact"
-                icon={CalendarPlus}
-                title="No stays in October 2026"
-                action={<Button>Add booking</Button>}
-              >
-                Stays appear here as bars, with each check-out marked as a clean to schedule.
-              </EmptyState>
-            </Card>
             <Card title="Confirmation" description="Routine actions: saved, updated, sent.">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
@@ -271,6 +273,108 @@ function StyleGuide() {
               </div>
             </Card>
           </div>
+
+          <Card
+            title="KPI cards"
+            description="Option A from docs/design/KpiCards.dc.html: no icons, the number leads, one small chart each. Board sample figures."
+          >
+            <div className="grid grid-cols-2 gap-3 @2xl/content:grid-cols-4 @2xl/content:gap-4">
+              <KpiCard
+                label="Gross revenue"
+                value={<KpiMoney cents={285_600} />}
+                support="From 5 stays"
+                change={{ label: '+12%', direction: 'up', vs: 'Sep' }}
+                chart={<StaysBar grossByStayCents={[50_400, 67_200, 50_400, 84_000, 33_600]} />}
+              />
+              <KpiCard
+                label="TruPlan fees earned"
+                value={<KpiMoney cents={62_832} />}
+                support="22% of gross"
+                chart={<ShareBar shareBps={2200} />}
+              />
+              <KpiCard
+                label="Nights booked"
+                value={<KpiOf value={17} of={31} />}
+                support="55% occupancy"
+                chart={<NightsStrip nightsByDay={SAMPLE_NIGHTS} />}
+              />
+              <KpiCard
+                label="Avg. nightly earnings"
+                value={<KpiMoney cents={16_800} />}
+                support="Across 17 nights"
+                chart={<NightlyRange lowCents={14_200} highCents={19_500} />}
+              />
+            </div>
+          </Card>
+
+          <Card
+            title="Empty states: compact"
+            description="Panels with nothing to show yet: the illustrations from docs/design/EmptyIcons.dc.html, with its wording."
+          >
+            <div className="grid gap-4 @3xl/content:grid-cols-2 @6xl/content:grid-cols-3">
+              {(
+                [
+                  [
+                    'Where the revenue went',
+                    <RevenueIllustration key="i" />,
+                    'No revenue this month yet',
+                    "Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.",
+                    null,
+                  ],
+                  [
+                    'Bookings',
+                    <BookingsIllustration key="i" />,
+                    'No stays this month',
+                    'Add a booking and it appears here as a bar across its nights.',
+                    'Add booking',
+                  ],
+                  [
+                    'Receipts this month',
+                    <ReceiptsIllustration key="i" />,
+                    'No receipts yet',
+                    "Upload a receipt as a PDF or photo and it's filed against this property.",
+                    'Upload receipt',
+                  ],
+                  [
+                    'Expenses',
+                    <ExpensesIllustration key="i" />,
+                    'No expenses recorded',
+                    "Restocks and repairs you pay for show up here and come off the owner's net.",
+                    'Add expense',
+                  ],
+                  [
+                    'Coming up',
+                    <ComingUpIllustration key="i" />,
+                    'Nothing in the next 14 days',
+                    "Check-ins and check-outs will be listed here as they're booked.",
+                    null,
+                  ],
+                  [
+                    'Needs attention',
+                    <AllClearIllustration key="i" />,
+                    'All clear',
+                    'No missing payouts, receipts or plans. Anything that needs you will show up here.',
+                    null,
+                  ],
+                ] as const
+              ).map(([panel, illustration, title, text, action]) => (
+                <div
+                  key={panel}
+                  className="flex flex-col gap-2.5 rounded-[18px] border border-line bg-surface px-[22px] py-5"
+                >
+                  <p className="text-base font-bold text-ink">{panel}</p>
+                  <EmptyState
+                    size="compact"
+                    illustration={illustration}
+                    title={title}
+                    action={action && <Button variant="secondary">{action}</Button>}
+                  >
+                    {text}
+                  </EmptyState>
+                </div>
+              ))}
+            </div>
+          </Card>
 
           <Card
             title="Property cards"

@@ -1327,6 +1327,22 @@ Dashboard rules (approved 2026-10-06):
   property judged in its own time zone, at most 8 items, with a link to the full calendar. On the same day,
   check-outs come first.
 
+- **KPI charts** (`docs/design/KpiCards.dc.html`, Option A). Each KPI card has one small chart, from fields the
+  reporting module computes from records:
+  - Gross revenue: `grossByStayCents`, the gross of each stay that makes up the month's gross, in check-in
+    order. These are complete stays' shares of the month plus cancelled stays that still paid out, and they
+    sum exactly to `grossCents`. Stays waiting on a payout have no segment yet.
+  - TruPlan fees: `feeShareBps`, the fee ÷ gross, half up. It is null with no gross.
+  - Nights booked: `nightsByDay`, one entry per day with how many properties had that night booked and at
+    how many it could be sold (owner stays and blocks can't).
+  - Avg. nightly earnings: `nightlyLowCents` and `nightlyHighCents`, the lowest and highest of each complete
+    stay's gross in the month ÷ its nights in the month, half up. This is the same rule as the average.
+
+  The "vs. previous month" rules above are unchanged.
+
+- **Empty panels** use the illustrations in `docs/design/EmptyIcons.dc.html` with its wording: revenue,
+  bookings, receipts, expenses, coming up, all clear. Page-level empty states keep the sleeping guide.
+
 ### Onboarding [4b]
 
 | Method | Path                              | Roles | Notes                                                                                                                   |

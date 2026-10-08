@@ -67,6 +67,59 @@ describe('admin dashboard', () => {
     ]);
   });
 
+  it('gives the KPI charts their series, computed from the records', async () => {
+    // Fixture: A and B each have Nov 10–13 (3 nights, owner gross 51000, so 17000 a night); only A has a plan (22%).
+    await book({
+      checkInDate: '2026-11-15',
+      checkOutDate: '2026-11-16',
+      payoutCents: 30_000,
+      guestCleaningFeeCents: 0,
+    });
+    await book({ checkInDate: '2026-11-20', checkOutDate: '2026-11-22', kind: 'OWNER_STAY' }, w.propertyB.id);
+    await book({ checkInDate: '2026-11-25', checkOutDate: '2026-11-27' }); // no payout yet
+
+    const { kpis } = (await dash('month=2026-11')).body;
+    expect(kpis).toMatchObject({
+      grossCents: 132_000,
+      managementFeeCents: 17_820, // 22% of A's 81000
+      grossByStayCents: [51_000, 51_000, 30_000], // check-in order; the unpaid stay has no segment yet
+      feeShareBps: 1350, // 17820 / 132000
+      nightlyLowCents: 17_000,
+      nightlyHighCents: 30_000,
+    });
+    expect(kpis.grossByStayCents.reduce((a: number, b: number) => a + b, 0)).toBe(kpis.grossCents);
+    expect(kpis.nightsByDay).toHaveLength(30);
+    const day = (n: number) => kpis.nightsByDay[n - 1];
+    expect([day(1), day(10), day(12), day(13), day(15), day(20), day(21), day(22), day(25)]).toEqual([
+      { booked: 0, available: 2 },
+      { booked: 2, available: 2 },
+      { booked: 2, available: 2 },
+      { booked: 0, available: 2 },
+      { booked: 1, available: 2 },
+      { booked: 0, available: 1 }, // B's owner stay can't be sold
+      { booked: 0, available: 1 },
+      { booked: 0, available: 2 },
+      { booked: 1, available: 2 }, // booked even before its payout is entered
+    ]);
+    const booked = kpis.nightsByDay.reduce((n: number, d: { booked: number }) => n + d.booked, 0);
+    const available = kpis.nightsByDay.reduce((n: number, d: { available: number }) => n + d.available, 0);
+    expect([booked, available]).toEqual([kpis.nightsBooked, kpis.availableNights]);
+  });
+
+  it('has empty chart series when nothing is booked', async () => {
+    const { kpis } = (await dash('month=2026-12')).body;
+    expect(kpis).toMatchObject({
+      grossByStayCents: [],
+      feeShareBps: null,
+      nightlyLowCents: null,
+      nightlyHighCents: null,
+    });
+    expect(kpis.nightsByDay).toHaveLength(31);
+    expect(
+      kpis.nightsByDay.every((d: { booked: number; available: number }) => d.booked === 0 && d.available === 2),
+    ).toBe(true);
+  });
+
   it('compares a complete month with a complete, planned, fully entered previous month', async () => {
     t.clock.set('2026-12-15T20:00:00Z');
     await book({

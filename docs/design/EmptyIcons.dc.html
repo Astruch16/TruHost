@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TruHost empty state illustrations</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{opacity:.8}
+@keyframes ei-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes ei-pop{0%,60%,100%{transform:translate(0,0)}75%,88%{transform:translate(2px,-2px)}}
+@keyframes ei-grow{0%{transform:scaleX(0)}30%,80%{transform:scaleX(1)}100%{transform:scaleX(1)}}
+@keyframes ei-stamp{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.12)}86%{transform:scale(0.97)}}
+@keyframes ei-peek{0%,100%{transform:translateY(0)}45%,60%{transform:translateY(-5px)}}
+@keyframes ei-glow{0%,100%{opacity:.85}30%{opacity:.6}45%{opacity:.95}70%{opacity:.7}}
+@keyframes ei-twinkle{0%,100%{transform:scale(.6);opacity:.4}50%{transform:scale(1.1);opacity:1}}
+.ei-float{animation:ei-float 3.6s ease-in-out infinite}
+.ei-pop{animation:ei-pop 4.2s ease-in-out infinite}
+.ei-grow{animation:ei-grow 4.5s cubic-bezier(.3,.7,.2,1) infinite;transform-box:fill-box;transform-origin:0% 50%}
+.ei-stamp{animation:ei-stamp 3.8s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%}
+.ei-peek{animation:ei-peek 4s ease-in-out infinite}
+.ei-glow{animation:ei-glow 3.2s ease-in-out infinite}
+.ei-twinkle{animation:ei-twinkle 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%}
+@media (prefers-reduced-motion:reduce){.ei-float,.ei-pop,.ei-grow,.ei-stamp,.ei-peek,.ei-glow,.ei-twinkle{animation:none}}
+</style>
+</helmet>
+<div style="width: 1200px; height: 760px; box-sizing: border-box; padding: 40px; background: #F6F6F3; color: #1A1D21; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-size: 15px; line-height: 1.45; display: flex; flex-direction: column; gap: 24px">
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+<defs>
+<radialGradient id="eiShadow"><stop offset="0" stop-color="#101412" stop-opacity="0.22"></stop><stop offset="1" stop-color="#101412" stop-opacity="0"></stop></radialGradient>
+<linearGradient id="eiSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"></stop><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"></stop></linearGradient>
+<linearGradient id="eiGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2D987"></stop><stop offset="1" stop-color="#D9AE3C"></stop></linearGradient>
+<linearGradient id="eiPaper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"></stop><stop offset="1" stop-color="#F1F2EE"></stop></linearGradient>
+</defs>
+</svg>
+
+<div>
+<h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Empty state illustrations</h1>
+<div style="color: #5B6068; margin-top: 4px">For panels with nothing to show yet. One family: lit from the top left, two or three tones per colour, a soft shadow under each object, gold for the detail that matters.</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; flex: 1">
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700">Where the revenue went</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px">
+<svg width="88" height="88" viewBox="0 0 80 80" role="img" aria-label="A pie chart with a gold coin">
+<circle cx="40" cy="40" r="35" fill="#DDEBDF"></circle>
+<ellipse cx="40" cy="66" rx="24" ry="4.5" fill="url(#eiShadow)"></ellipse>
+<circle cx="36" cy="39" r="20" fill="#2F5548"></circle>
+<circle cx="36" cy="36" r="20" fill="#4F7A63"></circle>
+<path class="ei-pop" d="M36 36 L36 16 A20 20 0 0 1 54.4 28.2 Z" fill="#A99BD6"></path>
+<path d="M36 36 L54.4 28.2 A20 20 0 0 1 56 36 Z" fill="#7FA9DC"></path>
+<circle cx="36" cy="36" r="20" fill="url(#eiSheen)"></circle>
+<path d="M21 26 A18 18 0 0 1 30 18" fill="none" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round"></path>
+<g class="ei-float">
+<circle cx="53" cy="53.500" r="10.500" fill="#C99A2E"></circle>
+<circle cx="52" cy="51.500" r="10.500" fill="url(#eiGold)"></circle>
+<circle cx="52" cy="51.500" r="6.500" fill="none" stroke="#C99A2E" stroke-width="1.600"></circle>
+<path d="M45.500 47 A8 8 0 0 1 50 43.500" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.600" stroke-linecap="round"></path>
+</g>
+</svg>
+<div style="font-weight: 700">No revenue this month yet</div>
+<div style="font-size: 14px; color: #5B6068; max-width: 260px">Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.</div>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700">Bookings</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px">
+<svg width="88" height="88" viewBox="0 0 80 80" role="img" aria-label="A calendar page with one stay marked">
+<circle cx="40" cy="40" r="35" fill="#DCE8F5"></circle>
+<ellipse cx="40" cy="66" rx="25" ry="4.5" fill="url(#eiShadow)"></ellipse>
+<rect x="16" y="20" width="48" height="43" rx="7" fill="#B7C7DA"></rect>
+<rect x="16" y="17" width="48" height="43" rx="7" fill="url(#eiPaper)"></rect>
+<path d="M23 17 H57 A7 7 0 0 1 64 24 V29 H16 V24 A7 7 0 0 1 23 17Z" fill="#24456B"></path>
+<path d="M23 17 H57 A7 7 0 0 1 64 24 V25 H16 V24 A7 7 0 0 1 23 17Z" fill="#FFFFFF" fill-opacity="0.14"></path>
+<rect x="25" y="12" width="4.500" height="10" rx="2.250" fill="#3D5F86"></rect>
+<rect x="50.500" y="12" width="4.500" height="10" rx="2.250" fill="#3D5F86"></rect>
+<g fill="#DADDD7">
+<circle cx="24" cy="36" r="1.700"></circle><circle cx="32" cy="36" r="1.700"></circle><circle cx="40" cy="36" r="1.700"></circle><circle cx="48" cy="36" r="1.700"></circle><circle cx="56" cy="36" r="1.700"></circle>
+<circle cx="24" cy="52" r="1.700"></circle><circle cx="32" cy="52" r="1.700"></circle><circle cx="40" cy="52" r="1.700"></circle><circle cx="48" cy="52" r="1.700"></circle><circle cx="56" cy="52" r="1.700"></circle>
+<circle cx="24" cy="44" r="1.700"></circle><circle cx="56" cy="44" r="1.700"></circle>
+</g>
+<g class="ei-grow">
+<rect x="29" y="40.500" width="23" height="7" rx="3.500" fill="#7FA9DC"></rect>
+<rect x="29" y="40.500" width="23" height="3" rx="1.500" fill="#FFFFFF" fill-opacity="0.35"></rect>
+<circle cx="32.500" cy="44" r="2" fill="url(#eiGold)"></circle>
+</g>
+</svg>
+<div style="font-weight: 700">No stays this month</div>
+<div style="font-size: 14px; color: #5B6068; max-width: 260px">Add a booking and it appears here as a bar across its nights.</div>
+<button style="height: 40px; padding: 0 16px; font: inherit; font-size: 14px; font-weight: 600; color: #173F3A; background: #FFFFFF; border: 1px solid #CDCFD3; border-radius: 10px; cursor: pointer">Add booking</button>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700">Receipts this month</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px">
+<svg width="88" height="88" viewBox="0 0 80 80" role="img" aria-label="A paper receipt with a gold seal">
+<circle cx="40" cy="40" r="35" fill="#E6E0F5"></circle>
+<ellipse cx="38" cy="66" rx="22" ry="4.500" fill="url(#eiShadow)"></ellipse>
+<path d="M25 15 H53 A4 4 0 0 1 57 19 V62 L53 59 L49 62 L45 59 L41 62 L37 59 L33 62 L29 59 L25 62 L23 60.500 V19 A4 4 0 0 1 25 15Z" fill="#CFC8E4" transform="translate(2 2)"></path>
+<path d="M25 15 H53 A4 4 0 0 1 57 19 V62 L53 59 L49 62 L45 59 L41 62 L37 59 L33 62 L29 59 L25 62 L21 59 V19 A4 4 0 0 1 25 15Z" fill="url(#eiPaper)"></path>
+<rect x="27" y="23" width="22" height="3" rx="1.500" fill="#56478A" fill-opacity="0.75"></rect>
+<rect x="27" y="31" width="16" height="2.500" rx="1.250" fill="#DADDD7"></rect>
+<rect x="27" y="37" width="20" height="2.500" rx="1.250" fill="#DADDD7"></rect>
+<rect x="27" y="43" width="13" height="2.500" rx="1.250" fill="#DADDD7"></rect>
+<rect x="27" y="50" width="12" height="3" rx="1.500" fill="#A99BD6"></rect>
+<g class="ei-stamp">
+<circle cx="54" cy="52" r="10" fill="#C99A2E"></circle>
+<circle cx="53" cy="50" r="10" fill="url(#eiGold)"></circle>
+<path d="M48.500 50 L51.500 53 L57.500 46.500" fill="none" stroke="#FFFFFF" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"></path>
+</g>
+</svg>
+<div style="font-weight: 700">No receipts yet</div>
+<div style="font-size: 14px; color: #5B6068; max-width: 260px">Upload a receipt as a PDF or photo and it's filed against this property.</div>
+<button style="height: 40px; padding: 0 16px; font: inherit; font-size: 14px; font-weight: 600; color: #173F3A; background: #FFFFFF; border: 1px solid #CDCFD3; border-radius: 10px; cursor: pointer">Upload receipt</button>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700">Expenses</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px">
+<svg width="88" height="88" viewBox="0 0 80 80" role="img" aria-label="A green wallet with a card tucked inside">
+<circle cx="40" cy="40" r="35" fill="#DDEBDF"></circle>
+<ellipse cx="40" cy="65" rx="26" ry="4.500" fill="url(#eiShadow)"></ellipse>
+<g class="ei-peek">
+<g transform="rotate(-12 40 26)">
+<rect x="24" y="14" width="32" height="21" rx="3.500" fill="#8B7FD0"></rect>
+<rect x="24" y="19" width="32" height="4" fill="#56478A" fill-opacity="0.6"></rect>
+<rect x="28" y="27" width="10" height="3" rx="1.500" fill="#FFFFFF" fill-opacity="0.6"></rect>
+</g>
+</g>
+<rect x="14" y="28" width="52" height="33" rx="9" fill="#2F5548"></rect>
+<rect x="14" y="26" width="52" height="33" rx="9" fill="#4F7A63"></rect>
+<rect x="14" y="26" width="52" height="33" rx="9" fill="url(#eiSheen)"></rect>
+<path d="M22 29 H58" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.600" stroke-linecap="round"></path>
+<rect x="46" y="36" width="22" height="14" rx="7" fill="#2F5548"></rect>
+<circle cx="55" cy="43" r="3.400" fill="url(#eiGold)"></circle>
+</svg>
+<div style="font-weight: 700">No expenses recorded</div>
+<div style="font-size: 14px; color: #5B6068; max-width: 260px">Restocks and repairs you pay for show up here and come off the owner's net.</div>
+<button style="height: 40px; padding: 0 16px; font: inherit; font-size: 14px; font-weight: 600; color: #173F3A; background: #FFFFFF; border: 1px solid #CDCFD3; border-radius: 10px; cursor: pointer">Add expense</button>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700">Coming up</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px">
+<svg width="88" height="88" viewBox="0 0 80 80" role="img" aria-label="A cabin door with a welcome mat">
+<circle cx="40" cy="40" r="35" fill="#F1ECDD"></circle>
+<ellipse cx="40" cy="66" rx="25" ry="4.500" fill="url(#eiShadow)"></ellipse>
+<path d="M18 22 L40 10 L62 22" fill="none" stroke="#3E6B56" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+<rect x="24" y="20" width="32" height="42" rx="4" fill="#553B30"></rect>
+<rect x="27" y="23" width="26" height="39" rx="2.500" fill="#6B4E3D"></rect>
+<rect x="27" y="23" width="26" height="39" rx="2.500" fill="url(#eiSheen)"></rect>
+<rect x="31" y="27" width="18" height="13" rx="2" fill="#553B30" fill-opacity="0.55"></rect>
+<rect x="31" y="44" width="18" height="14" rx="2" fill="#553B30" fill-opacity="0.55"></rect>
+<rect class="ei-glow" x="33" y="29" width="14" height="9" rx="1.500" fill="#E2C15A" fill-opacity="0.85"></rect>
+<path d="M40 29 V38 M33 33.500 H47" stroke="#553B30" stroke-width="1.200"></path>
+<circle cx="47.500" cy="43" r="2.200" fill="url(#eiGold)"></circle>
+<rect x="19" y="61" width="42" height="5" rx="2.500" fill="#93BFA0"></rect>
+<rect x="19" y="61" width="42" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.35"></rect>
+</svg>
+<div style="font-weight: 700">Nothing in the next 14 days</div>
+<div style="font-size: 14px; color: #5B6068; max-width: 260px">Check-ins and check-outs will be listed here as they're booked.</div>
+</div>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E3E4E1; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700">Needs attention</div>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px">
+<svg width="88" height="88" viewBox="0 0 80 80" role="img" aria-label="A green shield with a check mark">
+<circle cx="40" cy="40" r="35" fill="#DDEBDF"></circle>
+<ellipse cx="40" cy="67" rx="20" ry="4" fill="url(#eiShadow)"></ellipse>
+<g class="ei-float">
+<path d="M40 14 L60 22 V37 C60 50 51 58.500 40 64 C29 58.500 20 50 20 37 V22Z" fill="#2F5548" transform="translate(1.500 2)"></path>
+<path d="M40 14 L60 22 V37 C60 50 51 58.500 40 64 C29 58.500 20 50 20 37 V22Z" fill="#4F7A63"></path>
+<path d="M40 19 L55 25 V37 C55 47 48.500 53.500 40 58 C31.500 53.500 25 47 25 37 V25Z" fill="#93BFA0" fill-opacity="0.45"></path>
+<path d="M40 14 L60 22 V37 C60 50 51 58.500 40 64 C29 58.500 20 50 20 37 V22Z" fill="url(#eiSheen)"></path>
+<path d="M31.500 38.500 L37.500 44.500 L49 32" fill="none" stroke="#FFFFFF" stroke-width="4.500" stroke-linecap="round" stroke-linejoin="round"></path>
+</g>
+<path class="ei-twinkle" d="M62 12 l1.600 3.600 3.600 1.600 -3.600 1.600 -1.600 3.600 -1.600 -3.600 -3.600 -1.600 3.600 -1.600z" fill="url(#eiGold)"></path>
+<path class="ei-twinkle" style="animation-delay: -1.2s" d="M16 50 l1.100 2.400 2.400 1.100 -2.400 1.100 -1.100 2.400 -1.100 -2.400 -2.400 -1.100 2.400 -1.100z" fill="url(#eiGold)"></path>
+</svg>
+<div style="font-weight: 700">All clear</div>
+<div style="font-size: 14px; color: #5B6068; max-width: 260px">No missing payouts, receipts or plans. Anything that needs you will show up here.</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":760}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

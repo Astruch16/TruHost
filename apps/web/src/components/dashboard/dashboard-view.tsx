@@ -1,9 +1,8 @@
-import { Banknote, CalendarPlus, Moon, ReceiptText, Star, Upload, Wallet } from 'lucide-react';
+import { CalendarPlus, ReceiptText, Upload } from 'lucide-react';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
-import { formatChange, formatPoints, greeting, longDate, TINTS } from '../../lib/dashboard-format';
+import { formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
 import { formatBps, formatOccupancy } from '../../lib/format';
-import { formatCents } from '../../lib/money';
 import { monthLabel } from '../../lib/months';
 import { LoadError } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -12,8 +11,11 @@ import { EmptyState } from '../ui/empty-state';
 import { MonthStepper } from '../ui/month-stepper';
 import { Skeleton } from '../ui/skeleton';
 import { ComingUp } from './coming-up';
+import { BookingsIllustration } from '../illustrations/bookings';
+import { RevenueIllustration } from '../illustrations/revenue';
 import { PropertyCard } from '../property-card';
-import { KpiCard, type KpiChange } from './kpi-card';
+import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
+import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { CalendarLegend, MonthCalendar } from './month-calendar';
 import { NeedsAttention } from './needs-attention';
 import { RevenueBreakdown } from './revenue-breakdown';
@@ -165,15 +167,8 @@ export function DashboardView({
                 ) : d.breakdown.grossCents === 0 &&
                   d.breakdown.ownerExpensesCents === 0 &&
                   d.breakdown.cleaningFeesCents === 0 ? (
-                  <EmptyState
-                    size="compact"
-                    icon={Wallet}
-                    title={`No revenue recorded for ${monthLabel(month)}`}
-                    action={<Button onClick={() => onAction('booking')}>Add booking</Button>}
-                  >
-                    Add the month’s stays with their payouts and cleaning fees, and expenses with receipts.
-                    {d.kpis.incompleteBookings > 0 &&
-                      ` ${plural(d.kpis.incompleteBookings, 'stay is', 'stays are')} waiting on a payout.`}
+                  <EmptyState size="compact" illustration={<RevenueIllustration />} title="No revenue this month yet">
+                    Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.
                   </EmptyState>
                 ) : (
                   <RevenueBreakdown breakdown={d.breakdown} feeRatesBps={d.kpis.feeRatesBps} />
@@ -189,11 +184,15 @@ export function DashboardView({
               ) : stays.length === 0 ? (
                 <EmptyState
                   size="compact"
-                  icon={CalendarPlus}
-                  title={`No stays in ${monthLabel(month)}`}
-                  action={<Button onClick={() => onAction('booking')}>Add booking</Button>}
+                  illustration={<BookingsIllustration />}
+                  title="No stays this month"
+                  action={
+                    <Button variant="secondary" onClick={() => onAction('booking')}>
+                      Add booking
+                    </Button>
+                  }
                 >
-                  Stays appear here as bars, with each check-out marked as a clean to schedule.
+                  Add a booking and it appears here as a bar across its nights.
                 </EmptyState>
               ) : (
                 <MonthCalendar
@@ -243,84 +242,79 @@ function Kpis({ d }: { d: Dashboard }) {
   const k = d.kpis;
 
   return (
-    <div className={KPI_GRID}>
-      <KpiCard
-        icon={Banknote}
-        tint={TINTS[0]}
-        label="Gross revenue"
-        periodNote={periodNote}
-        value={formatCents(k.grossCents)}
-        support={
-          <>
-            From <strong className="text-ink">{plural(k.stays, 'stay', 'stays')}</strong>
-            {k.incompleteBookings > 0 && <> · {k.incompleteBookings} waiting on payout</>}
-          </>
-        }
-        change={rel(d.comparison?.grossCents)}
-      />
-      <KpiCard
-        icon={Wallet}
-        tint={TINTS[2]}
-        label="TruPlan fees earned"
-        periodNote={periodNote}
-        value={formatCents(k.managementFeeCents)}
-        support={
-          k.feeRatesBps.length === 0
-            ? 'No plan in force'
-            : k.feeRatesBps.length === 1
-              ? `${formatBps(k.feeRatesBps[0]!)} of gross`
-              : `Across ${plural(d.scope.propertyCount, 'property', 'properties')}`
-        }
-        change={rel(d.comparison?.managementFeeCents)}
-      />
-      <KpiCard
-        icon={Moon}
-        tint={TINTS[1]}
-        label="Nights booked"
-        periodNote={periodNote}
-        value={k.nightsBooked}
-        suffix={`of ${k.availableNights}`}
-        support={
-          k.occupancyBps === null ? (
-            'No nights available'
-          ) : (
+    <div className="flex flex-col gap-2">
+      {/* Said once for all four cards, so their labels stay on one line. */}
+      {periodNote && <p className="text-xs font-semibold tracking-wide text-muted uppercase">{periodNote}</p>}
+      <div className={KPI_GRID}>
+        <KpiCard
+          label="Gross revenue"
+          value={<KpiMoney cents={k.grossCents} />}
+          chart={<StaysBar grossByStayCents={k.grossByStayCents} />}
+          support={
             <>
-              <strong className="text-ink">{formatOccupancy(k.occupancyBps)}</strong> occupancy
+              From <strong className="text-ink">{plural(k.stays, 'stay', 'stays')}</strong>
+              {k.incompleteBookings > 0 && <> · {k.incompleteBookings} waiting on payout</>}
             </>
-          )
-        }
-        change={
-          d.comparison && d.comparison.occupancyBps.changeBps !== null
-            ? {
-                label: formatPoints(d.comparison.occupancyBps.changeBps),
-                direction:
-                  d.comparison.occupancyBps.changeBps > 0
-                    ? 'up'
-                    : d.comparison.occupancyBps.changeBps < 0
-                      ? 'down'
-                      : 'flat',
-                vs,
-              }
-            : null
-        }
-      />
-      <KpiCard
-        icon={Star}
-        tint={{ bg: 'bg-line-soft', fg: 'text-ink' }}
-        label="Avg. nightly earnings"
-        periodNote={periodNote}
-        value={k.avgNightlyEarningsCents === null ? '—' : formatCents(k.avgNightlyEarningsCents)}
-        support={
-          k.completeNights > 0 ? (
-            <>
-              Across <strong className="text-ink">{plural(k.completeNights, 'night', 'nights')}</strong>
-            </>
-          ) : (
-            'No completed stays yet'
-          )
-        }
-        change={rel(d.comparison?.avgNightlyEarningsCents)}
-      />
+          }
+          change={rel(d.comparison?.grossCents)}
+        />
+        <KpiCard
+          label="TruPlan fees earned"
+          value={<KpiMoney cents={k.managementFeeCents} />}
+          chart={<ShareBar shareBps={k.feeShareBps} />}
+          support={
+            k.feeRatesBps.length === 0
+              ? 'No plan in force'
+              : k.feeRatesBps.length === 1
+                ? `${formatBps(k.feeRatesBps[0]!)} of gross`
+                : `Across ${plural(d.scope.propertyCount, 'property', 'properties')}`
+          }
+          change={rel(d.comparison?.managementFeeCents)}
+        />
+        <KpiCard
+          label="Nights booked"
+          value={<KpiOf value={k.nightsBooked} of={k.availableNights} />}
+          chart={<NightsStrip nightsByDay={k.nightsByDay} />}
+          support={
+            k.occupancyBps === null ? (
+              'No nights available'
+            ) : (
+              <>
+                <strong className="text-ink">{formatOccupancy(k.occupancyBps)}</strong> occupancy
+              </>
+            )
+          }
+          change={
+            d.comparison && d.comparison.occupancyBps.changeBps !== null
+              ? {
+                  label: formatPoints(d.comparison.occupancyBps.changeBps),
+                  direction:
+                    d.comparison.occupancyBps.changeBps > 0
+                      ? 'up'
+                      : d.comparison.occupancyBps.changeBps < 0
+                        ? 'down'
+                        : 'flat',
+                  vs,
+                }
+              : null
+          }
+        />
+        <KpiCard
+          label="Avg. nightly earnings"
+          value={k.avgNightlyEarningsCents === null ? '—' : <KpiMoney cents={k.avgNightlyEarningsCents} />}
+          chart={<NightlyRange lowCents={k.nightlyLowCents} highCents={k.nightlyHighCents} />}
+          support={
+            k.completeNights > 0 ? (
+              <>
+                Across <strong className="text-ink">{plural(k.completeNights, 'night', 'nights')}</strong>
+              </>
+            ) : (
+              'No completed stays yet'
+            )
+          }
+          change={rel(d.comparison?.avgNightlyEarningsCents)}
+        />
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { cx } from '../../lib/cx';
+import { splitCents } from '../../lib/money';
 
 export interface KpiChange {
   label: string;
@@ -10,44 +10,31 @@ export interface KpiChange {
   vs: string;
 }
 
-/** One KPI tile: tinted icon, label (with period note), big figure, supporting line, optional change chip. */
+/**
+ * One KPI tile, Option A in docs/design/KpiCards.dc.html: no icon, the number leads. Label, large figure,
+ * supporting line (with the "vs. previous month" chip when there is one) and one small chart.
+ */
 export function KpiCard({
-  icon: Icon,
-  tint,
   label,
-  periodNote,
   value,
-  suffix,
   support,
   change,
+  chart,
 }: {
-  icon: LucideIcon;
-  tint: { bg: string; fg: string };
   label: string;
-  periodNote?: string;
   value: ReactNode;
-  suffix?: ReactNode;
   support: ReactNode;
   change?: KpiChange | null;
+  chart: ReactNode;
 }) {
   return (
-    <section className="flex min-w-0 flex-col gap-3 rounded-inner border border-line bg-surface p-3.5 @2xl/content:p-4">
-      <header className="flex flex-col gap-2.5">
-        <span
-          className={cx('grid size-9 shrink-0 place-items-center rounded-full @2xl/content:size-10', tint.bg, tint.fg)}
-        >
-          <Icon aria-hidden className="size-[18px]" />
-        </span>
-        <div className="min-w-0 leading-tight">
-          <h3 className="text-sm leading-snug font-medium text-ink">{label}</h3>
-          <p className="min-h-4 text-xs text-muted">{periodNote}</p>
-        </div>
-      </header>
-      <p className="figure flex flex-wrap items-baseline gap-x-1.5 text-xl leading-none font-bold tracking-tight text-ink @2xl/content:text-[1.5rem] @[100rem]/content:text-[1.75rem]">
+    <section className="@container/kpi flex min-w-0 flex-col gap-1.5 rounded-2xl border border-line bg-surface px-4 py-4 @2xl/content:px-[22px] @2xl/content:py-5">
+      <h3 className="text-[13px] font-semibold text-muted">{label}</h3>
+      {/* The board's 32px wherever the card is wide enough (its own width, not the page's). */}
+      <p className="figure text-[1.625rem] leading-[1.15] font-bold tracking-[-0.03em] whitespace-nowrap text-ink @[13rem]/kpi:text-[2rem]">
         {value}
-        {suffix && <span className="text-base font-normal text-muted">{suffix}</span>}
       </p>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[13px] text-muted">
         <span className="min-w-0">{support}</span>
         {change && (
           <span
@@ -65,6 +52,27 @@ export function KpiCard({
           </span>
         )}
       </div>
+      <div className="mt-auto pt-2.5">{chart}</div>
     </section>
+  );
+}
+
+/** "$2,856" large, ".00" smaller and lighter. */
+export function KpiMoney({ cents }: { cents: number }) {
+  const { whole, cents: fraction } = splitCents(cents);
+  return (
+    <>
+      {whole}
+      <span className="text-[0.625em] text-muted">{fraction}</span>
+    </>
+  );
+}
+
+/** "17 of 31": the denominator smaller and lighter. */
+export function KpiOf({ value, of }: { value: number; of: number }) {
+  return (
+    <>
+      {value} <span className="text-[0.625em] text-muted">of {of}</span>
+    </>
   );
 }

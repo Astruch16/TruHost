@@ -64,6 +64,14 @@ const FIXTURE_STAYS: CalendarStay[] = [
   stay('s7', 'p1', '2026-10-30', '2026-11-01', 2),
 ];
 
+/** Per-day strip derived from the fixture stays (two properties, October). */
+const FIXTURE_NIGHTS = Array.from({ length: 31 }, (_, i) => {
+  const day = `2026-10-${String(i + 1).padStart(2, '0')}`;
+  const covering = FIXTURE_STAYS.filter((s) => s.checkInDate <= day && day < s.checkOutDate);
+  const unavailable = covering.filter((s) => s.kind !== 'GUEST').length;
+  return { booked: covering.filter((s) => s.kind === 'GUEST').length, available: 2 - unavailable };
+});
+
 const FIXTURE: Dashboard = {
   month: '2026-10',
   today: '2026-10-06',
@@ -80,6 +88,12 @@ const FIXTURE: Dashboard = {
     occupancyBps: 3455,
     avgNightlyEarningsCents: 24_255,
     completeNights: 17,
+    // Five paid stays (the sixth is waiting on its payout); they sum to grossCents.
+    grossByStayCents: [51_000, 88_340, 64_000, 132_000, 77_000],
+    feeShareBps: 2200,
+    nightsByDay: FIXTURE_NIGHTS,
+    nightlyLowCents: 17_000,
+    nightlyHighCents: 26_400,
   },
   comparison: null,
   noComparisonReason: 'MONTH_NOT_ENDED',
@@ -243,6 +257,11 @@ const EMPTY_SINGLE: Dashboard = {
     occupancyBps: 0,
     avgNightlyEarningsCents: null,
     completeNights: 0,
+    grossByStayCents: [],
+    feeShareBps: null,
+    nightsByDay: Array.from({ length: 31 }, () => ({ booked: 0, available: 1 })),
+    nightlyLowCents: null,
+    nightlyHighCents: null,
   },
   breakdown: { grossCents: 0, managementFeeCents: 0, ownerExpensesCents: 0, netToOwnersCents: 0, cleaningFeesCents: 0 },
   properties: [

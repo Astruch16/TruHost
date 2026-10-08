@@ -7101,6 +7101,52 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "grossByStayCents": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "feeShareBps": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "nightsByDay": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "booked": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "available": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": ["booked", "available"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "nightlyLowCents": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "nightlyHighCents": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -7113,7 +7159,12 @@
                         "availableNights",
                         "occupancyBps",
                         "avgNightlyEarningsCents",
-                        "completeNights"
+                        "completeNights",
+                        "grossByStayCents",
+                        "feeShareBps",
+                        "nightsByDay",
+                        "nightlyLowCents",
+                        "nightlyHighCents"
                       ],
                       "additionalProperties": false
                     },

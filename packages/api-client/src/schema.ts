@@ -3368,6 +3368,14 @@ export interface operations {
               occupancyBps: number | null;
               avgNightlyEarningsCents: number | null;
               completeNights: number;
+              grossByStayCents: number[];
+              feeShareBps: number | null;
+              nightsByDay: {
+                booked: number;
+                available: number;
+              }[];
+              nightlyLowCents: number | null;
+              nightlyHighCents: number | null;
             };
             comparison: {
               month: string;

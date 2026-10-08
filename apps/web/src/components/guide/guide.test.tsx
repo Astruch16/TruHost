@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GuideContext } from '../../lib/guide-context';
 import { GUIDE_CHARACTERS, GUIDE_POSES, guideFromApi, guideToApi } from '../../lib/guides';
-import { CalendarPlus } from 'lucide-react';
+import { BookingsIllustration } from '../illustrations/bookings';
 import { Confirmation } from '../ui/confirmation';
 import { EmptyState } from '../ui/empty-state';
 import { SuccessNotice } from '../ui/success-notice';
@@ -120,7 +120,7 @@ describe('the signed-in user’s guide', () => {
   it('stays out of compact empty states and routine confirmations', () => {
     render(
       <GuideContext.Provider value="pip">
-        <EmptyState size="compact" icon={CalendarPlus} title="No stays" />
+        <EmptyState size="compact" illustration={<BookingsIllustration />} title="No stays" />
         <Confirmation>Saved</Confirmation>
       </GuideContext.Provider>,
     );
