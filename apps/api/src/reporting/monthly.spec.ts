@@ -214,3 +214,66 @@ describe('computeMonth', () => {
     expect(f.managementFeeCents).toBe(11);
   });
 });
+
+describe('computeMonth: what the KPI charts show', () => {
+  const days = (f: ReturnType<typeof october>, key: 'bookedByDay' | 'unavailableByDay') =>
+    f[key].flatMap((v, i) => (v ? [i + 1] : []));
+
+  it('lists the gross of each contributing stay in check-in order, summing exactly to gross', () => {
+    const f = october([
+      guest('2026-10-20', '2026-10-23', 45_000, 6_000), // 39000
+      guest('2026-09-29', '2026-10-03', 1_003, 0), // Oct share of [251,251,251,250] = 501
+      guest('2026-10-10', '2026-10-12', null, 6_000), // incomplete: no money yet, no segment
+      guest('2026-10-05', '2026-10-07', 6_000, 6_000), // owner gross 0: no segment
+      guest('2026-10-30', '2026-11-02', 20_000, 0, { status: 'CANCELLED' }), // paid out anyway
+      guest('2026-10-14', '2026-10-15', 9_000, 0, { kind: 'OWNER_STAY' }),
+    ]);
+    expect(f.grossByStay).toEqual([
+      { checkIn: '2026-09-29', grossCents: 501 },
+      { checkIn: '2026-10-20', grossCents: 39_000 },
+      { checkIn: '2026-10-30', grossCents: 20_000 },
+    ]);
+    expect(f.grossByStay.reduce((s, x) => s + x.grossCents, 0)).toBe(f.grossCents);
+    expect(f.grossCents).toBe(59_501);
+  });
+
+  it('marks each night of the month as booked or unavailable', () => {
+    const f = october([
+      guest('2026-09-29', '2026-10-03', 1_003, 0), // Oct 1–2
+      guest('2026-10-10', '2026-10-12', null, null), // incomplete still books Oct 10–11
+      guest('2026-10-30', '2026-11-04', 50_000, 0), // Oct 30–31
+      guest('2026-10-20', '2026-10-25', 50_000, 0, { status: 'CANCELLED' }), // no nights
+      guest('2026-10-14', '2026-10-16', 0, 0, { kind: 'OWNER_STAY' }), // Oct 14–15
+      guest('2026-10-31', '2026-11-01', 0, 0, { kind: 'BLOCK' }), // overlaps nothing booked in practice
+    ]);
+    expect(f.bookedByDay).toHaveLength(31);
+    expect(days(f, 'bookedByDay')).toEqual([1, 2, 10, 11, 30, 31]);
+    expect(days(f, 'unavailableByDay')).toEqual([14, 15, 31]);
+    expect(f.bookedByDay.reduce((a, b) => a + b, 0)).toBe(f.nightsBooked);
+  });
+
+  it.each([
+    ['no complete stays', [guest('2026-10-10', '2026-10-12', null, null)], null, null],
+    ['one stay', [guest('2026-10-01', '2026-10-04', 30_000, 6_000)], 8_000, 8_000],
+    [
+      'several stays, each its own nightly rate',
+      [
+        guest('2026-10-01', '2026-10-04', 30_000, 6_000), // 24000 / 3 = 8000
+        guest('2026-10-10', '2026-10-12', 35_000, 6_000), // 29000 / 2 = 14500
+        guest('2026-10-20', '2026-10-27', 70_001, 6_000), // 64001 / 7 = 9143.0 → 9143
+      ],
+      8_000,
+      14_500,
+    ],
+    [
+      'half a cent rounds up, using only the nights in this month',
+      // Sep 29 → Oct 3 owner gross 1003: Oct share 501 over 2 nights = 250.5 → 251
+      [guest('2026-09-29', '2026-10-03', 1_003, 0), guest('2026-10-10', '2026-10-11', 300, 0)],
+      251,
+      300,
+    ],
+  ])('nightly low and high: %s', (_, bookings, low, high) => {
+    const f = october(bookings);
+    expect([f.nightlyLowCents, f.nightlyHighCents]).toEqual([low, high]);
+  });
+});

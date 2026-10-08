@@ -116,6 +116,20 @@ export class DashboardService {
         occupancyBps: occupancy(),
         avgNightlyEarningsCents: avgNightly(),
         completeNights: sum('completeNights'),
+        grossByStayCents: figures
+          .flatMap((f) => f.grossByStay)
+          .sort((a, b) => (a.checkIn < b.checkIn ? -1 : a.checkIn > b.checkIn ? 1 : 0))
+          .map((s) => s.grossCents),
+        feeShareBps: sum('grossCents') > 0 ? divideHalfUp(sum('managementFeeCents') * 10_000, sum('grossCents')) : null,
+        nightsByDay: nightsByDay(figures),
+        nightlyLowCents: extreme(
+          figures.map((f) => f.nightlyLowCents),
+          Math.min,
+        ),
+        nightlyHighCents: extreme(
+          figures.map((f) => f.nightlyHighCents),
+          Math.max,
+        ),
       },
       comparison: blocker
         ? null
@@ -309,4 +323,19 @@ export class DashboardService {
     );
     return { total: events.length, items: events.slice(0, UPCOMING_LIMIT) };
   }
+}
+
+/** Per day: properties with the night booked, and properties where it could be sold. */
+function nightsByDay(figures: { bookedByDay: number[]; unavailableByDay: number[] }[]) {
+  const days = figures[0]?.bookedByDay.length ?? 0;
+  return Array.from({ length: days }, (_, d) => ({
+    booked: figures.reduce((n, f) => n + f.bookedByDay[d]!, 0),
+    available: figures.reduce((n, f) => n + 1 - f.unavailableByDay[d]!, 0),
+  }));
+}
+
+/** The lowest or highest of the per-property values, ignoring properties that have none. */
+function extreme(values: (number | null)[], pick: (...v: number[]) => number): number | null {
+  const present = values.filter((v): v is number => v !== null);
+  return present.length > 0 ? pick(...present) : null;
 }

@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router';
-import { Banknote, ChevronRight, CircleCheck, MailWarning, ReceiptText, Shield, type LucideIcon } from 'lucide-react';
+import { Banknote, ChevronRight, MailWarning, ReceiptText, Shield, type LucideIcon } from 'lucide-react';
+import { AllClearIllustration } from '../illustrations/all-clear';
 import { Card } from '../ui/card';
+import { EmptyState } from '../ui/empty-state';
 import { Pill } from '../ui/pill';
 
 export interface AttentionItem {
@@ -64,10 +66,9 @@ export function NeedsAttention({
   return (
     <Card title="Needs attention">
       {items.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted">
-          <CircleCheck aria-hidden className="size-5 text-sage-deep" />
-          All caught up. Missing payouts, receipts and plans show up here.
-        </div>
+        <EmptyState size="compact" illustration={<AllClearIllustration />} title="All clear">
+          No missing payouts, receipts or plans. Anything that needs you will show up here.
+        </EmptyState>
       ) : (
         <ul className="flex flex-col">
           {items.map((item) => {

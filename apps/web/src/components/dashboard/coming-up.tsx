@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
-import { CalendarCheck } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
+import { ComingUpIllustration } from '../illustrations/coming-up';
 import { Card } from '../ui/card';
+import { EmptyState } from '../ui/empty-state';
 
 export interface UpcomingItem {
   type: 'CHECK_IN' | 'CHECK_OUT';
@@ -32,10 +33,9 @@ export function ComingUp({
   return (
     <Card title="Coming up" description="Next 14 days" actions={link}>
       {items.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted">
-          <CalendarCheck aria-hidden className="size-5" />
-          No check-ins or check-outs in the next 14 days.
-        </div>
+        <EmptyState size="compact" illustration={<ComingUpIllustration />} title="Nothing in the next 14 days">
+          Check-ins and check-outs will be listed here as they're booked.
+        </EmptyState>
       ) : (
         <ul className="flex flex-col divide-y divide-line-soft">
           {items.map((e) => (

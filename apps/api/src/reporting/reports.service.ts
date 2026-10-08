@@ -5,7 +5,14 @@ import type { Actor } from '../auth/actor.js';
 import { fromIsoDate, toIsoDate } from '../common/dates.js';
 import { notFound } from '../common/problem.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { computeMonth, divideHalfUp, monthBounds, type MonthBooking, type MonthExpense } from './monthly.js';
+import {
+  computeMonth,
+  divideHalfUp,
+  monthBounds,
+  type MonthBooking,
+  type MonthExpense,
+  type MonthFigures,
+} from './monthly.js';
 
 type PlanInForce = { id: string; name: string; managementFeeBps: number } | null;
 
@@ -163,8 +170,17 @@ export class ReportsService {
   }
 }
 
-/** Drops the internal parts of avg. nightly earnings before responding. */
-function strip<T extends { completeNights: number; completeGrossCents: number }>(f: T) {
-  const { completeNights: _n, completeGrossCents: _g, ...rest } = f;
+/** Drops the internal parts (avg. nightly earnings inputs, chart series used by the dashboard) before responding. */
+function strip<T extends MonthFigures>(f: T) {
+  const {
+    completeNights: _n,
+    completeGrossCents: _g,
+    grossByStay: _s,
+    bookedByDay: _b,
+    unavailableByDay: _u,
+    nightlyLowCents: _l,
+    nightlyHighCents: _h,
+    ...rest
+  } = f;
   return rest;
 }

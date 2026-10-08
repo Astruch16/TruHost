@@ -279,6 +279,128 @@
   }
 }
 
+/* Empty state illustrations (components/illustrations). Keyframes and classes copied from
+   docs/design/EmptyIcons.dc.html, including switching them off under reduced motion. */
+@keyframes ei-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes ei-pop {
+  0%,
+  60%,
+  100% {
+    transform: translate(0, 0);
+  }
+  75%,
+  88% {
+    transform: translate(2px, -2px);
+  }
+}
+@keyframes ei-grow {
+  0% {
+    transform: scaleX(0);
+  }
+  30%,
+  80% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+@keyframes ei-stamp {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  78% {
+    transform: scale(1.12);
+  }
+  86% {
+    transform: scale(0.97);
+  }
+}
+@keyframes ei-peek {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45%,
+  60% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes ei-glow {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  45% {
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.7;
+  }
+}
+@keyframes ei-twinkle {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+.ei-float {
+  animation: ei-float 3.6s ease-in-out infinite;
+}
+.ei-pop {
+  animation: ei-pop 4.2s ease-in-out infinite;
+}
+.ei-grow {
+  animation: ei-grow 4.5s cubic-bezier(0.3, 0.7, 0.2, 1) infinite;
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+}
+.ei-stamp {
+  animation: ei-stamp 3.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.ei-peek {
+  animation: ei-peek 4s ease-in-out infinite;
+}
+.ei-glow {
+  animation: ei-glow 3.2s ease-in-out infinite;
+}
+.ei-twinkle {
+  animation: ei-twinkle 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ei-float,
+  .ei-pop,
+  .ei-grow,
+  .ei-stamp,
+  .ei-peek,
+  .ei-glow,
+  .ei-twinkle {
+    animation: none !important;
+  }
+}
+
 /* Sidebar foot: show the scene only with room for it, and the tagline only with room for both (no overlap with
    the nav, whatever the viewport height or the number of nav items). */
 .sidebar-foot {
