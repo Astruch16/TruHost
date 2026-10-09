@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import {
   GET_TTL_SECONDS,
@@ -74,6 +74,12 @@ export class LocalStorage implements FileStorage {
     if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
     if (Number(params.exp) < Math.floor(Date.now() / 1000)) return null;
     return params;
+  }
+
+  async delete(key: string): Promise<void> {
+    const path = this.pathFor(key);
+    await rm(path, { force: true });
+    await rm(`${path}.meta.json`, { force: true });
   }
 
   async write(key: string, body: Buffer, meta: StoredMeta): Promise<void> {

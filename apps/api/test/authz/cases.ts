@@ -114,6 +114,19 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
   {
+    route: 'GET /v1/properties/:id/deletion',
+    path: (w) => `/v1/properties/${w.propertyA.id}/deletion`,
+    allow: ADMIN,
+  },
+  {
+    route: 'DELETE /v1/properties/:id',
+    path: (w) => `/v1/properties/${w.propertyA.id}`,
+    // The fixture property has bookings, expenses and receipts, so even an admin can't delete it.
+    allow: ADMIN,
+    adminGets: 409,
+    mutates: true,
+  },
+  {
     route: 'PUT /v1/properties/:id/cover-photo',
     path: (w) => `/v1/properties/${w.propertyA.id}/cover-photo`,
     // The fixture photo is already attached, so even an admin can't reuse its files.

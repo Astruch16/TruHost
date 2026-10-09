@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Archive, ArrowDown, ArrowUp, Plus, UserMinus } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, Pencil, Plus, Trash2, UserMinus } from 'lucide-react';
 import { CoverPhotoCard } from '../../../../components/cover-photo-card';
-import { PropertyForm } from '../../../../components/property-form';
+import { DeletePropertyDialog } from '../../../../components/delete-property-dialog';
+import { PropertyDetailsCard } from '../../../../components/property-details-card';
+import { PropertyDialog } from '../../../../components/property-dialog';
 import { ErrorAlert } from '../../../../components/ui/alert';
 import { Button } from '../../../../components/ui/button';
 import { Card } from '../../../../components/ui/card';
@@ -18,7 +20,6 @@ import { LoadingBlock } from '../../../../components/ui/skeleton';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../../components/ui/table';
 import { useApi } from '../../../../lib/api-context';
 import { formatBps, ROOM_TYPES, titleCase } from '../../../../lib/format';
-import type { PropertyFormValues } from '../../../../lib/property-values';
 import { queries } from '../../../../lib/queries';
 
 export const Route = createFileRoute('/_app/admin/properties/$propertyId')({
@@ -31,11 +32,9 @@ function AdminProperty() {
   const qc = useQueryClient();
   const [confirmArchive, setConfirmArchive] = useState(false);
   const property = useQuery(queries.property(api, propertyId));
-  const update = useMutation({
-    mutationFn: (body: PropertyFormValues) =>
-      unwrap(api.PATCH('/v1/properties/{id}', { params: { path: { id: propertyId } }, body })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['properties'] }),
-  });
+  const navigate = useNavigate();
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const archive = useMutation({
     mutationFn: () => unwrap(api.POST('/v1/properties/{id}/archive', { params: { path: { id: propertyId } } })),
     onSuccess: async () => {
@@ -55,13 +54,20 @@ function AdminProperty() {
         title={p.name}
         description={`${p.addressLine1}, ${p.city}`}
         actions={
-          p.archivedAt ? (
-            <Pill tone="neutral">Archived</Pill>
-          ) : (
-            <Button variant="danger" onClick={() => setConfirmArchive(true)}>
-              <Archive aria-hidden className="size-4" /> Archive
+          <>
+            {p.archivedAt && <Pill tone="neutral">Archived</Pill>}
+            <Button variant="secondary" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="size-4" /> Edit details
             </Button>
-          )
+            {!p.archivedAt && (
+              <Button variant="secondary" onClick={() => setConfirmArchive(true)}>
+                <Archive aria-hidden className="size-4" /> Archive
+              </Button>
+            )}
+            <Button variant="danger" onClick={() => setDeleting(true)}>
+              <Trash2 aria-hidden className="size-4" /> Delete
+            </Button>
+          </>
         }
       />
       <ConfirmDialog
@@ -75,23 +81,18 @@ function AdminProperty() {
         error={archive.error}
         onConfirm={() => archive.mutate()}
       />
+      <PropertyDialog property={p} open={editing} onOpenChange={setEditing} />
+      <DeletePropertyDialog
+        property={p}
+        open={deleting}
+        onOpenChange={setDeleting}
+        onArchive={() => setConfirmArchive(true)}
+        onDeleted={() => void navigate({ to: '/admin/properties', replace: true })}
+      />
       <div className="flex flex-col gap-6">
         <div className="grid items-start gap-6 @[68.75rem]/content:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <CoverPhotoCard property={p} />
-          <Card title="Details">
-            <PropertyForm
-              key={p.id}
-              initial={{
-                ...p,
-                defaultCleanerPayCents: p.defaultCleanerPayCents ?? 0,
-                standardCleaningFeeCents: p.standardCleaningFeeCents ?? 0,
-              }}
-              submitLabel={update.isSuccess && !update.isPending ? 'Saved' : 'Save changes'}
-              pending={update.isPending}
-              error={update.error}
-              onSubmit={(v) => update.mutate(v)}
-            />
-          </Card>
+          <PropertyDetailsCard property={p} onEdit={() => setEditing(true)} />
         </div>
         <div className="grid gap-6 @4xl/content:grid-cols-2">
           <RoomsCard propertyId={propertyId} />

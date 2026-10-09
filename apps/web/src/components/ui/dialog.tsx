@@ -23,7 +23,7 @@ export function Dialog({
   description?: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -36,6 +36,7 @@ export function Dialog({
             size === 'sm' && 'max-w-md',
             size === 'md' && 'max-w-lg',
             size === 'lg' && 'max-w-2xl',
+            size === 'xl' && 'max-w-3xl',
           )}
           {...(description ? {} : { 'aria-describedby': undefined })}
         >

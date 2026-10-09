@@ -4,7 +4,7 @@ import type { createProperty, SetCoverPhoto, updateProperty } from '@truhost/sha
 import { AccessService } from '../access/access.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { Actor } from '../auth/actor.js';
-import { notFound, unprocessable } from '../common/problem.js';
+import { notFound, ProblemException, unprocessable } from '../common/problem.js';
 import { FilesService } from '../files/files.service.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -122,6 +122,75 @@ export class PropertiesService {
     });
   }
 
+  /** What stands in the way of deleting a property: its financial records (any, even cancelled or voided). */
+  async deletion(actor: Actor, id: string) {
+    this.access.assert(actor, 'property:write', id, 'Property');
+    if (!(await this.prisma.property.count({ where: { id } }))) throw notFound('Property');
+    return this.blockers(this.prisma, id);
+  }
+
+  /**
+   * Deletes a property that has no financial records, with everything that belongs to it: rooms, memberships,
+   * plan history, photos and their stored files. A property with bookings, expenses or receipts can't be deleted
+   * (it is archived instead, so the records are kept). The audit log keeps a record of the deletion.
+   */
+  async delete(actor: Actor, id: string) {
+    this.access.assert(actor, 'property:write', id, 'Property');
+    const objectKeys = await this.prisma.$transaction(async (tx) => {
+      // Lock the property so no booking or expense can be added to it while it is being deleted.
+      const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "Property" WHERE id = ${id}::uuid FOR UPDATE`;
+      if (locked.length === 0) throw notFound('Property');
+      const blockers = await this.blockers(tx, id);
+      if (!blockers.allowed) {
+        throw new ProblemException({
+          status: 409,
+          code: 'PROPERTY_HAS_RECORDS',
+          detail:
+            'This property has bookings, expenses or receipts, which must be kept. Archive it instead to hide it everywhere.',
+        });
+      }
+      const before = await tx.property.findUniqueOrThrow({ where: { id } });
+      const files = await tx.storedFile.findMany({ where: { propertyId: id }, select: { objectKey: true } });
+
+      // Photos and their files are protected rows; the guards let this transaction remove this property's only.
+      await tx.$executeRaw`SELECT set_config('truhost.deleting_property', ${id}, true)`;
+      await tx.property.update({ where: { id }, data: { coverPhotoId: null, defaultCleanerId: null } });
+      await tx.propertyPhoto.deleteMany({ where: { propertyId: id } });
+      await tx.storedFile.deleteMany({ where: { propertyId: id } });
+      await tx.room.deleteMany({ where: { propertyId: id } });
+      await tx.membership.deleteMany({ where: { propertyId: id } });
+      await tx.propertyPlan.deleteMany({ where: { propertyId: id } });
+      await tx.property.delete({ where: { id } });
+
+      await this.audit.record(tx, actor, {
+        action: 'property.delete',
+        entityType: 'Property',
+        entityId: id,
+        propertyId: id,
+        before: {
+          name: before.name,
+          addressLine1: before.addressLine1,
+          city: before.city,
+          postalCode: before.postalCode,
+          files: files.length,
+        },
+        after: null,
+      });
+      return files.map((f) => f.objectKey);
+    });
+    // Rows first, then storage: if removing a file fails, nothing points at it any more.
+    await this.files.deleteObjects(objectKeys);
+  }
+
+  private async blockers(db: Pick<PrismaService, 'booking' | 'expense' | 'receipt'>, id: string) {
+    const [bookings, expenses, receipts] = await Promise.all([
+      db.booking.count({ where: { propertyId: id } }),
+      db.expense.count({ where: { propertyId: id } }),
+      db.receipt.count({ where: { propertyId: id } }),
+    ]);
+    return { allowed: bookings + expenses + receipts === 0, bookings, expenses, receipts };
+  }
+
   /**
    * Makes two fresh uploads (large and card renditions) the property's cover. The previous photo stays as history;
    * both files are verified against storage in the same transaction.
@@ -194,6 +263,14 @@ export class PropertiesService {
       checkOutTime: p.checkOutTime,
       provincialRegistrationNumber: p.provincialRegistrationNumber,
       businessLicenceNumber: p.businessLicenceNumber,
+      description: p.description,
+      bedrooms: p.bedrooms,
+      bathrooms: p.bathrooms,
+      halfBathrooms: p.halfBathrooms,
+      maxGuests: p.maxGuests,
+      airbnbUrl: p.airbnbUrl,
+      vrboUrl: p.vrboUrl,
+      bookingComUrl: p.bookingComUrl,
       archivedAt: p.archivedAt,
       coverPhoto: p.coverPhoto ? await this.files.photoLinks(p.coverPhoto) : null,
       ...(this.access.can(actor, 'property:readAdminFields', p.id)

@@ -174,10 +174,26 @@ export interface paths {
     get: operations['Properties_get'];
     put?: never;
     post?: never;
-    delete?: never;
+    delete: operations['Properties_remove'];
     options?: never;
     head?: never;
     patch: operations['Properties_update'];
+    trace?: never;
+  };
+  '/v1/properties/{id}/deletion': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Properties_deletion'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   '/v1/properties/{id}/archive': {
@@ -1156,6 +1172,14 @@ export interface operations {
               /** Format: uuid */
               id: string;
               name: string;
+              description: string | null;
+              bedrooms: number | null;
+              bathrooms: number | null;
+              halfBathrooms: number | null;
+              maxGuests: number | null;
+              airbnbUrl: string | null;
+              vrboUrl: string | null;
+              bookingComUrl: string | null;
               addressLine1: string;
               addressLine2: string | null;
               city: string;
@@ -1200,6 +1224,22 @@ export interface operations {
       content: {
         'application/json': {
           name: string;
+          /** @default null */
+          description?: string | null;
+          /** @default null */
+          bedrooms?: number | null;
+          /** @default null */
+          bathrooms?: number | null;
+          /** @default null */
+          halfBathrooms?: number | null;
+          /** @default null */
+          maxGuests?: number | null;
+          /** @default null */
+          airbnbUrl?: string | null;
+          /** @default null */
+          vrboUrl?: string | null;
+          /** @default null */
+          bookingComUrl?: string | null;
           addressLine1: string;
           /** @default null */
           addressLine2?: string | null;
@@ -1234,6 +1274,14 @@ export interface operations {
             /** Format: uuid */
             id: string;
             name: string;
+            description: string | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            halfBathrooms: number | null;
+            maxGuests: number | null;
+            airbnbUrl: string | null;
+            vrboUrl: string | null;
+            bookingComUrl: string | null;
             addressLine1: string;
             addressLine2: string | null;
             city: string;
@@ -1284,6 +1332,14 @@ export interface operations {
             /** Format: uuid */
             id: string;
             name: string;
+            description: string | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            halfBathrooms: number | null;
+            maxGuests: number | null;
+            airbnbUrl: string | null;
+            vrboUrl: string | null;
+            bookingComUrl: string | null;
             addressLine1: string;
             addressLine2: string | null;
             city: string;
@@ -1314,6 +1370,25 @@ export interface operations {
       };
     };
   };
+  Properties_remove: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   Properties_update: {
     parameters: {
       query?: never;
@@ -1327,6 +1402,14 @@ export interface operations {
       content: {
         'application/json': {
           name?: string;
+          description?: string | null;
+          bedrooms?: number | null;
+          bathrooms?: number | null;
+          halfBathrooms?: number | null;
+          maxGuests?: number | null;
+          airbnbUrl?: string | null;
+          vrboUrl?: string | null;
+          bookingComUrl?: string | null;
           addressLine1?: string;
           addressLine2?: string | null;
           city?: string;
@@ -1354,6 +1437,14 @@ export interface operations {
             /** Format: uuid */
             id: string;
             name: string;
+            description: string | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            halfBathrooms: number | null;
+            maxGuests: number | null;
+            airbnbUrl: string | null;
+            vrboUrl: string | null;
+            bookingComUrl: string | null;
             addressLine1: string;
             addressLine2: string | null;
             city: string;
@@ -1384,6 +1475,32 @@ export interface operations {
       };
     };
   };
+  Properties_deletion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            allowed: boolean;
+            bookings: number;
+            expenses: number;
+            receipts: number;
+          };
+        };
+      };
+    };
+  };
   Properties_archive: {
     parameters: {
       query?: never;
@@ -1404,6 +1521,14 @@ export interface operations {
             /** Format: uuid */
             id: string;
             name: string;
+            description: string | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            halfBathrooms: number | null;
+            maxGuests: number | null;
+            airbnbUrl: string | null;
+            vrboUrl: string | null;
+            bookingComUrl: string | null;
             addressLine1: string;
             addressLine2: string | null;
             city: string;
@@ -1463,6 +1588,14 @@ export interface operations {
             /** Format: uuid */
             id: string;
             name: string;
+            description: string | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            halfBathrooms: number | null;
+            maxGuests: number | null;
+            airbnbUrl: string | null;
+            vrboUrl: string | null;
+            bookingComUrl: string | null;
             addressLine1: string;
             addressLine2: string | null;
             city: string;
@@ -1513,6 +1646,14 @@ export interface operations {
             /** Format: uuid */
             id: string;
             name: string;
+            description: string | null;
+            bedrooms: number | null;
+            bathrooms: number | null;
+            halfBathrooms: number | null;
+            maxGuests: number | null;
+            airbnbUrl: string | null;
+            vrboUrl: string | null;
+            bookingComUrl: string | null;
             addressLine1: string;
             addressLine2: string | null;
             city: string;
