@@ -11,6 +11,7 @@ import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
+import { DatePicker } from './ui/date-picker';
 import { Input } from './ui/input';
 import { Select } from './ui/select';
 
@@ -112,7 +113,7 @@ export function ExpenseDialog({
           </Field>
         )}
         <Field label="Purchase date" error={errors.incurredOn} hint="The date on the receipt." required>
-          <Input type="date" value={v.incurredOn} onChange={set('incurredOn')} />
+          <DatePicker value={v.incurredOn} onChange={(incurredOn) => setV({ ...v, incurredOn })} />
         </Field>
         <Field label="Amount ($)" error={amountError ?? errors.amountCents} hint="Total paid, including tax." required>
           <Input value={v.amount} onChange={set('amount')} inputMode="decimal" className="figure" />

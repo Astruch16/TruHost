@@ -11,6 +11,7 @@ import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
+import { DatePicker } from './ui/date-picker';
 import { Input } from './ui/input';
 import { Select } from './ui/select';
 
@@ -90,7 +91,7 @@ export function ReceiptDialog({
           />
         </Field>
         <Field label="Receipt date" error={errors.receiptDate} required>
-          <Input type="date" value={receiptDate} onChange={(e) => setReceiptDate(e.target.value)} />
+          <DatePicker value={receiptDate} onChange={setReceiptDate} />
         </Field>
         <Field
           label="Expense"

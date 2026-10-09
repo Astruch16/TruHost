@@ -23,7 +23,11 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { ConfirmDialog, Dialog } from '../../components/ui/dialog';
 import { EmptyState } from '../../components/ui/empty-state';
+import { DatePicker } from '../../components/ui/date-picker';
 import { Field } from '../../components/ui/field';
+import { MonthPicker } from '../../components/ui/month-picker';
+import { MonthStepper } from '../../components/ui/month-stepper';
+import { addDays } from '../../lib/dates';
 import { Input, Textarea } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { PageHeader } from '../../components/ui/page-header';
@@ -124,6 +128,9 @@ function StyleGuide() {
   const [guide, setGuide] = useState<GuideCharacter>('sage');
   const [propertyDialog, setPropertyDialog] = useState<'new' | 'edit' | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<'allowed' | 'blocked' | null>(null);
+  const [stay, setStay] = useState({ checkIn: '2026-10-14', checkOut: '2026-10-18' });
+  const [purchased, setPurchased] = useState('');
+  const [startMonth, setStartMonth] = useState('2026-11');
   const nav = navItems({ staffRole: 'ADMIN', memberships: [{}] }).map((item, i) =>
     i === 3 ? { ...item, badge: 2 } : item,
   );
@@ -299,6 +306,45 @@ function StyleGuide() {
               </div>
             </Card>
           </div>
+
+          <Card
+            title="Date pickers"
+            description="Every date and month field: a stay (check-out shades the nights), a single date, a month, and the month stepper."
+          >
+            <div className="grid gap-4 @xl/content:grid-cols-2 @4xl/content:grid-cols-4">
+              <Field label="Check-in" required>
+                <DatePicker
+                  value={stay.checkIn}
+                  onChange={(checkIn) =>
+                    setStay({
+                      checkIn,
+                      checkOut:
+                        stay.checkOut && checkIn && stay.checkOut <= checkIn ? addDays(checkIn, 1) : stay.checkOut,
+                    })
+                  }
+                  placeholder="Choose check-in"
+                />
+              </Field>
+              <Field label="Check-out" required>
+                <DatePicker
+                  value={stay.checkOut}
+                  onChange={(checkOut) => setStay({ ...stay, checkOut })}
+                  rangeStart={stay.checkIn || undefined}
+                  min={stay.checkIn ? addDays(stay.checkIn, 1) : undefined}
+                  placeholder="Choose check-out"
+                />
+              </Field>
+              <Field label="Purchase date" hint="The date on the receipt.">
+                <DatePicker value={purchased} onChange={setPurchased} clearable />
+              </Field>
+              <Field label="Starting month">
+                <MonthPicker value={startMonth} onChange={setStartMonth} />
+              </Field>
+            </div>
+            <div className="mt-4">
+              <MonthStepper month={startMonth} onChange={setStartMonth} />
+            </div>
+          </Card>
 
           <Card
             title="KPI cards"

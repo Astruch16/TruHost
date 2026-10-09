@@ -7,3 +7,4 @@ apps/api/prisma/migrations
 apps/web/src/routeTree.gen.ts
 AGENTS.md
 docs/design/*.html
+apps/api/.storage
