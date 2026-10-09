@@ -43,12 +43,6 @@ export const Route = createFileRoute('/dev/ui')({
   component: StyleGuide,
 });
 
-const sampleProperties = [
-  { id: 'a', name: 'Cedar Suite', city: 'Chilliwack', province: 'BC' },
-  { id: 'b', name: 'Lakeview Cabin', city: 'Cultus Lake', province: 'BC' },
-  { id: 'c', name: 'Garden Loft', city: 'Chilliwack', province: 'BC' },
-];
-
 /** Dev-only stand-in for an uploaded cover photo (an illustration, not a real property). */
 const SAMPLE_PHOTO = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
 <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc3e4"/><stop offset="1" stop-color="#e8f1f6"/></linearGradient></defs>
@@ -58,6 +52,23 @@ const SAMPLE_PHOTO = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http:
 <rect x="250" y="235" width="140" height="80" fill="#8a5a3c"/><path d="M235 240 L320 185 L405 240Z" fill="#5a3a28"/>
 <rect x="305" y="270" width="30" height="45" fill="#f3e7c4"/><rect x="0" y="310" width="640" height="50" fill="#2f5548"/>
 </svg>`)}`;
+
+/** A second dev-only illustration: a lake cabin at sunset. */
+const SAMPLE_PHOTO_2 = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+<defs><linearGradient id="d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3b27a"/><stop offset="1" stop-color="#f7e2c4"/></linearGradient></defs>
+<rect width="640" height="360" fill="url(#d)"/><circle cx="470" cy="150" r="46" fill="#fbe3a6"/>
+<path d="M0 210 L150 130 L260 190 L380 120 L520 200 L640 160 V360 H0Z" fill="#8a6f86"/>
+<rect x="0" y="235" width="640" height="125" fill="#5d8aa8"/><path d="M0 250 H640" stroke="#f7e2c4" stroke-opacity=".5" stroke-width="3"/>
+<rect x="90" y="190" width="120" height="60" fill="#e8dcc8"/><path d="M78 195 L150 150 L222 195Z" fill="#5a3a28"/>
+<rect x="138" y="215" width="24" height="35" fill="#5a3a28"/><rect x="0" y="300" width="640" height="60" fill="#3f6b5a"/>
+</svg>`)}`;
+
+const sampleProperties = [
+  { id: 'a', name: 'Cedar Suite', city: 'Chilliwack', province: 'BC', photoUrl: SAMPLE_PHOTO },
+  { id: 'b', name: 'Lakeview Cabin', city: 'Cultus Lake', province: 'BC', photoUrl: null },
+  { id: 'c', name: 'Garden Loft', city: 'Chilliwack', province: 'BC', photoUrl: SAMPLE_PHOTO_2 },
+  { id: 'd', name: 'Harbour View', city: 'Harrison Hot Springs', province: 'BC', photoUrl: null },
+];
 
 const sampleProperty = {
   id: '00000000-0000-7000-8000-000000000001',
