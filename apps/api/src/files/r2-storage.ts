@@ -1,4 +1,11 @@
-import { GetObjectCommand, HeadObjectCommand, NotFound, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  NotFound,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   base64ToHex,
@@ -70,6 +77,11 @@ export class R2Storage implements FileStorage {
       if (e instanceof NotFound || (e as { name?: string }).name === 'NotFound') return null;
       throw e;
     }
+  }
+
+  async delete(key: string): Promise<void> {
+    // S3 semantics: deleting a missing key succeeds.
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
 
   async presignGet(key: string, o: { contentType: string; filename: string | null; window?: LinkWindow }) {

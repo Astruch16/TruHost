@@ -98,6 +98,16 @@ export class FilesService {
     return { id: photo.id, url: large.url, thumbUrl: thumb.url, expiresAt: large.expiresAt };
   }
 
+  /**
+   * Removes objects from storage after their rows are gone (a deleted property). Best effort: a failure is logged
+   * and the rest carry on, since the rows (the source of truth) are already deleted and nothing can reach them.
+   */
+  async deleteObjects(keys: string[]) {
+    const results = await Promise.allSettled(keys.map((key) => this.storage.delete(key)));
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    if (failed > 0) this.logger.error(`Could not delete ${failed} of ${keys.length} stored objects; they are orphaned`);
+  }
+
   /** Short-lived viewing link. Access is decided by what the file is attached to. */
   async viewUrl(actor: Actor, fileId: string) {
     const file = await this.prisma.storedFile.findUnique({

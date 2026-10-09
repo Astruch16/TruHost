@@ -3,6 +3,9 @@ import { createFileRoute, notFound } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { ApiError } from '@truhost/api-client';
 import { CoverPhotoCard } from '../../components/cover-photo-card';
+import { DeletePropertyDialog } from '../../components/delete-property-dialog';
+import { PropertyDetailsCard } from '../../components/property-details-card';
+import { PropertyDialog } from '../../components/property-dialog';
 import { KpiCard, KpiMoney, KpiOf } from '../../components/dashboard/kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from '../../components/dashboard/kpi-charts';
 import { AllClearIllustration } from '../../components/illustrations/all-clear';
@@ -82,10 +85,20 @@ const sampleProperty = {
   timeZone: 'America/Vancouver',
   checkInTime: '16:00',
   checkOutTime: '11:00',
-  provincialRegistrationNumber: null,
   businessLicenceNumber: null,
   archivedAt: null,
   coverPhoto: { id: 'photo', url: SAMPLE_PHOTO, thumbUrl: SAMPLE_PHOTO, expiresAt: '2026-11-20T20:05:00Z' },
+  description: 'Ground-floor suite with a private patio, ten minutes from the river trails.',
+  bedrooms: 2,
+  bathrooms: 1,
+  halfBathrooms: 1,
+  maxGuests: 4,
+  airbnbUrl: 'https://www.airbnb.ca/rooms/0000000',
+  vrboUrl: null,
+  bookingComUrl: 'https://www.booking.com/hotel/ca/sample.html',
+  provincialRegistrationNumber: 'H123456789',
+  standardCleaningFeeCents: 9_500,
+  defaultCleanerPayCents: 7_000,
 };
 
 /** The board's sample month: 17 of 31 nights booked. */
@@ -109,6 +122,8 @@ function StyleGuide() {
   const [confirm, setConfirm] = useState(false);
   const [role, setRole] = useState('CLEANER');
   const [guide, setGuide] = useState<GuideCharacter>('sage');
+  const [propertyDialog, setPropertyDialog] = useState<'new' | 'edit' | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<'allowed' | 'blocked' | null>(null);
   const nav = navItems({ staffRole: 'ADMIN', memberships: [{}] }).map((item, i) =>
     i === 3 ? { ...item, badge: 2 } : item,
   );
@@ -404,6 +419,7 @@ function StyleGuide() {
                 figures={{ occupancyBps: 7200, grossCents: 431_000 }}
                 index={0}
                 revenueLabel="Gross, Oct"
+                onEdit={() => setPropertyDialog('edit')}
               />
               <PropertyCard
                 property={{
@@ -445,6 +461,46 @@ function StyleGuide() {
                 revenueLabel="Gross, Oct"
               />
             </div>
+          </Card>
+
+          <Card
+            title="Property screens"
+            description="Details summary, the add/edit form and both delete outcomes (sample data, nothing is saved)."
+          >
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => setPropertyDialog('new')}>
+                  New property form
+                </Button>
+                <Button variant="secondary" onClick={() => setPropertyDialog('edit')}>
+                  Edit property form
+                </Button>
+                <Button variant="danger" onClick={() => setDeleteDialog('allowed')}>
+                  Delete (no records)
+                </Button>
+                <Button variant="danger" onClick={() => setDeleteDialog('blocked')}>
+                  Delete (has records)
+                </Button>
+              </div>
+              <PropertyDetailsCard property={sampleProperty} onEdit={() => setPropertyDialog('edit')} />
+            </div>
+            <PropertyDialog
+              property={propertyDialog === 'edit' ? sampleProperty : null}
+              open={propertyDialog !== null}
+              onOpenChange={(open) => !open && setPropertyDialog(null)}
+            />
+            <DeletePropertyDialog
+              property={sampleProperty}
+              open={deleteDialog !== null}
+              onOpenChange={(open) => !open && setDeleteDialog(null)}
+              onArchive={() => undefined}
+              onDeleted={() => setDeleteDialog(null)}
+              preview={
+                deleteDialog === 'blocked'
+                  ? { allowed: false, bookings: 14, expenses: 6, receipts: 5 }
+                  : { allowed: true, bookings: 0, expenses: 0, receipts: 0 }
+              }
+            />
           </Card>
 
           <div className="grid gap-5 lg:grid-cols-2">

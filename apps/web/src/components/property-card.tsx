@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { Pencil } from 'lucide-react';
 import { cx } from '../lib/cx';
 import { monogram, TINTS } from '../lib/dashboard-format';
 import { formatOccupancy } from '../lib/format';
@@ -16,6 +17,7 @@ export function PropertyCard({
   index,
   revenueLabel,
   figures,
+  onEdit,
 }: {
   property: {
     id: string;
@@ -31,11 +33,13 @@ export function PropertyCard({
   revenueLabel: string;
   /** The month's figures from the reporting module; `'loading'` shows placeholders, null shows dashes. */
   figures: { occupancyBps: number | null; grossCents: number } | 'loading' | null;
+  /** Shows an Edit button on the photo (the properties page). */
+  onEdit?: () => void;
 }) {
   const tint = TINTS[index % TINTS.length]!;
   const figure = (value: string) =>
     figures === 'loading' ? <Skeleton className="mt-1 h-6 w-16" /> : <span className="figure">{value}</span>;
-  return (
+  const card = (
     <Link
       to="/admin/properties/$propertyId"
       params={{ propertyId: property.id }}
@@ -83,5 +87,20 @@ export function PropertyCard({
         </dl>
       </div>
     </Link>
+  );
+  if (!onEdit) return card;
+  // The button sits beside the link (not inside it) so each is its own control.
+  return (
+    <div className="group/card relative h-full">
+      {card}
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={`Edit ${property.name}`}
+        className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-ink shadow-sm backdrop-blur-sm transition-[opacity,background-color] hover:bg-white focus-visible:opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 sm:focus-visible:opacity-100"
+      >
+        <Pencil aria-hidden className="size-3.5" /> Edit
+      </button>
+    </div>
   );
 }

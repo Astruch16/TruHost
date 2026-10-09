@@ -1,6 +1,14 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { createProperty, page, property, propertyListQuery, setCoverPhoto, updateProperty } from '@truhost/shared';
+import {
+  createProperty,
+  page,
+  property,
+  propertyDeletion,
+  propertyListQuery,
+  setCoverPhoto,
+  updateProperty,
+} from '@truhost/shared';
 import type { z } from 'zod';
 import { CurrentActor, type Actor } from '../auth/actor.js';
 import { uuidParam } from '../common/params.js';
@@ -41,6 +49,19 @@ export class PropertiesController {
     @Body(new ZodPipe(updateProperty)) body: z.output<typeof updateProperty>,
   ) {
     return this.properties.update(actor, id, body);
+  }
+
+  @Get(':id/deletion')
+  @ZodResponse(propertyDeletion)
+  deletion(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
+    return this.properties.deletion(actor, id);
+  }
+
+  /** Only a property with no bookings, expenses or receipts; anything else is archived instead (409). */
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
+    await this.properties.delete(actor, id);
   }
 
   @Post(':id/archive')

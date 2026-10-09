@@ -18,6 +18,8 @@ export interface FileStorage {
   /** A short-lived PUT that only accepts exactly this type, length and SHA-256. */
   presignPut(o: { key: string; contentType: string; sizeBytes: number; sha256Hex: string }): Promise<PutTarget>;
   head(key: string): Promise<ObjectInfo | null>;
+  /** Removes an object. Missing objects are not an error. */
+  delete(key: string): Promise<void>;
   /**
    * A short-lived GET for viewing. With `window`, the link is signed at the window's start instead of now, so every
    * request in that window gets the identical URL and the browser can cache the image (see `linkWindow`).

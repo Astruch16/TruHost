@@ -126,6 +126,17 @@ model Property {
   id                           String         @id @default(uuid(7)) @db.Uuid
   /// Internal nickname shown in the UI, e.g. "Kits 2BR".
   name                         String
+  /// Short description for the team (not a listing description). Up to 1000 characters.
+  description                  String?
+  /// Layout. Null = not entered yet. Bathrooms count full and half bathrooms separately, as listings do.
+  bedrooms                     Int?
+  bathrooms                    Int?
+  halfBathrooms                Int?
+  maxGuests                    Int?
+  /// Public listing pages (https, on that platform's domain; checked in the API).
+  airbnbUrl                    String?
+  vrboUrl                      String?
+  bookingComUrl                String?
   addressLine1                 String
   addressLine2                 String?
   city                         String

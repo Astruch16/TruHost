@@ -22,6 +22,14 @@ export type PropertyPhotoLinks = z.infer<typeof propertyPhotoLinks>;
 export const property = z.object({
   id,
   name: z.string(),
+  description: z.string().nullable(),
+  bedrooms: z.number().int().nullable(),
+  bathrooms: z.number().int().nullable(),
+  halfBathrooms: z.number().int().nullable(),
+  maxGuests: z.number().int().nullable(),
+  airbnbUrl: z.string().nullable(),
+  vrboUrl: z.string().nullable(),
+  bookingComUrl: z.string().nullable(),
   addressLine1: z.string(),
   addressLine2: z.string().nullable(),
   city: z.string(),
@@ -44,8 +52,33 @@ export type Property = z.infer<typeof property>;
 
 /** Field rules without defaults. Defaults belong to create only: in zod 4, `.partial()` still
  * applies defaults, which would silently reset fields on every PATCH. */
+/** An https link to a listing on one platform (by its domain, including country domains such as airbnb.ca). */
+const listingUrl = (platform: string, host: RegExp) =>
+  z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => {
+      try {
+        const u = new URL(v);
+        return u.protocol === 'https:' && host.test(u.hostname);
+      } catch {
+        return false;
+      }
+    }, `Expected an https link to the ${platform} listing`)
+    .nullable();
+const count = (min: number, max: number) => z.number().int().min(min).max(max).nullable();
+
 const propertyFields = {
   name: text(100),
+  description: z.string().trim().max(1000).nullable(),
+  bedrooms: count(0, 50),
+  bathrooms: count(0, 50),
+  halfBathrooms: count(0, 20),
+  maxGuests: count(1, 100),
+  airbnbUrl: listingUrl('Airbnb', /(^|\.)airbnb\.[a-z]{2,3}(\.[a-z]{2})?$/),
+  vrboUrl: listingUrl('VRBO', /(^|\.)vrbo\.com$/),
+  bookingComUrl: listingUrl('Booking.com', /(^|\.)booking\.com$/),
   addressLine1: text(200),
   addressLine2: text(200).nullable(),
   city: text(100),
@@ -67,6 +100,14 @@ const propertyFields = {
 export const createProperty = z.object({
   ...propertyFields,
   addressLine2: propertyFields.addressLine2.default(null),
+  description: propertyFields.description.default(null),
+  bedrooms: propertyFields.bedrooms.default(null),
+  bathrooms: propertyFields.bathrooms.default(null),
+  halfBathrooms: propertyFields.halfBathrooms.default(null),
+  maxGuests: propertyFields.maxGuests.default(null),
+  airbnbUrl: propertyFields.airbnbUrl.default(null),
+  vrboUrl: propertyFields.vrboUrl.default(null),
+  bookingComUrl: propertyFields.bookingComUrl.default(null),
   province: propertyFields.province.default('BC'),
   timeZone: propertyFields.timeZone.default('America/Vancouver'),
   checkInTime: propertyFields.checkInTime.default('16:00'),
@@ -85,6 +126,18 @@ export type UpdateProperty = z.input<typeof updateProperty>;
 /** Make two verified uploads (purpose PROPERTY_PHOTO) the property's cover: large and card renditions. */
 export const setCoverPhoto = z.object({ fileId: id, thumbFileId: id });
 export type SetCoverPhoto = z.infer<typeof setCoverPhoto>;
+
+/**
+ * Whether a property can be deleted. Only one with no financial records can (no bookings, expenses or receipts,
+ * including cancelled or voided ones); any other is archived instead, so its records are kept.
+ */
+export const propertyDeletion = z.object({
+  allowed: z.boolean(),
+  bookings: z.number().int(),
+  expenses: z.number().int(),
+  receipts: z.number().int(),
+});
+export type PropertyDeletion = z.infer<typeof propertyDeletion>;
 
 export const propertyListQuery = z.object({
   includeArchived: z

@@ -1070,6 +1070,46 @@
                           "name": {
                             "type": "string"
                           },
+                          "description": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "bedrooms": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "bathrooms": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "halfBathrooms": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "maxGuests": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "airbnbUrl": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "vrboUrl": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "bookingComUrl": {
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "addressLine1": {
                             "type": "string"
                           },
@@ -1156,6 +1196,14 @@
                         "required": [
                           "id",
                           "name",
+                          "description",
+                          "bedrooms",
+                          "bathrooms",
+                          "halfBathrooms",
+                          "maxGuests",
+                          "airbnbUrl",
+                          "vrboUrl",
+                          "bookingComUrl",
                           "addressLine1",
                           "addressLine2",
                           "city",
@@ -1203,6 +1251,58 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 100
+                  },
+                  "description": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "bedrooms": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 50
+                  },
+                  "bathrooms": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 50
+                  },
+                  "halfBathrooms": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20
+                  },
+                  "maxGuests": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "airbnbUrl": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "vrboUrl": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "bookingComUrl": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
                   },
                   "addressLine1": {
                     "type": "string",
@@ -1293,6 +1393,46 @@
                     "name": {
                       "type": "string"
                     },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bedrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "halfBathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxGuests": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "airbnbUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vrboUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bookingComUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "addressLine1": {
                       "type": "string"
                     },
@@ -1379,6 +1519,14 @@
                   "required": [
                     "id",
                     "name",
+                    "description",
+                    "bedrooms",
+                    "bathrooms",
+                    "halfBathrooms",
+                    "maxGuests",
+                    "airbnbUrl",
+                    "vrboUrl",
+                    "bookingComUrl",
                     "addressLine1",
                     "addressLine2",
                     "city",
@@ -1431,6 +1579,46 @@
                     "name": {
                       "type": "string"
                     },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bedrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "halfBathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxGuests": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "airbnbUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vrboUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bookingComUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "addressLine1": {
                       "type": "string"
                     },
@@ -1517,6 +1705,14 @@
                   "required": [
                     "id",
                     "name",
+                    "description",
+                    "bedrooms",
+                    "bathrooms",
+                    "halfBathrooms",
+                    "maxGuests",
+                    "airbnbUrl",
+                    "vrboUrl",
+                    "bookingComUrl",
                     "addressLine1",
                     "addressLine2",
                     "city",
@@ -1562,6 +1758,50 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 100
+                  },
+                  "description": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "bedrooms": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 50
+                  },
+                  "bathrooms": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 50
+                  },
+                  "halfBathrooms": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20
+                  },
+                  "maxGuests": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "airbnbUrl": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "vrboUrl": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "bookingComUrl": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
                   },
                   "addressLine1": {
                     "type": "string",
@@ -1648,6 +1888,46 @@
                     "name": {
                       "type": "string"
                     },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bedrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "halfBathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxGuests": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "airbnbUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vrboUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bookingComUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "addressLine1": {
                       "type": "string"
                     },
@@ -1734,6 +2014,14 @@
                   "required": [
                     "id",
                     "name",
+                    "description",
+                    "bedrooms",
+                    "bathrooms",
+                    "halfBathrooms",
+                    "maxGuests",
+                    "airbnbUrl",
+                    "vrboUrl",
+                    "bookingComUrl",
                     "addressLine1",
                     "addressLine2",
                     "city",
@@ -1748,6 +2036,75 @@
                     "archivedAt",
                     "coverPhoto"
                   ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["properties"]
+      },
+      "delete": {
+        "operationId": "Properties_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["properties"]
+      }
+    },
+    "/v1/properties/{id}/deletion": {
+      "get": {
+        "operationId": "Properties_deletion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "allowed": {
+                      "type": "boolean"
+                    },
+                    "bookings": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "expenses": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "receipts": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": ["allowed", "bookings", "expenses", "receipts"],
                   "additionalProperties": false
                 }
               }
@@ -1786,6 +2143,46 @@
                     "name": {
                       "type": "string"
                     },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bedrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "halfBathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxGuests": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "airbnbUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vrboUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bookingComUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "addressLine1": {
                       "type": "string"
                     },
@@ -1872,6 +2269,14 @@
                   "required": [
                     "id",
                     "name",
+                    "description",
+                    "bedrooms",
+                    "bathrooms",
+                    "halfBathrooms",
+                    "maxGuests",
+                    "airbnbUrl",
+                    "vrboUrl",
+                    "bookingComUrl",
                     "addressLine1",
                     "addressLine2",
                     "city",
@@ -1947,6 +2352,46 @@
                     "name": {
                       "type": "string"
                     },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bedrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "halfBathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxGuests": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "airbnbUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vrboUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bookingComUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "addressLine1": {
                       "type": "string"
                     },
@@ -2033,6 +2478,14 @@
                   "required": [
                     "id",
                     "name",
+                    "description",
+                    "bedrooms",
+                    "bathrooms",
+                    "halfBathrooms",
+                    "maxGuests",
+                    "airbnbUrl",
+                    "vrboUrl",
+                    "bookingComUrl",
                     "addressLine1",
                     "addressLine2",
                     "city",
@@ -2083,6 +2536,46 @@
                     "name": {
                       "type": "string"
                     },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bedrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "bathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "halfBathrooms": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxGuests": {
+                      "nullable": true,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "airbnbUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "vrboUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "bookingComUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "addressLine1": {
                       "type": "string"
                     },
@@ -2169,6 +2662,14 @@
                   "required": [
                     "id",
                     "name",
+                    "description",
+                    "bedrooms",
+                    "bathrooms",
+                    "halfBathrooms",
+                    "maxGuests",
+                    "airbnbUrl",
+                    "vrboUrl",
+                    "bookingComUrl",
                     "addressLine1",
                     "addressLine2",
                     "city",
