@@ -7,6 +7,7 @@ import { ExpenseDialog } from '../../../components/expense-dialog';
 import { ReceiptDialog } from '../../../components/receipt-dialog';
 import { useApi } from '../../../lib/api-context';
 import { monthKey, monthRange } from '../../../lib/months';
+import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
 import { queries } from '../../../lib/queries';
 import { monthSearch, useScope } from '../../../lib/scope';
 
@@ -30,6 +31,15 @@ function Dashboard() {
   const properties = useQuery(queries.properties(api));
   const dash = useQuery(queries.dashboard(api, month, propertyId));
   const calendar = useQuery(queries.bookings(api, monthRange(month), propertyId ?? undefined));
+  usePrefetchAdjacentMonths(month, (m) => queries.dashboard(api, m, propertyId), dash.isSuccess);
+  usePrefetchAdjacentMonths(
+    month,
+    (m) => queries.bookings(api, monthRange(m), propertyId ?? undefined),
+    calendar.isSuccess,
+  );
+  // The month the calendar's stays are for: the previous one while the chosen month loads.
+  const [staysMonth, setStaysMonth] = useState(month);
+  if (calendar.data && !calendar.isPlaceholderData && staysMonth !== month) setStaysMonth(month);
   const propertyList = properties.data?.items ?? [];
 
   return (
@@ -42,10 +52,13 @@ function Dashboard() {
         scope={{ propertyId, name: propertyList.find((p) => p.id === propertyId)?.name ?? null }}
         properties={properties.data?.items}
         dashboard={dash.data}
+        dashboardUpdating={dash.isPlaceholderData}
         dashboardError={dash.error}
         onRetryDashboard={() => void dash.refetch()}
         retryingDashboard={dash.isFetching}
         stays={calendar.data?.items.filter((b) => b.status === 'CONFIRMED')}
+        staysMonth={calendar.isPlaceholderData ? staysMonth : month}
+        staysUpdating={calendar.isPlaceholderData}
         staysError={calendar.error}
         onRetryStays={() => void calendar.refetch()}
         retryingStays={calendar.isFetching}

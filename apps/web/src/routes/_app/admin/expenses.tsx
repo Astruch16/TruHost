@@ -22,6 +22,8 @@ import { categoryLabel } from '../../../lib/format';
 import { formatCents } from '../../../lib/money';
 import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
 import { queries } from '../../../lib/queries';
+import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
+import { updatingStyles } from '../../../lib/styles';
 import { monthSearch, useScope } from '../../../lib/scope';
 import { openFile } from '../../../lib/upload';
 
@@ -42,6 +44,11 @@ function Expenses() {
   const [actionError, setActionError] = useState<unknown>(null);
   const properties = useQuery(queries.properties(api));
   const expenses = useQuery(queries.expenses(api, monthRange(month), propertyId || undefined));
+  usePrefetchAdjacentMonths(
+    month,
+    (m) => queries.expenses(api, monthRange(m), propertyId || undefined),
+    expenses.isSuccess,
+  );
   const propertyList = properties.data?.items ?? [];
   const nameOf = (id: string) => propertyList.find((p) => p.id === id)?.name ?? '';
   const items = expenses.data?.items ?? [];
@@ -70,7 +77,7 @@ function Expenses() {
           <EmptyState title="Add a property first">
             Expenses belong to a property. Create one under Properties, then come back here.
           </EmptyState>
-        ) : expenses.isSuccess && items.length === 0 ? (
+        ) : expenses.isSuccess && !expenses.isPlaceholderData && items.length === 0 ? (
           <EmptyState
             title={`No expenses in ${monthLabel(month)}`}
             action={<Button onClick={() => setEditing('new')}>Add expense</Button>}
@@ -78,7 +85,10 @@ function Expenses() {
             Record each purchase with its receipt. Supply restocks are owner-borne.
           </EmptyState>
         ) : (
-          <Table>
+          <Table
+            aria-busy={expenses.isPlaceholderData || undefined}
+            className={updatingStyles(expenses.isPlaceholderData)}
+          >
             <THead>
               <tr>
                 <Th>Date</Th>

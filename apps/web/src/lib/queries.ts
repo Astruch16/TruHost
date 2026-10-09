@@ -1,5 +1,15 @@
-import { queryOptions } from '@tanstack/react-query';
+import { queryOptions, type QueryKey } from '@tanstack/react-query';
 import { unwrap, type ApiClient } from '@truhost/api-client';
+
+/**
+ * For reads by month: while another month loads, keep showing the one on screen (pages dim it) instead of falling
+ * back to skeletons, as long as it is for the same property or scope. `scopeOf` picks that out of a query key.
+ */
+function keepWhileSameScope(scopeOf: (key: QueryKey) => unknown) {
+  return <T>(previous: T | undefined, query: { queryKey: QueryKey } | undefined, key: QueryKey) =>
+    query && scopeOf(query.queryKey) === scopeOf(key) ? previous : undefined;
+}
+const rangeScope = (key: QueryKey) => (key[1] as { propertyId?: string | null }).propertyId ?? null;
 
 /**
  * Query definitions, one per API read. Keys are hierarchical so mutations can invalidate a whole
@@ -55,45 +65,63 @@ export const queries = {
       queryKey: ['properties', propertyId, 'plan'],
       queryFn: () => unwrap(api.GET('/v1/properties/{id}/plan', { params: { path: { id: propertyId } } })),
     }),
-  bookings: (api: ApiClient, range: { from: string; to: string }, propertyId?: string) =>
-    queryOptions({
-      queryKey: ['bookings', { ...range, propertyId: propertyId ?? null }],
+  bookings: (api: ApiClient, range: { from: string; to: string }, propertyId?: string) => {
+    const queryKey = ['bookings', { ...range, propertyId: propertyId ?? null }] as const;
+    return queryOptions({
+      queryKey,
       queryFn: () => unwrap(api.GET('/v1/bookings', { params: { query: { ...range, propertyId } } })),
-    }),
-  propertyBookings: (api: ApiClient, propertyId: string, range: { from: string; to: string }) =>
-    queryOptions({
-      queryKey: ['bookings', { ...range, propertyId }, 'property'],
+      placeholderData: (prev, q) => keepWhileSameScope(rangeScope)(prev, q, queryKey),
+    });
+  },
+  propertyBookings: (api: ApiClient, propertyId: string, range: { from: string; to: string }) => {
+    const queryKey = ['bookings', { ...range, propertyId }, 'property'] as const;
+    return queryOptions({
+      queryKey,
       queryFn: () =>
         unwrap(api.GET('/v1/properties/{id}/bookings', { params: { path: { id: propertyId }, query: range } })),
-    }),
-  expenses: (api: ApiClient, range: { from: string; to: string }, propertyId?: string) =>
-    queryOptions({
-      queryKey: ['expenses', { ...range, propertyId: propertyId ?? null }],
+      placeholderData: (prev, q) => keepWhileSameScope(rangeScope)(prev, q, queryKey),
+    });
+  },
+  expenses: (api: ApiClient, range: { from: string; to: string }, propertyId?: string) => {
+    const queryKey = ['expenses', { ...range, propertyId: propertyId ?? null }] as const;
+    return queryOptions({
+      queryKey,
       queryFn: () =>
         unwrap(api.GET('/v1/expenses', { params: { query: { ...range, propertyId, includeVoided: 'true' } } })),
-    }),
-  propertyExpenses: (api: ApiClient, propertyId: string, range: { from: string; to: string }) =>
-    queryOptions({
-      queryKey: ['expenses', { ...range, propertyId }, 'property'],
+      placeholderData: (prev, q) => keepWhileSameScope(rangeScope)(prev, q, queryKey),
+    });
+  },
+  propertyExpenses: (api: ApiClient, propertyId: string, range: { from: string; to: string }) => {
+    const queryKey = ['expenses', { ...range, propertyId }, 'property'] as const;
+    return queryOptions({
+      queryKey,
       queryFn: () =>
         unwrap(
           api.GET('/v1/properties/{id}/expenses', {
             params: { path: { id: propertyId }, query: { ...range, includeVoided: 'false' } },
           }),
         ),
-    }),
-  propertySummary: (api: ApiClient, propertyId: string, month: string) =>
-    queryOptions({
-      queryKey: ['summary', propertyId, month],
+      placeholderData: (prev, q) => keepWhileSameScope(rangeScope)(prev, q, queryKey),
+    });
+  },
+  propertySummary: (api: ApiClient, propertyId: string, month: string) => {
+    const queryKey = ['summary', propertyId, month] as const;
+    return queryOptions({
+      queryKey,
       queryFn: () =>
         unwrap(api.GET('/v1/properties/{id}/summary', { params: { path: { id: propertyId }, query: { month } } })),
-    }),
-  dashboard: (api: ApiClient, month: string, propertyId: string | null) =>
-    queryOptions({
-      queryKey: ['dashboard', month, propertyId],
+      placeholderData: (prev, q) => keepWhileSameScope((k) => k[1])(prev, q, queryKey),
+    });
+  },
+  dashboard: (api: ApiClient, month: string, propertyId: string | null) => {
+    const queryKey = ['dashboard', month, propertyId] as const;
+    return queryOptions({
+      queryKey,
       queryFn: () =>
         unwrap(api.GET('/v1/dashboard', { params: { query: { month, propertyId: propertyId ?? undefined } } })),
-    }),
+      placeholderData: (prev, q) => keepWhileSameScope((k) => k[2])(prev, q, queryKey),
+    });
+  },
   plans: (api: ApiClient) => queryOptions({ queryKey: ['plans'], queryFn: () => unwrap(api.GET('/v1/plans')) }),
   users: (api: ApiClient) =>
     queryOptions({

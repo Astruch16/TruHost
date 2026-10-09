@@ -13,6 +13,9 @@ import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../components
 import { useApi } from '../../../lib/api-context';
 import { formatCents } from '../../../lib/money';
 import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
+import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
+import { cx } from '../../../lib/cx';
+import { updatingStyles } from '../../../lib/styles';
 import { formatBps, formatOccupancy, kindLabel } from '../../../lib/format';
 import { queries } from '../../../lib/queries';
 import { openFile } from '../../../lib/upload';
@@ -111,6 +114,7 @@ function OwnerBookings({ propertyId }: { propertyId: string }) {
   const api = useApi();
   const [month, setMonth] = useState(monthKey);
   const bookings = useQuery(queries.propertyBookings(api, propertyId, monthRange(month)));
+  usePrefetchAdjacentMonths(month, (m) => queries.propertyBookings(api, propertyId, monthRange(m)), bookings.isSuccess);
   const items = bookings.data?.items ?? [];
   return (
     <Card
@@ -118,7 +122,7 @@ function OwnerBookings({ propertyId }: { propertyId: string }) {
       actions={<MonthStepper month={month} onChange={setMonth} />}
       className="@4xl/content:col-span-2"
     >
-      <Table>
+      <Table aria-busy={bookings.isPlaceholderData || undefined} className={updatingStyles(bookings.isPlaceholderData)}>
         <THead>
           <tr>
             <Th>Dates</Th>
@@ -131,7 +135,7 @@ function OwnerBookings({ propertyId }: { propertyId: string }) {
             columns={3}
             loading={bookings.isPending}
             error={bookings.error}
-            empty={items.length === 0}
+            empty={items.length === 0 && !bookings.isPlaceholderData}
             emptyMessage={`No stays in ${monthLabel(month)}.`}
           />
           {items.map((b) => (
@@ -167,6 +171,7 @@ function OwnerExpenses({ propertyId }: { propertyId: string }) {
   const [month, setMonth] = useState(monthKey);
   const [viewError, setViewError] = useState<unknown>(null);
   const expenses = useQuery(queries.propertyExpenses(api, propertyId, monthRange(month)));
+  usePrefetchAdjacentMonths(month, (m) => queries.propertyExpenses(api, propertyId, monthRange(m)), expenses.isSuccess);
   const items = expenses.data?.items ?? [];
   return (
     <Card
@@ -175,7 +180,7 @@ function OwnerExpenses({ propertyId }: { propertyId: string }) {
       className="@4xl/content:col-span-2"
     >
       <ErrorAlert error={viewError} />
-      <Table>
+      <Table aria-busy={expenses.isPlaceholderData || undefined} className={updatingStyles(expenses.isPlaceholderData)}>
         <THead>
           <tr>
             <Th>Date</Th>
@@ -189,7 +194,7 @@ function OwnerExpenses({ propertyId }: { propertyId: string }) {
             columns={4}
             loading={expenses.isPending}
             error={expenses.error}
-            empty={items.length === 0}
+            empty={items.length === 0 && !expenses.isPlaceholderData}
             emptyMessage={`No expenses in ${monthLabel(month)}.`}
           />
           {items.map((e) => (
@@ -231,6 +236,7 @@ function OwnerMonth({ propertyId }: { propertyId: string }) {
   const api = useApi();
   const [month, setMonth] = useState(monthKey);
   const summary = useQuery(queries.propertySummary(api, propertyId, month));
+  usePrefetchAdjacentMonths(month, (m) => queries.propertySummary(api, propertyId, m), summary.isSuccess);
   const f = summary.data;
   const row = (label: string, value: string, strong = false) => (
     <div className="flex items-baseline justify-between gap-4 py-2">
@@ -249,9 +255,17 @@ function OwnerMonth({ propertyId }: { propertyId: string }) {
       ) : !f ? (
         <Skeleton className="h-40" />
       ) : f.nightsBooked === 0 && f.grossCents === 0 && f.ownerExpensesCents === 0 ? (
-        <p className="py-6 text-center text-sm text-muted">No stays or expenses in {monthLabel(month)} yet.</p>
+        <p
+          aria-busy={summary.isPlaceholderData || undefined}
+          className={cx('py-6 text-center text-sm text-muted', updatingStyles(summary.isPlaceholderData))}
+        >
+          No stays or expenses in {monthLabel(month)} yet.
+        </p>
       ) : (
-        <div className="grid gap-x-10 @xl/content:grid-cols-2">
+        <div
+          aria-busy={summary.isPlaceholderData || undefined}
+          className={cx('grid gap-x-10 @xl/content:grid-cols-2', updatingStyles(summary.isPlaceholderData))}
+        >
           <dl className="divide-y divide-line-soft text-sm">
             {row('Gross revenue', formatCents(f.grossCents))}
             {row(

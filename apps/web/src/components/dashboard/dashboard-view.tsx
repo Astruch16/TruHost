@@ -9,6 +9,8 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
 import { MonthStepper } from '../ui/month-stepper';
+import { cx } from '../../lib/cx';
+import { updatingStyles } from '../../lib/styles';
 import { Skeleton } from '../ui/skeleton';
 import { ComingUp } from './coming-up';
 import { BookingsIllustration } from '../illustrations/bookings';
@@ -44,10 +46,13 @@ export function DashboardView({
   scope,
   properties,
   dashboard: d,
+  dashboardUpdating = false,
   dashboardError,
   onRetryDashboard,
   retryingDashboard,
   stays,
+  staysMonth,
+  staysUpdating = false,
   staysError,
   onRetryStays,
   retryingStays,
@@ -63,11 +68,16 @@ export function DashboardView({
   /** All properties the admin can see (for names and stable tints); undefined while loading. */
   properties: { id: string; name: string }[] | undefined;
   dashboard: Dashboard | undefined;
+  /** `dashboard` is still the previous month's while the chosen month loads: it is shown dimmed. */
+  dashboardUpdating?: boolean;
   dashboardError: unknown;
   onRetryDashboard: () => void;
   retryingDashboard: boolean;
   /** Confirmed stays overlapping the month; undefined while loading. */
   stays: CalendarStay[] | undefined;
+  /** The month `stays` are for (the previous one while the chosen month loads). Defaults to `month`. */
+  staysMonth?: string;
+  staysUpdating?: boolean;
   staysError: unknown;
   onRetryStays: () => void;
   retryingStays: boolean;
@@ -85,6 +95,11 @@ export function DashboardView({
     return i === -1 ? fallback : i;
   };
   const railSkeleton = failed ? null : <Skeleton className="h-40 rounded-card" />;
+  // While the next month loads, the figures on screen are still the previous month's: label them with their own
+  // month and dim them, rather than blanking to skeletons.
+  const dataMonth = d?.month ?? month;
+  const calendarMonth = staysMonth ?? month;
+  const dim = (updating: boolean) => ({ 'aria-busy': updating || undefined, className: updatingStyles(updating) });
 
   return (
     <div className="grid gap-6 @[68.75rem]/content:grid-cols-[minmax(0,1fr)_380px]">
@@ -118,7 +133,9 @@ export function DashboardView({
                   ))}
                 </div>
               ) : (
-                <Kpis d={d} />
+                <div {...dim(dashboardUpdating)}>
+                  <Kpis d={d} />
+                </div>
               )}
             </div>
           )}
@@ -136,11 +153,17 @@ export function DashboardView({
         ) : failed ? null : (
           <>
             <div className="grid gap-6 @[100rem]/content:grid-cols-2">
-              <Card title="Property performance" description={monthLabel(month)}>
+              <Card title="Property performance" description={monthLabel(dataMonth)}>
                 {!d ? (
                   <Skeleton className="h-56 rounded-inner" />
                 ) : (
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4">
+                  <div
+                    aria-busy={dashboardUpdating || undefined}
+                    className={cx(
+                      'grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4',
+                      updatingStyles(dashboardUpdating),
+                    )}
+                  >
                     {d.properties.map((p, i) => (
                       <PropertyCard
                         key={p.id}
@@ -154,54 +177,62 @@ export function DashboardView({
                         }}
                         figures={p}
                         index={tintIndex(p.id, i)}
-                        revenueLabel={`Gross, ${shortMonth(month)}`}
+                        revenueLabel={`Gross, ${shortMonth(dataMonth)}`}
                       />
                     ))}
                   </div>
                 )}
               </Card>
 
-              <Card title="Where the revenue went" description={monthLabel(month)}>
+              <Card title="Where the revenue went" description={monthLabel(dataMonth)}>
                 {!d ? (
                   <Skeleton className="h-40" />
                 ) : d.breakdown.grossCents === 0 &&
                   d.breakdown.ownerExpensesCents === 0 &&
                   d.breakdown.cleaningFeesCents === 0 ? (
-                  <EmptyState size="compact" illustration={<RevenueIllustration />} title="No revenue this month yet">
-                    Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.
-                  </EmptyState>
+                  <div {...dim(dashboardUpdating)}>
+                    <EmptyState size="compact" illustration={<RevenueIllustration />} title="No revenue this month yet">
+                      Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.
+                    </EmptyState>
+                  </div>
                 ) : (
-                  <RevenueBreakdown breakdown={d.breakdown} feeRatesBps={d.kpis.feeRatesBps} />
+                  <div {...dim(dashboardUpdating)}>
+                    <RevenueBreakdown breakdown={d.breakdown} feeRatesBps={d.kpis.feeRatesBps} />
+                  </div>
                 )}
               </Card>
             </div>
 
-            <Card title="Bookings" description={monthLabel(month)} actions={<CalendarLegend />}>
+            <Card title="Bookings" description={monthLabel(calendarMonth)} actions={<CalendarLegend />}>
               {staysError && !stays ? (
                 <LoadError what="the calendar" onRetry={onRetryStays} retrying={retryingStays} />
               ) : !stays ? (
                 <Skeleton className="h-72" />
               ) : stays.length === 0 ? (
-                <EmptyState
-                  size="compact"
-                  illustration={<BookingsIllustration />}
-                  title="No stays this month"
-                  action={
-                    <Button variant="secondary" onClick={() => onAction('booking')}>
-                      Add booking
-                    </Button>
-                  }
-                >
-                  Add a booking and it appears here as a bar across its nights.
-                </EmptyState>
+                <div {...dim(staysUpdating)}>
+                  <EmptyState
+                    size="compact"
+                    illustration={<BookingsIllustration />}
+                    title="No stays this month"
+                    action={
+                      <Button variant="secondary" onClick={() => onAction('booking')}>
+                        Add booking
+                      </Button>
+                    }
+                  >
+                    Add a booking and it appears here as a bar across its nights.
+                  </EmptyState>
+                </div>
               ) : (
-                <MonthCalendar
-                  month={month}
-                  stays={stays}
-                  propertyNames={new Map(propertyList.map((p) => [p.id, p.name]))}
-                  today={d?.today ?? null}
-                  showProperty={multi}
-                />
+                <div {...dim(staysUpdating)}>
+                  <MonthCalendar
+                    month={calendarMonth}
+                    stays={stays}
+                    propertyNames={new Map(propertyList.map((p) => [p.id, p.name]))}
+                    today={d?.today ?? null}
+                    showProperty={multi}
+                  />
+                </div>
               )}
             </Card>
           </>
@@ -223,8 +254,20 @@ export function DashboardView({
             </Button>
           </div>
         </Card>
-        {d ? <NeedsAttention items={d.attention.items} total={d.attention.total} showProperty={multi} /> : railSkeleton}
-        {d ? <ComingUp items={d.upcoming.items} total={d.upcoming.total} showProperty={multi} /> : railSkeleton}
+        {d ? (
+          <div {...dim(dashboardUpdating)}>
+            <NeedsAttention items={d.attention.items} total={d.attention.total} showProperty={multi} />
+          </div>
+        ) : (
+          railSkeleton
+        )}
+        {d ? (
+          <div {...dim(dashboardUpdating)}>
+            <ComingUp items={d.upcoming.items} total={d.upcoming.total} showProperty={multi} />
+          </div>
+        ) : (
+          railSkeleton
+        )}
       </aside>
     </div>
   );

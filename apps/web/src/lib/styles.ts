@@ -57,6 +57,13 @@ export const pillStyles = (tone: PillTone) =>
  * Shared look for every dropdown surface (selects, profile menu, property switcher, notifications): rounded
  * panel, soft shadow, enter/exit animation. Motion is disabled under prefers-reduced-motion (styles.css).
  */
+/**
+ * Content showing the previous month while the next one loads: dimmed (no skeleton, no jump), back to full strength
+ * when the new figures arrive. Pair with aria-busy.
+ */
+export const updatingStyles = (updating: boolean) =>
+  cx('transition-opacity duration-200', updating && 'pointer-events-none opacity-55');
+
 export const menuSurfaceStyles = cx(
   'z-50 overflow-hidden rounded-inner border border-line bg-surface p-1.5',
   'shadow-[0_16px_40px_-16px_rgba(26,29,33,0.28)]',
