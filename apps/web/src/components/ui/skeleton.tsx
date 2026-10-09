@@ -1,8 +1,8 @@
 import { cx } from '../../lib/cx';
 
-/** Placeholder block while data loads. Static (no shimmer) so it never fights reduced-motion. */
+/** Placeholder block while data loads. Pulses gently; static under reduced motion. */
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cx('rounded-control-sm bg-line-soft', className)} />;
+  return <div aria-hidden className={cx('animate-skeleton rounded-control-sm bg-line-soft', className)} />;
 }
 
 /** Full-area loading state with an accessible label. */

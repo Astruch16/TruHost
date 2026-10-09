@@ -1,4 +1,5 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { createFileRoute, Navigate, useRouter } from '@tanstack/react-router';
 import { useAuth } from '@clerk/react';
 import { SignInForm } from '../components/auth/sign-in-form';
 import { AuthFrame } from '../components/shell/auth-frame';
@@ -13,12 +14,18 @@ const ERRORS = {
 export const Route = createFileRoute('/sign-in/$')({
   validateSearch: (s: Record<string, unknown>): { error?: keyof typeof ERRORS } =>
     typeof s.error === 'string' && s.error in ERRORS ? { error: s.error as keyof typeof ERRORS } : {},
+  pendingMs: 0,
   component: SignInPage,
 });
 
 function SignInPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const { error } = Route.useSearch();
+  const router = useRouter();
+  // Fetch the portal's code while the person signs in, so it opens without waiting for it afterwards.
+  useEffect(() => {
+    void router.preloadRoute({ to: '/' }).catch(() => undefined);
+  }, [router]);
   if (isLoaded && isSignedIn) return <Navigate to="/" />;
   return (
     <AuthFrame>

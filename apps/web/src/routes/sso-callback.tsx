@@ -6,6 +6,7 @@ import { Spinner } from '../components/ui/spinner';
 
 /** Where Google sends people back. Finishes the sign-in, or returns to the sign-in page with a reason. */
 export const Route = createFileRoute('/sso-callback')({
+  pendingMs: 0,
   component: SsoCallback,
 });
 

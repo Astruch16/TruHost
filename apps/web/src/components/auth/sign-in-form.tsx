@@ -40,6 +40,8 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
   const [error, setError] = useState<string | null>(initialError);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState<'submit' | 'google' | 'resend' | null>(null);
+  /** Signed in and handing over to the portal: the button stays busy until the page changes. */
+  const [leaving, setLeaving] = useState(false);
 
   const go = (next: Step) => {
     setError(null);
@@ -70,7 +72,8 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
   /** After any successful step: open the session, or ask for the device check if Clerk needs it. */
   const continueSignIn = async () => {
     if (signIn.status === 'complete') {
-      await run('submit', () =>
+      setLeaving(true);
+      const opened = await run('submit', () =>
         signIn.finalize({
           navigate: ({ decorateUrl }) => {
             const url = decorateUrl('/');
@@ -79,6 +82,7 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
           },
         }),
       );
+      if (!opened) setLeaving(false);
       return;
     }
     if (signIn.status === 'needs_client_trust' || signIn.status === 'needs_second_factor') {
@@ -242,8 +246,8 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
               {notice}
             </p>
           )}
-          <AuthButton loading={pending === 'submit'} disabled={!code.trim()}>
-            {reset ? 'Continue' : 'Verify and sign in'}
+          <AuthButton loading={pending === 'submit' || leaving} disabled={!code.trim()}>
+            {leaving ? 'Signing in…' : reset ? 'Continue' : 'Verify and sign in'}
           </AuthButton>
         </form>
         <div className="flex items-center justify-between">
@@ -276,7 +280,9 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
             invalid={Boolean(error)}
           />
           <AuthError>{error}</AuthError>
-          <AuthButton loading={pending === 'submit'}>Save and sign in</AuthButton>
+          <AuthButton loading={pending === 'submit' || leaving}>
+            {leaving ? 'Signing in…' : 'Save and sign in'}
+          </AuthButton>
         </form>
         <div className="text-center">
           <AuthLink onClick={backToSignIn}>Back to sign in</AuthLink>
@@ -315,8 +321,8 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
           />
         </div>
         <AuthError>{error}</AuthError>
-        <AuthButton loading={pending === 'submit'} disabled={notReady || pending === 'google'}>
-          Sign in
+        <AuthButton loading={pending === 'submit' || leaving} disabled={notReady || pending === 'google'}>
+          {leaving ? 'Signing in…' : 'Sign in'}
         </AuthButton>
       </form>
       <AuthNote>

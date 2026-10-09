@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { phoneCardOffset } from '../../lib/login-scene';
+import { clearFirstPaint } from '../../lib/use-load-stage';
 import { useMediaQuery, useWindowSize } from '../../lib/use-viewport';
 import { AuthTagline } from '../auth/auth-card';
 import { LoginScene } from '../auth/login-scene';
@@ -18,6 +19,9 @@ export function AuthFrame({ children }: { children: ReactNode }) {
   const { height } = useWindowSize();
   // Phones: room above the card for the moon when the screen allows; short screens keep the form in view.
   const offset = phone && card ? phoneCardOffset(height, card.bottom - card.top) : undefined;
+
+  // Sign-in and account pages replace the first-paint screen from index.html.
+  useLayoutEffect(clearFirstPaint, []);
 
   useLayoutEffect(() => {
     const el = cardRef.current;

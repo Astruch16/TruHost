@@ -1,6 +1,7 @@
 import { createRouter } from '@tanstack/react-router';
 import { MutationCache, QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
+import { RouteLoading } from './components/shell/route-loading';
 import { routeTree } from './routeTree.gen';
 
 export const queryClient: QueryClient = new QueryClient({
@@ -21,6 +22,11 @@ export const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreload: 'intent',
+  // Pages load on first use. If one takes a moment, show its outline rather than nothing (and once shown, keep it
+  // long enough not to flicker). Top-level pages show it at once: on a first visit there's nothing else to show.
+  defaultPendingComponent: RouteLoading,
+  defaultPendingMs: 200,
+  defaultPendingMinMs: 300,
   scrollRestoration: true,
 });
 

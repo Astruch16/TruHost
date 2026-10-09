@@ -79,6 +79,19 @@ describe('SignInForm', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/' }));
   });
 
+  it('stays busy after signing in, until the portal takes over', async () => {
+    signIn.password.mockImplementation(async () => {
+      signIn.status = 'complete';
+      return ok;
+    });
+    signIn.finalize.mockResolvedValue(ok); // navigation pending: the page hasn't changed yet
+    render(<SignInForm />);
+    await signInWith('owner@example.com', 'correct horse');
+    const button = await screen.findByRole('button', { name: 'Signing in…' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+  });
+
   it.each([
     ['form_password_incorrect', 422, undefined, /password isn’t right/],
     ['form_identifier_not_found', 422, undefined, /no TruHost account for that email/],

@@ -5,9 +5,116 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TruHost</title>
+    <script>
+      // First paint, before the app's code has downloaded (it can take a few seconds on a slow connection).
+      // Sign-in pages get the night sky; the portal gets its own outline. React replaces it on its first render.
+      // Keep the path rule in step with isAuthPath (src/lib/shell-context.ts).
+      document.documentElement.dataset.splash = '1';
+      if (/^\/(sign-in|sign-up|sso-callback)(\/|$)/.test(location.pathname)) {
+        document.documentElement.classList.add('boot-auth');
+      }
+    </script>
+    <style>
+      body {
+        margin: 0;
+      }
+      .boot {
+        min-height: 100dvh;
+        background: #f6f6f3;
+        display: grid;
+      }
+      .boot-auth .boot {
+        background: linear-gradient(#08141f, #102638 40%, #1a4042 64%, #2b584f);
+      }
+      .boot-auth .boot > :not(.boot-sr) {
+        display: none;
+      }
+      .boot-side {
+        display: none;
+        background: #173f3a;
+      }
+      .boot-main {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .boot-bar,
+      .boot-block {
+        background: #eeeeeb;
+        border-radius: 10px;
+        animation: boot-pulse 1.6s ease-in-out infinite;
+      }
+      .boot-bar {
+        height: 48px;
+        width: min(100%, 18rem);
+        border-radius: 999px;
+      }
+      .boot-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .boot-block {
+        height: 120px;
+        border-radius: 16px;
+      }
+      .boot-wide {
+        height: 280px;
+        border-radius: 18px;
+      }
+      @media (min-width: 1024px) {
+        .boot {
+          grid-template-columns: 248px minmax(0, 1fr);
+        }
+        .boot-side {
+          display: block;
+        }
+        .boot-main {
+          padding: 24px 32px;
+        }
+        .boot-row {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 16px;
+        }
+      }
+      @keyframes boot-pulse {
+        50% {
+          opacity: 0.55;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-bar,
+        .boot-block {
+          animation: none;
+        }
+      }
+      .boot-sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status">
+        <span class="boot-sr">Loading TruHost</span>
+        <div class="boot-side"></div>
+        <div class="boot-main" aria-hidden="true">
+          <div class="boot-bar"></div>
+          <div class="boot-row">
+            <div class="boot-block"></div>
+            <div class="boot-block"></div>
+            <div class="boot-block"></div>
+            <div class="boot-block"></div>
+          </div>
+          <div class="boot-block boot-wide"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
