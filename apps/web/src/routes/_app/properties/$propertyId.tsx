@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Navigate } from '@tanstack/react-router';
+import { ApiError } from '@truhost/api-client';
+import { PropertyAddressCard, PropertyRoomsCard } from '../../../components/property-basics';
+import { NotAvailable } from '../../../components/shell/not-available';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, FileText, MapPin } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { ErrorAlert } from '../../../components/ui/alert';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
@@ -17,27 +20,41 @@ import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
 import { cx } from '../../../lib/cx';
 import { updatingStyles } from '../../../lib/styles';
 import { formatBps, formatOccupancy, kindLabel } from '../../../lib/format';
+import { propertyPath } from '../../../lib/access';
 import { queries } from '../../../lib/queries';
 import { openFile } from '../../../lib/upload';
 
 /**
- * Read-only property view for owners and cleaners. The API decides which fields come back; this page renders what it
- * gets. The owner dashboard from the mockup replaces this view once Phase 2 data exists.
+ * The owner's property page: the month's figures, plan, stays and expenses, plus address and rooms. Only for owners
+ * of this property. Cleaners go to their own page (/cleaner/properties/:id), which has no financial sections, and
+ * admins to the admin page; anyone else sees "not available". The API enforces the same on every call.
  */
 export const Route = createFileRoute('/_app/properties/$propertyId')({
-  component: PropertyView,
+  component: PropertyPage,
 });
 
-function PropertyView() {
+function PropertyPage() {
   const { propertyId } = Route.useParams();
-  const api = useApi();
-  const me = useQuery(queries.me(api));
-  const property = useQuery(queries.property(api, propertyId));
-  const rooms = useQuery(queries.rooms(api, propertyId));
-  const isOwner = me.data?.memberships.some((m) => m.property.id === propertyId && m.role === 'OWNER') ?? false;
-  const plan = useQuery({ ...queries.propertyPlan(api, propertyId), enabled: isOwner });
+  const me = useQuery(queries.me(useApi()));
+  if (!me.data) return <LoadingBlock />;
+  const path = propertyPath(me.data, propertyId);
+  if (path === null) return <NotAvailable />;
+  if (path !== '/properties/$propertyId') return <Navigate to={path} params={{ propertyId }} replace />;
+  return <OwnerPropertyView propertyId={propertyId} />;
+}
 
-  if (property.error) return <ErrorAlert error={property.error} />;
+function OwnerPropertyView({ propertyId }: { propertyId: string }) {
+  const api = useApi();
+  const property = useQuery(queries.property(api, propertyId));
+  const plan = useQuery(queries.propertyPlan(api, propertyId));
+
+  if (property.error) {
+    return property.error instanceof ApiError && property.error.status === 404 ? (
+      <NotAvailable />
+    ) : (
+      <ErrorAlert error={property.error} />
+    );
+  }
   if (!property.data) return <LoadingBlock />;
   const p = property.data;
 
@@ -45,65 +62,28 @@ function PropertyView() {
     <>
       <PageHeader eyebrow="Property details" title={p.name} description={`${p.city}, ${p.province}`} />
       <div className="grid gap-6 @4xl/content:grid-cols-2">
-        {isOwner && <OwnerMonth propertyId={propertyId} />}
-        <Card title="Address">
-          <div className="flex flex-col gap-3 text-sm">
-            <p className="flex gap-2.5">
-              <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
+        <OwnerMonth propertyId={propertyId} />
+        <PropertyAddressCard property={p} />
+        <Card title="Plan">
+          {plan.error ? (
+            <ErrorAlert error={plan.error} />
+          ) : plan.isPending ? (
+            <Skeleton className="h-6 w-2/3" />
+          ) : plan.data?.current ? (
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <Pill tone="lavender">{plan.data.current.plan.name}</Pill>
               <span>
-                {p.addressLine1}
-                {p.addressLine2 && <>, {p.addressLine2}</>}
-                <br />
-                {p.city}, {p.province} {p.postalCode}
+                <span className="figure font-semibold">{formatBps(plan.data.current.plan.managementFeeBps)}</span> of
+                monthly gross revenue, since <span className="figure">{plan.data.current.effectiveFrom}</span>
               </span>
-            </p>
-            <p className="flex gap-2.5">
-              <Clock aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
-              <span className="figure">
-                Check-in {p.checkInTime} · Check-out {p.checkOutTime}
-              </span>
-            </p>
-          </div>
-        </Card>
-        {isOwner && (
-          <Card title="Plan">
-            {plan.error ? (
-              <ErrorAlert error={plan.error} />
-            ) : plan.isPending ? (
-              <Skeleton className="h-6 w-2/3" />
-            ) : plan.data?.current ? (
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <Pill tone="lavender">{plan.data.current.plan.name}</Pill>
-                <span>
-                  <span className="figure font-semibold">{formatBps(plan.data.current.plan.managementFeeBps)}</span> of
-                  monthly gross revenue, since <span className="figure">{plan.data.current.effectiveFrom}</span>
-                </span>
-              </div>
-            ) : (
-              <p className="text-sm text-muted">No plan assigned yet.</p>
-            )}
-          </Card>
-        )}
-        {isOwner && <OwnerBookings propertyId={propertyId} />}
-        {isOwner && <OwnerExpenses propertyId={propertyId} />}
-        <Card title="Rooms" description="In cleaning-checklist order.">
-          {rooms.error ? (
-            <ErrorAlert error={rooms.error} />
-          ) : !rooms.data ? (
-            <Skeleton className="h-16" />
+            </div>
           ) : (
-            <ol className="flex flex-col divide-y divide-line-soft text-sm">
-              {rooms.data.items.map((r, i) => (
-                <li key={r.id} className="flex items-center gap-3 py-2.5">
-                  <span className="figure grid size-6 place-items-center rounded-full bg-ground text-xs font-semibold text-muted">
-                    {i + 1}
-                  </span>
-                  {r.name}
-                </li>
-              ))}
-            </ol>
+            <p className="text-sm text-muted">No plan assigned yet.</p>
           )}
         </Card>
+        <OwnerBookings propertyId={propertyId} />
+        <OwnerExpenses propertyId={propertyId} />
+        <PropertyRoomsCard propertyId={propertyId} />
       </div>
     </>
   );

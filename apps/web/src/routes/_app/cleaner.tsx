@@ -3,18 +3,19 @@ import { useQuery } from '@tanstack/react-query';
 import { NotAvailable } from '../../components/shell/not-available';
 import { LoadingBlock } from '../../components/ui/skeleton';
 import { useApi } from '../../lib/api-context';
-import { isAdmin } from '../../lib/access';
 import { queries } from '../../lib/queries';
 
-/** Hides admin screens from non-admins. Convenience only: the API enforces access on every call. */
-export const Route = createFileRoute('/_app/admin')({
-  component: AdminLayout,
+/**
+ * The cleaner's screens. Only for people who clean at least one property. Convenience only: the API enforces
+ * access on every call.
+ */
+export const Route = createFileRoute('/_app/cleaner')({
+  component: CleanerLayout,
 });
 
-function AdminLayout() {
+function CleanerLayout() {
   const me = useQuery(queries.me(useApi()));
   if (!me.data) return <LoadingBlock />;
-  // Owners and cleaners who open an admin address (a bookmark, a shared link) get a page that says so.
-  if (!isAdmin(me.data)) return <NotAvailable />;
+  if (!me.data.memberships.some((m) => m.role === 'CLEANER')) return <NotAvailable />;
   return <Outlet />;
 }

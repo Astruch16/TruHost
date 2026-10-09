@@ -1,6 +1,7 @@
 import { createRouter } from '@tanstack/react-router';
 import { MutationCache, QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
+import { NotAvailable } from './components/shell/not-available';
 import { RouteLoading } from './components/shell/route-loading';
 import { routeTree } from './routeTree.gen';
 
@@ -28,6 +29,7 @@ export const router = createRouter({
   defaultPendingMs: 200,
   defaultPendingMinMs: 300,
   scrollRestoration: true,
+  defaultNotFoundComponent: () => <NotAvailable />,
 });
 
 declare module '@tanstack/react-router' {
