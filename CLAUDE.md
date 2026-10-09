@@ -155,6 +155,11 @@ Requires Node 24+ and pnpm (`corepack enable`). Run from the repo root.
 | Single test file |                                   | `pnpm --filter @truhost/api exec vitest run src/access`               |
 | Format           | `pnpm format`                     | CI runs `prettier --check .`                                          |
 
+The dev API (`apps/api/scripts/dev.mjs`) compiles with `nest build --watch` and runs under `node --watch`, so it
+restarts whenever anything it loaded changes: its own code, the generated Prisma client or `packages/shared`, even
+when a compile reports type errors (they are still printed). After `prisma migrate`, it picks up the new client by
+itself.
+
 Tooling per package:
 
 - **api:** NestJS 12 (ESM, `nodenext`, so relative imports use `.js`
