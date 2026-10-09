@@ -106,7 +106,7 @@ function SignedInShell() {
         role: roleLabel(user),
         email: user.email,
       }}
-      properties={list}
+      properties={list.map((p) => ({ ...p, photoUrl: p.coverPhoto?.thumbUrl ?? null }))}
       selectedPropertyId={selectedId}
       onSelectProperty={selectProperty}
       allowAllProperties={isAdmin}
