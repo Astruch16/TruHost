@@ -458,6 +458,7 @@ enum ExpenseCategory {
   FURNISHINGS
   UTILITIES
   INTERNET
+  SUBSCRIPTIONS       /// Streaming and other services for guests (Netflix, Disney+, Spotify …).
   LICENSING_PERMITS
   INSURANCE
   STRATA

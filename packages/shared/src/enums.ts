@@ -65,6 +65,7 @@ export const ExpenseCategory = z.enum([
   'FURNISHINGS',
   'UTILITIES',
   'INTERNET',
+  'SUBSCRIPTIONS',
   'LICENSING_PERMITS',
   'INSURANCE',
   'STRATA',
