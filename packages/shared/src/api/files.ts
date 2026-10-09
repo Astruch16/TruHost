@@ -14,25 +14,39 @@ export const MAX_RECEIPT_BYTES = 20 * 1024 * 1024;
 export const PROPERTY_PHOTO_CONTENT_TYPES = ['image/jpeg'] as const;
 export const MAX_PROPERTY_PHOTO_BYTES = 5 * 1024 * 1024;
 
+/** Avatars are cropped to a small square and re-encoded as JPEG in the browser. */
+export const AVATAR_CONTENT_TYPES = ['image/jpeg'] as const;
+export const MAX_AVATAR_BYTES = 1024 * 1024;
+
 const declared = {
-  propertyId: id,
   /** Hex SHA-256 of the file; storage rejects any other body. */
   sha256: z.string().regex(/^[0-9a-f]{64}$/, 'Expected a lowercase hex SHA-256'),
   filename: z.string().trim().min(1).max(200).nullable().default(null),
 };
 
-/** Ask for an upload URL. Type and size limits depend on the purpose; clean and damage photos arrive in Phase 3. */
+/**
+ * Ask for an upload URL. Type and size limits depend on the purpose; clean and damage photos arrive in Phase 3.
+ * Avatars belong to the uploading user, not a property.
+ */
 export const createUpload = z.discriminatedUnion('purpose', [
   z.object({
     purpose: z.literal('RECEIPT'),
+    propertyId: id,
     contentType: z.enum(RECEIPT_CONTENT_TYPES),
     sizeBytes: z.number().int().min(1).max(MAX_RECEIPT_BYTES),
     ...declared,
   }),
   z.object({
     purpose: z.literal('PROPERTY_PHOTO'),
+    propertyId: id,
     contentType: z.enum(PROPERTY_PHOTO_CONTENT_TYPES),
     sizeBytes: z.number().int().min(1).max(MAX_PROPERTY_PHOTO_BYTES),
+    ...declared,
+  }),
+  z.object({
+    purpose: z.literal('AVATAR'),
+    contentType: z.enum(AVATAR_CONTENT_TYPES),
+    sizeBytes: z.number().int().min(1).max(MAX_AVATAR_BYTES),
     ...declared,
   }),
 ]);

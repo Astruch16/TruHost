@@ -18,6 +18,8 @@ export interface AuthzCase {
   public?: boolean;
   /** Status an admin gets when the request is allowed but can't succeed with the fixture data. */
   adminGets?: number;
+  /** Status every allowed actor gets when the request is allowed but can't succeed with the fixture data. */
+  allowedGets?: number;
   /** Re-seed before each actor because the request changes state. */
   mutates?: boolean;
   /**
@@ -35,6 +37,25 @@ export const CASES: AuthzCase[] = [
   // ── health, me, config ──
   { route: 'GET /v1/health', path: () => '/v1/health', allow: 'everyone', public: true },
   { route: 'GET /v1/me', path: () => '/v1/me', allow: 'everyone' },
+  {
+    route: 'PUT /v1/me/avatar',
+    path: () => '/v1/me/avatar',
+    // Everyone may set their own photo; with no upload in the fixture, the file isn't found (and never another's).
+    body: () => ({ fileId: '00000000-0000-7000-8000-000000000000' }),
+    allow: 'everyone',
+    allowedGets: 422,
+    mutates: true,
+  },
+  { route: 'DELETE /v1/me/avatar', path: () => '/v1/me/avatar', allow: 'everyone', mutates: true },
+  { route: 'GET /v1/me/notification-settings', path: () => '/v1/me/notification-settings', allow: 'everyone' },
+  {
+    route: 'PUT /v1/me/notification-settings',
+    path: () => '/v1/me/notification-settings',
+    // Self-scoped: everyone may save their own (which categories apply is covered in me-settings.e2e-spec.ts).
+    body: () => ({ items: [] }),
+    allow: 'everyone',
+    mutates: true,
+  },
   {
     route: 'PATCH /v1/me',
     path: () => '/v1/me',

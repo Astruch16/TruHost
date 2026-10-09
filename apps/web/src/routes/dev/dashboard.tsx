@@ -292,7 +292,6 @@ function Preview() {
       onSelectProperty={() => undefined}
       allowAllProperties
       onSignOut={() => undefined}
-      onManageSignIn={() => undefined}
     >
       <p className="mb-4 rounded-control bg-lavender-tint px-3 py-2 text-sm text-lavender-deep">
         Dev preview with fixture data. The real dashboard is at /admin.

@@ -8,6 +8,11 @@ import { unwrap, type ApiClient } from '@truhost/api-client';
 export const queries = {
   me: (api: ApiClient) =>
     queryOptions({ queryKey: ['me'], queryFn: () => unwrap(api.GET('/v1/me')), staleTime: 60_000 }),
+  notificationSettings: (api: ApiClient) =>
+    queryOptions({
+      queryKey: ['me', 'notification-settings'],
+      queryFn: () => unwrap(api.GET('/v1/me/notification-settings')),
+    }),
   config: (api: ApiClient) =>
     queryOptions({ queryKey: ['config'], queryFn: () => unwrap(api.GET('/v1/config')), staleTime: Infinity }),
   properties: (api: ApiClient, includeArchived = false) =>

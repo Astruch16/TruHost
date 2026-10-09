@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createFileRoute, Navigate, Outlet, useMatchRoute, useNavigate, useParams } from '@tanstack/react-router';
 import { useAuth, useClerk, useUser } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
@@ -9,10 +9,10 @@ import { PortalLoading } from '../components/shell/portal-loading';
 import { AuthFrame } from '../components/shell/auth-frame';
 import { ErrorAlert } from '../components/ui/alert';
 import { useApi } from '../lib/api-context';
-import { clerkAppearance } from '../lib/clerk-appearance';
 import { GuideContext } from '../lib/guide-context';
 import { guideFromApi } from '../lib/guides';
 import { initials, navItems, roleLabel } from '../lib/nav';
+import { applyMotion, PreferencesContext } from '../lib/preferences';
 import { queries } from '../lib/queries';
 import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
 
@@ -31,7 +31,7 @@ function AppLayout() {
 
 function SignedInShell() {
   const api = useApi();
-  const { signOut, openUserProfile } = useClerk();
+  const { signOut } = useClerk();
   const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const me = useQuery(queries.me(api));
@@ -45,6 +45,8 @@ function SignedInShell() {
   };
   const handleSignOut = () => void signOut({ redirectUrl: '/sign-in' });
   const signedInAs = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
+  const motion = me.data?.motion ?? 'SYSTEM';
+  useEffect(() => applyMotion(motion), [motion]);
 
   if (me.isPending) return <PortalLoading onRetry={() => void me.refetch()} />;
   if (me.error) {
@@ -105,17 +107,19 @@ function SignedInShell() {
         initials: initials(user.firstName, user.lastName),
         role: roleLabel(user),
         email: user.email,
+        avatarUrl: user.avatar?.url ?? null,
       }}
       properties={list.map((p) => ({ ...p, photoUrl: p.coverPhoto?.thumbUrl ?? null }))}
       selectedPropertyId={selectedId}
       onSelectProperty={selectProperty}
       allowAllProperties={isAdmin}
       onSignOut={handleSignOut}
-      onManageSignIn={() => openUserProfile({ appearance: clerkAppearance })}
     >
       <ScopeContext.Provider value={{ propertyId: selectedId, setPropertyId: setScope }}>
         <GuideContext.Provider value={guideFromApi(user.guide)}>
-          <Outlet />
+          <PreferencesContext.Provider value={{ weekStartsOn: user.weekStartsOn, motion: user.motion }}>
+            <Outlet />
+          </PreferencesContext.Provider>
         </GuideContext.Provider>
       </ScopeContext.Provider>
     </AppShell>

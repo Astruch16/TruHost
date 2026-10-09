@@ -56,6 +56,38 @@
                       "type": "string",
                       "enum": ["SAGE", "JUNIPER", "PIP"]
                     },
+                    "avatar": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": ["url", "expiresAt"],
+                      "additionalProperties": false
+                    },
+                    "weekStartsOn": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "enum": [0]
+                        },
+                        {
+                          "type": "number",
+                          "enum": [1]
+                        }
+                      ]
+                    },
+                    "motion": {
+                      "type": "string",
+                      "enum": ["SYSTEM", "REDUCED"]
+                    },
                     "memberships": {
                       "type": "array",
                       "items": {
@@ -100,6 +132,9 @@
                     "staffRole",
                     "status",
                     "guide",
+                    "avatar",
+                    "weekStartsOn",
+                    "motion",
                     "memberships"
                   ],
                   "additionalProperties": false
@@ -139,6 +174,22 @@
                   "guide": {
                     "type": "string",
                     "enum": ["SAGE", "JUNIPER", "PIP"]
+                  },
+                  "weekStartsOn": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "enum": [0]
+                      },
+                      {
+                        "type": "number",
+                        "enum": [1]
+                      }
+                    ]
+                  },
+                  "motion": {
+                    "type": "string",
+                    "enum": ["SYSTEM", "REDUCED"]
                   }
                 }
               }
@@ -184,6 +235,38 @@
                       "type": "string",
                       "enum": ["SAGE", "JUNIPER", "PIP"]
                     },
+                    "avatar": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": ["url", "expiresAt"],
+                      "additionalProperties": false
+                    },
+                    "weekStartsOn": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "enum": [0]
+                        },
+                        {
+                          "type": "number",
+                          "enum": [1]
+                        }
+                      ]
+                    },
+                    "motion": {
+                      "type": "string",
+                      "enum": ["SYSTEM", "REDUCED"]
+                    },
                     "memberships": {
                       "type": "array",
                       "items": {
@@ -228,8 +311,431 @@
                     "staffRole",
                     "status",
                     "guide",
+                    "avatar",
+                    "weekStartsOn",
+                    "motion",
                     "memberships"
                   ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/avatar": {
+      "put": {
+        "operationId": "Me_setAvatar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": ["fileId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "staffRole": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": ["ADMIN"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["INVITED", "ACTIVE", "DEACTIVATED"]
+                    },
+                    "guide": {
+                      "type": "string",
+                      "enum": ["SAGE", "JUNIPER", "PIP"]
+                    },
+                    "avatar": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": ["url", "expiresAt"],
+                      "additionalProperties": false
+                    },
+                    "weekStartsOn": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "enum": [0]
+                        },
+                        {
+                          "type": "number",
+                          "enum": [1]
+                        }
+                      ]
+                    },
+                    "motion": {
+                      "type": "string",
+                      "enum": ["SYSTEM", "REDUCED"]
+                    },
+                    "memberships": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["OWNER", "CLEANER"]
+                          },
+                          "property": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "name"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["id", "role", "property"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "firstName",
+                    "lastName",
+                    "phone",
+                    "staffRole",
+                    "status",
+                    "guide",
+                    "avatar",
+                    "weekStartsOn",
+                    "motion",
+                    "memberships"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["me"]
+      },
+      "delete": {
+        "operationId": "Me_removeAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "staffRole": {
+                      "nullable": true,
+                      "type": "string",
+                      "enum": ["ADMIN"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["INVITED", "ACTIVE", "DEACTIVATED"]
+                    },
+                    "guide": {
+                      "type": "string",
+                      "enum": ["SAGE", "JUNIPER", "PIP"]
+                    },
+                    "avatar": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": ["url", "expiresAt"],
+                      "additionalProperties": false
+                    },
+                    "weekStartsOn": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "enum": [0]
+                        },
+                        {
+                          "type": "number",
+                          "enum": [1]
+                        }
+                      ]
+                    },
+                    "motion": {
+                      "type": "string",
+                      "enum": ["SYSTEM", "REDUCED"]
+                    },
+                    "memberships": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": ["OWNER", "CLEANER"]
+                          },
+                          "property": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "name"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["id", "role", "property"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "firstName",
+                    "lastName",
+                    "phone",
+                    "staffRole",
+                    "status",
+                    "guide",
+                    "avatar",
+                    "weekStartsOn",
+                    "motion",
+                    "memberships"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/notification-settings": {
+      "get": {
+        "operationId": "Me_notificationSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "SUPPLY_ALERTS",
+                              "INVITE_ACCEPTED",
+                              "WEEKLY_SUMMARY",
+                              "STATEMENT_RELEASED",
+                              "CLEAN_ASSIGNED",
+                              "PAYMENT_RECORDED"
+                            ]
+                          },
+                          "email": {
+                            "type": "boolean"
+                          },
+                          "inApp": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["category", "email", "inApp"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["items"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["me"]
+      },
+      "put": {
+        "operationId": "Me_updateNotificationSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "SUPPLY_ALERTS",
+                            "INVITE_ACCEPTED",
+                            "WEEKLY_SUMMARY",
+                            "STATEMENT_RELEASED",
+                            "CLEAN_ASSIGNED",
+                            "PAYMENT_RECORDED"
+                          ]
+                        },
+                        "email": {
+                          "type": "boolean"
+                        },
+                        "inApp": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["category", "email", "inApp"]
+                    }
+                  }
+                },
+                "required": ["items"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "SUPPLY_ALERTS",
+                              "INVITE_ACCEPTED",
+                              "WEEKLY_SUMMARY",
+                              "STATEMENT_RELEASED",
+                              "CLEAN_ASSIGNED",
+                              "PAYMENT_RECORDED"
+                            ]
+                          },
+                          "email": {
+                            "type": "boolean"
+                          },
+                          "inApp": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["category", "email", "inApp"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["items"],
                   "additionalProperties": false
                 }
               }
@@ -5270,6 +5776,11 @@
                         "type": "string",
                         "enum": ["RECEIPT"]
                       },
+                      "propertyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
                       "contentType": {
                         "type": "string",
                         "enum": ["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]
@@ -5278,11 +5789,6 @@
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 20971520
-                      },
-                      "propertyId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       },
                       "sha256": {
                         "type": "string",
@@ -5296,7 +5802,7 @@
                         "maxLength": 200
                       }
                     },
-                    "required": ["purpose", "contentType", "sizeBytes", "propertyId", "sha256"]
+                    "required": ["purpose", "propertyId", "contentType", "sizeBytes", "sha256"]
                   },
                   {
                     "type": "object",
@@ -5304,6 +5810,11 @@
                       "purpose": {
                         "type": "string",
                         "enum": ["PROPERTY_PHOTO"]
+                      },
+                      "propertyId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       },
                       "contentType": {
                         "type": "string",
@@ -5314,10 +5825,35 @@
                         "minimum": 1,
                         "maximum": 5242880
                       },
-                      "propertyId": {
+                      "sha256": {
                         "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "filename": {
+                        "default": null,
+                        "nullable": true,
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "required": ["purpose", "propertyId", "contentType", "sizeBytes", "sha256"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "purpose": {
+                        "type": "string",
+                        "enum": ["AVATAR"]
+                      },
+                      "contentType": {
+                        "type": "string",
+                        "enum": ["image/jpeg"]
+                      },
+                      "sizeBytes": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1048576
                       },
                       "sha256": {
                         "type": "string",
@@ -5331,7 +5867,7 @@
                         "maxLength": 200
                       }
                     },
-                    "required": ["purpose", "contentType", "sizeBytes", "propertyId", "sha256"]
+                    "required": ["purpose", "contentType", "sizeBytes", "sha256"]
                   }
                 ]
               }

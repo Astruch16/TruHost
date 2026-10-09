@@ -17,9 +17,14 @@ import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
+import { Route as DevSettingsRouteImport } from './routes/dev/settings'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
 import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
+import { Route as AppAccountIndexRouteImport } from './routes/_app/account/index'
+import { Route as AppAccountNotificationsRouteImport } from './routes/_app/account/notifications'
+import { Route as AppAccountPreferencesRouteImport } from './routes/_app/account/preferences'
+import { Route as AppAccountSecurityRouteImport } from './routes/_app/account/security'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAdminBookingsRouteImport } from './routes/_app/admin/bookings'
 import { Route as AppAdminCalendarRouteImport } from './routes/_app/admin/calendar'
@@ -70,6 +75,11 @@ const DevNoAccessRoute = DevNoAccessRouteImport.update({
   path: '/dev/no-access',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevSettingsRoute = DevSettingsRouteImport.update({
+  id: '/dev/settings',
+  path: '/dev/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevUiRoute = DevUiRouteImport.update({
   id: '/dev/ui',
   path: '/dev/ui',
@@ -84,6 +94,26 @@ const SignUpSplatRoute = SignUpSplatRouteImport.update({
   id: '/sign-up/$',
   path: '/sign-up/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppAccountIndexRoute = AppAccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAccountRoute,
+} as any)
+const AppAccountNotificationsRoute = AppAccountNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppAccountRoute,
+} as any)
+const AppAccountPreferencesRoute = AppAccountPreferencesRouteImport.update({
+  id: '/preferences',
+  path: '/preferences',
+  getParentRoute: () => AppAccountRoute,
+} as any)
+const AppAccountSecurityRoute = AppAccountSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AppAccountRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
@@ -140,20 +170,25 @@ const AppAdminPropertiesPropertyIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/sso-callback': typeof SsoCallbackRoute
-  '/account': typeof AppAccountRoute
+  '/account': typeof AppAccountRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/settings': typeof DevSettingsRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/account/notifications': typeof AppAccountNotificationsRoute
+  '/account/preferences': typeof AppAccountPreferencesRoute
+  '/account/security': typeof AppAccountSecurityRoute
   '/admin/bookings': typeof AppAdminBookingsRoute
   '/admin/calendar': typeof AppAdminCalendarRoute
   '/admin/expenses': typeof AppAdminExpensesRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/team': typeof AppAdminTeamRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/account/': typeof AppAccountIndexRoute
   '/admin/': typeof AppAdminIndexRoute
   '/properties/': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
@@ -161,20 +196,24 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
-  '/account': typeof AppAccountRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/settings': typeof DevSettingsRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/': typeof AppIndexRoute
+  '/account/notifications': typeof AppAccountNotificationsRoute
+  '/account/preferences': typeof AppAccountPreferencesRoute
+  '/account/security': typeof AppAccountSecurityRoute
   '/admin/bookings': typeof AppAdminBookingsRoute
   '/admin/calendar': typeof AppAdminCalendarRoute
   '/admin/expenses': typeof AppAdminExpensesRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/team': typeof AppAdminTeamRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/account': typeof AppAccountIndexRoute
   '/admin': typeof AppAdminIndexRoute
   '/properties': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
@@ -184,21 +223,26 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/sso-callback': typeof SsoCallbackRoute
-  '/_app/account': typeof AppAccountRoute
+  '/_app/account': typeof AppAccountRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/settings': typeof DevSettingsRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/account/notifications': typeof AppAccountNotificationsRoute
+  '/_app/account/preferences': typeof AppAccountPreferencesRoute
+  '/_app/account/security': typeof AppAccountSecurityRoute
   '/_app/admin/bookings': typeof AppAdminBookingsRoute
   '/_app/admin/calendar': typeof AppAdminCalendarRoute
   '/_app/admin/expenses': typeof AppAdminExpensesRoute
   '/_app/admin/plans': typeof AppAdminPlansRoute
   '/_app/admin/team': typeof AppAdminTeamRoute
   '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
+  '/_app/account/': typeof AppAccountIndexRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/properties/': typeof AppPropertiesIndexRoute
   '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
@@ -214,15 +258,20 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/settings'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
+    | '/account/notifications'
+    | '/account/preferences'
+    | '/account/security'
     | '/admin/bookings'
     | '/admin/calendar'
     | '/admin/expenses'
     | '/admin/plans'
     | '/admin/team'
     | '/properties/$propertyId'
+    | '/account/'
     | '/admin/'
     | '/properties/'
     | '/admin/properties/$propertyId'
@@ -230,20 +279,24 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sso-callback'
-    | '/account'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/settings'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/'
+    | '/account/notifications'
+    | '/account/preferences'
+    | '/account/security'
     | '/admin/bookings'
     | '/admin/calendar'
     | '/admin/expenses'
     | '/admin/plans'
     | '/admin/team'
     | '/properties/$propertyId'
+    | '/account'
     | '/admin'
     | '/properties'
     | '/admin/properties/$propertyId'
@@ -257,16 +310,21 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/settings'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
     | '/_app/'
+    | '/_app/account/notifications'
+    | '/_app/account/preferences'
+    | '/_app/account/security'
     | '/_app/admin/bookings'
     | '/_app/admin/calendar'
     | '/_app/admin/expenses'
     | '/_app/admin/plans'
     | '/_app/admin/team'
     | '/_app/properties/$propertyId'
+    | '/_app/account/'
     | '/_app/admin/'
     | '/_app/properties/'
     | '/_app/admin/properties/$propertyId'
@@ -279,6 +337,7 @@ export interface RootRouteChildren {
   DevDashboardRoute: typeof DevDashboardRoute
   DevLoadingRoute: typeof DevLoadingRoute
   DevNoAccessRoute: typeof DevNoAccessRoute
+  DevSettingsRoute: typeof DevSettingsRoute
   DevUiRoute: typeof DevUiRoute
   SignInSplatRoute: typeof SignInSplatRoute
   SignUpSplatRoute: typeof SignUpSplatRoute
@@ -342,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevNoAccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/settings': {
+      id: '/dev/settings'
+      path: '/dev/settings'
+      fullPath: '/dev/settings'
+      preLoaderRoute: typeof DevSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/ui': {
       id: '/dev/ui'
       path: '/dev/ui'
@@ -362,6 +428,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign-up/$'
       preLoaderRoute: typeof SignUpSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/account/': {
+      id: '/_app/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AppAccountIndexRouteImport
+      parentRoute: typeof AppAccountRoute
+    }
+    '/_app/account/notifications': {
+      id: '/_app/account/notifications'
+      path: '/notifications'
+      fullPath: '/account/notifications'
+      preLoaderRoute: typeof AppAccountNotificationsRouteImport
+      parentRoute: typeof AppAccountRoute
+    }
+    '/_app/account/preferences': {
+      id: '/_app/account/preferences'
+      path: '/preferences'
+      fullPath: '/account/preferences'
+      preLoaderRoute: typeof AppAccountPreferencesRouteImport
+      parentRoute: typeof AppAccountRoute
+    }
+    '/_app/account/security': {
+      id: '/_app/account/security'
+      path: '/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof AppAccountSecurityRouteImport
+      parentRoute: typeof AppAccountRoute
     }
     '/_app/admin/': {
       id: '/_app/admin/'
@@ -436,6 +530,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAccountRouteChildren {
+  AppAccountNotificationsRoute: typeof AppAccountNotificationsRoute
+  AppAccountPreferencesRoute: typeof AppAccountPreferencesRoute
+  AppAccountSecurityRoute: typeof AppAccountSecurityRoute
+  AppAccountIndexRoute: typeof AppAccountIndexRoute
+}
+
+const AppAccountRouteChildren: AppAccountRouteChildren = {
+  AppAccountNotificationsRoute: AppAccountNotificationsRoute,
+  AppAccountPreferencesRoute: AppAccountPreferencesRoute,
+  AppAccountSecurityRoute: AppAccountSecurityRoute,
+  AppAccountIndexRoute: AppAccountIndexRoute,
+}
+
+const AppAccountRouteWithChildren = AppAccountRoute._addFileChildren(
+  AppAccountRouteChildren,
+)
+
 interface AppAdminRouteChildren {
   AppAdminBookingsRoute: typeof AppAdminBookingsRoute
   AppAdminCalendarRoute: typeof AppAdminCalendarRoute
@@ -463,7 +575,7 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
-  AppAccountRoute: typeof AppAccountRoute
+  AppAccountRoute: typeof AppAccountRouteWithChildren
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppPropertiesPropertyIdRoute: typeof AppPropertiesPropertyIdRoute
@@ -471,7 +583,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAccountRoute: AppAccountRoute,
+  AppAccountRoute: AppAccountRouteWithChildren,
   AppAdminRoute: AppAdminRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppPropertiesPropertyIdRoute: AppPropertiesPropertyIdRoute,
@@ -486,6 +598,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevDashboardRoute: DevDashboardRoute,
   DevLoadingRoute: DevLoadingRoute,
   DevNoAccessRoute: DevNoAccessRoute,
+  DevSettingsRoute: DevSettingsRoute,
   DevUiRoute: DevUiRoute,
   SignInSplatRoute: SignInSplatRoute,
   SignUpSplatRoute: SignUpSplatRoute,

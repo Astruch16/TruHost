@@ -61,6 +61,8 @@ describe('authorization matrix', () => {
         expect(res.status, JSON.stringify(res.body)).toBe(c.everyoneGets);
       } else if (who === 'admin' && c.adminGets !== undefined) {
         expect(res.status, JSON.stringify(res.body)).toBe(c.adminGets);
+      } else if (allowed(c, who) && c.allowedGets !== undefined) {
+        expect(res.status, JSON.stringify(res.body)).toBe(c.allowedGets);
       } else if (allowed(c, who)) {
         expect(res.status, JSON.stringify(res.body)).toBeLessThan(300);
       } else {

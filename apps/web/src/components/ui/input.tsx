@@ -1,4 +1,5 @@
-import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, useState, type InputHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useFieldContext } from '../../lib/field-context';
 import { controlStyles } from '../../lib/styles';
 import { cx } from '../../lib/cx';
@@ -39,3 +40,31 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     />
   );
 });
+
+/** Password input with a show/hide toggle. */
+export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>>(
+  function PasswordInput({ className, ...props }, ref) {
+    const [shown, setShown] = useState(false);
+    const Icon = shown ? EyeOff : Eye;
+    return (
+      <div className="relative">
+        <input
+          ref={ref}
+          type={shown ? 'text' : 'password'}
+          {...props}
+          {...useControlProps(props)}
+          className={cx(controlStyles, 'pr-12', className)}
+        />
+        <button
+          type="button"
+          onClick={() => setShown(!shown)}
+          aria-label={shown ? 'Hide password' : 'Show password'}
+          aria-pressed={shown}
+          className="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center rounded-control-sm text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep"
+        >
+          <Icon aria-hidden className="size-4" />
+        </button>
+      </div>
+    );
+  },
+);

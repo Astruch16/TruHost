@@ -14,7 +14,7 @@ export interface CalendarStay {
 
 export interface Segment {
   stay: CalendarStay;
-  /** 0 = Sunday. */
+  /** 0 = the first day of the week. */
   startCol: number;
   /** Inclusive. */
   endCol: number;
@@ -34,11 +34,11 @@ const DAY = 86_400_000;
 const toDay = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / DAY;
 const fromDay = (d: number) => new Date(d * DAY).toISOString().slice(0, 10);
 
-export function monthGrid(month: string, stays: CalendarStay[]): Week[] {
+export function monthGrid(month: string, stays: CalendarStay[], weekStartsOn: 0 | 1 = 0): Week[] {
   const first = toDay(`${month}-01`);
   const [y, m] = month.split('-').map(Number) as [number, number];
   const next = Date.UTC(y, m, 1) / DAY;
-  const lead = new Date(first * DAY).getUTCDay();
+  const lead = (new Date(first * DAY).getUTCDay() - weekStartsOn + 7) % 7;
   const weeks: Week[] = [];
 
   for (let weekStart = first - lead; weekStart < next; weekStart += 7) {

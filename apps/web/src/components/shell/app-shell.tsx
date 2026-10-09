@@ -13,6 +13,7 @@ export interface ShellUser {
   initials: string;
   role: string;
   email: string;
+  avatarUrl?: string | null;
 }
 
 /**
@@ -28,7 +29,6 @@ export function AppShell({
   allowAllProperties = false,
   unreadNotifications = 0,
   onSignOut,
-  onManageSignIn,
   children,
 }: {
   nav: NavItem[];
@@ -40,7 +40,6 @@ export function AppShell({
   allowAllProperties?: boolean;
   unreadNotifications?: number;
   onSignOut: () => void;
-  onManageSignIn: () => void;
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -100,7 +99,7 @@ export function AppShell({
             )}
           </div>
           <NotificationsBell unread={unreadNotifications} />
-          <ProfileMenu {...user} onSignOut={onSignOut} onManageSignIn={onManageSignIn} />
+          <ProfileMenu {...user} onSignOut={onSignOut} />
         </header>
         <main
           id="main"

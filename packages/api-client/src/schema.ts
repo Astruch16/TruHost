@@ -36,6 +36,38 @@ export interface paths {
     patch: operations['Me_update'];
     trace?: never;
   };
+  '/v1/me/avatar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['Me_setAvatar'];
+    post?: never;
+    delete: operations['Me_removeAvatar'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/notification-settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Me_notificationSettings'];
+    put: operations['Me_updateNotificationSettings'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/config': {
     parameters: {
       query?: never;
@@ -716,6 +748,14 @@ export interface operations {
             status: 'INVITED' | 'ACTIVE' | 'DEACTIVATED';
             /** @enum {string} */
             guide: 'SAGE' | 'JUNIPER' | 'PIP';
+            avatar: {
+              url: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
+            weekStartsOn: 0 | 1;
+            /** @enum {string} */
+            motion: 'SYSTEM' | 'REDUCED';
             memberships: {
               /** Format: uuid */
               id: string;
@@ -747,6 +787,9 @@ export interface operations {
           phone?: string | null;
           /** @enum {string} */
           guide?: 'SAGE' | 'JUNIPER' | 'PIP';
+          weekStartsOn?: 0 | 1;
+          /** @enum {string} */
+          motion?: 'SYSTEM' | 'REDUCED';
         };
       };
     };
@@ -769,6 +812,14 @@ export interface operations {
             status: 'INVITED' | 'ACTIVE' | 'DEACTIVATED';
             /** @enum {string} */
             guide: 'SAGE' | 'JUNIPER' | 'PIP';
+            avatar: {
+              url: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
+            weekStartsOn: 0 | 1;
+            /** @enum {string} */
+            motion: 'SYSTEM' | 'REDUCED';
             memberships: {
               /** Format: uuid */
               id: string;
@@ -779,6 +830,196 @@ export interface operations {
                 id: string;
                 name: string;
               };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Me_setAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          fileId: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string | null;
+            /** @enum {string|null} */
+            staffRole: 'ADMIN' | null;
+            /** @enum {string} */
+            status: 'INVITED' | 'ACTIVE' | 'DEACTIVATED';
+            /** @enum {string} */
+            guide: 'SAGE' | 'JUNIPER' | 'PIP';
+            avatar: {
+              url: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
+            weekStartsOn: 0 | 1;
+            /** @enum {string} */
+            motion: 'SYSTEM' | 'REDUCED';
+            memberships: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              role: 'OWNER' | 'CLEANER';
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Me_removeAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string | null;
+            /** @enum {string|null} */
+            staffRole: 'ADMIN' | null;
+            /** @enum {string} */
+            status: 'INVITED' | 'ACTIVE' | 'DEACTIVATED';
+            /** @enum {string} */
+            guide: 'SAGE' | 'JUNIPER' | 'PIP';
+            avatar: {
+              url: string;
+              /** Format: date-time */
+              expiresAt: string;
+            } | null;
+            weekStartsOn: 0 | 1;
+            /** @enum {string} */
+            motion: 'SYSTEM' | 'REDUCED';
+            memberships: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              role: 'OWNER' | 'CLEANER';
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Me_notificationSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** @enum {string} */
+              category:
+                | 'SUPPLY_ALERTS'
+                | 'INVITE_ACCEPTED'
+                | 'WEEKLY_SUMMARY'
+                | 'STATEMENT_RELEASED'
+                | 'CLEAN_ASSIGNED'
+                | 'PAYMENT_RECORDED';
+              email: boolean;
+              inApp: boolean;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Me_updateNotificationSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          items: {
+            /** @enum {string} */
+            category:
+              | 'SUPPLY_ALERTS'
+              | 'INVITE_ACCEPTED'
+              | 'WEEKLY_SUMMARY'
+              | 'STATEMENT_RELEASED'
+              | 'CLEAN_ASSIGNED'
+              | 'PAYMENT_RECORDED';
+            email: boolean;
+            inApp: boolean;
+          }[];
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** @enum {string} */
+              category:
+                | 'SUPPLY_ALERTS'
+                | 'INVITE_ACCEPTED'
+                | 'WEEKLY_SUMMARY'
+                | 'STATEMENT_RELEASED'
+                | 'CLEAN_ASSIGNED'
+                | 'PAYMENT_RECORDED';
+              email: boolean;
+              inApp: boolean;
             }[];
           };
         };
@@ -2683,11 +2924,11 @@ export interface operations {
           | {
               /** @enum {string} */
               purpose: 'RECEIPT';
+              /** Format: uuid */
+              propertyId: string;
               /** @enum {string} */
               contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/heic' | 'application/pdf';
               sizeBytes: number;
-              /** Format: uuid */
-              propertyId: string;
               sha256: string;
               /** @default null */
               filename?: string | null;
@@ -2695,11 +2936,21 @@ export interface operations {
           | {
               /** @enum {string} */
               purpose: 'PROPERTY_PHOTO';
+              /** Format: uuid */
+              propertyId: string;
               /** @enum {string} */
               contentType: 'image/jpeg';
               sizeBytes: number;
-              /** Format: uuid */
-              propertyId: string;
+              sha256: string;
+              /** @default null */
+              filename?: string | null;
+            }
+          | {
+              /** @enum {string} */
+              purpose: 'AVATAR';
+              /** @enum {string} */
+              contentType: 'image/jpeg';
+              sizeBytes: number;
               sha256: string;
               /** @default null */
               filename?: string | null;

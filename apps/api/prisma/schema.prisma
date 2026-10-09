@@ -25,22 +25,29 @@ enum UserStatus {
 }
 
 model User {
-  id            String     @id @default(uuid(7)) @db.Uuid
+  id                   String                @id @default(uuid(7)) @db.Uuid
   /// Null until first sign-in; linked on the first authenticated request by Clerk's verified email.
-  clerkUserId   String?    @unique
+  clerkUserId          String?               @unique
   /// Stored lower-cased.
-  email         String     @unique
-  firstName     String
-  lastName      String
-  phone         String?
+  email                String                @unique
+  firstName            String
+  lastName             String
+  phone                String?
   /// Null = not staff. Company-wide; owner/cleaner access lives in Membership.
-  staffRole     StaffRole?
-  status        UserStatus @default(INVITED)
-  deactivatedAt DateTime?  @db.Timestamptz
+  staffRole            StaffRole?
+  status               UserStatus            @default(INVITED)
+  deactivatedAt        DateTime?             @db.Timestamptz
   /// The guide character this user picked (Settings). Purely a display preference.
-  guide         Guide      @default(SAGE)
-  createdAt     DateTime   @default(now()) @db.Timestamptz
-  updatedAt     DateTime   @updatedAt @db.Timestamptz
+  guide                Guide                 @default(SAGE)
+  /// Profile photo (an AVATAR file). Replacing or removing it deletes the old file and object.
+  avatarFileId         String?               @unique @db.Uuid
+  avatarFile           StoredFile?           @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: Restrict)
+  /// Display preferences (Settings): first day of the week in calendars (0 = Sunday, 1 = Monday; CHECK) and motion.
+  weekStartsOn         Int                   @default(0)
+  motion               MotionPreference      @default(SYSTEM)
+  notificationSettings NotificationSetting[]
+  createdAt            DateTime              @default(now()) @db.Timestamptz
+  updatedAt            DateTime              @updatedAt @db.Timestamptz
 
   memberships            Membership[]     @relation("MembershipUser")
   membershipsCreated     Membership[]     @relation("MembershipCreatedBy")
@@ -58,6 +65,34 @@ model User {
   receiptsVoided         Receipt[]        @relation("ReceiptVoidedBy")
   filesUploaded          StoredFile[]
   propertyPhotosUploaded PropertyPhoto[]
+}
+
+/// SYSTEM follows the device's reduced-motion setting; REDUCED turns animations off in the app regardless.
+enum MotionPreference {
+  SYSTEM
+  REDUCED
+}
+
+/// What a user can be notified about. Which ones apply depends on their roles (see the shared catalogue).
+enum NotificationCategory {
+  SUPPLY_ALERTS
+  INVITE_ACCEPTED
+  WEEKLY_SUMMARY
+  STATEMENT_RELEASED
+  CLEAN_ASSIGNED
+  PAYMENT_RECORDED
+}
+
+/// A user's choice for one category. A missing row means the category's default.
+model NotificationSetting {
+  userId    String               @db.Uuid
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  category  NotificationCategory
+  email     Boolean
+  inApp     Boolean
+  updatedAt DateTime             @updatedAt @db.Timestamptz
+
+  @@id([userId, category])
 }
 
 /// The three guide characters (docs/design/Mascots.dc.html).
@@ -436,6 +471,8 @@ enum FilePurpose {
   CLEAN_PHOTO
   DAMAGE_PHOTO
   PROPERTY_PHOTO
+  /// A user's profile photo: one small square JPEG. Not property-scoped; replaced and removed outright.
+  AVATAR
 }
 
 enum FileStatus {
@@ -449,9 +486,10 @@ enum FileStatus {
 model StoredFile {
   id               String      @id @default(uuid(7)) @db.Uuid
   purpose          FilePurpose
-  /// Scoping key and object-key prefix: properties/{propertyId}/{purpose}/{id}.
-  propertyId       String      @db.Uuid
-  property         Property    @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// Scoping key and object-key prefix: properties/{propertyId}/{purpose}/{id}. Null only for AVATAR, which belongs
+  /// to a user (users/{userId}/avatar/{id}) (CHECK).
+  propertyId       String?     @db.Uuid
+  property         Property?   @relation(fields: [propertyId], references: [id], onDelete: Restrict)
   objectKey        String      @unique
   /// Allow-listed per purpose (images and PDF for receipts; JPEG for property photos).
   contentType      String
@@ -468,6 +506,7 @@ model StoredFile {
   originalFilename String?
 
   receipt            Receipt?
+  avatarOf           User?          @relation("UserAvatar")
   propertyPhoto      PropertyPhoto? @relation("PropertyPhotoLarge")
   propertyPhotoThumb PropertyPhoto? @relation("PropertyPhotoThumb")
 
