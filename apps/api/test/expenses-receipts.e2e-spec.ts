@@ -45,6 +45,15 @@ describe('expenses', () => {
     expect(await t.prisma.auditLog.count({ where: { action: 'expense.create', entityId: res.body.id } })).toBe(1);
   });
 
+  it('accepts streaming and other subscriptions as their own category', async () => {
+    const res = await create({ category: 'SUBSCRIPTIONS', vendor: 'Netflix', description: 'Standard plan' }).expect(
+      201,
+    );
+    expect(res.body).toMatchObject({ category: 'SUBSCRIPTIONS', vendor: 'Netflix' });
+    const owner = await t.as('ownerA').get(`/v1/properties/${w.propertyA.id}/expenses?${NOV}`).expect(200);
+    expect(owner.body.items).toContainEqual(expect.objectContaining({ category: 'SUBSCRIPTIONS' }));
+  });
+
   it('never flags TruHost-borne expenses as missing a receipt', async () => {
     expect((await create({ bearer: 'TRUHOST' }).expect(201)).body.missingReceipt).toBe(false);
   });
