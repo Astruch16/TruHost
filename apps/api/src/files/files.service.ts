@@ -14,7 +14,7 @@ import { FILE_STORAGE, linkWindow, type FileStorage } from './storage.js';
 type UploadInput = z.output<typeof createUpload>;
 
 /** Who may upload a file of each purpose (and so to which properties). */
-const UPLOAD_ACTION: Record<UploadInput['purpose'], Action> = {
+const UPLOAD_ACTION: Record<Exclude<UploadInput['purpose'], 'AVATAR'>, Action> = {
   RECEIPT: 'receipt:write',
   PROPERTY_PHOTO: 'property:write',
 };
@@ -34,16 +34,22 @@ export class FilesService {
 
   /** Records a PENDING file and returns a signed PUT for exactly the declared bytes. */
   async createUpload(actor: Actor, input: UploadInput) {
-    this.access.assert(actor, UPLOAD_ACTION[input.purpose], input.propertyId, 'Property');
-    if (!(await this.prisma.property.count({ where: { id: input.propertyId } }))) throw notFound('Property');
+    // Avatars belong to the signed-in user (anyone may upload their own); everything else to a property.
+    const propertyId = input.purpose === 'AVATAR' ? null : input.propertyId;
+    if (input.purpose !== 'AVATAR') {
+      this.access.assert(actor, UPLOAD_ACTION[input.purpose], input.propertyId, 'Property');
+      if (!(await this.prisma.property.count({ where: { id: input.propertyId } }))) throw notFound('Property');
+    }
 
     const id = uuidv7();
     const file = await this.prisma.storedFile.create({
       data: {
         id,
         purpose: input.purpose,
-        propertyId: input.propertyId,
-        objectKey: `properties/${input.propertyId}/${input.purpose.toLowerCase()}/${id}`,
+        propertyId,
+        objectKey: propertyId
+          ? `properties/${propertyId}/${input.purpose.toLowerCase()}/${id}`
+          : `users/${actor.userId}/avatar/${id}`,
         contentType: input.contentType,
         sizeBytes: input.sizeBytes,
         sha256: input.sha256,
@@ -65,7 +71,12 @@ export class FilesService {
    * Confirms a PENDING upload is in storage exactly as declared and marks it VERIFIED. Called inside the
    * transaction that attaches the file to its domain row, so a file is never verified without an owner.
    */
-  async verifyForAttach(tx: Tx, actor: Actor, fileId: string, expect: { propertyId: string; purpose: FilePurpose }) {
+  async verifyForAttach(
+    tx: Tx,
+    actor: Actor,
+    fileId: string,
+    expect: { propertyId: string | null; purpose: FilePurpose },
+  ) {
     const file = await tx.storedFile.findUnique({ where: { id: fileId } });
     if (!file || file.uploadedById !== actor.userId) throw unprocessable('UNKNOWN_FILE', 'Upload not found');
     if (file.propertyId !== expect.propertyId || file.purpose !== expect.purpose) {
@@ -108,6 +119,16 @@ export class FilesService {
     if (failed > 0) this.logger.error(`Could not delete ${failed} of ${keys.length} stored objects; they are orphaned`);
   }
 
+  /** A windowed (cacheable) signed link to a user's avatar; the caller has already decided they may see it. */
+  async avatarLink(file: FileRef) {
+    const { url, expiresAt } = await this.storage.presignGet(file.objectKey, {
+      contentType: file.contentType,
+      filename: null,
+      window: linkWindow(this.clock.now()),
+    });
+    return { url, expiresAt };
+  }
+
   /** Short-lived viewing link. Access is decided by what the file is attached to. */
   async viewUrl(actor: Actor, fileId: string) {
     const file = await this.prisma.storedFile.findUnique({
@@ -116,6 +137,7 @@ export class FilesService {
         receipt: { include: { expense: { select: { bearer: true, voidedAt: true } } } },
         propertyPhoto: { select: { id: true } },
         propertyPhotoThumb: { select: { id: true } },
+        avatarOf: { select: { id: true } },
       },
     });
     if (!file || !this.canView(actor, file)) throw notFound('File');
@@ -129,8 +151,12 @@ export class FilesService {
       receipt: { voidedAt: Date | null; expense: { bearer: string; voidedAt: Date | null } | null } | null;
       propertyPhoto: { id: string } | null;
       propertyPhotoThumb: { id: string } | null;
+      avatarOf: { id: string } | null;
     },
   ): boolean {
+    // Avatars: their owner and admins (who see everyone on the team page).
+    if (file.purpose === 'AVATAR') return file.uploadedById === actor.userId || this.access.isAdmin(actor);
+    if (!file.propertyId) return false;
     // Property photos: anyone who can see the property.
     if (file.propertyPhoto || file.propertyPhotoThumb) return this.access.can(actor, 'property:read', file.propertyId);
     // Unattached uploads are visible only to whoever uploaded them.

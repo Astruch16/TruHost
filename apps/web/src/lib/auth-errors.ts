@@ -35,7 +35,7 @@ export function signInErrorMessage(error: unknown): string {
     case 'form_param_missing':
       return 'Fill in both your email and password.';
     case 'form_code_incorrect':
-      return 'That code isn’t right. Check the email we sent and try again.';
+      return 'That code isn’t right. Check it and try again.';
     case 'verification_expired':
       return 'That code has expired. Send a new one.';
     case 'verification_failed':

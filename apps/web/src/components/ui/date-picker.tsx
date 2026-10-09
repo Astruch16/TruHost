@@ -15,17 +15,8 @@ import {
 } from '../../lib/dates';
 import { useFieldContext } from '../../lib/field-context';
 import { monthLabel } from '../../lib/months';
+import { useWeekStart, weekdayNames } from '../../lib/preferences';
 import { controlStyles, menuSurfaceStyles } from '../../lib/styles';
-
-const WEEKDAYS = [
-  ['S', 'Sunday'],
-  ['M', 'Monday'],
-  ['T', 'Tuesday'],
-  ['W', 'Wednesday'],
-  ['T', 'Thursday'],
-  ['F', 'Friday'],
-  ['S', 'Saturday'],
-] as const;
 
 const navButton =
   'grid size-8 place-items-center rounded-full text-ink transition-colors hover:bg-sage-tint/60 disabled:opacity-30 disabled:hover:bg-transparent';
@@ -33,7 +24,7 @@ const navButton =
 /**
  * Date field with our own calendar (native date pickers can't be styled and look different in every browser).
  * The button shows the date in words; the panel shows a month at a time, marks today, and, with `rangeStart`
- * (check-out after check-in), shades the stay and counts its nights. Keyboard: arrows move by day and week,
+ * (check-out after check-in), shades the stay and counts its nights. Weeks start on the user's chosen day (Settings). Keyboard: arrows move by day and week,
  * Page Up/Down by month (with Shift, by year), Home/End to the week's ends, Enter picks. Inside a <Field> it picks
  * up the label, description and error wiring.
  */
@@ -61,6 +52,7 @@ export function DatePicker({
   'aria-label'?: string;
 }) {
   const field = useFieldContext();
+  const weekStartsOn = useWeekStart();
   const [open, setOpen] = useState(false);
   const today = todayIso();
   const startAt = () => clampDate(value || (rangeStart && rangeStart > today ? rangeStart : today), min, max);
@@ -108,7 +100,7 @@ export function DatePicker({
     focusOnRender.current = true;
   };
   const onGridKey = (e: KeyboardEvent) => {
-    const next = moveFocus(focused, e.key, e.shiftKey);
+    const next = moveFocus(focused, e.key, e.shiftKey, weekStartsOn);
     if (!next) return;
     e.preventDefault();
     focus(next);
@@ -123,7 +115,7 @@ export function DatePicker({
   const rangeEnd = hovered && rangeStart && hovered > rangeStart ? hovered : value;
   const inRange = (iso: string) => Boolean(rangeStart && rangeEnd && iso > rangeStart && iso < rangeEnd);
   const nights = rangeStart && rangeEnd && rangeEnd > rangeStart ? nightsBetween(rangeStart, rangeEnd) : null;
-  const days = calendarDays(month);
+  const days = calendarDays(month, weekStartsOn);
   // One day in view is reachable with Tab (roving focus): the focused one, else the first that can be picked.
   const tabStop =
     monthOf(focused) === month && !outOfBounds(focused)
@@ -207,14 +199,14 @@ export function DatePicker({
             onMouseLeave={() => setHovered(null)}
           >
             <div role="row" className="grid grid-cols-7">
-              {WEEKDAYS.map(([short, long]) => (
+              {weekdayNames(weekStartsOn).map((long) => (
                 <span
                   key={long}
                   role="columnheader"
                   aria-label={long}
                   className="py-1 text-center text-xs font-semibold text-muted"
                 >
-                  {short}
+                  {long.charAt(0)}
                 </span>
               ))}
             </div>

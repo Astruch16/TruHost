@@ -11,6 +11,19 @@ export type UserStatus = z.infer<typeof UserStatus>;
 export const Guide = z.enum(['SAGE', 'JUNIPER', 'PIP']);
 export type Guide = z.infer<typeof Guide>;
 
+export const MotionPreference = z.enum(['SYSTEM', 'REDUCED']);
+export type MotionPreference = z.infer<typeof MotionPreference>;
+
+export const NotificationCategory = z.enum([
+  'SUPPLY_ALERTS',
+  'INVITE_ACCEPTED',
+  'WEEKLY_SUMMARY',
+  'STATEMENT_RELEASED',
+  'CLEAN_ASSIGNED',
+  'PAYMENT_RECORDED',
+]);
+export type NotificationCategory = z.infer<typeof NotificationCategory>;
+
 export const InviteStatus = z.enum(['PENDING', 'ACCEPTED', 'REVOKED']);
 export type InviteStatus = z.infer<typeof InviteStatus>;
 

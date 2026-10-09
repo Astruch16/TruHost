@@ -1,8 +1,8 @@
 import { checkoutsByDay, monthGrid, type CalendarStay } from '../../lib/calendar';
 import { cx } from '../../lib/cx';
 import { monogram } from '../../lib/dashboard-format';
+import { useWeekStart, weekdayNames } from '../../lib/preferences';
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const BAR_H = 22;
 const BAR_GAP = 4;
 
@@ -20,16 +20,17 @@ export function MonthCalendar({
   today: string | null;
   showProperty: boolean;
 }) {
-  const weeks = monthGrid(month, stays);
+  const weekStartsOn = useWeekStart();
+  const weeks = monthGrid(month, stays, weekStartsOn);
   const checkouts = checkoutsByDay(month, stays);
 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[640px] overflow-hidden rounded-inner border border-line">
         <div className="grid grid-cols-7 border-b border-line bg-ground text-xs font-semibold text-muted">
-          {WEEKDAYS.map((d) => (
+          {weekdayNames(weekStartsOn).map((d) => (
             <div key={d} className="px-2.5 py-2">
-              {d}
+              {d.slice(0, 3)}
             </div>
           ))}
         </div>

@@ -32,18 +32,24 @@ export const monthOf = (iso: string) => iso.slice(0, 7);
 /** 0 = Sunday. */
 export const weekday = (iso: string) => new Date(parse(iso)).getUTCDay();
 
+/** 0 = Sunday first, 1 = Monday first (the user's preference). */
+export type WeekStart = 0 | 1;
+
+/** Position of a day in a week that starts on `weekStartsOn` (0 = first column). */
+export const weekColumn = (iso: string, weekStartsOn: WeekStart = 0) => (weekday(iso) - weekStartsOn + 7) % 7;
+
 /**
- * The days shown for a month: whole weeks, Sunday first, always six of them (42 days) so the panel never changes
- * height between months.
+ * The days shown for a month: whole weeks, starting on the user's first day of the week, always six of them (42
+ * days) so the panel never changes height between months.
  */
-export function calendarDays(month: string): string[] {
+export function calendarDays(month: string, weekStartsOn: WeekStart = 0): string[] {
   const first = `${month}-01`;
-  const start = addDays(first, -weekday(first));
+  const start = addDays(first, -weekColumn(first, weekStartsOn));
   return Array.from({ length: 42 }, (_, i) => addDays(start, i));
 }
 
 /** Where a key press moves the focused day in a calendar grid, or null for keys it doesn't handle. */
-export function moveFocus(iso: string, key: string, shift = false): string | null {
+export function moveFocus(iso: string, key: string, shift = false, weekStartsOn: WeekStart = 0): string | null {
   switch (key) {
     case 'ArrowLeft':
       return addDays(iso, -1);
@@ -54,9 +60,9 @@ export function moveFocus(iso: string, key: string, shift = false): string | nul
     case 'ArrowDown':
       return addDays(iso, 7);
     case 'Home':
-      return addDays(iso, -weekday(iso));
+      return addDays(iso, -weekColumn(iso, weekStartsOn));
     case 'End':
-      return addDays(iso, 6 - weekday(iso));
+      return addDays(iso, 6 - weekColumn(iso, weekStartsOn));
     case 'PageUp':
       return addMonthsToDate(iso, shift ? -12 : -1);
     case 'PageDown':

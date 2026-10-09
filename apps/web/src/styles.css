@@ -125,6 +125,15 @@
       animation-iteration-count: 1 !important;
     }
   }
+  /* "Reduce motion" chosen in Settings (lib/preferences.ts sets data-motion on <html>): the same as the system
+     setting above, for people who want it in TruHost only. */
+  :root[data-motion='reduced'] *,
+  :root[data-motion='reduced'] ::before,
+  :root[data-motion='reduced'] ::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 /* Radix popover/dialog enter animations (disabled by the reduced-motion rule above). */
@@ -336,6 +345,24 @@
   }
 }
 
+/* The same under "Reduce motion" in Settings. */
+:root[data-motion='reduced']
+  :is(
+    .th-wave,
+    .th-blink,
+    .th-bob,
+    .th-sway,
+    .th-point,
+    .th-celebrate,
+    .th-think,
+    .th-sleep,
+    .th-nudge,
+    .th-float,
+    .th-pop
+  ) {
+  animation: none !important;
+}
+
 /* Empty state illustrations (components/illustrations). Keyframes and classes copied from
    docs/design/EmptyIcons.dc.html, including switching them off under reduced motion. */
 @keyframes ei-float {
@@ -456,6 +483,10 @@
   .ei-twinkle {
     animation: none !important;
   }
+}
+
+:root[data-motion='reduced'] :is(.ei-float, .ei-pop, .ei-grow, .ei-stamp, .ei-peek, .ei-glow, .ei-twinkle) {
+  animation: none !important;
 }
 
 /* Sign-in scene and card (components/auth). Keyframes and classes copied from docs/design/Login.dc.html. Extra:

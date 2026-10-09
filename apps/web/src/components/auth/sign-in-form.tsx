@@ -20,11 +20,15 @@ type Step =
   | { kind: 'reset-code' }
   | { kind: 'reset-password' }
   /** Clerk's device check: a new browser confirms with an emailed code before the session is created. */
-  | { kind: 'device-code' };
+  | { kind: 'device-code' }
+  /** Two-step verification is on: a code from the authenticator app, or one of the backup codes. */
+  | { kind: 'totp' }
+  | { kind: 'backup-code' };
 
 /**
  * Our own sign-in on Clerk's useSignIn hook (no Clerk UI): email and password, Continue with Google, and the
- * forgot-password flow (email code, then a new password). Sign-up stays invite only, so there is no sign-up link;
+ * forgot-password flow (email code, then a new password), and two-step verification (authenticator app or backup
+ * code) for accounts that turned it on in Settings. Sign-up stays invite only, so there is no sign-up link;
  * invited users arrive through the link in their invitation.
  */
 export function SignInForm({ initialError = null }: { initialError?: string | null }) {
@@ -84,6 +88,11 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
       );
       if (!opened) setLeaving(false);
       return;
+    }
+    if (signIn.status === 'needs_second_factor') {
+      const factors = signIn.supportedSecondFactors.map((f) => f.strategy);
+      if (factors.includes('totp')) return go({ kind: 'totp' });
+      if (factors.includes('backup_code')) return go({ kind: 'backup-code' });
     }
     if (signIn.status === 'needs_client_trust' || signIn.status === 'needs_second_factor') {
       const byEmail = signIn.supportedSecondFactors.some((f) => f.strategy === 'email_code');
@@ -165,6 +174,15 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
   const verifyDeviceCode = async (e: FormEvent) => {
     e.preventDefault();
     if (await run('submit', () => signIn.mfa.verifyEmailCode({ code: code.trim() }))) await continueSignIn();
+  };
+
+  const verifyTwoStep = async (e: FormEvent) => {
+    e.preventDefault();
+    const typed = code.replace(/[\s-]/g, '');
+    const verified = await run('submit', () =>
+      step.kind === 'totp' ? signIn.mfa.verifyTOTP({ code: typed }) : signIn.mfa.verifyBackupCode({ code: typed }),
+    );
+    if (verified) await continueSignIn();
   };
 
   const resendDeviceCode = async () => {
@@ -255,6 +273,48 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
           <AuthLink onClick={() => void (reset ? resendResetCode() : resendDeviceCode())}>
             {pending === 'resend' ? 'Sending…' : 'Send a new code'}
           </AuthLink>
+        </div>
+      </AuthCard>
+    );
+  }
+
+  if (step.kind === 'totp' || step.kind === 'backup-code') {
+    const app = step.kind === 'totp';
+    const canSwitch = signIn.supportedSecondFactors.some((f) => f.strategy === (app ? 'backup_code' : 'totp'));
+    return (
+      <AuthCard
+        title="Two-step verification"
+        subtitle={
+          app
+            ? 'Open your authenticator app and enter the 6-digit code for TruHost.'
+            : 'Enter one of the backup codes you saved when you set up two-step verification.'
+        }
+      >
+        <form onSubmit={verifyTwoStep} noValidate className="flex flex-col gap-3.5 sm:gap-[18px]">
+          <AuthField
+            key={step.kind}
+            label={app ? 'Authentication code' : 'Backup code'}
+            inputMode={app ? 'numeric' : 'text'}
+            autoComplete="one-time-code"
+            placeholder={app ? '6-digit code' : 'Backup code'}
+            maxLength={app ? 9 : 20}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            invalid={Boolean(error)}
+            autoFocus
+          />
+          <AuthError>{error}</AuthError>
+          <AuthButton loading={pending === 'submit' || leaving} disabled={!code.trim()}>
+            {leaving ? 'Signing in…' : 'Verify and sign in'}
+          </AuthButton>
+        </form>
+        <div className="flex items-center justify-between">
+          <AuthLink onClick={backToSignIn}>Back to sign in</AuthLink>
+          {canSwitch && (
+            <AuthLink onClick={() => go({ kind: app ? 'backup-code' : 'totp' })}>
+              {app ? 'Use a backup code' : 'Use your authenticator app'}
+            </AuthLink>
+          )}
         </div>
       </AuthCard>
     );

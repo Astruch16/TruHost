@@ -144,7 +144,6 @@ function StyleGuide() {
       onSelectProperty={setSelected}
       unreadNotifications={1}
       onSignOut={() => undefined}
-      onManageSignIn={() => undefined}
       allowAllProperties
     >
       <PageHeader
