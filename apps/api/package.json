@@ -16,6 +16,7 @@
     "dev": "node scripts/dev.mjs",
     "lint": "oxlint --type-aware src/ test/",
     "openapi": "nest build && node dist/cli/emit-openapi.js ../../packages/api-client/openapi.json && pnpm --filter @truhost/api-client generate",
+    "seed:dev": "tsx src/cli/seed-dev.ts",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
     "start:dev": "node scripts/dev.mjs",
