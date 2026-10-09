@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
+import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
@@ -57,6 +58,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
 const DevDashboardRoute = DevDashboardRouteImport.update({
   id: '/dev/dashboard',
   path: '/dev/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLoadingRoute = DevLoadingRouteImport.update({
+  id: '/dev/loading',
+  path: '/dev/loading',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevNoAccessRoute = DevNoAccessRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRoute
   '/admin': typeof AppAdminRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
+  '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
   '/account': typeof AppAccountRoute
   '/dev/dashboard': typeof DevDashboardRoute
+  '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
+  '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/dev/dashboard'
+    | '/dev/loading'
     | '/dev/no-access'
     | '/dev/ui'
     | '/sign-in/$'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/account'
     | '/dev/dashboard'
+    | '/dev/loading'
     | '/dev/no-access'
     | '/dev/ui'
     | '/sign-in/$'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/admin'
     | '/dev/dashboard'
+    | '/dev/loading'
     | '/dev/no-access'
     | '/dev/ui'
     | '/sign-in/$'
@@ -265,6 +277,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   SsoCallbackRoute: typeof SsoCallbackRoute
   DevDashboardRoute: typeof DevDashboardRoute
+  DevLoadingRoute: typeof DevLoadingRoute
   DevNoAccessRoute: typeof DevNoAccessRoute
   DevUiRoute: typeof DevUiRoute
   SignInSplatRoute: typeof SignInSplatRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/dashboard'
       fullPath: '/dev/dashboard'
       preLoaderRoute: typeof DevDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/loading': {
+      id: '/dev/loading'
+      path: '/dev/loading'
+      fullPath: '/dev/loading'
+      preLoaderRoute: typeof DevLoadingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/no-access': {
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   SsoCallbackRoute: SsoCallbackRoute,
   DevDashboardRoute: DevDashboardRoute,
+  DevLoadingRoute: DevLoadingRoute,
   DevNoAccessRoute: DevNoAccessRoute,
   DevUiRoute: DevUiRoute,
   SignInSplatRoute: SignInSplatRoute,

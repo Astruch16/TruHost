@@ -8,6 +8,7 @@ import { clerkAppearance } from '../lib/clerk-appearance';
  * invited people arrive from the link in their invitation email.
  */
 export const Route = createFileRoute('/sign-up/$')({
+  pendingMs: 0,
   component: () => (
     <AuthFrame>
       <SignUp

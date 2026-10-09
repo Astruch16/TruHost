@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { Menu, X } from 'lucide-react';
 import type { NavItem } from '../../lib/nav';
+import { ShellContext } from '../../lib/shell-context';
 import { NotificationsBell } from './notifications-bell';
 import { ProfileMenu } from './profile-menu';
 import { PropertySwitcher, type SwitcherProperty } from './property-switcher';
@@ -106,7 +107,7 @@ export function AppShell({
           tabIndex={-1}
           className="mx-auto w-full max-w-[1680px] flex-1 px-4 py-6 focus:outline-none @2xl/content:px-8 @2xl/content:py-8 @[100rem]/content:px-10"
         >
-          {children}
+          <ShellContext.Provider value={true}>{children}</ShellContext.Provider>
         </main>
       </div>
     </div>

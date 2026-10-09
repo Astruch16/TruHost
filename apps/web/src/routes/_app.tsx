@@ -5,9 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
 import { AuthButton, AuthCard } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
+import { PortalLoading } from '../components/shell/portal-loading';
 import { AuthFrame } from '../components/shell/auth-frame';
 import { ErrorAlert } from '../components/ui/alert';
-import { LoadingBlock } from '../components/ui/skeleton';
 import { useApi } from '../lib/api-context';
 import { clerkAppearance } from '../lib/clerk-appearance';
 import { GuideContext } from '../lib/guide-context';
@@ -18,22 +18,15 @@ import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
 
 /** Everything behind sign-in. Our API (not Clerk) decides who the user is and what they see. */
 export const Route = createFileRoute('/_app')({
+  pendingMs: 0, // first visit: show the portal outline straight away, never a blank screen
   component: AppLayout,
 });
 
 function AppLayout() {
   const { isLoaded, isSignedIn } = useAuth();
-  if (!isLoaded) return <FullPageLoading />;
+  if (!isLoaded) return <PortalLoading />;
   if (!isSignedIn) return <Navigate to="/sign-in/$" params={{ _splat: '' }} />;
   return <SignedInShell />;
-}
-
-function FullPageLoading() {
-  return (
-    <div className="mx-auto max-w-3xl p-8">
-      <LoadingBlock label="Loading TruHost" />
-    </div>
-  );
 }
 
 function SignedInShell() {
@@ -53,7 +46,7 @@ function SignedInShell() {
   const handleSignOut = () => void signOut({ redirectUrl: '/sign-in' });
   const signedInAs = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
 
-  if (me.isPending) return <FullPageLoading />;
+  if (me.isPending) return <PortalLoading onRetry={() => void me.refetch()} />;
   if (me.error) {
     const notInvited = me.error instanceof ApiError && me.error.problem.code === 'NOT_INVITED';
     return (
