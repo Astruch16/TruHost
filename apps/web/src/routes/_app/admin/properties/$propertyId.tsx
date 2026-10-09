@@ -14,6 +14,7 @@ import { ConfirmDialog } from '../../../../components/ui/dialog';
 import { Field } from '../../../../components/ui/field';
 import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
+import { MonthPicker } from '../../../../components/ui/month-picker';
 import { PageHeader } from '../../../../components/ui/page-header';
 import { Pill } from '../../../../components/ui/pill';
 import { LoadingBlock } from '../../../../components/ui/skeleton';
@@ -274,7 +275,7 @@ function PlanCard({ propertyId }: { propertyId: string }) {
             />
           </Field>
           <Field label="Starting month">
-            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} required />
+            <MonthPicker value={month} onChange={setMonth} />
           </Field>
           <Button type="submit" variant="secondary" loading={assign.isPending}>
             Assign

@@ -10,6 +10,8 @@ import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
+import { DatePicker } from './ui/date-picker';
+import { addDays } from '../lib/dates';
 import { Input, Textarea } from './ui/input';
 import { Select } from './ui/select';
 
@@ -128,10 +130,30 @@ export function BookingDialog({
           />
         </Field>
         <Field label="Check-in" error={errors.checkInDate} required>
-          <Input type="date" value={v.checkInDate} onChange={set('checkInDate')} />
+          <DatePicker
+            value={v.checkInDate}
+            onChange={(checkInDate) =>
+              // Keep check-out after check-in: if the new check-in reaches it, move it to the next day.
+              setV({
+                ...v,
+                checkInDate,
+                checkOutDate:
+                  v.checkOutDate && checkInDate && v.checkOutDate <= checkInDate
+                    ? addDays(checkInDate, 1)
+                    : v.checkOutDate,
+              })
+            }
+            placeholder="Choose check-in"
+          />
         </Field>
         <Field label="Check-out" error={errors.checkOutDate} required>
-          <Input type="date" value={v.checkOutDate} onChange={set('checkOutDate')} />
+          <DatePicker
+            value={v.checkOutDate}
+            onChange={pick('checkOutDate')}
+            rangeStart={v.checkInDate || undefined}
+            min={v.checkInDate ? addDays(v.checkInDate, 1) : undefined}
+            placeholder="Choose check-out"
+          />
         </Field>
         {isGuest && (
           <>
