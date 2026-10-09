@@ -21,6 +21,8 @@ import { channelLabel, kindLabel } from '../../../lib/format';
 import { formatCents } from '../../../lib/money';
 import { monthKey, monthLabel, monthRange, shortDate } from '../../../lib/months';
 import { queries } from '../../../lib/queries';
+import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
+import { updatingStyles } from '../../../lib/styles';
 import { monthSearch, useScope } from '../../../lib/scope';
 
 export const Route = createFileRoute('/_app/admin/bookings')({
@@ -42,6 +44,11 @@ function Bookings() {
   const properties = useQuery(queries.properties(api));
   const range = monthRange(month);
   const bookings = useQuery(queries.bookings(api, range, propertyId || undefined));
+  usePrefetchAdjacentMonths(
+    month,
+    (m) => queries.bookings(api, monthRange(m), propertyId || undefined),
+    bookings.isSuccess,
+  );
   const propertyList = properties.data?.items ?? [];
   const nameOf = (id: string) => propertyList.find((p) => p.id === id)?.name ?? '';
   const items = bookings.data?.items ?? [];
@@ -66,7 +73,7 @@ function Bookings() {
           <EmptyState title="Add a property first">
             Bookings belong to a property. Create one under Properties, then come back here.
           </EmptyState>
-        ) : bookings.isSuccess && items.length === 0 ? (
+        ) : bookings.isSuccess && !bookings.isPlaceholderData && items.length === 0 ? (
           <EmptyState
             title={`No bookings in ${monthLabel(month)}`}
             action={<Button onClick={() => setEditing('new')}>Add booking</Button>}
@@ -74,7 +81,10 @@ function Bookings() {
             Add each stay with its dates. You can enter the payout once the channel pays out.
           </EmptyState>
         ) : (
-          <Table>
+          <Table
+            aria-busy={bookings.isPlaceholderData || undefined}
+            className={updatingStyles(bookings.isPlaceholderData)}
+          >
             <THead>
               <tr>
                 <Th>Dates</Th>
