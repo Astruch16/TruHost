@@ -6,13 +6,13 @@ import { fieldErrors } from '../lib/errors';
 import { formatCents } from '../lib/money';
 import { shortDate } from '../lib/months';
 import { queries } from '../lib/queries';
-import { uploadReceipt, UploadError } from '../lib/upload';
+import { RECEIPT_ACCEPT, uploadReceipt, UploadError } from '../lib/upload';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
+import { FilePicker } from './ui/file-picker';
 import { DatePicker } from './ui/date-picker';
-import { Input } from './ui/input';
 import { Select } from './ui/select';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -83,12 +83,7 @@ export function ReceiptDialog({
           </Field>
         )}
         <Field label="File" hint="PDF or photo, up to 20 MB." required>
-          <Input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="py-2"
-          />
+          <FilePicker file={file} onChange={setFile} accept={RECEIPT_ACCEPT} />
         </Field>
         <Field label="Receipt date" error={errors.receiptDate} required>
           <DatePicker value={receiptDate} onChange={setReceiptDate} />

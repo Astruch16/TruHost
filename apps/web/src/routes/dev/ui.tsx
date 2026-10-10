@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { ApiError } from '@truhost/api-client';
 import { CoverPhotoCard } from '../../components/cover-photo-card';
 import { DeletePropertyDialog } from '../../components/delete-property-dialog';
+import { ExpenseDialog } from '../../components/expense-dialog';
 import { PropertyDetailsCard } from '../../components/property-details-card';
 import { PropertyDialog } from '../../components/property-dialog';
 import { KpiCard, KpiMoney, KpiOf } from '../../components/dashboard/kpi-card';
@@ -128,6 +129,7 @@ function StyleGuide() {
   const [guide, setGuide] = useState<GuideCharacter>('sage');
   const [propertyDialog, setPropertyDialog] = useState<'new' | 'edit' | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<'allowed' | 'blocked' | null>(null);
+  const [expenseDialog, setExpenseDialog] = useState(false);
   const [stay, setStay] = useState({ checkIn: '2026-10-14', checkOut: '2026-10-18' });
   const [purchased, setPurchased] = useState('');
   const [startMonth, setStartMonth] = useState('2026-11');
@@ -510,7 +512,7 @@ function StyleGuide() {
 
           <Card
             title="Property screens"
-            description="Details summary, the add/edit form and both delete outcomes (sample data, nothing is saved)."
+            description="Details summary, the add/edit form, both delete outcomes and the add expense form (sample data, nothing is saved)."
           >
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap gap-2">
@@ -526,8 +528,17 @@ function StyleGuide() {
                 <Button variant="danger" onClick={() => setDeleteDialog('blocked')}>
                   Delete (has records)
                 </Button>
+                <Button variant="secondary" onClick={() => setExpenseDialog(true)}>
+                  Add expense form
+                </Button>
               </div>
               <PropertyDetailsCard property={sampleProperty} onEdit={() => setPropertyDialog('edit')} />
+              {expenseDialog && (
+                <ExpenseDialog
+                  onClose={() => setExpenseDialog(false)}
+                  properties={[{ id: 'a', name: sampleProperty.name }]}
+                />
+              )}
             </div>
             <PropertyDialog
               property={propertyDialog === 'edit' ? sampleProperty : null}

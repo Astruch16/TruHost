@@ -8,6 +8,8 @@ export async function sha256Hex(data: ArrayBuffer): Promise<string> {
 }
 
 export const RECEIPT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf'] as const;
+/** For a file picker's `accept`: the receipt types above. */
+export const RECEIPT_ACCEPT = RECEIPT_TYPES.join(',');
 export const MAX_RECEIPT_BYTES = 20 * 1024 * 1024;
 
 /** A failure whose message is written for the user (shown as-is by ErrorAlert). */
