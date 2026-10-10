@@ -25,7 +25,7 @@ export function MonthCalendar({
   const checkouts = checkoutsByDay(month, stays);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="scroll-area overflow-x-auto">
       <div className="min-w-[640px] overflow-hidden rounded-inner border border-line">
         <div className="grid grid-cols-7 border-b border-line bg-ground text-xs font-semibold text-muted">
           {weekdayNames(weekStartsOn).map((d) => (
