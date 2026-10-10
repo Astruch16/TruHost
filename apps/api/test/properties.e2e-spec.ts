@@ -202,11 +202,8 @@ describe('memberships and rooms', () => {
   });
 
   it('adds rooms at the end of the checklist and reorders them', async () => {
-    const kitchen = await t
-      .as('admin')
-      .post(`/v1/properties/${w.propertyA.id}/rooms`, { name: 'Kitchen', type: 'KITCHEN' })
-      .expect(201);
-    expect(kitchen.body.sortOrder).toBe(2);
+    const kitchen = await t.as('admin').post(`/v1/properties/${w.propertyA.id}/rooms`, { type: 'KITCHEN' }).expect(201);
+    expect(kitchen.body).toMatchObject({ position: 2, displayName: 'Kitchen', label: null });
 
     const order = [kitchen.body.id, ...w.propertyA.roomIds];
     const res = await t.as('admin').put(`/v1/properties/${w.propertyA.id}/rooms/order`, { roomIds: order }).expect(200);

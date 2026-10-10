@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Archive, ArrowDown, ArrowUp, Pencil, Plus, Trash2, UserMinus } from 'lucide-react';
+import { Archive, Pencil, Plus, Trash2, UserMinus } from 'lucide-react';
 import { CoverPhotoCard } from '../../../../components/cover-photo-card';
 import { DeletePropertyDialog } from '../../../../components/delete-property-dialog';
 import { PropertyDetailsCard } from '../../../../components/property-details-card';
@@ -12,7 +12,6 @@ import { Button } from '../../../../components/ui/button';
 import { Card } from '../../../../components/ui/card';
 import { ConfirmDialog } from '../../../../components/ui/dialog';
 import { Field } from '../../../../components/ui/field';
-import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
 import { MonthPicker } from '../../../../components/ui/month-picker';
 import { PageHeader } from '../../../../components/ui/page-header';
@@ -20,7 +19,8 @@ import { Pill } from '../../../../components/ui/pill';
 import { LoadingBlock } from '../../../../components/ui/skeleton';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../../components/ui/table';
 import { useApi } from '../../../../lib/api-context';
-import { formatBps, ROOM_TYPES, titleCase } from '../../../../lib/format';
+import { formatBps, titleCase } from '../../../../lib/format';
+import { RoomsCard } from '../../../../components/rooms/rooms-card';
 import { queries } from '../../../../lib/queries';
 
 export const Route = createFileRoute('/_app/admin/properties/$propertyId')({
@@ -96,125 +96,12 @@ function AdminProperty() {
           <PropertyDetailsCard property={p} onEdit={() => setEditing(true)} />
         </div>
         <div className="grid gap-6 @4xl/content:grid-cols-2">
-          <RoomsCard propertyId={propertyId} />
+          <RoomsCard propertyId={propertyId} layout={p} />
           <PlanCard propertyId={propertyId} />
         </div>
         <MembersCard propertyId={propertyId} defaultCleanerId={p.defaultCleanerId ?? null} />
       </div>
     </>
-  );
-}
-
-function RoomsCard({ propertyId }: { propertyId: string }) {
-  const api = useApi();
-  const qc = useQueryClient();
-  const rooms = useQuery(queries.rooms(api, propertyId));
-  const [name, setName] = useState('');
-  const [type, setType] = useState<(typeof ROOM_TYPES)[number]>('BEDROOM');
-  const [archiving, setArchiving] = useState<{ id: string; name: string } | null>(null);
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['properties', propertyId, 'rooms'] });
-
-  const add = useMutation({
-    mutationFn: () =>
-      unwrap(api.POST('/v1/properties/{id}/rooms', { params: { path: { id: propertyId } }, body: { name, type } })),
-    onSuccess: () => {
-      setName('');
-      return invalidate();
-    },
-  });
-  const reorder = useMutation({
-    mutationFn: (roomIds: string[]) =>
-      unwrap(api.PUT('/v1/properties/{id}/rooms/order', { params: { path: { id: propertyId } }, body: { roomIds } })),
-    onSuccess: invalidate,
-  });
-  const archive = useMutation({
-    mutationFn: (id: string) => unwrap(api.POST('/v1/rooms/{id}/archive', { params: { path: { id } } })),
-    onSuccess: async () => {
-      await invalidate();
-      setArchiving(null);
-    },
-  });
-
-  const items = rooms.data?.items ?? [];
-  const move = (index: number, delta: number) => {
-    const ids = items.map((r) => r.id);
-    const [moved] = ids.splice(index, 1);
-    ids.splice(index + delta, 0, moved!);
-    reorder.mutate(ids);
-  };
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    add.mutate();
-  };
-
-  return (
-    <Card title="Rooms" description="Cleaners photograph rooms in this order.">
-      <div className="flex flex-col gap-4">
-        <ErrorAlert error={rooms.error ?? add.error ?? reorder.error} />
-        <ol className="flex flex-col divide-y divide-line-soft">
-          {items.map((r, i) => (
-            <li key={r.id} className="flex items-center gap-2 py-2">
-              <span className="figure grid size-6 shrink-0 place-items-center rounded-full bg-ground text-xs font-semibold text-muted">
-                {i + 1}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-sm">
-                {r.name} <span className="text-muted">· {titleCase(r.type)}</span>
-              </span>
-              <Button
-                variant="quiet"
-                size="sm"
-                aria-label={`Move ${r.name} up`}
-                disabled={i === 0 || reorder.isPending}
-                onClick={() => move(i, -1)}
-                className="px-2"
-              >
-                <ArrowUp aria-hidden className="size-4" />
-              </Button>
-              <Button
-                variant="quiet"
-                size="sm"
-                aria-label={`Move ${r.name} down`}
-                disabled={i === items.length - 1 || reorder.isPending}
-                onClick={() => move(i, 1)}
-                className="px-2"
-              >
-                <ArrowDown aria-hidden className="size-4" />
-              </Button>
-              <Button variant="quiet" size="sm" onClick={() => setArchiving(r)}>
-                Archive
-              </Button>
-            </li>
-          ))}
-          {rooms.data && items.length === 0 && <li className="py-4 text-sm text-muted">No rooms yet.</li>}
-        </ol>
-        <form onSubmit={submit} className="grid gap-3 @xl/content:grid-cols-[1fr_auto_auto] @xl/content:items-end">
-          <Field label="Room name">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Ensuite" required />
-          </Field>
-          <Field label="Type">
-            <Select
-              value={type}
-              onValueChange={(value) => setType(value as typeof type)}
-              options={ROOM_TYPES.map((t) => ({ value: t, label: titleCase(t) }))}
-            />
-          </Field>
-          <Button type="submit" variant="secondary" loading={add.isPending}>
-            <Plus aria-hidden className="size-4" /> Add room
-          </Button>
-        </form>
-      </div>
-      <ConfirmDialog
-        open={archiving !== null}
-        onOpenChange={(open) => !open && setArchiving(null)}
-        title={`Archive ${archiving?.name ?? 'room'}?`}
-        description="It leaves the cleaning checklist. Past photos of it are kept."
-        confirmLabel="Archive room"
-        destructive
-        pending={archive.isPending}
-        error={archive.error}
-        onConfirm={() => archiving && archive.mutate(archiving.id)}
-      />
-    </Card>
   );
 }
 

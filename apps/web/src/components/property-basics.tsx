@@ -50,7 +50,7 @@ export function PropertyRoomsCard({ propertyId, className }: { propertyId: strin
               <span className="figure grid size-6 place-items-center rounded-full bg-ground text-xs font-semibold text-muted">
                 {i + 1}
               </span>
-              {r.name}
+              {r.displayName}
             </li>
           ))}
         </ol>

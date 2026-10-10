@@ -278,22 +278,33 @@ model PropertyPhoto {
 enum RoomType {
   BEDROOM
   BATHROOM
+  HALF_BATH
   KITCHEN
-  LIVING
-  DINING
+  LIVING      /// "Living room"
+  DINING      /// "Dining room"
   LAUNDRY
-  OUTDOOR
   ENTRY
-  OTHER
+  OFFICE
+  PATIO_DECK  /// "Patio/Deck" (was OUTDOOR)
+  HOT_TUB
+  GARAGE
+  OTHER       /// Needs a label (CHECK)
 }
 
+/// A room's name is derived, never stored (roomDisplayNames in packages/shared):
+/// - the only room of its type: the type ("Kitchen");
+/// - several of a type: unlabelled ones are numbered by their place among that type, in walkthrough order
+///   ("Bedroom · Primary", "Bedroom 2", "Bedroom 3");
+/// - with a label: type · label ("Bedroom · Primary", "Other · Wine cellar").
+/// No two active rooms of a property share a name: checked under a lock on the property row (409 ROOM_NAME_TAKEN),
+/// and backed by a unique index on (propertyId, type, lower(label)) for active labelled rooms.
 model Room {
   id         String    @id @default(uuid(7)) @db.Uuid
   propertyId String    @db.Uuid
-  name       String    /// e.g. "Primary bedroom", "Ensuite".
   type       RoomType
-  sortOrder  Int       @default(0) /// Order in the cleaner's photo checklist.
-  /// Archived rooms leave the clean-completion requirement but keep their historic photos.
+  label      String?   /// Optional ("Primary", "Ensuite", "Loft"); tidy, ≤ 60 characters (CHECK).
+  position   Int       @default(0) /// Walkthrough order: the cleaner's photo checklist and the owner's photo view.
+  /// Archived ("deleted") rooms leave the walkthrough and the name checks but keep their historic photos.
   archivedAt DateTime? @db.Timestamptz
   createdAt  DateTime  @default(now()) @db.Timestamptz
 
@@ -1221,10 +1232,11 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 | GET    | `/properties/:id/memberships` | A     | [1]                                                                                                                                                                    |
 | POST   | `/properties/:id/memberships` | A     | `{ userId, role }`. Audited. [1]                                                                                                                                       |
 | POST   | `/memberships/:id/revoke`     | A     | Audited. [1]                                                                                                                                                           |
-| GET    | `/properties/:id/rooms`       | A O C | [1]                                                                                                                                                                    |
-| POST   | `/properties/:id/rooms`       | A     | [1]                                                                                                                                                                    |
-| PATCH  | `/rooms/:id`                  | A     | [1]                                                                                                                                                                    |
-| POST   | `/rooms/:id/archive`          | A     | [1]                                                                                                                                                                    |
+| GET    | `/properties/:id/rooms`       | A O C | Active rooms in walkthrough order, each with its `displayName`. [1]                                                                                                    |
+| POST   | `/properties/:id/rooms`       | A     | `{ type, label? }`, added last. 409 `ROOM_NAME_TAKEN`; OTHER needs a label. [1]                                                                                        |
+| POST   | `/properties/:id/rooms/bulk`  | A     | Quick setup: `{ rooms: [{ type, label? }] }`, added last in order; all or nothing. At most 100 active rooms.                                                           |
+| PATCH  | `/rooms/:id`                  | A     | `{ type?, label? }`. 409 `ROOM_NAME_TAKEN`, 422 `ROOM_LABEL_REQUIRED`. [1]                                                                                             |
+| POST   | `/rooms/:id/archive`          | A     | "Delete" in the UI: leaves the walkthrough; photos stay. [1]                                                                                                           |
 | PUT    | `/properties/:id/rooms/order` | A     | [1]                                                                                                                                                                    |
 
 ### Plans
@@ -1860,3 +1872,4 @@ UI, and a "needs financials" queue.
 | 2026-10-09 | Properties can be deleted only while they have no bookings, expenses or receipts (e.g. added by mistake): then everything that belongs to them goes, including photos and stored files, and the audit log keeps a record. Any other property is archived, keeping its records (rule: never hard-delete money, documents or evidence; CRA record keeping). The photo and file guards allow deletion only inside that property's delete transaction (`truhost.deleting_property`).                                                                                                                                                                                                                                                            |
 | 2026-10-09 | Settings has four sections: Profile, Security, Notifications, Preferences. Security is ours on Clerk's hooks (no Clerk UI): change or add a password, two-step verification with an authenticator app and backup codes (also accepted at sign-in), signed-in devices, and our own "Confirm it’s you" step when Clerk asks for a recent sign-in. Profile photos are one 256px JPEG per person, made in the browser and kept in the private bucket under `users/{id}/avatar/`; replacing or removing one deletes the old file. Notification choices are stored now, per role, and read by each notification as its feature lands. Week start and reduced motion are per user. Email changes stay with TruHost (our database holds the email). |
 | 2026-10-09 | Owners and cleaners get separate property screens. Owners use `/properties/:id` (figures, plan, stays, expenses). Cleaners use `/cleaner/properties/:id`: name, address, stay times and rooms only, with no financial section rendered or fetched; cleans join it in Phase 3. A membership's role picks the screen, so someone who owns one property and cleans another gets each view where it applies. Admin pages, other people's properties and unknown addresses show one "This page isn't available" page with a way home, never a blank screen, and never saying which of the three it is. The notifications bell is hidden (`lib/features.ts`) until notifications are sent.                                                        |
+| 2026-10-10 | Rooms are a type plus an optional label, and their names are derived ("Kitchen", "Bedroom 2", "Bedroom · Primary"), so they stay consistent and can't drift from the type. Unlabelled rooms of a type are numbered by their place among all rooms of that type in walkthrough order. No two active rooms share a name. `position` is the walkthrough order the photo checklist and owner photo view will use. The migration kept old names as labels unless they only repeated the type (alone, with a number, or a bare number), and numbered any labels that would have clashed. Deleting a room archives it, since clean photos will reference rooms. Admins set up an empty property with per-type counts in one step.                  |

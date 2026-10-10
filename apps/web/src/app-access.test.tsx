@@ -72,7 +72,11 @@ function fakeApi(me: Me) {
           : path === '/v1/properties/{id}'
             ? propertyData(id)
             : path === '/v1/properties/{id}/rooms'
-              ? { items: [{ id: 'r1', name: 'Kitchen', type: 'KITCHEN', sortOrder: 0, archivedAt: null }] }
+              ? {
+                  items: [
+                    { id: 'r1', type: 'KITCHEN', label: null, displayName: 'Kitchen', position: 0, archivedAt: null },
+                  ],
+                }
               : { items: [] };
     return { data, response: new Response(null, { status: 200 }) };
   });

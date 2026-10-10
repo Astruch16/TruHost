@@ -44,7 +44,7 @@ describe('property details and deletion', () => {
   /** A property set up like a real one, but with no bookings, expenses or receipts yet. */
   async function setUpProperty() {
     const p = (await create().expect(201)).body;
-    await t.as('admin').post(`/v1/properties/${p.id}/rooms`, { name: 'Bedroom', type: 'BEDROOM' }).expect(201);
+    await t.as('admin').post(`/v1/properties/${p.id}/rooms`, { type: 'BEDROOM' }).expect(201);
     await t
       .as('admin')
       .post(`/v1/properties/${p.id}/memberships`, { userId: w.users.ownerB.id, role: 'OWNER' })

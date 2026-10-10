@@ -199,7 +199,14 @@ export const CASES: AuthzCase[] = [
   {
     route: 'POST /v1/properties/:id/rooms',
     path: (w) => `/v1/properties/${w.propertyA.id}/rooms`,
-    body: () => ({ name: 'Kitchen', type: 'KITCHEN' }),
+    body: () => ({ type: 'KITCHEN' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/properties/:id/rooms/bulk',
+    path: (w) => `/v1/properties/${w.propertyA.id}/rooms/bulk`,
+    body: () => ({ rooms: [{ type: 'KITCHEN' }, { type: 'LIVING' }] }),
     allow: ADMIN,
     mutates: true,
   },
@@ -213,7 +220,7 @@ export const CASES: AuthzCase[] = [
   {
     route: 'PATCH /v1/rooms/:id',
     path: (w) => `/v1/rooms/${w.propertyA.roomIds[0]}`,
-    body: () => ({ name: 'Primary bedroom' }),
+    body: () => ({ label: 'Primary' }),
     allow: ADMIN,
     mutates: true,
   },
