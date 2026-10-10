@@ -8,3 +8,6 @@ coverage/
 !.env.example
 .DS_Store
 *.log
+
+# TanStack Router plugin scratch files (written while the dev server runs)
+apps/web/.tanstack/

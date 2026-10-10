@@ -293,16 +293,20 @@ enum RoomType {
 
 /// A room's name is derived, never stored (roomDisplayNames in packages/shared):
 /// - the only room of its type: the type ("Kitchen");
-/// - several of a type: unlabelled ones are numbered by their place among that type, in walkthrough order
-///   ("Bedroom · Primary", "Bedroom 2", "Bedroom 3");
+/// - several of a type: the room's own stored number ("Bedroom 2"), which never changes with the walkthrough order;
 /// - with a label: type · label ("Bedroom · Primary", "Other · Wine cellar").
+/// Numbers are given once, at creation: the smallest number no room of that type on the property holds, deleted rooms
+/// included (they keep theirs with their photos), so a number never moves to another room. A label hides the number
+/// but keeps it; changing type takes the next free number of the new type. Reordering and deleting never rename.
 /// No two active rooms of a property share a name: checked under a lock on the property row (409 ROOM_NAME_TAKEN),
-/// and backed by a unique index on (propertyId, type, lower(label)) for active labelled rooms.
+/// and backed by unique indexes on (propertyId, type, lower(label)) for active labelled rooms and on
+/// (propertyId, type, number) for all rooms.
 model Room {
   id         String    @id @default(uuid(7)) @db.Uuid
   propertyId String    @db.Uuid
   type       RoomType
   label      String?   /// Optional ("Primary", "Ensuite", "Loft"); tidy, ≤ 60 characters (CHECK).
+  number     Int       /// Given at creation (next free for the type); ≥ 1. Shown when there are several of the type.
   position   Int       @default(0) /// Walkthrough order: the cleaner's photo checklist and the owner's photo view.
   /// Archived ("deleted") rooms leave the walkthrough and the name checks but keep their historic photos.
   archivedAt DateTime? @db.Timestamptz
@@ -1873,3 +1877,4 @@ UI, and a "needs financials" queue.
 | 2026-10-09 | Settings has four sections: Profile, Security, Notifications, Preferences. Security is ours on Clerk's hooks (no Clerk UI): change or add a password, two-step verification with an authenticator app and backup codes (also accepted at sign-in), signed-in devices, and our own "Confirm it’s you" step when Clerk asks for a recent sign-in. Profile photos are one 256px JPEG per person, made in the browser and kept in the private bucket under `users/{id}/avatar/`; replacing or removing one deletes the old file. Notification choices are stored now, per role, and read by each notification as its feature lands. Week start and reduced motion are per user. Email changes stay with TruHost (our database holds the email). |
 | 2026-10-09 | Owners and cleaners get separate property screens. Owners use `/properties/:id` (figures, plan, stays, expenses). Cleaners use `/cleaner/properties/:id`: name, address, stay times and rooms only, with no financial section rendered or fetched; cleans join it in Phase 3. A membership's role picks the screen, so someone who owns one property and cleans another gets each view where it applies. Admin pages, other people's properties and unknown addresses show one "This page isn't available" page with a way home, never a blank screen, and never saying which of the three it is. The notifications bell is hidden (`lib/features.ts`) until notifications are sent.                                                        |
 | 2026-10-10 | Rooms are a type plus an optional label, and their names are derived ("Kitchen", "Bedroom 2", "Bedroom · Primary"), so they stay consistent and can't drift from the type. Unlabelled rooms of a type are numbered by their place among all rooms of that type in walkthrough order. No two active rooms share a name. `position` is the walkthrough order the photo checklist and owner photo view will use. The migration kept old names as labels unless they only repeated the type (alone, with a number, or a bare number), and numbered any labels that would have clashed. Deleting a room archives it, since clean photos will reference rooms. Admins set up an empty property with per-type counts in one step.                  |
+| 2026-10-10 | Room numbers are stored, not derived from the walkthrough order: reordering renamed rooms ("Bedroom 2" and "Bedroom 3" swapped), which would show owners and cleaners a different room under a familiar name once photos reference rooms. Every room gets the next free number for its type at creation and keeps it; deleted rooms keep theirs, so a number is never reused for a different room. The only rename left is the first of a type gaining its number when a second arrives ("Kitchen" → "Kitchen 1"). The migration numbered existing rooms once from the walkthrough order, so no name changed.                                                                                                                               |

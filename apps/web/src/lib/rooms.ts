@@ -1,5 +1,6 @@
 import {
   duplicateRoomName,
+  nextRoomNumber,
   normalizeRoomLabel,
   RoomType,
   roomDisplayNames,
@@ -74,18 +75,24 @@ export function roomsFromCounts(counts: RoomCounts): { type: RoomType }[] {
   );
 }
 
-type Named = Pick<Room, 'id' | 'type' | 'label'>;
+type Numbered = Pick<Room, 'id' | 'type' | 'label' | 'number' | 'archivedAt'>;
 
 /**
- * What a change would be called before it's saved: a new room (no `id`) at the end, or an existing room with a new
- * type or label. `clash` is the name it would share with another room (the API refuses that too), or null.
+ * What a change would be called before it's saved: a new room (no `id`), or an existing room with a new type or
+ * label. `rooms` are all the property's rooms, deleted ones included (they hold their numbers), so a new room's
+ * number is the one the API will give. `clash` is the name it would share with another room (the API refuses that
+ * too), or null.
  */
 export function previewRoomName(
-  rooms: readonly Named[],
+  rooms: readonly Numbered[],
   change: { id?: string; type: RoomType; label: string },
 ): { name: string; clash: string | null; needsLabel: boolean } {
-  const draft = { id: change.id ?? '__new__', type: change.type, label: normalizeRoomLabel(change.label) };
-  const next = change.id ? rooms.map((r) => (r.id === change.id ? draft : r)) : [...rooms, draft];
+  const current = change.id ? rooms.find((r) => r.id === change.id) : undefined;
+  const others = rooms.filter((r) => r.id !== change.id);
+  const number = current && current.type === change.type ? current.number : nextRoomNumber(others, change.type);
+  const draft = { id: change.id ?? '__new__', type: change.type, label: normalizeRoomLabel(change.label), number };
+  const active = rooms.filter((r) => !r.archivedAt);
+  const next = change.id ? active.map((r) => (r.id === change.id ? draft : r)) : [...active, draft];
   const names = roomDisplayNames(next);
   return {
     name: names.get(draft.id)!,
@@ -94,15 +101,10 @@ export function previewRoomName(
   };
 }
 
-/** The list after moving one room, renumbered as the API will (for showing the new order straight away). */
-export function reorderedRooms<T extends Named & { position: number; displayName: string }>(
-  rooms: readonly T[],
-  from: number,
-  to: number,
-): T[] {
+/** The list after moving one room. Only the order changes: names come from each room's own number. */
+export function reorderedRooms<T extends { position: number }>(rooms: readonly T[], from: number, to: number): T[] {
   const next = [...rooms];
   const [moved] = next.splice(from, 1);
   next.splice(to, 0, moved!);
-  const names = roomDisplayNames(next);
-  return next.map((r, i) => ({ ...r, position: i, displayName: names.get(r.id)! }));
+  return next.map((r, i) => ({ ...r, position: i }));
 }

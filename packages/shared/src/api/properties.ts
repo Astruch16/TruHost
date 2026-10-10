@@ -177,8 +177,10 @@ export const room = z.object({
   type: RoomType,
   /** Optional, e.g. "Primary", "Ensuite", "Loft". Required for OTHER. */
   label: z.string().nullable(),
-  /** What the room is called (from type, label and order; see roomDisplayNames). Computed by the API. */
+  /** What the room is called (from type, label and number; see roomDisplayNames). Computed by the API. */
   displayName: z.string(),
+  /** Given once, when the room is created; shown when there are several of the type ("Bedroom 2"). */
+  number: z.number().int(),
   /** Walkthrough order (0 first): the cleaner's photo checklist and the owner's photo view follow it. */
   position: z.number().int(),
   archivedAt: isoDateTime.nullable(),

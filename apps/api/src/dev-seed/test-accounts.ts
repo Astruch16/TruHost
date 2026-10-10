@@ -218,7 +218,7 @@ export async function seedTestAccounts(prisma: PrismaClient, identity: SeedIdent
     let property = await prisma.property.findUnique({ where: { id: p.id } });
     if (!property) {
       property = await prisma.property.create({
-        data: { ...fields, rooms: { create: ROOMS.map((r, i) => ({ ...r, position: i })) } },
+        data: { ...fields, rooms: { create: ROOMS.map((r, i) => ({ ...r, number: 1, position: i })) } },
       });
       await prisma.auditLog.create({
         data: {

@@ -59,10 +59,12 @@ export function RoomsCard({
 }) {
   const api = useApi();
   const qc = useQueryClient();
-  const query = queries.rooms(api, propertyId);
+  // Deleted rooms too: they keep their numbers, so previews of a new room's name match what the API will give.
+  const query = queries.rooms(api, propertyId, true);
   const rooms = useQuery(query);
   const [deleting, setDeleting] = useState<Room | null>(null);
-  const items = rooms.data?.items ?? [];
+  const all = rooms.data?.items ?? [];
+  const items = all.filter((r) => !r.archivedAt);
   const refresh = () => qc.invalidateQueries({ queryKey: ['properties', propertyId, 'rooms'] });
 
   const reorder = useMutation({
@@ -72,15 +74,19 @@ export function RoomsCard({
       await qc.cancelQueries({ queryKey: query.queryKey });
       const before = qc.getQueryData(query.queryKey);
       if (before) {
+        // Show the new order straight away (names don't change: they come from each room's own number).
         const byId = new Map(before.items.map((r) => [r.id, r]));
-        const next = roomIds.map((id) => byId.get(id)!);
-        // Show the new order (and the numbers it gives) straight away; the server's answer replaces it.
-        qc.setQueryData(query.queryKey, { ...before, items: reorderedRooms(next, 0, 0) });
+        const moved = reorderedRooms(
+          roomIds.map((id) => byId.get(id)!),
+          0,
+          0,
+        );
+        qc.setQueryData(query.queryKey, { ...before, items: [...moved, ...before.items.filter((r) => r.archivedAt)] });
       }
       return { before };
     },
     onError: (_e, _ids, context) => context?.before && qc.setQueryData(query.queryKey, context.before),
-    onSuccess: (data) => qc.setQueryData(query.queryKey, data),
+    onSettled: refresh,
   });
   const remove = useMutation({
     mutationFn: (id: string) => unwrap(api.POST('/v1/rooms/{id}/archive', { params: { path: { id } } })),
@@ -104,10 +110,16 @@ export function RoomsCard({
           {items.length === 0 ? (
             <QuickSetup propertyId={propertyId} layout={layout} onDone={refresh} />
           ) : (
-            <RoomList rooms={items} onReorder={(ids) => reorder.mutate(ids)} onDelete={setDeleting} onSaved={refresh} />
+            <RoomList
+              rooms={items}
+              allRooms={all}
+              onReorder={(ids) => reorder.mutate(ids)}
+              onDelete={setDeleting}
+              onSaved={refresh}
+            />
           )}
           <ErrorAlert error={reorder.error} />
-          <AddRoom propertyId={propertyId} rooms={items} first={items.length === 0} onAdded={refresh} />
+          <AddRoom propertyId={propertyId} rooms={all} first={items.length === 0} onAdded={refresh} />
         </div>
       )}
       <ConfirmDialog
@@ -392,11 +404,15 @@ function TypeChips({
 
 function RoomList({
   rooms,
+  allRooms,
   onReorder,
   onDelete,
   onSaved,
 }: {
+  /** Active rooms, in walkthrough order. */
   rooms: Room[];
+  /** Deleted ones too, for name previews (they hold their numbers). */
+  allRooms: Room[];
   onReorder: (ids: string[]) => void;
   onDelete: (room: Room) => void;
   onSaved: () => void;
@@ -444,7 +460,7 @@ function RoomList({
               key={room.id}
               room={room}
               index={i}
-              rooms={rooms}
+              rooms={allRooms}
               onDelete={() => onDelete(room)}
               onSaved={onSaved}
             />
