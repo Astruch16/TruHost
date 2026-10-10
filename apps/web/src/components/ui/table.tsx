@@ -6,7 +6,7 @@ import { Skeleton } from './skeleton';
 /** Scrolls horizontally on narrow screens instead of squashing columns. */
 export function Table({ className, children, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="-mx-1 overflow-x-auto px-1">
+    <div className="scroll-area -mx-1 overflow-x-auto px-1">
       <table {...props} className={cx('w-full border-collapse text-left text-sm', className)}>
         {children}
       </table>

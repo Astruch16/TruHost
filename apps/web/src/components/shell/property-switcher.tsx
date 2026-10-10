@@ -207,7 +207,7 @@ export function PropertySwitcher({
           <ul
             ref={listRef}
             aria-label="Properties"
-            className="flex max-h-[min(22rem,60vh)] flex-col gap-0.5 overflow-y-auto px-2 pb-2"
+            className="scroll-area flex max-h-[min(22rem,60vh)] flex-col gap-0.5 overflow-y-auto px-2 pb-2"
           >
             {showAll && (
               <li>

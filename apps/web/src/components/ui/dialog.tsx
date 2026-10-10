@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cx } from '../../lib/cx';
@@ -25,14 +25,16 @@ export function Dialog({
   footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
+  // Once the body has scrolled, a hairline under the title shows where the content goes.
+  const [scrolled, setScrolled] = useState(false);
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-40 bg-ink/40 animate-fade-in" />
         <RadixDialog.Content
           className={cx(
-            'fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto',
-            'rounded-card border border-line-soft bg-surface p-6 shadow-xl animate-pop-in focus:outline-none',
+            'fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
+            'rounded-card border border-line-soft bg-surface shadow-xl animate-pop-in focus:outline-none',
             size === 'sm' && 'max-w-md',
             size === 'md' && 'max-w-lg',
             size === 'lg' && 'max-w-2xl',
@@ -40,7 +42,13 @@ export function Dialog({
           )}
           {...(description ? {} : { 'aria-describedby': undefined })}
         >
-          <div className="mb-4 flex items-start justify-between gap-4">
+          {/* The title stays put; only the body scrolls, inside the card's rounded shape, with the portal's scrollbar. */}
+          <div
+            className={cx(
+              'flex shrink-0 items-start justify-between gap-4 border-b px-6 pt-6 pb-4 transition-colors',
+              scrolled ? 'border-line-soft' : 'border-transparent',
+            )}
+          >
             <div>
               <RadixDialog.Title className="text-lg font-semibold text-ink">{title}</RadixDialog.Title>
               {description && (
@@ -53,8 +61,13 @@ export function Dialog({
               </Button>
             </RadixDialog.Close>
           </div>
-          {children}
-          {footer && <div className="mt-6 flex flex-wrap justify-end gap-2">{footer}</div>}
+          <div
+            className="scroll-area min-h-0 flex-1 overflow-y-auto px-6 pb-6"
+            onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
+          >
+            {children}
+            {footer && <div className="mt-6 flex flex-wrap justify-end gap-2">{footer}</div>}
+          </div>
         </RadixDialog.Content>
       </RadixDialog.Portal>
     </RadixDialog.Root>

@@ -27,7 +27,7 @@ export function SettingsNav({
 }) {
   return (
     <nav aria-label="Settings">
-      <ul className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 @4xl/content:mx-0 @4xl/content:flex-col @4xl/content:gap-1 @4xl/content:overflow-visible @4xl/content:px-0 @4xl/content:pb-0">
+      <ul className="scroll-area -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 @4xl/content:mx-0 @4xl/content:flex-col @4xl/content:gap-1 @4xl/content:overflow-visible @4xl/content:px-0 @4xl/content:pb-0">
         {SECTIONS.map(({ to, label, hint, icon: Icon, exact }) => (
           <li key={to} className="shrink-0">
             <Link
