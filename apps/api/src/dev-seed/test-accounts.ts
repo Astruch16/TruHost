@@ -47,12 +47,7 @@ export const SEED_PROPERTIES = [
   },
 ] as const;
 
-const ROOMS = [
-  { name: 'Bedroom', type: 'BEDROOM' },
-  { name: 'Bathroom', type: 'BATHROOM' },
-  { name: 'Kitchen', type: 'KITCHEN' },
-  { name: 'Living room', type: 'LIVING' },
-] as const;
+const ROOMS = [{ type: 'BEDROOM' }, { type: 'BATHROOM' }, { type: 'KITCHEN' }, { type: 'LIVING' }] as const;
 
 type Channel = 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT';
 interface StayPattern {
@@ -223,7 +218,7 @@ export async function seedTestAccounts(prisma: PrismaClient, identity: SeedIdent
     let property = await prisma.property.findUnique({ where: { id: p.id } });
     if (!property) {
       property = await prisma.property.create({
-        data: { ...fields, rooms: { create: ROOMS.map((r, i) => ({ ...r, sortOrder: i })) } },
+        data: { ...fields, rooms: { create: ROOMS.map((r, i) => ({ ...r, position: i })) } },
       });
       await prisma.auditLog.create({
         data: {

@@ -1,5 +1,6 @@
 export * from './money.js';
 export * from './enums.js';
+export * from './rooms.js';
 export * from './primitives.js';
 export * from './problem.js';
 export * from './api/me.js';

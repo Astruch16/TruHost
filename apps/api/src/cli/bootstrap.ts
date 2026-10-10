@@ -22,12 +22,7 @@ import { ResendEmailSender } from '../email/resend-email-sender.js';
 import { inviteEmail } from '../email/templates.js';
 
 const TRUPLAN = { name: 'TruPlan', managementFeeBps: 2200, description: '22% of the month’s owner gross revenue' };
-const DEFAULT_ROOMS = [
-  { name: 'Bedroom', type: 'BEDROOM' },
-  { name: 'Bathroom', type: 'BATHROOM' },
-  { name: 'Kitchen', type: 'KITCHEN' },
-  { name: 'Living room', type: 'LIVING' },
-] as const;
+const DEFAULT_ROOMS = [{ type: 'BEDROOM' }, { type: 'BATHROOM' }, { type: 'KITCHEN' }, { type: 'LIVING' }] as const;
 
 const { values: args } = parseArgs({
   options: {
@@ -102,7 +97,7 @@ async function main() {
       });
       await prisma.$transaction(async (tx) => {
         const p = await tx.property.create({
-          data: { ...input, rooms: { create: DEFAULT_ROOMS.map((r, i) => ({ ...r, sortOrder: i })) } },
+          data: { ...input, rooms: { create: DEFAULT_ROOMS.map((r, i) => ({ ...r, position: i })) } },
         });
         await tx.membership.create({ data: { userId: admin.id, propertyId: p.id, role: 'OWNER' } });
         await tx.propertyPlan.create({

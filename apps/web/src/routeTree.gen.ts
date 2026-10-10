@@ -18,6 +18,7 @@ import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
+import { Route as DevRoomsRouteImport } from './routes/dev/rooms'
 import { Route as DevSettingsRouteImport } from './routes/dev/settings'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
@@ -80,6 +81,11 @@ const DevLoadingRoute = DevLoadingRouteImport.update({
 const DevNoAccessRoute = DevNoAccessRouteImport.update({
   id: '/dev/no-access',
   path: '/dev/no-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevRoomsRoute = DevRoomsRouteImport.update({
+  id: '/dev/rooms',
+  path: '/dev/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevSettingsRoute = DevSettingsRouteImport.update({
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/rooms'
     | '/dev/settings'
     | '/dev/ui'
     | '/sign-in/$'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/rooms'
     | '/dev/settings'
     | '/dev/ui'
     | '/sign-in/$'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/rooms'
     | '/dev/settings'
     | '/dev/ui'
     | '/sign-in/$'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   DevDashboardRoute: typeof DevDashboardRoute
   DevLoadingRoute: typeof DevLoadingRoute
   DevNoAccessRoute: typeof DevNoAccessRoute
+  DevRoomsRoute: typeof DevRoomsRoute
   DevSettingsRoute: typeof DevSettingsRoute
   DevUiRoute: typeof DevUiRoute
   SignInSplatRoute: typeof SignInSplatRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/no-access'
       fullPath: '/dev/no-access'
       preLoaderRoute: typeof DevNoAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/rooms': {
+      id: '/dev/rooms'
+      path: '/dev/rooms'
+      fullPath: '/dev/rooms'
+      preLoaderRoute: typeof DevRoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/settings': {
@@ -651,6 +671,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevDashboardRoute: DevDashboardRoute,
   DevLoadingRoute: DevLoadingRoute,
   DevNoAccessRoute: DevNoAccessRoute,
+  DevRoomsRoute: DevRoomsRoute,
   DevSettingsRoute: DevSettingsRoute,
   DevUiRoute: DevUiRoute,
   SignInSplatRoute: SignInSplatRoute,

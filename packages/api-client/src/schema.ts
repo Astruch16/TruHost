@@ -308,6 +308,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/properties/{id}/rooms/bulk': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Rooms_createMany'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/properties/{id}/rooms/order': {
     parameters: {
       query?: never;
@@ -2081,11 +2097,24 @@ export interface operations {
               id: string;
               /** Format: uuid */
               propertyId: string;
-              name: string;
               /** @enum {string} */
               type:
-                'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
-              sortOrder: number;
+                | 'BEDROOM'
+                | 'BATHROOM'
+                | 'HALF_BATH'
+                | 'KITCHEN'
+                | 'LIVING'
+                | 'DINING'
+                | 'LAUNDRY'
+                | 'ENTRY'
+                | 'OFFICE'
+                | 'PATIO_DECK'
+                | 'HOT_TUB'
+                | 'GARAGE'
+                | 'OTHER';
+              label: string | null;
+              displayName: string;
+              position: number;
               /** Format: date-time */
               archivedAt: string | null;
             }[];
@@ -2108,9 +2137,22 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': {
-          name: string;
           /** @enum {string} */
-          type: 'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
+          type:
+            | 'BEDROOM'
+            | 'BATHROOM'
+            | 'HALF_BATH'
+            | 'KITCHEN'
+            | 'LIVING'
+            | 'DINING'
+            | 'LAUNDRY'
+            | 'ENTRY'
+            | 'OFFICE'
+            | 'PATIO_DECK'
+            | 'HOT_TUB'
+            | 'GARAGE'
+            | 'OTHER';
+          label?: string | null;
         };
       };
     };
@@ -2125,12 +2167,99 @@ export interface operations {
             id: string;
             /** Format: uuid */
             propertyId: string;
-            name: string;
             /** @enum {string} */
-            type: 'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
-            sortOrder: number;
+            type:
+              | 'BEDROOM'
+              | 'BATHROOM'
+              | 'HALF_BATH'
+              | 'KITCHEN'
+              | 'LIVING'
+              | 'DINING'
+              | 'LAUNDRY'
+              | 'ENTRY'
+              | 'OFFICE'
+              | 'PATIO_DECK'
+              | 'HOT_TUB'
+              | 'GARAGE'
+              | 'OTHER';
+            label: string | null;
+            displayName: string;
+            position: number;
             /** Format: date-time */
             archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Rooms_createMany: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          rooms: {
+            /** @enum {string} */
+            type:
+              | 'BEDROOM'
+              | 'BATHROOM'
+              | 'HALF_BATH'
+              | 'KITCHEN'
+              | 'LIVING'
+              | 'DINING'
+              | 'LAUNDRY'
+              | 'ENTRY'
+              | 'OFFICE'
+              | 'PATIO_DECK'
+              | 'HOT_TUB'
+              | 'GARAGE'
+              | 'OTHER';
+            label?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              type:
+                | 'BEDROOM'
+                | 'BATHROOM'
+                | 'HALF_BATH'
+                | 'KITCHEN'
+                | 'LIVING'
+                | 'DINING'
+                | 'LAUNDRY'
+                | 'ENTRY'
+                | 'OFFICE'
+                | 'PATIO_DECK'
+                | 'HOT_TUB'
+                | 'GARAGE'
+                | 'OTHER';
+              label: string | null;
+              displayName: string;
+              position: number;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+            /** Format: uuid */
+            nextCursor: string | null;
           };
         };
       };
@@ -2164,11 +2293,24 @@ export interface operations {
               id: string;
               /** Format: uuid */
               propertyId: string;
-              name: string;
               /** @enum {string} */
               type:
-                'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
-              sortOrder: number;
+                | 'BEDROOM'
+                | 'BATHROOM'
+                | 'HALF_BATH'
+                | 'KITCHEN'
+                | 'LIVING'
+                | 'DINING'
+                | 'LAUNDRY'
+                | 'ENTRY'
+                | 'OFFICE'
+                | 'PATIO_DECK'
+                | 'HOT_TUB'
+                | 'GARAGE'
+                | 'OTHER';
+              label: string | null;
+              displayName: string;
+              position: number;
               /** Format: date-time */
               archivedAt: string | null;
             }[];
@@ -2191,9 +2333,22 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': {
-          name?: string;
           /** @enum {string} */
-          type?: 'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
+          type?:
+            | 'BEDROOM'
+            | 'BATHROOM'
+            | 'HALF_BATH'
+            | 'KITCHEN'
+            | 'LIVING'
+            | 'DINING'
+            | 'LAUNDRY'
+            | 'ENTRY'
+            | 'OFFICE'
+            | 'PATIO_DECK'
+            | 'HOT_TUB'
+            | 'GARAGE'
+            | 'OTHER';
+          label?: string | null;
         };
       };
     };
@@ -2208,10 +2363,24 @@ export interface operations {
             id: string;
             /** Format: uuid */
             propertyId: string;
-            name: string;
             /** @enum {string} */
-            type: 'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
-            sortOrder: number;
+            type:
+              | 'BEDROOM'
+              | 'BATHROOM'
+              | 'HALF_BATH'
+              | 'KITCHEN'
+              | 'LIVING'
+              | 'DINING'
+              | 'LAUNDRY'
+              | 'ENTRY'
+              | 'OFFICE'
+              | 'PATIO_DECK'
+              | 'HOT_TUB'
+              | 'GARAGE'
+              | 'OTHER';
+            label: string | null;
+            displayName: string;
+            position: number;
             /** Format: date-time */
             archivedAt: string | null;
           };
@@ -2240,10 +2409,24 @@ export interface operations {
             id: string;
             /** Format: uuid */
             propertyId: string;
-            name: string;
             /** @enum {string} */
-            type: 'BEDROOM' | 'BATHROOM' | 'KITCHEN' | 'LIVING' | 'DINING' | 'LAUNDRY' | 'OUTDOOR' | 'ENTRY' | 'OTHER';
-            sortOrder: number;
+            type:
+              | 'BEDROOM'
+              | 'BATHROOM'
+              | 'HALF_BATH'
+              | 'KITCHEN'
+              | 'LIVING'
+              | 'DINING'
+              | 'LAUNDRY'
+              | 'ENTRY'
+              | 'OFFICE'
+              | 'PATIO_DECK'
+              | 'HOT_TUB'
+              | 'GARAGE'
+              | 'OTHER';
+            label: string | null;
+            displayName: string;
+            position: number;
             /** Format: date-time */
             archivedAt: string | null;
           };

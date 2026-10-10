@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { nonNegativeCents } from '../money.js';
 import { MembershipRole, RoomType } from '../enums.js';
+import { normalizeRoomLabel, roomTypeNeedsLabel } from '../rooms.js';
 import { bps, id, isoDate, isoDateTime, monthStart, text, timeOfDay } from '../primitives.js';
 
 /**
@@ -173,17 +174,38 @@ export const membershipListQuery = z.object({
 export const room = z.object({
   id,
   propertyId: id,
-  name: z.string(),
   type: RoomType,
-  sortOrder: z.number().int(),
+  /** Optional, e.g. "Primary", "Ensuite", "Loft". Required for OTHER. */
+  label: z.string().nullable(),
+  /** What the room is called (from type, label and order; see roomDisplayNames). Computed by the API. */
+  displayName: z.string(),
+  /** Walkthrough order (0 first): the cleaner's photo checklist and the owner's photo view follow it. */
+  position: z.number().int(),
   archivedAt: isoDateTime.nullable(),
 });
 export type Room = z.infer<typeof room>;
 
-export const createRoom = z.object({ name: text(100), type: RoomType });
+/** Trimmed, inner spaces collapsed; empty or null means "no label". */
+const roomLabel = z
+  .string()
+  .max(60)
+  .nullable()
+  .transform((v) => normalizeRoomLabel(v));
+
+export const createRoom = z
+  .object({ type: RoomType, label: roomLabel.default(null) })
+  .refine((r) => !roomTypeNeedsLabel(r.type) || r.label !== null, {
+    path: ['label'],
+    message: 'Give an “Other” room a name',
+  });
 export type CreateRoom = z.infer<typeof createRoom>;
 
-export const updateRoom = createRoom.partial();
+/** Quick setup: several rooms at once, appended in this order. */
+export const createRooms = z.object({ rooms: z.array(createRoom).min(1).max(60) });
+export type CreateRooms = z.infer<typeof createRooms>;
+
+/** Change the type, the label, or both. No defaults (see CLAUDE.md: update schemas never carry .default()). */
+export const updateRoom = z.object({ type: RoomType, label: roomLabel }).partial();
 export type UpdateRoom = z.infer<typeof updateRoom>;
 
 export const reorderRooms = z.object({ roomIds: z.array(id).min(1).max(100) });

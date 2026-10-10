@@ -39,12 +39,12 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
         defaultCleanerPayCents: 9000,
         rooms: {
           create: [
-            { name: 'Bedroom', type: 'BEDROOM', sortOrder: 0 },
-            { name: 'Bathroom', type: 'BATHROOM', sortOrder: 1 },
+            { type: 'BEDROOM', position: 0 },
+            { type: 'BATHROOM', position: 1 },
           ],
         },
       },
-      include: { rooms: { orderBy: { sortOrder: 'asc' } } },
+      include: { rooms: { orderBy: { position: 'asc' } } },
     });
   const a = await property('Property A');
   const b = await property('Property B');

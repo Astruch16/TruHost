@@ -33,12 +33,16 @@ export type MembershipRole = z.infer<typeof MembershipRole>;
 export const RoomType = z.enum([
   'BEDROOM',
   'BATHROOM',
+  'HALF_BATH',
   'KITCHEN',
   'LIVING',
   'DINING',
   'LAUNDRY',
-  'OUTDOOR',
   'ENTRY',
+  'OFFICE',
+  'PATIO_DECK',
+  'HOT_TUB',
+  'GARAGE',
   'OTHER',
 ]);
 export type RoomType = z.infer<typeof RoomType>;

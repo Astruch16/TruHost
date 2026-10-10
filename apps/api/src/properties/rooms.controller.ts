@@ -2,11 +2,13 @@ import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put, Query } from 
 import { ApiTags } from '@nestjs/swagger';
 import {
   createRoom,
+  createRooms,
   page,
   reorderRooms,
   room,
   updateRoom,
   type CreateRoom,
+  type CreateRooms,
   type ReorderRooms,
   type UpdateRoom,
 } from '@truhost/shared';
@@ -48,6 +50,18 @@ export class RoomsController {
     @Body(new ZodPipe(createRoom)) body: CreateRoom,
   ) {
     return this.rooms.create(actor, propertyId, body);
+  }
+
+  /** Quick setup: several rooms at once (e.g. from per-type counts), added at the end of the walkthrough. */
+  @Post('properties/:id/rooms/bulk')
+  @ZodBody(createRooms)
+  @ZodResponse(page(room), 201)
+  createMany(
+    @CurrentActor() actor: Actor,
+    @Param('id', uuidParam) propertyId: string,
+    @Body(new ZodPipe(createRooms)) body: CreateRooms,
+  ) {
+    return this.rooms.createMany(actor, propertyId, body.rooms);
   }
 
   @Put('properties/:id/rooms/order')
