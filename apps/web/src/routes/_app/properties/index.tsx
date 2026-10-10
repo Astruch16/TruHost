@@ -30,7 +30,7 @@ function MyProperties() {
           {me.data.memberships.map((m) => (
             <li key={m.id}>
               <Link
-                to="/properties/$propertyId"
+                to={m.role === 'OWNER' ? '/properties/$propertyId' : '/cleaner/properties/$propertyId'}
                 params={{ propertyId: m.property.id }}
                 className="group flex min-h-24 items-center gap-4 rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-sm"
               >

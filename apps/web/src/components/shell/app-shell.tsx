@@ -3,6 +3,7 @@ import * as RadixDialog from '@radix-ui/react-dialog';
 import { Menu, X } from 'lucide-react';
 import type { NavItem } from '../../lib/nav';
 import { ShellContext } from '../../lib/shell-context';
+import { FEATURES } from '../../lib/features';
 import { NotificationsBell } from './notifications-bell';
 import { ProfileMenu } from './profile-menu';
 import { PropertySwitcher, type SwitcherProperty } from './property-switcher';
@@ -98,7 +99,8 @@ export function AppShell({
               />
             )}
           </div>
-          <NotificationsBell unread={unreadNotifications} />
+          {/* Hidden until notifications are sent (lib/features.ts). */}
+          {FEATURES.notifications && <NotificationsBell unread={unreadNotifications} />}
           <ProfileMenu {...user} onSignOut={onSignOut} />
         </header>
         <main

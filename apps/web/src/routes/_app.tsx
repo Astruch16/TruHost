@@ -5,12 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
 import { AuthButton, AuthCard } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
+import { NotAvailable } from '../components/shell/not-available';
 import { PortalLoading } from '../components/shell/portal-loading';
 import { AuthFrame } from '../components/shell/auth-frame';
 import { ErrorAlert } from '../components/ui/alert';
 import { useApi } from '../lib/api-context';
 import { GuideContext } from '../lib/guide-context';
 import { guideFromApi } from '../lib/guides';
+import { propertyPath } from '../lib/access';
 import { initials, navItems, roleLabel } from '../lib/nav';
 import { applyMotion, PreferencesContext } from '../lib/preferences';
 import { queries } from '../lib/queries';
@@ -20,6 +22,8 @@ import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
 export const Route = createFileRoute('/_app')({
   pendingMs: 0, // first visit: show the portal outline straight away, never a blank screen
   component: AppLayout,
+  // Unknown addresses inside the portal: inside the shell, with the way home.
+  notFoundComponent: () => <NotAvailable />,
 });
 
 function AppLayout() {
@@ -89,7 +93,9 @@ function SignedInShell() {
   const selectProperty = (id: string | null) => {
     setScope(id);
     if (!isAdmin) {
-      if (id) void navigate({ to: '/properties/$propertyId', params: { propertyId: id } });
+      // The owner page for properties they own, the cleaner page for ones they clean.
+      const to = id ? propertyPath(user, id) : null;
+      if (id && to) void navigate({ to, params: { propertyId: id } });
       return;
     }
     if (matchRoute({ to: '/admin/properties/$propertyId' })) {

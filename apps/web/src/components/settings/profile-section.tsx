@@ -136,7 +136,7 @@ function AccessCard({ me }: { me: Me }) {
             description={
               m.role === 'OWNER'
                 ? 'Stays, earnings and statements for this property.'
-                : 'Cleans, supplies and damage reports for this property.'
+                : 'The property’s address and rooms. Your cleaning schedule arrives here later.'
             }
           />
         ))}

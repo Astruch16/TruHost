@@ -14,6 +14,7 @@ import { Route as SsoCallbackRouteImport } from './routes/sso-callback'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
@@ -35,6 +36,7 @@ import { Route as AppPropertiesIndexRouteImport } from './routes/_app/properties
 import { Route as AppPropertiesPropertyIdRouteImport } from './routes/_app/properties/$propertyId'
 import { Route as AppAdminPropertiesIndexRouteImport } from './routes/_app/admin/properties/index'
 import { Route as AppAdminPropertiesPropertyIdRouteImport } from './routes/_app/admin/properties/$propertyId'
+import { Route as AppCleanerPropertiesPropertyIdRouteImport } from './routes/_app/cleaner/properties/$propertyId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -58,6 +60,11 @@ const AppAccountRoute = AppAccountRouteImport.update({
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCleanerRoute = AppCleanerRouteImport.update({
+  id: '/cleaner',
+  path: '/cleaner',
   getParentRoute: () => AppRoute,
 } as any)
 const DevDashboardRoute = DevDashboardRouteImport.update({
@@ -166,12 +173,19 @@ const AppAdminPropertiesPropertyIdRoute =
     path: '/properties/$propertyId',
     getParentRoute: () => AppAdminRoute,
   } as any)
+const AppCleanerPropertiesPropertyIdRoute =
+  AppCleanerPropertiesPropertyIdRouteImport.update({
+    id: '/properties/$propertyId',
+    path: '/properties/$propertyId',
+    getParentRoute: () => AppCleanerRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/sso-callback': typeof SsoCallbackRoute
   '/account': typeof AppAccountRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
+  '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
@@ -192,10 +206,12 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AppAdminIndexRoute
   '/properties/': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/admin/properties/': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
+  '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
@@ -217,6 +233,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminIndexRoute
   '/properties': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/admin/properties': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRoutesById {
@@ -225,6 +242,7 @@ export interface FileRoutesById {
   '/sso-callback': typeof SsoCallbackRoute
   '/_app/account': typeof AppAccountRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
+  '/_app/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
@@ -246,6 +264,7 @@ export interface FileRoutesById {
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/properties/': typeof AppPropertiesIndexRoute
   '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/_app/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/_app/admin/properties/': typeof AppAdminPropertiesIndexRoute
 }
 export interface FileRouteTypes {
@@ -255,6 +274,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/account'
     | '/admin'
+    | '/cleaner'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
@@ -275,10 +295,12 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/properties/'
     | '/admin/properties/$propertyId'
+    | '/cleaner/properties/$propertyId'
     | '/admin/properties/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sso-callback'
+    | '/cleaner'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
@@ -300,6 +322,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/properties'
     | '/admin/properties/$propertyId'
+    | '/cleaner/properties/$propertyId'
     | '/admin/properties'
   id:
     | '__root__'
@@ -307,6 +330,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/_app/account'
     | '/_app/admin'
+    | '/_app/cleaner'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
@@ -328,6 +352,7 @@ export interface FileRouteTypes {
     | '/_app/admin/'
     | '/_app/properties/'
     | '/_app/admin/properties/$propertyId'
+    | '/_app/cleaner/properties/$propertyId'
     | '/_app/admin/properties/'
   fileRoutesById: FileRoutesById
 }
@@ -378,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cleaner': {
+      id: '/_app/cleaner'
+      path: '/cleaner'
+      fullPath: '/cleaner'
+      preLoaderRoute: typeof AppCleanerRouteImport
       parentRoute: typeof AppRoute
     }
     '/dev/dashboard': {
@@ -527,6 +559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminPropertiesPropertyIdRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/cleaner/properties/$propertyId': {
+      id: '/_app/cleaner/properties/$propertyId'
+      path: '/properties/$propertyId'
+      fullPath: '/cleaner/properties/$propertyId'
+      preLoaderRoute: typeof AppCleanerPropertiesPropertyIdRouteImport
+      parentRoute: typeof AppCleanerRoute
+    }
   }
 }
 
@@ -574,9 +613,22 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
   AppAdminRouteChildren,
 )
 
+interface AppCleanerRouteChildren {
+  AppCleanerPropertiesPropertyIdRoute: typeof AppCleanerPropertiesPropertyIdRoute
+}
+
+const AppCleanerRouteChildren: AppCleanerRouteChildren = {
+  AppCleanerPropertiesPropertyIdRoute: AppCleanerPropertiesPropertyIdRoute,
+}
+
+const AppCleanerRouteWithChildren = AppCleanerRoute._addFileChildren(
+  AppCleanerRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRouteWithChildren
   AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppCleanerRoute: typeof AppCleanerRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppPropertiesPropertyIdRoute: typeof AppPropertiesPropertyIdRoute
   AppPropertiesIndexRoute: typeof AppPropertiesIndexRoute
@@ -585,6 +637,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRouteWithChildren,
   AppAdminRoute: AppAdminRouteWithChildren,
+  AppCleanerRoute: AppCleanerRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppPropertiesPropertyIdRoute: AppPropertiesPropertyIdRoute,
   AppPropertiesIndexRoute: AppPropertiesIndexRoute,
