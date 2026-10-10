@@ -2114,6 +2114,7 @@ export interface operations {
                 | 'OTHER';
               label: string | null;
               displayName: string;
+              number: number;
               position: number;
               /** Format: date-time */
               archivedAt: string | null;
@@ -2184,6 +2185,7 @@ export interface operations {
               | 'OTHER';
             label: string | null;
             displayName: string;
+            number: number;
             position: number;
             /** Format: date-time */
             archivedAt: string | null;
@@ -2254,6 +2256,7 @@ export interface operations {
                 | 'OTHER';
               label: string | null;
               displayName: string;
+              number: number;
               position: number;
               /** Format: date-time */
               archivedAt: string | null;
@@ -2310,6 +2313,7 @@ export interface operations {
                 | 'OTHER';
               label: string | null;
               displayName: string;
+              number: number;
               position: number;
               /** Format: date-time */
               archivedAt: string | null;
@@ -2380,6 +2384,7 @@ export interface operations {
               | 'OTHER';
             label: string | null;
             displayName: string;
+            number: number;
             position: number;
             /** Format: date-time */
             archivedAt: string | null;
@@ -2426,6 +2431,7 @@ export interface operations {
               | 'OTHER';
             label: string | null;
             displayName: string;
+            number: number;
             position: number;
             /** Format: date-time */
             archivedAt: string | null;

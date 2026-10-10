@@ -39,8 +39,8 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
         defaultCleanerPayCents: 9000,
         rooms: {
           create: [
-            { type: 'BEDROOM', position: 0 },
-            { type: 'BATHROOM', position: 1 },
+            { type: 'BEDROOM', number: 1, position: 0 },
+            { type: 'BATHROOM', number: 1, position: 1 },
           ],
         },
       },

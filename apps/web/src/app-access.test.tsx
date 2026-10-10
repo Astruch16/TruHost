@@ -74,7 +74,15 @@ function fakeApi(me: Me) {
             : path === '/v1/properties/{id}/rooms'
               ? {
                   items: [
-                    { id: 'r1', type: 'KITCHEN', label: null, displayName: 'Kitchen', position: 0, archivedAt: null },
+                    {
+                      id: 'r1',
+                      type: 'KITCHEN',
+                      label: null,
+                      number: 1,
+                      displayName: 'Kitchen',
+                      position: 0,
+                      archivedAt: null,
+                    },
                   ],
                 }
               : { items: [] };

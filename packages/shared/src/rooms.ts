@@ -27,30 +27,38 @@ export function normalizeRoomLabel(label: string | null | undefined): string | n
 }
 
 /**
- * The names rooms are shown by, from their type, label and walkthrough order:
+ * The names rooms are shown by, from their type, label and number:
  * - a label: "Bedroom · Primary";
- * - the only room of its type: "Kitchen";
- * - several of a type: unlabelled ones are numbered by their place among that type, in walkthrough order
- *   ("Bedroom · Primary", "Bedroom 2", "Bedroom 3").
+ * - the only active room of its type: "Kitchen";
+ * - several of a type: "Bedroom 2", from the room's own stored number.
  *
- * `rooms` are a property's active rooms in walkthrough order. Display only: the API uses this to answer with names
- * and to refuse two rooms with the same name; it never identifies a room (ids do).
+ * Numbers are given once, when a room is created (nextRoomNumber), and never change with the walkthrough order, so a
+ * room keeps its name when rooms are reordered or deleted. `rooms` are a property's active rooms. Display only: the
+ * API uses this to answer with names and to refuse two rooms with the same name; it never identifies a room (ids do).
  */
-export function roomDisplayNames<T extends { id: string; type: RoomType; label: string | null }>(
+export function roomDisplayNames<T extends { id: string; type: RoomType; label: string | null; number: number }>(
   rooms: readonly T[],
 ): Map<string, string> {
   const ofType = new Map<RoomType, number>();
   for (const r of rooms) ofType.set(r.type, (ofType.get(r.type) ?? 0) + 1);
-  const seen = new Map<RoomType, number>();
   const names = new Map<string, string>();
   for (const r of rooms) {
-    const nth = (seen.get(r.type) ?? 0) + 1;
-    seen.set(r.type, nth);
     const type = ROOM_TYPE_LABELS[r.type];
     const label = normalizeRoomLabel(r.label);
-    names.set(r.id, label ? `${type} · ${label}` : ofType.get(r.type)! > 1 ? `${type} ${nth}` : type);
+    names.set(r.id, label ? `${type} · ${label}` : ofType.get(r.type)! > 1 ? `${type} ${r.number}` : type);
   }
   return names;
+}
+
+/**
+ * The number a new room of `type` gets: the smallest one no room of that type on the property holds, counting
+ * deleted (archived) rooms, which keep theirs with their photos. So a number never moves to a different room.
+ */
+export function nextRoomNumber(rooms: readonly { type: RoomType; number: number }[], type: RoomType): number {
+  const held = new Set(rooms.filter((r) => r.type === type).map((r) => r.number));
+  let n = 1;
+  while (held.has(n)) n++;
+  return n;
 }
 
 /** The first display name shared by two rooms (compared without case), or null if all are distinct. */

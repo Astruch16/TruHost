@@ -20,10 +20,12 @@ function setup(initial: Room[]) {
     POST: vi.fn(async (path: string, init: { body?: unknown }) => {
       if (path.endsWith('/bulk')) {
         rooms = named(
-          (init.body as { rooms: { type: Room['type'] }[] }).rooms.map((r, i) => ({
+          (init.body as { rooms: { type: Room['type'] }[] }).rooms.map((r, i, list) => ({
             ...r,
             id: `n${i}`,
             label: null,
+            // Numbers in the order created, per type (as the API gives them).
+            number: list.slice(0, i + 1).filter((x) => x.type === r.type).length,
             position: i,
           })),
         );
@@ -97,7 +99,7 @@ describe('RoomsCard', () => {
   });
 
   it('adds one room with a type chip and a label, previewing its name and refusing a clash', async () => {
-    const api = setup(named([{ id: 'a', type: 'BEDROOM', label: 'Primary', position: 0 }]));
+    const api = setup(named([{ id: 'a', type: 'BEDROOM', label: 'Primary', number: 1, position: 0 }]));
     const user = u();
     await user.click(await screen.findByRole('button', { name: 'Add a room' }));
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveAttribute(
@@ -125,8 +127,8 @@ describe('RoomsCard', () => {
   it('edits a room’s type and label inline, and deletes after confirming', async () => {
     const api = setup(
       named([
-        { id: 'a', type: 'BEDROOM', label: null, position: 0 },
-        { id: 'b', type: 'BEDROOM', label: null, position: 1 },
+        { id: 'a', type: 'BEDROOM', label: null, number: 1, position: 0 },
+        { id: 'b', type: 'BEDROOM', label: null, number: 2, position: 1 },
       ]),
     );
     const user = u();
@@ -147,37 +149,34 @@ describe('RoomsCard', () => {
     expect(api.POST).toHaveBeenCalledWith('/v1/rooms/{id}/archive', { params: { path: { id: 'b' } } });
   });
 
-  it('reorders with the keyboard: Space to pick up, arrow down, Space to drop', async () => {
+  it('reorders with the keyboard (Space, arrow, Space) without renaming any room', async () => {
     const api = setup(
       named([
-        { id: 'a', type: 'KITCHEN', label: null, position: 0 },
-        { id: 'b', type: 'BEDROOM', label: null, position: 1 },
-        { id: 'c', type: 'BATHROOM', label: null, position: 2 },
+        { id: 'a', type: 'KITCHEN', label: null, number: 1, position: 0 },
+        { id: 'b', type: 'BEDROOM', label: null, number: 2, position: 1 },
+        { id: 'c', type: 'BEDROOM', label: null, number: 1, position: 2 },
       ]),
     );
     const user = u();
-    const handle = await screen.findByRole('button', { name: 'Reorder Kitchen' });
-    handle.focus();
+    const rows = () =>
+      within(screen.getByRole('list', { name: 'Rooms in walkthrough order' }))
+        .getAllByRole('listitem')
+        .map((li) => li.textContent?.replace(/^\d+/, ''));
+    await screen.findByRole('button', { name: 'Reorder Kitchen' });
+    expect(rows()).toEqual(['Kitchen', 'Bedroom 2', 'Bedroom 1']);
+
+    screen.getByRole('button', { name: 'Reorder Bedroom 1' }).focus();
     await user.keyboard(' ');
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowUp}');
+    await user.keyboard('{ArrowUp}');
     await user.keyboard(' ');
     await waitFor(() =>
       expect(api.PUT).toHaveBeenCalledWith('/v1/properties/{id}/rooms/order', {
         params: { path: { id: 'p1' } },
-        body: { roomIds: ['b', 'a', 'c'] },
+        body: { roomIds: ['c', 'a', 'b'] },
       }),
     );
-    const list = screen.getByRole('list', { name: 'Rooms in walkthrough order' });
-    await waitFor(() =>
-      expect(
-        within(list)
-          .getAllByRole('listitem')
-          .map((li) => li.textContent),
-      ).toEqual([
-        expect.stringContaining('Bedroom'),
-        expect.stringContaining('Kitchen'),
-        expect.stringContaining('Bathroom'),
-      ]),
-    );
+    // Same names, new order: "Bedroom 1" is still Bedroom 1, now first.
+    await waitFor(() => expect(rows()).toEqual(['Bedroom 1', 'Kitchen', 'Bedroom 2']));
   });
 });

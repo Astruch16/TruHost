@@ -253,8 +253,8 @@ enum RoomType {
   OTHER
 }
 
-/// A room in the walkthrough. Its name is derived, never stored: the type alone ("Kitchen"), numbered when there are
-/// several of a type ("Bedroom 2"), or with its label ("Bedroom · Primary"); see roomDisplayNames in shared.
+/// A room in the walkthrough. Its name is derived, never stored: the type alone ("Kitchen"), with its number when there
+/// are several of a type ("Bedroom 2"), or with its label ("Bedroom · Primary"); see roomDisplayNames in shared.
 model Room {
   id         String    @id @default(uuid(7)) @db.Uuid
   propertyId String    @db.Uuid
@@ -263,6 +263,9 @@ model Room {
   /// Optional, e.g. "Primary", "Ensuite", "Loft"; required for OTHER. Tidy and at most 60 characters (CHECKs).
   /// Unique per property and type among active rooms, ignoring case (room_label_unique), so no two rooms share a name.
   label      String?
+  /// Given once, at creation: the next number no room of this type on the property holds (deleted rooms keep theirs).
+  /// Never changes with the walkthrough order, so a room's name stays put; a label only hides it.
+  number     Int
   /// Walkthrough order (0 first): the cleaner's photo checklist and the owner's photo view follow it.
   position   Int       @default(0)
   /// Archived ("deleted") rooms leave the walkthrough and the name checks but keep their history and photos.
@@ -271,6 +274,8 @@ model Room {
 
   /// Target of CleanPhoto's composite FK (Phase 3), proving the room belongs to the clean's property.
   @@unique([propertyId, id])
+  /// A number belongs to one room of a type, deleted rooms included, so it never moves to a different room.
+  @@unique([propertyId, type, number])
   @@index([propertyId, position])
 }
 

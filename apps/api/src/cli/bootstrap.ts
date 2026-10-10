@@ -97,7 +97,7 @@ async function main() {
       });
       await prisma.$transaction(async (tx) => {
         const p = await tx.property.create({
-          data: { ...input, rooms: { create: DEFAULT_ROOMS.map((r, i) => ({ ...r, position: i })) } },
+          data: { ...input, rooms: { create: DEFAULT_ROOMS.map((r, i) => ({ ...r, number: 1, position: i })) } },
         });
         await tx.membership.create({ data: { userId: admin.id, propertyId: p.id, role: 'OWNER' } });
         await tx.propertyPlan.create({

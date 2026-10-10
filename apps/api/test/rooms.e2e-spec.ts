@@ -22,10 +22,10 @@ describe('rooms: types, labels, derived names and order', () => {
     ((await t.as(who).get(path()).expect(200)).body.items as { displayName: string }[]).map((r) => r.displayName);
 
   describe('names', () => {
-    it('numbers rooms of a type once there are several, and renames when that changes', async () => {
+    it('shows numbers once a type has several rooms', async () => {
       expect(await names()).toEqual(['Bedroom', 'Bathroom']);
       const second = await add({ type: 'BEDROOM' }).expect(201);
-      expect(second.body).toMatchObject({ displayName: 'Bedroom 2', label: null, position: 2 });
+      expect(second.body).toMatchObject({ displayName: 'Bedroom 2', label: null, number: 2, position: 2 });
       expect(await names()).toEqual(['Bedroom 1', 'Bathroom', 'Bedroom 2']);
 
       await t.as('admin').patch(`/v1/rooms/${w.propertyA.roomIds[0]}`, { label: 'Primary' }).expect(200);
@@ -38,19 +38,92 @@ describe('rooms: types, labels, derived names and order', () => {
       expect(await names('cleanerA')).toEqual(['Bedroom · Primary', 'Bathroom']);
     });
 
-    it('follows the walkthrough order', async () => {
-      const second = await add({ type: 'BEDROOM' }).expect(201);
-      const [bedroom, bathroom] = w.propertyA.roomIds;
+    it('never renames a room when the walkthrough is reordered', async () => {
       await t
         .as('admin')
-        .put(`${path()}/order`, { roomIds: [second.body.id, bathroom, bedroom] })
-        .expect(200);
+        .post(`${path()}/bulk`, {
+          rooms: [{ type: 'BEDROOM' }, { type: 'BEDROOM' }, { type: 'BATHROOM' }, { type: 'KITCHEN' }],
+        })
+        .expect(201);
+      await add({ type: 'BEDROOM', label: 'Loft' }).expect(201);
+      const byId = async () => {
+        const items = (await t.as('admin').get(path()).expect(200)).body.items as { id: string; displayName: string }[];
+        return { ids: items.map((r) => r.id), names: Object.fromEntries(items.map((r) => [r.id, r.displayName])) };
+      };
+      const before = await byId();
+      expect(Object.values(before.names).sort()).toEqual(
+        ['Bathroom 1', 'Bathroom 2', 'Bedroom 1', 'Bedroom 2', 'Bedroom 3', 'Bedroom · Loft', 'Kitchen'].sort(),
+      );
+      const orders = [
+        [...before.ids].reverse(),
+        [...before.ids.slice(3), ...before.ids.slice(0, 3)],
+        [before.ids[4], before.ids[0], before.ids[6], before.ids[2], before.ids[5], before.ids[1], before.ids[3]],
+      ];
+      for (const order of orders) {
+        const res = await t.as('admin').put(`${path()}/order`, { roomIds: order }).expect(200);
+        expect(res.body.items.map((r: { id: string }) => r.id)).toEqual(order);
+        expect((await byId()).names).toEqual(before.names);
+      }
+    });
+
+    it('never renumbers the others when a room is deleted', async () => {
+      const [first] = w.propertyA.roomIds;
+      const two = (await add({ type: 'BEDROOM' }).expect(201)).body;
+      const three = (await add({ type: 'BEDROOM' }).expect(201)).body;
+      expect(await names()).toEqual(['Bedroom 1', 'Bathroom', 'Bedroom 2', 'Bedroom 3']);
+      await t.as('admin').post(`/v1/rooms/${two.id}/archive`).expect(200);
+      expect(await names()).toEqual(['Bedroom 1', 'Bathroom', 'Bedroom 3']);
+      // Down to one bedroom: it's just "Bedroom" (no number shown), and it keeps its number underneath.
+      await t.as('admin').post(`/v1/rooms/${first}/archive`).expect(200);
       const items = (await t.as('admin').get(path()).expect(200)).body.items;
-      expect(items.map((r: { id: string; displayName: string }) => [r.id, r.displayName])).toEqual([
-        [second.body.id, 'Bedroom 1'],
-        [bathroom, 'Bathroom'],
-        [bedroom, 'Bedroom 2'],
+      expect(items.find((r: { id: string }) => r.id === three.id)).toMatchObject({ displayName: 'Bedroom', number: 3 });
+    });
+
+    it('numbers new rooms from the next free number, never reusing a deleted room’s', async () => {
+      const [first] = w.propertyA.roomIds; // Bedroom, number 1
+      const two = (await add({ type: 'BEDROOM' }).expect(201)).body;
+      expect(two.number).toBe(2);
+      await t.as('admin').post(`/v1/rooms/${two.id}/archive`).expect(200);
+      // 2 still belongs to the deleted room (and its photos): the next is 3.
+      expect((await add({ type: 'BEDROOM' }).expect(201)).body).toMatchObject({ number: 3, displayName: 'Bedroom 3' });
+      // A label hides a number but keeps it: the next is 4, and clearing the label brings back "Bedroom 1".
+      await t.as('admin').patch(`/v1/rooms/${first}`, { label: 'Primary' }).expect(200);
+      expect((await add({ type: 'BEDROOM' }).expect(201)).body.number).toBe(4);
+      const cleared = await t.as('admin').patch(`/v1/rooms/${first}`, { label: null }).expect(200);
+      expect(cleared.body).toMatchObject({ number: 1, displayName: 'Bedroom 1' });
+      // Changing type moves a room to the next free number of its new type, which frees its old one.
+      const moved = await t.as('admin').patch(`/v1/rooms/${first}`, { type: 'OFFICE' }).expect(200);
+      expect(moved.body).toMatchObject({ number: 1, displayName: 'Office' });
+      expect((await add({ type: 'BEDROOM' }).expect(201)).body.number).toBe(1);
+    });
+
+    it('quick setup numbers rooms in the order created', async () => {
+      const res = await t
+        .as('admin')
+        .post(`${path()}/bulk`, {
+          rooms: [{ type: 'BATHROOM' }, { type: 'BEDROOM' }, { type: 'BATHROOM' }, { type: 'BEDROOM' }],
+        })
+        .expect(201);
+      expect(res.body.items.map((r: { type: string; number: number }) => `${r.type} ${r.number}`)).toEqual([
+        'BEDROOM 1',
+        'BATHROOM 1',
+        'BATHROOM 2',
+        'BEDROOM 2',
+        'BATHROOM 3',
+        'BEDROOM 3',
       ]);
+    });
+
+    it('keeps each number to one room of a type in the database, deleted rooms included', async () => {
+      const [bedroom] = w.propertyA.roomIds;
+      const two = (await add({ type: 'BEDROOM' }).expect(201)).body;
+      await t.as('admin').post(`/v1/rooms/${two.id}/archive`).expect(200);
+      await expect(t.prisma.$executeRaw`UPDATE "Room" SET number = 2 WHERE id = ${bedroom}::uuid`).rejects.toThrow(
+        /Room_propertyId_type_number_key/,
+      );
+      await expect(t.prisma.$executeRaw`UPDATE "Room" SET number = 0 WHERE id = ${bedroom}::uuid`).rejects.toThrow(
+        /room_number_positive/,
+      );
     });
 
     it('tidies labels and treats a blank one as none', async () => {
@@ -110,11 +183,13 @@ describe('rooms: types, labels, derived names and order', () => {
       const [bedroom, bathroom] = w.propertyA.roomIds;
       await t.prisma.$executeRaw`UPDATE "Room" SET label = 'Primary' WHERE id = ${bedroom}::uuid`;
       await expect(
-        t.prisma.$executeRaw`UPDATE "Room" SET type = 'BEDROOM', label = 'PRIMARY' WHERE id = ${bathroom}::uuid`,
+        t.prisma
+          .$executeRaw`UPDATE "Room" SET type = 'BEDROOM', label = 'PRIMARY', number = 2 WHERE id = ${bathroom}::uuid`,
       ).rejects.toThrow(/room_label_unique/);
       // Archived rooms don't count.
       await t.prisma.$executeRaw`UPDATE "Room" SET "archivedAt" = now() WHERE id = ${bedroom}::uuid`;
-      await t.prisma.$executeRaw`UPDATE "Room" SET type = 'BEDROOM', label = 'PRIMARY' WHERE id = ${bathroom}::uuid`;
+      await t.prisma
+        .$executeRaw`UPDATE "Room" SET type = 'BEDROOM', label = 'PRIMARY', number = 2 WHERE id = ${bathroom}::uuid`;
     });
   });
 
@@ -172,6 +247,7 @@ describe('rooms: types, labels, derived names and order', () => {
           propertyId: w.propertyA.id,
           type: 'OFFICE' as const,
           label: `Desk ${i}`,
+          number: i + 1,
           position: 10 + i,
         })),
       });
