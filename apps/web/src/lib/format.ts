@@ -60,3 +60,17 @@ export const categoryLabel = (c: string) =>
 
 /** Occupancy in basis points → "55%" (display only). */
 export const formatOccupancy = (bps: number | null) => (bps === null ? '—' : `${Math.round(bps / 100)}%`);
+
+/** File size for people: "820 B", "48 KB", "3.4 MB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  const mb = bytes / (1024 * 1024);
+  return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`;
+}
+
+/** A file name and its extension ("receipt.pdf" → ["receipt", ".pdf"]), so a long name can be cut before the dot. */
+export function splitName(name: string): [string, string] {
+  const dot = name.lastIndexOf('.');
+  return dot > 0 && name.length - dot <= 6 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
+}

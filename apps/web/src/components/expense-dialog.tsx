@@ -6,11 +6,12 @@ import type { Expense } from '../lib/api-types';
 import { fieldErrors } from '../lib/errors';
 import { categoryLabel, EXPENSE_CATEGORIES } from '../lib/format';
 import { centsToInput, parseDollarsToCents } from '../lib/money';
-import { uploadReceipt } from '../lib/upload';
+import { RECEIPT_ACCEPT, uploadReceipt } from '../lib/upload';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Field } from './ui/field';
+import { FilePicker } from './ui/file-picker';
 import { DatePicker } from './ui/date-picker';
 import { Input } from './ui/input';
 import { Select } from './ui/select';
@@ -102,7 +103,7 @@ export function ExpenseDialog({
       description="Owner-borne expenses are deducted on the owner’s statement and need a receipt."
       size="lg"
     >
-      <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={submit} noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!editing && properties.length > 1 && (
           <Field label="Property" className="sm:col-span-2" required>
             <Select
@@ -143,12 +144,7 @@ export function ExpenseDialog({
         </Field>
         {!editing && (
           <Field label="Receipt" hint="PDF or photo, up to 20 MB. You can also add it later." className="sm:col-span-2">
-            <Input
-              type="file"
-              accept="application/pdf,image/jpeg,image/png,image/webp,image/heic"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="py-2"
-            />
+            <FilePicker file={file} onChange={setFile} accept={RECEIPT_ACCEPT} />
           </Field>
         )}
         <div className="flex flex-col gap-3 sm:col-span-2">
