@@ -44,7 +44,8 @@ export function ComingUp({
                 aria-hidden
                 className={cx(
                   'mt-1.5 size-2.5 shrink-0 rounded-full',
-                  e.type === 'CHECK_IN' ? 'bg-blue-deep' : 'bg-lavender-deep',
+                  // Green for arrivals, lavender for check-outs: different in hue and lightness, so they read apart at dot size.
+                  e.type === 'CHECK_IN' ? 'bg-sage-mid' : 'bg-lavender-deep',
                 )}
               />
               <div className="min-w-0 flex-1">
