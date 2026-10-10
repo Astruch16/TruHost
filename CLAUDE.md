@@ -185,6 +185,7 @@ Tooling per package:
 | Browse data           | `pnpm db:studio`                                                                                                           |
 | First-run setup       | `pnpm bootstrap --admin-email … --first-name … --last-name … [--property-name … --address … --postal-code …]` (idempotent) |
 | Regenerate API client | `pnpm openapi` (builds, writes `packages/api-client/openapi.json`, regenerates types)                                      |
+| Local test accounts   | `pnpm seed:dev`: owner and cleaner you can sign in as, with sample data (Clerk dev instance only; see README)              |
 
 E2E tests use `TEST_DATABASE_URL` from `apps/api/.env`. They apply
 migrations once, then truncate tables between tests, so never point it at a
