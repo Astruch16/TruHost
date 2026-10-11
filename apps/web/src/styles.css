@@ -36,6 +36,9 @@
   --color-lavender-deep: #3f3470;
   --color-sage-tint: #ddebdf;
   --color-sage-deep: #23442f;
+  /* Brighter sage for small marks that must stand apart from the deep colours (the check-in dot beside the
+     lavender check-out dot). About 4:1 on white. */
+  --color-sage-mid: #3f8f5f;
 
   /* Error/destructive (not in the mockup palette; kept muted to sit with the pairs above) */
   --color-danger-tint: #f8e1de;
