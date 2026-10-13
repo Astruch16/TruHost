@@ -1,51 +1,88 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight } from 'lucide-react';
-import { ErrorAlert } from '../../../components/ui/alert';
+import { MyPropertyCard, MyPropertyCardSkeleton } from '../../../components/properties/my-property-card';
+import { LoadError } from '../../../components/ui/alert';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { PageHeader } from '../../../components/ui/page-header';
-import { Pill } from '../../../components/ui/pill';
-import { LoadingBlock } from '../../../components/ui/skeleton';
 import { useApi } from '../../../lib/api-context';
+import { myProperties, type MyProperty } from '../../../lib/my-properties';
 import { queries } from '../../../lib/queries';
 
-/** Owner/cleaner landing: the properties this user holds a membership on (admins included). */
+/**
+ * Owner/cleaner landing: the properties this person holds a membership on (admins included), as photo cards. Someone
+ * who owns some and cleans others sees them in two groups.
+ */
 export const Route = createFileRoute('/_app/properties/')({
   component: MyProperties,
 });
 
+const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))] gap-5';
+
 function MyProperties() {
-  const me = useQuery(queries.me(useApi()));
+  const api = useApi();
+  const me = useQuery(queries.me(api));
+  const properties = useQuery({ ...queries.properties(api), enabled: me.isSuccess });
+  const error = me.error ?? properties.error;
+  const loading = !me.data || !properties.data;
+  const { owned, cleaned } = loading ? { owned: [], cleaned: [] } : myProperties(me.data, properties.data.items);
+  const total = owned.length + cleaned.length;
+
   return (
     <>
-      <PageHeader title="My properties" />
-      {me.error ? (
-        <ErrorAlert error={me.error} />
-      ) : !me.data ? (
-        <LoadingBlock />
-      ) : me.data.memberships.length === 0 ? (
-        <EmptyState title="No properties yet">A TruHost admin will add you to a property.</EmptyState>
-      ) : (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4">
-          {me.data.memberships.map((m) => (
-            <li key={m.id}>
-              <Link
-                to={m.role === 'OWNER' ? '/properties/$propertyId' : '/cleaner/properties/$propertyId'}
-                params={{ propertyId: m.property.id }}
-                className="group flex min-h-24 items-center gap-4 rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-sm"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-lg font-semibold text-ink">{m.property.name}</span>
-                  <span className="mt-1.5 block">
-                    <Pill tone={m.role === 'OWNER' ? 'sage' : 'blue'}>{m.role === 'OWNER' ? 'Owner' : 'Cleaner'}</Pill>
-                  </span>
-                </span>
-                <ChevronRight aria-hidden className="size-5 text-muted transition-colors group-hover:text-ink" />
-              </Link>
-            </li>
+      <PageHeader
+        title="My properties"
+        description={loading || total === 0 ? undefined : describe(owned.length, cleaned.length)}
+      />
+      {error ? (
+        <LoadError
+          what="your properties"
+          onRetry={() => void Promise.all([me.refetch(), properties.refetch()])}
+          retrying={me.isFetching || properties.isFetching}
+        />
+      ) : loading ? (
+        <div className={GRID} role="status" aria-label="Loading your properties">
+          {[0, 1, 2].map((i) => (
+            <MyPropertyCardSkeleton key={i} />
           ))}
-        </ul>
+        </div>
+      ) : total === 0 ? (
+        <EmptyState title="No properties yet">A TruHost admin will add you to a property.</EmptyState>
+      ) : owned.length > 0 && cleaned.length > 0 ? (
+        <div className="flex flex-col gap-10">
+          <Group title="Properties you own" items={owned} />
+          <Group title="Properties you clean" items={cleaned} />
+        </div>
+      ) : (
+        <Cards items={owned.length ? owned : cleaned} />
       )}
     </>
+  );
+}
+
+function describe(owned: number, cleaned: number): string {
+  const n = (count: number) => `${count} propert${count === 1 ? 'y' : 'ies'}`;
+  if (owned && cleaned) return `You own ${n(owned)} and clean ${n(cleaned)}.`;
+  return owned ? `You own ${n(owned)} with TruHost.` : `You clean ${n(cleaned)} for TruHost.`;
+}
+
+function Group({ title, items }: { title: string; items: MyProperty[] }): ReactNode {
+  return (
+    <section aria-label={title} className="flex flex-col gap-4">
+      <h2 className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">{title}</h2>
+      <Cards items={items} />
+    </section>
+  );
+}
+
+function Cards({ items }: { items: MyProperty[] }) {
+  return (
+    <ul className={GRID}>
+      {items.map((item) => (
+        <li key={item.property.id}>
+          <MyPropertyCard item={item} />
+        </li>
+      ))}
+    </ul>
   );
 }
