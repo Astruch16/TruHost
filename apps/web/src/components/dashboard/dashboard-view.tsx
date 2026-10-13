@@ -203,7 +203,11 @@ export function DashboardView({
               </Card>
             </div>
 
-            <Card title="Bookings" description={monthLabel(calendarMonth)} actions={<CalendarLegend />}>
+            <Card
+              title="Bookings"
+              description={monthLabel(calendarMonth)}
+              actions={<CalendarLegend month={calendarMonth} stays={stays} />}
+            >
               {staysError && !stays ? (
                 <LoadError what="the calendar" onRetry={onRetryStays} retrying={retryingStays} />
               ) : !stays ? (

@@ -5,6 +5,7 @@ const stay = (id: string, checkInDate: string, checkOutDate: string, propertyId 
   id,
   propertyId,
   kind: 'GUEST',
+  channel: 'AIRBNB',
   checkInDate,
   checkOutDate,
   nights: 0,
