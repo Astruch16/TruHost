@@ -48,7 +48,7 @@ export class PropertiesService {
     return this.present(actor, row);
   }
 
-  async create(actor: Actor, input: CreateInput) {
+  async create(actor: Actor, { ownedByMe, ...input }: CreateInput) {
     this.access.assert(actor, 'property:write');
     return this.prisma.$transaction(async (tx) => {
       const row = await tx.property.create({ data: input, include: withCoverPhoto });
@@ -59,6 +59,19 @@ export class PropertiesService {
         propertyId: row.id,
         after: input,
       });
+      // One of the admin's own properties: they own it from the start (so it's in "My properties").
+      if (ownedByMe) {
+        const membership = await tx.membership.create({
+          data: { propertyId: row.id, userId: actor.userId, role: 'OWNER', createdById: actor.userId },
+        });
+        await this.audit.record(tx, actor, {
+          action: 'membership.create',
+          entityType: 'Membership',
+          entityId: membership.id,
+          propertyId: row.id,
+          after: { userId: actor.userId, role: 'OWNER' },
+        });
+      }
       return this.present(actor, row);
     });
   }

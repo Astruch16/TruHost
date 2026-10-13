@@ -1876,6 +1876,10 @@
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 9007199254740991
+                  },
+                  "ownedByMe": {
+                    "default": false,
+                    "type": "boolean"
                   }
                 },
                 "required": ["name", "addressLine1", "city", "postalCode"]

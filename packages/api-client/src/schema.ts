@@ -1518,6 +1518,8 @@ export interface operations {
           defaultCleanerPayCents?: number;
           /** @default 0 */
           standardCleaningFeeCents?: number;
+          /** @default false */
+          ownedByMe?: boolean;
         };
       };
     };

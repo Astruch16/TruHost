@@ -131,6 +131,42 @@ describe('properties', () => {
     expect(audit.propertyId).toBe(res.body.id);
   });
 
+  it('adds one of the admin’s own properties with them as its owner, in one step', async () => {
+    const body = { name: 'Lake House', addressLine1: '9 Shore Rd', city: 'Harrison', postalCode: 'V0M1K0' };
+    const res = await t
+      .as('admin')
+      .post('/v1/properties', { ...body, ownedByMe: true })
+      .expect(201);
+    expect(res.body).not.toHaveProperty('ownedByMe');
+    const me = await t.as('admin').get('/v1/me').expect(200);
+    expect(me.body.memberships).toContainEqual(
+      expect.objectContaining({ role: 'OWNER', property: { id: res.body.id, name: 'Lake House' } }),
+    );
+    const membership = await t.prisma.membership.findFirstOrThrow({ where: { propertyId: res.body.id } });
+    expect(membership).toMatchObject({ userId: w.users.admin.id, role: 'OWNER', createdById: w.users.admin.id });
+    expect(
+      await t.prisma.auditLog.count({
+        where: { action: 'membership.create', entityId: membership.id, actorId: w.users.admin.id },
+      }),
+    ).toBe(1);
+
+    // Without it, nobody owns the new property yet.
+    const plain = await t
+      .as('admin')
+      .post('/v1/properties', { ...body, name: 'Other House' })
+      .expect(201);
+    expect(await t.prisma.membership.count({ where: { propertyId: plain.body.id } })).toBe(0);
+  });
+
+  it('never lets owners or cleaners add properties, even their own', async () => {
+    const body = { name: 'Mine', addressLine1: '1 X St', city: 'Vancouver', postalCode: 'V6K3G1', ownedByMe: true };
+    for (const who of ['ownerA', 'cleanerA'] as const) {
+      const res = await t.as(who).post('/v1/properties', body);
+      expect([403, 404]).toContain(res.status);
+    }
+    expect(await t.prisma.property.count({ where: { name: 'Mine' } })).toBe(0);
+  });
+
   it('records only changed fields when updating', async () => {
     await t.as('admin').patch(`/v1/properties/${w.propertyA.id}`, { name: 'Renamed', city: 'Vancouver' }).expect(200);
     const audit = await t.prisma.auditLog.findFirstOrThrow({ where: { action: 'property.update' } });

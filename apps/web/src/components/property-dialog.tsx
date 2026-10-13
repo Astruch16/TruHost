@@ -13,12 +13,15 @@ export function PropertyDialog({
   open,
   onOpenChange,
   onCreated,
+  ownedByMe = false,
 }: {
   /** The property to edit; leave out to add a new one. */
   property?: Property | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (property: Property) => void;
+  /** Adding one of your own properties (admin, from "My properties"): you become its owner in the same step. */
+  ownedByMe?: boolean;
 }) {
   const api = useApi();
   const qc = useQueryClient();
@@ -27,10 +30,12 @@ export function PropertyDialog({
     mutationFn: (body: PropertyFormValues) =>
       property
         ? unwrap(api.PATCH('/v1/properties/{id}', { params: { path: { id: property.id } }, body }))
-        : unwrap(api.POST('/v1/properties', { body })),
+        : unwrap(api.POST('/v1/properties', { body: { ...body, ownedByMe } })),
     onSuccess: async (saved) => {
       qc.setQueryData(queries.property(api, saved.id).queryKey, saved);
       await qc.invalidateQueries({ queryKey: ['properties'] });
+      // Your memberships changed: "My properties" and the switcher read them from /me.
+      if (ownedByMe) await qc.invalidateQueries({ queryKey: queries.me(api).queryKey });
       onOpenChange(false);
       if (!editing) onCreated?.(saved);
     },
@@ -49,7 +54,9 @@ export function PropertyDialog({
       description={
         property
           ? 'Changes apply straight away. Past bookings and statements keep their figures.'
-          : 'Add the basics now; you can fill in the rest later.'
+          : ownedByMe
+            ? 'One of your own properties: you’ll be its owner. Add the basics now; you can fill in the rest later.'
+            : 'Add the basics now; you can fill in the rest later.'
       }
     >
       <PropertyForm
