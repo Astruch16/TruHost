@@ -1,4 +1,4 @@
-import { checkoutsByDay, monthGrid, type CalendarStay } from '../../lib/calendar';
+import { checkoutsByDay, monthGrid, monthLegend, stayStyle, type CalendarStay } from '../../lib/calendar';
 import { cx } from '../../lib/cx';
 import { monogram } from '../../lib/dashboard-format';
 import { useWeekStart, weekdayNames } from '../../lib/preferences';
@@ -64,6 +64,7 @@ export function MonthCalendar({
               </div>
             ))}
             {week.segments.map((seg) => {
+              const style = stayStyle(seg.stay);
               const label = `${showProperty ? `${monogram(propertyNames.get(seg.stay.propertyId) ?? '')} · ` : ''}${
                 seg.stay.kind === 'GUEST'
                   ? `${seg.stay.nights} night${seg.stay.nights === 1 ? '' : 's'}`
@@ -74,12 +75,10 @@ export function MonthCalendar({
               return (
                 <div
                   key={seg.stay.id}
-                  title={`${propertyNames.get(seg.stay.propertyId) ?? ''}: ${seg.stay.checkInDate} → ${seg.stay.checkOutDate}`}
+                  title={`${propertyNames.get(seg.stay.propertyId) ?? ''}: ${style.label}, ${seg.stay.checkInDate} → ${seg.stay.checkOutDate}`}
                   className={cx(
                     'absolute flex items-center overflow-hidden px-2 text-xs font-semibold whitespace-nowrap',
-                    seg.stay.kind === 'GUEST' && 'bg-blue-tint text-blue-deep',
-                    seg.stay.kind === 'OWNER_STAY' && 'bg-lavender-tint text-lavender-deep',
-                    seg.stay.kind === 'BLOCK' && 'bg-line-soft text-muted',
+                    style.bar,
                     seg.continuesBefore ? 'rounded-l-none' : 'rounded-l-md',
                     seg.continuesAfter ? 'rounded-r-none' : 'rounded-r-md',
                   )}
@@ -101,18 +100,25 @@ export function MonthCalendar({
   );
 }
 
-export function CalendarLegend() {
+/**
+ * What the colours mean, for this month only: a channel (or owner stay, or block) is listed once a stay of it is on
+ * the calendar, and "Clean to schedule" once a check-out falls in the month. Nothing on the calendar, no legend.
+ */
+export function CalendarLegend({ month, stays }: { month: string; stays: readonly CalendarStay[] | undefined }) {
+  const { styles, cleans } = monthLegend(month, stays ?? []);
+  if (styles.length === 0 && !cleans) return null;
   return (
-    <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden className="h-2.5 w-5 rounded-sm bg-blue-tint" /> Guest stay
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden className="h-2.5 w-5 rounded-sm bg-lavender-tint" /> Owner stay
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden className="size-1.5 rounded-full bg-lavender-deep" /> Clean to schedule
-      </span>
-    </div>
+    <ul aria-label="Calendar key" className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted">
+      {styles.map((s) => (
+        <li key={s.key} className="flex items-center gap-1.5">
+          <span aria-hidden className={cx('h-2.5 w-5 rounded-sm', s.swatch)} /> {s.label}
+        </li>
+      ))}
+      {cleans && (
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden className="size-1.5 rounded-full bg-lavender-deep" /> Clean to schedule
+        </li>
+      )}
+    </ul>
   );
 }

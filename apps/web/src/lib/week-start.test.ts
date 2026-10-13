@@ -34,6 +34,7 @@ describe('week start (Settings → Preferences)', () => {
         id: 's',
         propertyId: 'a',
         kind: 'GUEST' as const,
+        channel: 'AIRBNB' as const,
         checkInDate: '2026-10-10',
         checkOutDate: '2026-10-12',
         nights: 2,

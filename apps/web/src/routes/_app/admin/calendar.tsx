@@ -49,7 +49,7 @@ function Calendar() {
         description={propertyId ? list.find((p) => p.id === propertyId)?.name : 'All properties'}
         actions={<MonthStepper month={month} onChange={(m) => void navigate({ search: { month: m } })} />}
       />
-      <Card actions={<CalendarLegend />} title={monthLabel(calendarMonth)}>
+      <Card actions={<CalendarLegend month={calendarMonth} stays={stays} />} title={monthLabel(calendarMonth)}>
         {bookings.error ? (
           <ErrorAlert error={bookings.error} />
         ) : !bookings.data ? (

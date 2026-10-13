@@ -3,10 +3,14 @@
  * (check-in through the day before check-out); its check-out day gets a "clean" marker.
  */
 
+export type Channel = 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+
 export interface CalendarStay {
   id: string;
   propertyId: string;
   kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+  /** Where the guest booked; picks the bar's colour for guest stays. */
+  channel: Channel;
   checkInDate: string;
   checkOutDate: string;
   nights: number;
@@ -82,4 +86,70 @@ export function checkoutsByDay(month: string, stays: CalendarStay[]): Map<string
     counts.set(s.checkOutDate, (counts.get(s.checkOutDate) ?? 0) + 1);
   }
   return counts;
+}
+
+/** How a stay looks on the calendar: guest stays by booking channel, owner stays and blocks by kind. */
+export interface StayStyle {
+  key: Channel | 'OWNER_STAY' | 'BLOCK';
+  label: string;
+  /** Classes for the bar (background and text). */
+  bar: string;
+  /** Classes for the legend swatch. */
+  swatch: string;
+}
+
+const BLOCK_STRIPES = 'bg-[repeating-linear-gradient(135deg,var(--color-line-soft)_0_6px,var(--color-line)_6px_8px)]';
+
+/** In legend order. */
+export const STAY_STYLES: readonly StayStyle[] = [
+  {
+    key: 'AIRBNB',
+    label: 'Airbnb',
+    bar: 'bg-rose-tint text-rose-deep',
+    swatch: 'bg-rose-tint ring-1 ring-rose-deep/25',
+  },
+  { key: 'VRBO', label: 'Vrbo', bar: 'bg-blue-tint text-blue-deep', swatch: 'bg-blue-tint ring-1 ring-blue-deep/25' },
+  {
+    key: 'BOOKING_COM',
+    label: 'Booking.com',
+    bar: 'bg-amber-tint text-amber-deep',
+    swatch: 'bg-amber-tint ring-1 ring-amber-deep/25',
+  },
+  {
+    key: 'DIRECT',
+    label: 'Direct',
+    bar: 'bg-sage-tint text-sage-deep',
+    swatch: 'bg-sage-tint ring-1 ring-sage-deep/25',
+  },
+  { key: 'OTHER', label: 'Other channel', bar: 'bg-line text-ink', swatch: 'bg-line ring-1 ring-ink/15' },
+  {
+    key: 'OWNER_STAY',
+    label: 'Owner stay',
+    bar: 'bg-lavender-tint text-lavender-deep',
+    swatch: 'bg-lavender-tint ring-1 ring-lavender-deep/25',
+  },
+  { key: 'BLOCK', label: 'Blocked', bar: `${BLOCK_STRIPES} text-muted`, swatch: `${BLOCK_STRIPES} ring-1 ring-ink/15` },
+];
+
+const BY_KEY = new Map(STAY_STYLES.map((s) => [s.key, s]));
+
+export function stayStyle(stay: Pick<CalendarStay, 'kind' | 'channel'>): StayStyle {
+  return BY_KEY.get(stay.kind === 'GUEST' ? stay.channel : stay.kind) ?? BY_KEY.get('OTHER')!;
+}
+
+/**
+ * The legend for a month: only the colours of stays that show in it (a night in the month), in legend order, so it
+ * never lists channels that aren't on the calendar. `cleans` says whether any check-out falls in the month.
+ */
+export function monthLegend(month: string, stays: readonly CalendarStay[]): { styles: StayStyle[]; cleans: boolean } {
+  const [y, m] = month.split('-').map(Number) as [number, number];
+  const first = `${month}-01`;
+  const next = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);
+  const shown = new Set(
+    stays.filter((s) => s.checkInDate < next && s.checkOutDate > first).map((s) => stayStyle(s).key),
+  );
+  return {
+    styles: STAY_STYLES.filter((s) => shown.has(s.key)),
+    cleans: checkoutsByDay(month, stays as CalendarStay[]).size > 0,
+  };
 }

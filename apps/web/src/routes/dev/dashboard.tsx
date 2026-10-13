@@ -45,10 +45,12 @@ const stay = (
   checkOutDate: string,
   nights: number,
   kind: CalendarStay['kind'] = 'GUEST',
+  channel: CalendarStay['channel'] = 'AIRBNB',
 ): CalendarStay => ({
   id,
   propertyId,
   kind,
+  channel,
   checkInDate,
   checkOutDate,
   nights,
@@ -56,11 +58,11 @@ const stay = (
 
 const FIXTURE_STAYS: CalendarStay[] = [
   stay('s1', 'p1', '2026-10-01', '2026-10-04', 3),
-  stay('s2', 'p1', '2026-10-08', '2026-10-12', 4),
-  stay('s3', 'p2', '2026-10-09', '2026-10-11', 2),
+  stay('s2', 'p1', '2026-10-08', '2026-10-12', 4, 'GUEST', 'VRBO'),
+  stay('s3', 'p2', '2026-10-09', '2026-10-11', 2, 'GUEST', 'BOOKING_COM'),
   stay('s4', 'p1', '2026-10-15', '2026-10-18', 3),
   stay('s5', 'p2', '2026-10-17', '2026-10-24', 7, 'OWNER_STAY'),
-  stay('s6', 'p1', '2026-10-22', '2026-10-27', 5),
+  stay('s6', 'p1', '2026-10-22', '2026-10-27', 5, 'GUEST', 'DIRECT'),
   stay('s7', 'p1', '2026-10-30', '2026-11-01', 2),
 ];
 
