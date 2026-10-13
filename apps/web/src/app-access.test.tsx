@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
@@ -59,8 +59,11 @@ const propertyData = (id: string) => ({
 });
 
 /** A fake API that answers as the given user and records every path asked for. */
-function fakeApi(me: Me) {
+function fakeApi(start: Me) {
+  let me = start;
+  const created = new Map<string, ReturnType<typeof propertyData>>();
   const paths: string[] = [];
+  const posts: { path: string; body: unknown }[] = [];
   const GET = vi.fn(async (path: string, init?: { params?: { path?: { id?: string } } }) => {
     paths.push(path);
     const id = init?.params?.path?.id ?? '';
@@ -68,9 +71,9 @@ function fakeApi(me: Me) {
       path === '/v1/me'
         ? me
         : path === '/v1/properties'
-          ? { items: me.memberships.map((m) => propertyData(m.property.id)) }
+          ? { items: me.memberships.map((m) => created.get(m.property.id) ?? propertyData(m.property.id)) }
           : path === '/v1/properties/{id}'
-            ? propertyData(id)
+            ? (created.get(id) ?? propertyData(id))
             : path === '/v1/properties/{id}/rooms'
               ? {
                   items: [
@@ -88,11 +91,27 @@ function fakeApi(me: Me) {
               : { items: [] };
     return { data, response: new Response(null, { status: 200 }) };
   });
-  return { api: { GET } as unknown as ApiClient, paths };
+  // Adding a property: answers like the API, and makes the caller its owner when asked to.
+  const POST = vi.fn(async (path: string, init: { body: { name: string; ownedByMe?: boolean } }) => {
+    posts.push({ path, body: init.body });
+    const property = { ...propertyData('p-new'), name: init.body.name };
+    created.set('p-new', property);
+    if (init.body.ownedByMe) {
+      me = {
+        ...me,
+        memberships: [
+          ...me.memberships,
+          { id: 'm-new', role: 'OWNER', property: { id: 'p-new', name: property.name } },
+        ],
+      };
+    }
+    return { data: property, response: new Response(null, { status: 201 }) };
+  });
+  return { api: { GET, POST } as unknown as ApiClient, paths, posts };
 }
 
 function renderAt(url: string, me: Me) {
-  const { api, paths } = fakeApi(me);
+  const { api, paths, posts } = fakeApi(me);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createRouter({
     routeTree,
@@ -107,7 +126,7 @@ function renderAt(url: string, me: Me) {
       </QueryClientProvider>
     </ApiContext.Provider>,
   );
-  return { router, paths };
+  return { router, paths, posts };
 }
 
 const FINANCIAL = [
@@ -218,6 +237,44 @@ describe('admin pages by URL', () => {
       person([{ id: 'm9', role: 'OWNER', property: { id: CEDAR, name: 'Cedar Cabin' } }]),
     );
     expect(await screen.findByRole('heading', { name: 'This page isn’t available' })).toBeInTheDocument();
+  });
+});
+
+describe('adding your own property (My properties)', () => {
+  const admin = person([{ id: 'm1', role: 'OWNER', property: { id: CEDAR, name: 'Cedar Cabin' } }], 'ADMIN');
+
+  it('lets an admin add a property they own, then opens it', async () => {
+    const user = userEvent.setup();
+    const { router, posts } = renderAt('/properties', admin);
+    await user.click(await screen.findByRole('button', { name: 'Add property' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New property' });
+    expect(dialog).toHaveTextContent('you’ll be its owner');
+    await user.type(within(dialog).getByRole('textbox', { name: /Name/ }), 'Lake House');
+    await user.type(within(dialog).getByRole('textbox', { name: /Street address/ }), '9 Shore Rd');
+    await user.type(within(dialog).getByRole('textbox', { name: /City/ }), 'Harrison');
+    await user.type(within(dialog).getByRole('textbox', { name: /Postal code/ }), 'V0M 1K0');
+    await user.click(within(dialog).getByRole('button', { name: 'Create property' }));
+    expect(posts).toEqual([
+      { path: '/v1/properties', body: expect.objectContaining({ name: 'Lake House', ownedByMe: true }) },
+    ]);
+    expect(await screen.findByRole('heading', { name: 'Lake House' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/properties/p-new');
+  });
+
+  it('offers it in the empty state to an admin with no properties of their own', async () => {
+    renderAt('/properties', person([], 'ADMIN'));
+    expect(await screen.findByText('None of your own properties yet')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add property' })).toBeInTheDocument();
+  });
+
+  it('isn’t offered to owners or cleaners (only TruHost adds properties)', async () => {
+    for (const me of [owner, cleaner, person([])]) {
+      renderAt('/properties', me);
+      await screen.findByRole('heading', { name: 'My properties' });
+      await waitFor(() => expect(screen.queryByRole('status', { name: /Loading/ })).not.toBeInTheDocument());
+      expect(screen.queryByRole('button', { name: 'Add property' })).not.toBeInTheDocument();
+      cleanup();
+    }
   });
 });
 

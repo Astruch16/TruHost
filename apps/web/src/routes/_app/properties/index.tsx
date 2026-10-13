@@ -1,17 +1,22 @@
-import type { ReactNode } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { useState, type ReactNode } from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { MyPropertyCard, MyPropertyCardSkeleton } from '../../../components/properties/my-property-card';
+import { PropertyDialog } from '../../../components/property-dialog';
+import { Button } from '../../../components/ui/button';
 import { LoadError } from '../../../components/ui/alert';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { PageHeader } from '../../../components/ui/page-header';
 import { useApi } from '../../../lib/api-context';
+import { isAdmin } from '../../../lib/access';
 import { myProperties, type MyProperty } from '../../../lib/my-properties';
 import { queries } from '../../../lib/queries';
 
 /**
  * Owner/cleaner landing: the properties this person holds a membership on (admins included), as photo cards. Someone
- * who owns some and cleans others sees them in two groups.
+ * who owns some and cleans others sees them in two groups. Admins can add one of their own properties here (they become
+ * its owner); owners and cleaners can't add properties (the API enforces it).
  */
 export const Route = createFileRoute('/_app/properties/')({
   component: MyProperties,
@@ -27,12 +32,21 @@ function MyProperties() {
   const loading = !me.data || !properties.data;
   const { owned, cleaned } = loading ? { owned: [], cleaned: [] } : myProperties(me.data, properties.data.items);
   const total = owned.length + cleaned.length;
+  const navigate = useNavigate();
+  const [adding, setAdding] = useState(false);
+  const canAdd = me.data ? isAdmin(me.data) : false;
+  const addButton = canAdd ? (
+    <Button onClick={() => setAdding(true)}>
+      <Plus aria-hidden className="size-4" /> Add property
+    </Button>
+  ) : null;
 
   return (
     <>
       <PageHeader
         title="My properties"
         description={loading || total === 0 ? undefined : describe(owned.length, cleaned.length)}
+        actions={total > 0 ? addButton : null}
       />
       {error ? (
         <LoadError
@@ -47,7 +61,13 @@ function MyProperties() {
           ))}
         </div>
       ) : total === 0 ? (
-        <EmptyState title="No properties yet">A TruHost admin will add you to a property.</EmptyState>
+        canAdd ? (
+          <EmptyState title="None of your own properties yet" action={addButton}>
+            Add a property you own and it appears here, with its figures, stays and expenses.
+          </EmptyState>
+        ) : (
+          <EmptyState title="No properties yet">A TruHost admin will add you to a property.</EmptyState>
+        )
       ) : owned.length > 0 && cleaned.length > 0 ? (
         <div className="flex flex-col gap-10">
           <Group title="Properties you own" items={owned} />
@@ -55,6 +75,14 @@ function MyProperties() {
         </div>
       ) : (
         <Cards items={owned.length ? owned : cleaned} />
+      )}
+      {canAdd && (
+        <PropertyDialog
+          open={adding}
+          onOpenChange={setAdding}
+          ownedByMe
+          onCreated={(p) => void navigate({ to: '/properties/$propertyId', params: { propertyId: p.id } })}
+        />
       )}
     </>
   );

@@ -117,6 +117,11 @@ export const createProperty = z.object({
   businessLicenceNumber: propertyFields.businessLicenceNumber.default(null),
   defaultCleanerPayCents: propertyFields.defaultCleanerPayCents.default(0),
   standardCleaningFeeCents: propertyFields.standardCleaningFeeCents.default(0),
+  /**
+   * Also make the admin creating it an owner (adding one of their own properties from "My properties"), in the same
+   * transaction, so it never exists without its owner.
+   */
+  ownedByMe: z.boolean().default(false),
 });
 export type CreateProperty = z.input<typeof createProperty>;
 
