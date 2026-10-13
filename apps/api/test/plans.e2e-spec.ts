@@ -1,3 +1,4 @@
+import { OWN_PROPERTY_PLAN_ID } from '@truhost/shared';
 import { createTestApp, type TestApp } from './support/app.js';
 import { resetDb } from './support/db.js';
 import { seedWorld, type World } from './support/world.js';
@@ -60,6 +61,85 @@ describe('plans', () => {
       .post(`/v1/properties/${w.propertyA.id}/plan`, { planId: w.planId, effectiveFrom: '2025-12-01' })
       .expect(409);
     expect(res.body.code).toBe('PLAN_PERIOD_CONFLICT');
+  });
+
+  describe('own property (no fee)', () => {
+    it('corrects every month so far to the 0% plan, keeping the dates, and the fee goes', async () => {
+      const other = await t.as('admin').post('/v1/plans', { name: 'Other', managementFeeBps: 2000 }).expect(201);
+      await t
+        .as('admin')
+        .post(`/v1/properties/${w.propertyA.id}/plan`, { planId: other.body.id, effectiveFrom: '2026-11-01' })
+        .expect(200);
+      const before = await t.as('admin').get(`/v1/properties/${w.propertyA.id}/summary?month=2026-11`).expect(200);
+      expect(before.body.managementFeeCents).toBeGreaterThan(0);
+
+      const res = await t
+        .as('admin')
+        .post(`/v1/properties/${w.propertyA.id}/plan/correct`, { planId: OWN_PROPERTY_PLAN_ID })
+        .expect(200);
+      expect(
+        res.body.history.map((p: { plan: { name: string }; effectiveFrom: string }) => [p.plan.name, p.effectiveFrom]),
+      ).toEqual([
+        ['Own property', '2026-11-01'],
+        ['Own property', '2026-01-01'],
+      ]);
+      for (const month of ['2026-10', '2026-11']) {
+        const summary = await t.as('ownerA').get(`/v1/properties/${w.propertyA.id}/summary?month=${month}`).expect(200);
+        expect(summary.body).toMatchObject({ managementFeeBps: 0, managementFeeCents: 0 });
+      }
+      const audit = await t.prisma.auditLog.findFirstOrThrow({ where: { action: 'propertyPlan.correct' } });
+      expect(audit).toMatchObject({ actorId: w.users.admin.id, propertyId: w.propertyA.id });
+      expect(audit.before).toEqual({
+        periods: [
+          { planId: w.planId, effectiveFrom: '2026-01-01' },
+          { planId: other.body.id, effectiveFrom: '2026-11-01' },
+        ],
+      });
+    });
+
+    it('starts the plan in the month the property was added when it had none', async () => {
+      const p = await t
+        .as('admin')
+        .post('/v1/properties', { name: 'Bare', addressLine1: '1 X St', city: 'Vancouver', postalCode: 'V6K3G1' })
+        .expect(201);
+      const res = await t
+        .as('admin')
+        .post(`/v1/properties/${p.body.id}/plan/correct`, { planId: OWN_PROPERTY_PLAN_ID })
+        .expect(200);
+      expect(res.body.current).toMatchObject({
+        plan: { name: 'Own property', managementFeeBps: 0 },
+        effectiveTo: null,
+      });
+      expect(res.body.history).toHaveLength(1);
+    });
+
+    it('puts a property an admin adds as their own on it from the start', async () => {
+      const p = await t
+        .as('admin')
+        .post('/v1/properties', {
+          name: 'Mine',
+          addressLine1: '1 X St',
+          city: 'Vancouver',
+          postalCode: 'V6K3G1',
+          ownedByMe: true,
+        })
+        .expect(201);
+      const plan = await t.as('admin').get(`/v1/properties/${p.body.id}/plan`).expect(200);
+      expect(plan.body.current.plan).toMatchObject({ id: OWN_PROPERTY_PLAN_ID, managementFeeBps: 0 });
+    });
+
+    it('refuses unknown plans, non-admins, and archiving the Own property plan', async () => {
+      await t
+        .as('admin')
+        .post(`/v1/properties/${w.propertyA.id}/plan/correct`, { planId: '00000000-0000-7000-8000-000000000000' })
+        .expect(422);
+      await t
+        .as('ownerA')
+        .post(`/v1/properties/${w.propertyA.id}/plan/correct`, { planId: OWN_PROPERTY_PLAN_ID })
+        .expect(404);
+      const res = await t.as('admin').post(`/v1/plans/${OWN_PROPERTY_PLAN_ID}/archive`).expect(422);
+      expect(res.body.code).toBe('PLAN_RESERVED');
+    });
   });
 });
 

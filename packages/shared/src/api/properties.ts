@@ -263,3 +263,16 @@ export type PropertyPlanHistory = z.infer<typeof propertyPlanHistory>;
 
 export const assignPlan = z.object({ planId: id, effectiveFrom: monthStart });
 export type AssignPlan = z.infer<typeof assignPlan>;
+
+/**
+ * The 0% plan for properties TruHost staff own themselves (created by migration; can't be archived). Adding one of
+ * your own properties puts it on this plan.
+ */
+export const OWN_PROPERTY_PLAN_ID = '0192f5e0-0000-7000-8000-0000000000f0';
+
+/**
+ * Correct a property's plan for every month so far: each plan period switches to `planId` (dates unchanged). For
+ * fixing a plan that was wrong from the start, e.g. an admin's own property put on TruPlan. Audited.
+ */
+export const correctPlan = z.object({ planId: id });
+export type CorrectPlan = z.infer<typeof correctPlan>;

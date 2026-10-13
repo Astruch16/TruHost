@@ -2,12 +2,14 @@ import { Body, Controller, Get, HttpCode, Param, Patch, Post } from '@nestjs/com
 import { ApiTags } from '@nestjs/swagger';
 import {
   assignPlan,
+  correctPlan,
   createPlan,
   page,
   plan,
   propertyPlanHistory,
   updatePlan,
   type AssignPlan,
+  type CorrectPlan,
   type UpdatePlan,
 } from '@truhost/shared';
 import type { z } from 'zod';
@@ -68,5 +70,18 @@ export class PlansController {
     @Body(new ZodPipe(assignPlan)) body: AssignPlan,
   ) {
     return this.plans.assign(actor, propertyId, body);
+  }
+
+  /** Correct the plan for every month so far (e.g. an admin's own property wrongly put on TruPlan). */
+  @Post('properties/:id/plan/correct')
+  @HttpCode(200)
+  @ZodBody(correctPlan)
+  @ZodResponse(propertyPlanHistory)
+  correct(
+    @CurrentActor() actor: Actor,
+    @Param('id', uuidParam) propertyId: string,
+    @Body(new ZodPipe(correctPlan)) body: CorrectPlan,
+  ) {
+    return this.plans.correct(actor, propertyId, body);
   }
 }

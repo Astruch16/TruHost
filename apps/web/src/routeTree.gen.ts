@@ -18,6 +18,7 @@ import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
+import { Route as DevOwnerPropertyRouteImport } from './routes/dev/owner-property'
 import { Route as DevPropertiesRouteImport } from './routes/dev/properties'
 import { Route as DevRoomsRouteImport } from './routes/dev/rooms'
 import { Route as DevSettingsRouteImport } from './routes/dev/settings'
@@ -82,6 +83,11 @@ const DevLoadingRoute = DevLoadingRouteImport.update({
 const DevNoAccessRoute = DevNoAccessRouteImport.update({
   id: '/dev/no-access',
   path: '/dev/no-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevOwnerPropertyRoute = DevOwnerPropertyRouteImport.update({
+  id: '/dev/owner-property',
+  path: '/dev/owner-property',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevPropertiesRoute = DevPropertiesRouteImport.update({
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/owner-property'
     | '/dev/properties'
     | '/dev/rooms'
     | '/dev/settings'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/owner-property'
     | '/dev/properties'
     | '/dev/rooms'
     | '/dev/settings'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/no-access'
+    | '/dev/owner-property'
     | '/dev/properties'
     | '/dev/rooms'
     | '/dev/settings'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   DevDashboardRoute: typeof DevDashboardRoute
   DevLoadingRoute: typeof DevLoadingRoute
   DevNoAccessRoute: typeof DevNoAccessRoute
+  DevOwnerPropertyRoute: typeof DevOwnerPropertyRoute
   DevPropertiesRoute: typeof DevPropertiesRoute
   DevRoomsRoute: typeof DevRoomsRoute
   DevSettingsRoute: typeof DevSettingsRoute
@@ -457,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/no-access'
       fullPath: '/dev/no-access'
       preLoaderRoute: typeof DevNoAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/owner-property': {
+      id: '/dev/owner-property'
+      path: '/dev/owner-property'
+      fullPath: '/dev/owner-property'
+      preLoaderRoute: typeof DevOwnerPropertyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/properties': {
@@ -691,6 +711,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevDashboardRoute: DevDashboardRoute,
   DevLoadingRoute: DevLoadingRoute,
   DevNoAccessRoute: DevNoAccessRoute,
+  DevOwnerPropertyRoute: DevOwnerPropertyRoute,
   DevPropertiesRoute: DevPropertiesRoute,
   DevRoomsRoute: DevRoomsRoute,
   DevSettingsRoute: DevSettingsRoute,

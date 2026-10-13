@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { AssignPlan, UpdatePlan } from '@truhost/shared';
+import { OWN_PROPERTY_PLAN_ID, type AssignPlan, type CorrectPlan, type UpdatePlan } from '@truhost/shared';
 import type { createPlan } from '@truhost/shared';
 import type { z } from 'zod';
 import { AccessService } from '../access/access.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { Actor } from '../auth/actor.js';
-import { fromIsoDate, toIsoDate } from '../common/dates.js';
+import { currentMonthStart, fromIsoDate, toIsoDate } from '../common/dates.js';
 import { conflict, notFound, unprocessable } from '../common/problem.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -75,6 +75,12 @@ export class PlansService {
 
   async archive(actor: Actor, id: string) {
     this.access.assert(actor, 'plan:manage');
+    if (id === OWN_PROPERTY_PLAN_ID) {
+      throw unprocessable(
+        'PLAN_RESERVED',
+        'The Own property plan is used for staff-owned properties and can’t be archived',
+      );
+    }
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.plan.findUnique({ where: { id } });
       if (!before) throw notFound('Plan');
@@ -106,6 +112,19 @@ export class PlansService {
       effectiveTo: toIsoDate(p.effectiveTo),
     }));
     return { current: history.find((p) => p.effectiveTo === null) ?? null, history };
+  }
+
+  /** Switches every month so far to `planId` (see correctPlanHistory). */
+  async correct(actor: Actor, propertyId: string, input: CorrectPlan) {
+    this.access.assert(actor, 'propertyPlan:assign', propertyId, 'Property');
+    await this.prisma.$transaction(async (tx) => {
+      const property = await tx.property.findUnique({ where: { id: propertyId } });
+      if (!property) throw notFound('Property');
+      const plan = await tx.plan.findUnique({ where: { id: input.planId } });
+      if (!plan || plan.archivedAt) throw unprocessable('UNKNOWN_PLAN', 'Plan does not exist or is archived');
+      await correctPlanHistory(tx, this.audit, actor, property, plan.id);
+    });
+    return this.propertyPlan(actor, propertyId);
   }
 
   /**
@@ -148,6 +167,51 @@ export class PlansService {
     });
     return this.propertyPlan(actor, propertyId);
   }
+}
+
+/**
+ * Correct a property's plan for every month so far: each plan period switches to `planId`, keeping its dates; with no
+ * periods yet, one starts in the month the property was added. For a plan that was wrong from the start (e.g. an
+ * admin's own property put on TruPlan). Audited with the periods before and after.
+ * TODO(phase 2b): reject while a FINALIZED statement covers any of these months.
+ */
+export async function correctPlanHistory(
+  tx: Prisma.TransactionClient,
+  audit: AuditService,
+  actor: Actor,
+  property: { id: string; timeZone: string; createdAt: Date },
+  planId: string,
+) {
+  await tx.$queryRaw`SELECT id FROM "Property" WHERE id = ${property.id}::uuid FOR UPDATE`;
+  const periods = await tx.propertyPlan.findMany({
+    where: { propertyId: property.id },
+    orderBy: { effectiveFrom: 'asc' },
+  });
+  const before = periods.map((p) => ({ planId: p.planId, effectiveFrom: toIsoDate(p.effectiveFrom) }));
+  if (periods.length === 0) {
+    const from = currentMonthStart(property.timeZone, property.createdAt);
+    const created = await tx.propertyPlan.create({
+      data: { propertyId: property.id, planId, effectiveFrom: fromIsoDate(from), createdById: actor.userId },
+    });
+    await audit.record(tx, actor, {
+      action: 'propertyPlan.assign',
+      entityType: 'PropertyPlan',
+      entityId: created.id,
+      propertyId: property.id,
+      before: null,
+      after: { planId, effectiveFrom: from },
+    });
+    return;
+  }
+  await tx.propertyPlan.updateMany({ where: { propertyId: property.id }, data: { planId } });
+  await audit.record(tx, actor, {
+    action: 'propertyPlan.correct',
+    entityType: 'Property',
+    entityId: property.id,
+    propertyId: property.id,
+    before: { periods: before },
+    after: { periods: before.map((p) => ({ ...p, planId })) },
+  });
 }
 
 function presentPlan(p: PlanRow) {

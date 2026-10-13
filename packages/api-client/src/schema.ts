@@ -436,6 +436,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/properties/{id}/plan/correct': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Plans_correct'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/bookings': {
     parameters: {
       query?: never;
@@ -2645,6 +2661,63 @@ export interface operations {
           planId: string;
           /** Format: date */
           effectiveFrom: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            current: {
+              /** Format: uuid */
+              id: string;
+              plan: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                managementFeeBps: number;
+              };
+              /** Format: date */
+              effectiveFrom: string;
+              /** Format: date */
+              effectiveTo: string | null;
+            } | null;
+            history: {
+              /** Format: uuid */
+              id: string;
+              plan: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                managementFeeBps: number;
+              };
+              /** Format: date */
+              effectiveFrom: string;
+              /** Format: date */
+              effectiveTo: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Plans_correct: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          planId: string;
         };
       };
     };

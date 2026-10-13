@@ -267,6 +267,13 @@ export const CASES: AuthzCase[] = [
     allow: ADMIN,
     mutates: true,
   },
+  {
+    route: 'POST /v1/properties/:id/plan/correct',
+    path: (w) => `/v1/properties/${w.propertyA.id}/plan/correct`,
+    body: (w) => ({ planId: w.planId }),
+    allow: ADMIN,
+    mutates: true,
+  },
 
   // ── bookings ──
   { route: 'GET /v1/bookings', path: () => '/v1/bookings?from=2026-11-01&to=2026-12-01', allow: ADMIN },
