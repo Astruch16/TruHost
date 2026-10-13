@@ -16,7 +16,7 @@ import { queries } from '../../../lib/queries';
 /**
  * Owner/cleaner landing: the properties this person holds a membership on (admins included), as photo cards. Someone
  * who owns some and cleans others sees them in two groups. Admins can add one of their own properties here (they become
- * its owner); owners and cleaners can't add properties (the API enforces it).
+ * its owner) and edit them; owners and cleaners can't add or edit properties (the API enforces it).
  */
 export const Route = createFileRoute('/_app/properties/')({
   component: MyProperties,
@@ -34,6 +34,7 @@ function MyProperties() {
   const total = owned.length + cleaned.length;
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<MyProperty['property'] | null>(null);
   const canAdd = me.data ? isAdmin(me.data) : false;
   const addButton = canAdd ? (
     <Button onClick={() => setAdding(true)}>
@@ -70,11 +71,11 @@ function MyProperties() {
         )
       ) : owned.length > 0 && cleaned.length > 0 ? (
         <div className="flex flex-col gap-10">
-          <Group title="Properties you own" items={owned} />
-          <Group title="Properties you clean" items={cleaned} />
+          <Group title="Properties you own" items={owned} onEdit={canAdd ? setEditing : undefined} />
+          <Group title="Properties you clean" items={cleaned} onEdit={canAdd ? setEditing : undefined} />
         </div>
       ) : (
-        <Cards items={owned.length ? owned : cleaned} />
+        <Cards items={owned.length ? owned : cleaned} onEdit={canAdd ? setEditing : undefined} />
       )}
       {canAdd && (
         <PropertyDialog
@@ -83,6 +84,9 @@ function MyProperties() {
           ownedByMe
           onCreated={(p) => void navigate({ to: '/properties/$propertyId', params: { propertyId: p.id } })}
         />
+      )}
+      {canAdd && editing && (
+        <PropertyDialog property={editing} open onOpenChange={(open) => !open && setEditing(null)} />
       )}
     </>
   );
@@ -94,21 +98,23 @@ function describe(owned: number, cleaned: number): string {
   return owned ? `You own ${n(owned)} with TruHost.` : `You clean ${n(cleaned)} for TruHost.`;
 }
 
-function Group({ title, items }: { title: string; items: MyProperty[] }): ReactNode {
+type OnEdit = ((property: MyProperty['property']) => void) | undefined;
+
+function Group({ title, items, onEdit }: { title: string; items: MyProperty[]; onEdit: OnEdit }): ReactNode {
   return (
     <section aria-label={title} className="flex flex-col gap-4">
       <h2 className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">{title}</h2>
-      <Cards items={items} />
+      <Cards items={items} onEdit={onEdit} />
     </section>
   );
 }
 
-function Cards({ items }: { items: MyProperty[] }) {
+function Cards({ items, onEdit }: { items: MyProperty[]; onEdit: OnEdit }) {
   return (
     <ul className={GRID}>
       {items.map((item) => (
         <li key={item.property.id}>
-          <MyPropertyCard item={item} />
+          <MyPropertyCard item={item} onEdit={onEdit && (() => onEdit(item.property))} />
         </li>
       ))}
     </ul>

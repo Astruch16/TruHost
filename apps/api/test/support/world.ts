@@ -1,3 +1,4 @@
+import { OWN_PROPERTY_PLAN_ID } from '@truhost/shared';
 import type { PrismaService } from '../../src/prisma/prisma.service.js';
 import type { MembershipRole, StaffRole } from '../../src/generated/prisma/enums.js';
 
@@ -73,6 +74,8 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     (await prisma.membership.create({ data: { userId, propertyId, role } })).id;
 
   const plan = await prisma.plan.create({ data: { name: 'TruPlan', managementFeeBps: 2200 } });
+  // Created by migration in real databases; the test reset empties every table, so it's re-created here.
+  await prisma.plan.create({ data: { id: OWN_PROPERTY_PLAN_ID, name: 'Own property', managementFeeBps: 0 } });
   await prisma.propertyPlan.create({
     data: { propertyId: a.id, planId: plan.id, effectiveFrom: new Date('2026-01-01T00:00:00Z') },
   });

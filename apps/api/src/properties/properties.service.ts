@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import type { z } from 'zod';
-import type { createProperty, SetCoverPhoto, updateProperty } from '@truhost/shared';
+import { OWN_PROPERTY_PLAN_ID, type createProperty, type SetCoverPhoto, type updateProperty } from '@truhost/shared';
 import { AccessService } from '../access/access.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import type { Actor } from '../auth/actor.js';
 import { notFound, ProblemException, unprocessable } from '../common/problem.js';
 import { FilesService } from '../files/files.service.js';
 import type { Prisma } from '../generated/prisma/client.js';
+import { correctPlanHistory } from '../plans/plans.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 type CreateInput = z.output<typeof createProperty>;
@@ -59,7 +60,8 @@ export class PropertiesService {
         propertyId: row.id,
         after: input,
       });
-      // One of the admin's own properties: they own it from the start (so it's in "My properties").
+      // One of the admin's own properties: they own it from the start (so it's in "My properties"), with no management
+      // fee (the Own property plan).
       if (ownedByMe) {
         const membership = await tx.membership.create({
           data: { propertyId: row.id, userId: actor.userId, role: 'OWNER', createdById: actor.userId },
@@ -71,6 +73,7 @@ export class PropertiesService {
           propertyId: row.id,
           after: { userId: actor.userId, role: 'OWNER' },
         });
+        await correctPlanHistory(tx, this.audit, actor, row, OWN_PROPERTY_PLAN_ID);
       }
       return this.present(actor, row);
     });

@@ -58,6 +58,27 @@ const propertyData = (id: string) => ({
   coverPhoto: null,
 });
 
+const SUMMARY = {
+  propertyId: CEDAR,
+  month: '2026-10',
+  daysInMonth: 31,
+  nightsBooked: 12,
+  ownerStayNights: 0,
+  blockNights: 0,
+  availableNights: 31,
+  occupancyBps: 3871,
+  stays: 3,
+  grossCents: 240_000,
+  plan: null,
+  managementFeeBps: null,
+  managementFeeCents: 0,
+  ownerExpensesCents: 6_420,
+  netCents: 233_580,
+  avgNightlyEarningsCents: 20_000,
+  incompleteBookings: 0,
+  expensesMissingReceipt: 0,
+};
+
 /** A fake API that answers as the given user and records every path asked for. */
 function fakeApi(start: Me) {
   let me = start;
@@ -88,7 +109,11 @@ function fakeApi(start: Me) {
                     },
                   ],
                 }
-              : { items: [] };
+              : path === '/v1/properties/{id}/summary'
+                ? SUMMARY
+                : path === '/v1/properties/{id}/plan'
+                  ? { current: null, history: [] }
+                  : { items: [] };
     return { data, response: new Response(null, { status: 200 }) };
   });
   // Adding a property: answers like the API, and makes the caller its owner when asked to.
@@ -149,7 +174,7 @@ describe('cleaners', () => {
     expect(await screen.findByRole('heading', { name: 'Cedar Cabin' })).toBeInTheDocument();
     expect(screen.getByText(/45 Alpine Way/)).toBeInTheDocument();
     expect(await screen.findByText('Kitchen')).toBeInTheDocument();
-    for (const title of ['Month at a glance', 'Plan', 'Bookings', 'Expenses']) {
+    for (const title of ['Your month', 'Management fee', 'Stays', 'Expenses']) {
       expect(screen.queryByRole('heading', { name: title })).not.toBeInTheDocument();
     }
     expect(paths.filter((p) => FINANCIAL.includes(p))).toEqual([]);
@@ -189,15 +214,17 @@ describe('cleaners', () => {
 describe('owners', () => {
   it('get the owner page with its financial sections', async () => {
     renderAt(`/properties/${CEDAR}`, owner);
-    expect(await screen.findByRole('heading', { name: 'Month at a glance' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Plan' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your month' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Management fee' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stays' })).toBeInTheDocument();
+    expect((await screen.findAllByText('Net to you')).length).toBeGreaterThan(0);
   });
 
   it('who also clean another property get the cleaner page for that one', async () => {
     const { router } = renderAt(`/properties/${SEASIDE}`, owner);
     expect(await screen.findByText('You clean here')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(`/cleaner/properties/${SEASIDE}`);
-    expect(screen.queryByRole('heading', { name: 'Month at a glance' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Your month' })).not.toBeInTheDocument();
   });
 });
 
@@ -259,6 +286,15 @@ describe('adding your own property (My properties)', () => {
     ]);
     expect(await screen.findByRole('heading', { name: 'Lake House' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/properties/p-new');
+  });
+
+  it('lets an admin edit their properties from the cards; owners can’t', async () => {
+    renderAt('/properties', admin);
+    expect(await screen.findByRole('button', { name: 'Edit Cedar Cabin' })).toBeInTheDocument();
+    cleanup();
+    renderAt('/properties', owner);
+    await screen.findByRole('link', { name: /Cedar Cabin/ });
+    expect(screen.queryByRole('button', { name: /^Edit / })).not.toBeInTheDocument();
   });
 
   it('offers it in the empty state to an admin with no properties of their own', async () => {
