@@ -1,6 +1,7 @@
 /**
- * Month-grid layout for the stays calendar. Pure: dates in, cells and bar segments out. A stay occupies its nights
- * (check-in through the day before check-out); its check-out day gets a "clean" marker.
+ * Month-grid layout for the stays calendar. Pure: dates in, cells and bar segments out. As on Airbnb and Vrbo, a stay's
+ * bar runs from the middle of its check-in day to the middle of its check-out day, so back-to-back stays meet on the
+ * turnover day; the check-out day also gets a "clean" marker.
  */
 
 export type Channel = 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
@@ -22,8 +23,12 @@ export interface Segment {
   startCol: number;
   /** Inclusive. */
   endCol: number;
+  /** Starts halfway through its first day (the check-in day is in this segment). */
+  startsMidDay: boolean;
+  /** Ends halfway through its last day (the check-out day is in this segment). */
+  endsMidDay: boolean;
   lane: number;
-  /** The bar continues from the previous week / into the next week. */
+  /** The bar continues from the previous week (or month) / into the next. */
   continuesBefore: boolean;
   continuesAfter: boolean;
 }
@@ -50,27 +55,36 @@ export function monthGrid(month: string, stays: CalendarStay[], weekStartsOn: 0 
       const d = weekStart + i;
       return d >= first && d < next ? fromDay(d) : null;
     });
-    // Nights shown: inside this week and inside the month.
+    // Days shown: inside this week and inside the month.
     const lo = Math.max(weekStart, first);
-    const hi = Math.min(weekStart + 7, next); // exclusive
+    const last = Math.min(weekStart + 7, next) - 1; // inclusive
     const placed: Segment[] = [];
+    // Lanes are filled in half-days, so a stay checking in on another's check-out day can share its lane.
     const laneEnds: number[] = [];
     const inWeek = stays
-      .filter((s) => toDay(s.checkInDate) < hi && toDay(s.checkOutDate) > lo)
+      .filter((s) => toDay(s.checkInDate) <= last && toDay(s.checkOutDate) >= lo)
       .sort((a, b) => a.checkInDate.localeCompare(b.checkInDate) || a.id.localeCompare(b.id));
     for (const stay of inWeek) {
-      const start = Math.max(toDay(stay.checkInDate), lo);
-      const end = Math.min(toDay(stay.checkOutDate), hi) - 1; // last night shown
-      let lane = laneEnds.findIndex((laneEnd) => laneEnd < start);
+      const checkIn = toDay(stay.checkInDate);
+      const checkOut = toDay(stay.checkOutDate);
+      const start = Math.max(checkIn, lo);
+      const end = Math.min(checkOut, last);
+      const startsMidDay = checkIn === start;
+      const endsMidDay = checkOut === end;
+      const fromHalf = 2 * start + (startsMidDay ? 1 : 0);
+      const toHalf = 2 * end + (endsMidDay ? 1 : 2); // exclusive
+      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= fromHalf);
       if (lane === -1) lane = laneEnds.length;
-      laneEnds[lane] = end;
+      laneEnds[lane] = toHalf;
       placed.push({
         stay,
         startCol: start - weekStart,
         endCol: end - weekStart,
+        startsMidDay,
+        endsMidDay,
         lane,
-        continuesBefore: toDay(stay.checkInDate) < start,
-        continuesAfter: toDay(stay.checkOutDate) - 1 > end,
+        continuesBefore: checkIn < start,
+        continuesAfter: checkOut > end,
       });
     }
     weeks.push({ days, segments: placed, lanes: laneEnds.length });
@@ -138,7 +152,7 @@ export function stayStyle(stay: Pick<CalendarStay, 'kind' | 'channel'>): StaySty
 }
 
 /**
- * The legend for a month: only the colours of stays that show in it (a night in the month), in legend order, so it
+ * The legend for a month: only the colours of stays that show in it (any part of a bar), in legend order, so it
  * never lists channels that aren't on the calendar. `cleans` says whether any check-out falls in the month.
  */
 export function monthLegend(month: string, stays: readonly CalendarStay[]): { styles: StayStyle[]; cleans: boolean } {
@@ -146,7 +160,8 @@ export function monthLegend(month: string, stays: readonly CalendarStay[]): { st
   const first = `${month}-01`;
   const next = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);
   const shown = new Set(
-    stays.filter((s) => s.checkInDate < next && s.checkOutDate > first).map((s) => stayStyle(s).key),
+    // On the calendar: checks in by the month's end, checks out on or after its first day (half a day shows).
+    stays.filter((s) => s.checkInDate < next && s.checkOutDate >= first).map((s) => stayStyle(s).key),
   );
   return {
     styles: STAY_STYLES.filter((s) => shown.has(s.key)),

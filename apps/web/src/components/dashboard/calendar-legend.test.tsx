@@ -41,11 +41,11 @@ describe('legend', () => {
     ]);
   });
 
-  it('ignores a stay with no night in the month (it only checks out on the 1st)', () => {
+  it('counts a stay that only checks out on the 1st (half a day shows), but not one that ended before', () => {
     const stays = [stay('a', '2026-09-28', '2026-10-01', 'VRBO'), stay('b', '2026-10-05', '2026-10-07', 'AIRBNB')];
-    expect(labels('2026-10', stays)).toEqual(['Airbnb']);
-    // ...but its check-out is still a clean to schedule.
+    expect(labels('2026-10', stays)).toEqual(['Airbnb', 'Vrbo']);
     expect(monthLegend('2026-10', [stays[0]!]).cleans).toBe(true);
+    expect(labels('2026-10', [stay('c', '2026-09-20', '2026-09-30', 'DIRECT')])).toEqual([]);
   });
 
   it('counts a stay running in from the month before', () => {

@@ -6,7 +6,10 @@ import { useWeekStart, weekdayNames } from '../../lib/preferences';
 const BAR_H = 22;
 const BAR_GAP = 4;
 
-/** Month grid with stays as continuous bars and check-outs marked as cleans to schedule. */
+/**
+ * Month grid with stays as continuous bars, from the middle of the check-in day to the middle of the check-out day (as
+ * on Airbnb and Vrbo), and check-outs marked as cleans to schedule.
+ */
 export function MonthCalendar({
   month,
   stays,
@@ -72,6 +75,17 @@ export function MonthCalendar({
                     ? 'Owner stay'
                     : 'Blocked'
               }`;
+              // Day columns, fractional: a stay starts halfway through its check-in day and ends halfway through its
+              // check-out day. A small inset at those midpoints leaves a gap between back-to-back stays.
+              const from = seg.startCol + (seg.startsMidDay ? 0.5 : 0);
+              const to = seg.endCol + (seg.endsMidDay ? 0.5 : 1);
+              const insetStart = seg.continuesBefore ? 0 : 2;
+              const insetEnd = seg.continuesAfter ? 0 : 2;
+              // The label goes where the bar starts, or at the start of a week it runs into (if there's room). A start
+              // with less than a day of room that carries on to another row of this month leaves it to that row.
+              const room = to - from >= 1;
+              const continuesBelow = seg.continuesAfter && wi < weeks.length - 1;
+              const showLabel = seg.continuesBefore ? seg.startCol === 0 && room : room || !continuesBelow;
               return (
                 <div
                   key={seg.stay.id}
@@ -83,13 +97,13 @@ export function MonthCalendar({
                     seg.continuesAfter ? 'rounded-r-none' : 'rounded-r-md',
                   )}
                   style={{
-                    left: `calc(${(seg.startCol / 7) * 100}% + ${seg.continuesBefore ? 0 : 6}px)`,
-                    width: `calc(${((seg.endCol - seg.startCol + 1) / 7) * 100}% - ${(seg.continuesBefore ? 0 : 6) + (seg.continuesAfter ? 0 : 6)}px)`,
+                    left: `calc(${(from / 7) * 100}% + ${insetStart}px)`,
+                    width: `calc(${((to - from) / 7) * 100}% - ${insetStart + insetEnd}px)`,
                     top: 40 + seg.lane * (BAR_H + BAR_GAP),
                     height: BAR_H,
                   }}
                 >
-                  <span className="min-w-0 truncate">{!seg.continuesBefore || seg.startCol === 0 ? label : ''}</span>
+                  <span className="min-w-0 truncate">{showLabel ? label : ''}</span>
                 </div>
               );
             })}

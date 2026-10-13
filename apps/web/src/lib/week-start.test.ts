@@ -28,7 +28,7 @@ describe('week start (Settings → Preferences)', () => {
     expect(sunday[0]!.days.indexOf('2026-10-01')).toBe(4);
     expect(monday[0]!.days.indexOf('2026-10-01')).toBe(3);
     expect(monday.at(-1)!.days.includes('2026-10-31')).toBe(true);
-    // A stay over the weekend is one bar when weeks start on Monday, two when they start on Sunday.
+    // Saturday to Sunday: one bar when weeks start on Monday, two when they start on Sunday.
     const weekend = [
       {
         id: 's',
@@ -36,13 +36,13 @@ describe('week start (Settings → Preferences)', () => {
         kind: 'GUEST' as const,
         channel: 'AIRBNB' as const,
         checkInDate: '2026-10-10',
-        checkOutDate: '2026-10-12',
-        nights: 2,
+        checkOutDate: '2026-10-11',
+        nights: 1,
       },
     ];
     expect(monthGrid('2026-10', weekend).flatMap((w) => w.segments)).toHaveLength(2);
     expect(monthGrid('2026-10', weekend, 1).flatMap((w) => w.segments)).toEqual([
-      expect.objectContaining({ startCol: 5, endCol: 6, continuesBefore: false, continuesAfter: false }),
+      expect.objectContaining({ startCol: 5, endCol: 6, startsMidDay: true, endsMidDay: true, continuesAfter: false }),
     ]);
   });
 
