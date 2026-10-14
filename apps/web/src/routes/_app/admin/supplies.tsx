@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AllClearIllustration } from '../../../components/illustrations/all-clear';
+import { CelebratingGuide } from '../../../components/guide/celebrating-guide';
 import { RestockList } from '../../../components/supplies/restock-list';
 import { LoadError } from '../../../components/ui/alert';
 import { Card } from '../../../components/ui/card';
@@ -39,7 +39,7 @@ function Supplies() {
         </div>
       ) : items.length === 0 ? (
         <Card>
-          <EmptyState size="compact" illustration={<AllClearIllustration />} title="All stocked">
+          <EmptyState size="compact" illustration={<CelebratingGuide />} title="All stocked">
             Nothing {propertyId ? 'at this property' : 'at your properties'} is at or near its restock point.
           </EmptyState>
         </Card>
