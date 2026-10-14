@@ -13,18 +13,18 @@
 body{margin:0}
 a{color:inherit}a:hover{opacity:.8}
 @keyframes th-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@keyframes th-hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-9px)}60%{transform:translateY(-7px)}}
+@keyframes th-hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes th-nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
 @keyframes th-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
 @keyframes th-float{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 @keyframes th-pop{0%,100%{opacity:.35}50%{opacity:1}}
 .th-point{animation:th-bob 3.2s ease-in-out infinite}
-.th-celebrate{animation:th-hop 1.3s ease-in-out infinite}
+.th-celebrate{animation:th-hop 1.6s cubic-bezier(.37,0,.63,1) infinite}
 .th-think{animation:th-bob 4s ease-in-out infinite}
 .th-sleep{animation:th-breathe 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
 .th-nudge{animation:th-nudge 1.4s ease-in-out infinite}
 .th-float{animation:th-float 2.8s ease-in-out infinite}
-.th-pop{animation:th-pop 1.3s ease-in-out infinite}
+.th-pop{animation:th-pop 1.6s cubic-bezier(.37,0,.63,1) infinite}
 @media (prefers-reduced-motion:reduce){.th-point,.th-celebrate,.th-think,.th-sleep,.th-nudge,.th-float,.th-pop{animation:none}}
 </style>
 </helmet>

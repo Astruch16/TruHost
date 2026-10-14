@@ -284,16 +284,15 @@
     transform: rotate(6deg);
   }
 }
+/* One continuous rise and fall: no keyframes in between, so it never stops mid-air. Up decelerates into the top,
+   down accelerates gently back to the ground (easeInOutSine). */
 @keyframes th-hop {
   0%,
   100% {
     transform: translateY(0);
   }
-  40% {
-    transform: translateY(-9px);
-  }
-  60% {
-    transform: translateY(-7px);
+  50% {
+    transform: translateY(-8px);
   }
 }
 @keyframes th-nudge {
@@ -358,7 +357,7 @@
   animation: th-bob 3.2s ease-in-out infinite;
 }
 .th-celebrate {
-  animation: th-hop 1.3s ease-in-out infinite;
+  animation: th-hop 1.6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 .th-think {
   animation: th-bob 4s ease-in-out infinite;
@@ -375,7 +374,8 @@
   animation: th-float 2.8s ease-in-out infinite;
 }
 .th-pop {
-  animation: th-pop 1.3s ease-in-out infinite;
+  /* In time with th-hop, so the confetti twinkles with each hop. */
+  animation: th-pop 1.6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .th-wave,
