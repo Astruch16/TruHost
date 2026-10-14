@@ -25,7 +25,8 @@ export function KpiCard({
   value: ReactNode;
   support: ReactNode;
   change?: KpiChange | null;
-  chart: ReactNode;
+  /** One small chart along the bottom; optional where there's nothing worth charting. */
+  chart?: ReactNode;
 }) {
   return (
     <section className="@container/kpi flex min-w-0 flex-col gap-1.5 rounded-2xl border border-line bg-surface px-4 py-4 @2xl/content:px-[22px] @2xl/content:py-5">
@@ -52,7 +53,7 @@ export function KpiCard({
           </span>
         )}
       </div>
-      <div className="mt-auto pt-2.5">{chart}</div>
+      {chart && <div className="mt-auto pt-2.5">{chart}</div>}
     </section>
   );
 }

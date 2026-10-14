@@ -3,10 +3,13 @@ import { cx } from '../../lib/cx';
 import { ErrorAlert } from './alert';
 import { Skeleton } from './skeleton';
 
-/** Scrolls horizontally on narrow screens instead of squashing columns. */
+/**
+ * Scrolls horizontally on narrow screens instead of squashing columns. The scroller is `relative` so absolutely
+ * positioned content (e.g. a screen-reader-only "Actions" header) stays inside it rather than widening the page.
+ */
 export function Table({ className, children, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="scroll-area -mx-1 overflow-x-auto px-1">
+    <div className="scroll-area relative -mx-1 overflow-x-auto px-1">
       <table {...props} className={cx('w-full border-collapse text-left text-sm', className)}>
         {children}
       </table>
