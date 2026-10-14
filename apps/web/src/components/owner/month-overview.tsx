@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { MonthFigures } from '@truhost/shared';
 import { OWN_PROPERTY_PLAN_ID } from '@truhost/shared';
-import { BadgePercent, Receipt, Wallet } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { cx } from '../../lib/cx';
 import { formatBps, formatOccupancy } from '../../lib/format';
@@ -11,6 +10,7 @@ import { monthLabel } from '../../lib/months';
 import { usePrefetchAdjacentMonths } from '../../lib/month-prefetch';
 import { queries } from '../../lib/queries';
 import { updatingStyles } from '../../lib/styles';
+import { ExpensesIcon, FeeIcon, GrossIcon, OwnPropertyIcon } from '../illustrations/statement-icons';
 import { LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
 import { MonthStepper } from '../ui/month-stepper';
@@ -181,15 +181,13 @@ function Breakdown({ f }: { f: MonthFigures }) {
       </div>
       <dl className="flex flex-col">
         <Line
-          icon={<Wallet />}
-          tone="bg-surface text-ink"
+          icon={<GrossIcon />}
           label="Gross revenue"
           note={`${f.stays} stay${f.stays === 1 ? '' : 's'} this month`}
           value={formatCents(f.grossCents)}
         />
         <Line
-          icon={<BadgePercent />}
-          tone="bg-lavender-tint text-lavender-deep"
+          icon={ownProperty ? <OwnPropertyIcon /> : <FeeIcon />}
           label="Management fee"
           note={feeNote}
           value={f.managementFeeCents > 0 ? `−${formatCents(f.managementFeeCents)}` : null}
@@ -197,8 +195,7 @@ function Breakdown({ f }: { f: MonthFigures }) {
           share={f.managementFeeCents > 0 ? share(f.managementFeeCents) : null}
         />
         <Line
-          icon={<Receipt />}
-          tone="bg-amber-tint text-amber-deep"
+          icon={<ExpensesIcon />}
           label="Expenses"
           note={f.ownerExpensesCents > 0 ? 'Paid from your earnings' : 'None this month'}
           value={f.ownerExpensesCents > 0 ? `−${formatCents(f.ownerExpensesCents)}` : null}
@@ -224,10 +221,9 @@ function Breakdown({ f }: { f: MonthFigures }) {
   );
 }
 
-/** One line of the statement: an icon, what it is, and the amount (or a word when there's nothing). */
+/** One line of the statement: its illustration, what it is, and the amount (or a word when there's nothing). */
 function Line({
   icon,
-  tone,
   label,
   note,
   value,
@@ -235,7 +231,6 @@ function Line({
   share = null,
 }: {
   icon: ReactNode;
-  tone: string;
   label: string;
   note: string;
   value: string | null;
@@ -244,9 +239,7 @@ function Line({
 }) {
   return (
     <div className="flex items-center gap-3 border-b border-line py-3 first:pt-0 last:border-b-0">
-      <span aria-hidden className={cx('grid size-9 shrink-0 place-items-center rounded-[10px] [&>svg]:size-4', tone)}>
-        {icon}
-      </span>
+      <span className="shrink-0">{icon}</span>
       <div className="min-w-0 flex-1">
         <dt className="font-medium text-ink">{label}</dt>
         <p className="text-xs text-muted">{note}</p>
