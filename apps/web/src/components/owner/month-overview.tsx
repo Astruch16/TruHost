@@ -11,6 +11,7 @@ import { usePrefetchAdjacentMonths } from '../../lib/month-prefetch';
 import { queries } from '../../lib/queries';
 import { updatingStyles } from '../../lib/styles';
 import { ExpensesIcon, FeeIcon, GrossIcon, OwnPropertyIcon } from '../illustrations/statement-icons';
+import { StatementLine } from '../statement-line';
 import { LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
 import { MonthStepper } from '../ui/month-stepper';
@@ -178,13 +179,13 @@ function Breakdown({ f }: { f: MonthFigures }) {
         ))}
       </div>
       <dl className="flex flex-col">
-        <Line
+        <StatementLine
           icon={<GrossIcon />}
           label="Gross revenue"
           note={f.stays === 0 ? 'No stays this month' : `${f.stays} stay${f.stays === 1 ? '' : 's'} this month`}
           value={formatCents(f.grossCents)}
         />
-        <Line
+        <StatementLine
           icon={ownProperty ? <OwnPropertyIcon /> : <FeeIcon />}
           label="Management fee"
           note={feeNote}
@@ -192,7 +193,7 @@ function Breakdown({ f }: { f: MonthFigures }) {
           empty={ownProperty || f.managementFeeBps === 0 ? 'No fee' : 'None'}
           share={f.managementFeeCents > 0 ? share(f.managementFeeCents) : null}
         />
-        <Line
+        <StatementLine
           icon={<ExpensesIcon />}
           label="Expenses"
           note={f.ownerExpensesCents > 0 ? 'Paid from your earnings' : 'None this month'}
@@ -216,45 +217,5 @@ function Breakdown({ f }: { f: MonthFigures }) {
         </p>
       </div>
     </section>
-  );
-}
-
-/** One line of the statement: its illustration, what it is, and the amount (or a word when there's nothing). */
-function Line({
-  icon,
-  label,
-  note,
-  value,
-  empty = '—',
-  share = null,
-}: {
-  icon: ReactNode;
-  label: string;
-  note: string;
-  value: string | null;
-  empty?: string;
-  share?: number | null;
-}) {
-  return (
-    <div className="flex items-center gap-3 border-b border-line py-3 first:pt-0 last:border-b-0">
-      <span className="shrink-0">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <dt className="font-medium text-ink">{label}</dt>
-        <p className="text-xs text-muted">{note}</p>
-      </div>
-      <dd className="flex shrink-0 items-center gap-2">
-        {/* The share gives way to the amount on narrow screens (the fee's note says it too). */}
-        {share !== null && (
-          <span className="figure hidden rounded-full bg-surface px-2 py-0.5 text-xs text-muted @md/content:inline">
-            {share}%
-          </span>
-        )}
-        {value === null ? (
-          <span className="rounded-full bg-surface px-2.5 py-0.5 text-sm font-medium text-muted">{empty}</span>
-        ) : (
-          <span className="figure font-semibold text-ink">{value}</span>
-        )}
-      </dd>
-    </div>
   );
 }
