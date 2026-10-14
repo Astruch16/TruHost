@@ -76,11 +76,11 @@ export function MonthOverview({
 function Figures({ f }: { f: MonthFigures }) {
   return (
     <div className="grid gap-3 @xl/content:grid-cols-[1.3fr_1fr_1fr]">
-      {/* The headline tile: pastel blue, so it stands out without the weight of the dark green. */}
-      <div className="flex flex-col justify-between gap-3 rounded-inner bg-blue-tint p-5 text-blue-deep @xl/content:row-span-2">
+      {/* The headline tile: olive green, set apart from the white tiles and in the portal's earthy greens. */}
+      <div className="flex flex-col justify-between gap-3 rounded-inner bg-olive p-5 text-white @xl/content:row-span-2">
         <p className="text-sm font-semibold">Net to you</p>
         <p className="figure text-4xl font-bold tracking-tight">{formatCents(f.netCents)}</p>
-        <p className="text-sm text-blue-deep/80">
+        <p className="text-sm text-white/85">
           {f.managementFeeCents > 0 ? 'After the management fee and expenses.' : 'After expenses.'}
         </p>
       </div>
