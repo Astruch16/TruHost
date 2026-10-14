@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, FileText, Receipt } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
@@ -23,6 +23,7 @@ export function OwnerStays({ propertyId, month }: { propertyId: string; month: s
   const bookings = useQuery(queries.propertyBookings(api, propertyId, monthRange(month)));
   usePrefetchAdjacentMonths(month, (m) => queries.propertyBookings(api, propertyId, monthRange(m)), bookings.isSuccess);
   const items = bookings.data?.items ?? [];
+  const shown = useShownMonth(month, bookings.data !== undefined && !bookings.isPlaceholderData);
   return (
     <Card title="Stays" description={monthLabel(month)}>
       {bookings.error ? (
@@ -30,11 +31,12 @@ export function OwnerStays({ propertyId, month }: { propertyId: string; month: s
       ) : !bookings.data ? (
         <Skeleton className="h-32" />
       ) : items.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted">No stays in {monthLabel(month)}.</p>
+        <EmptyMonth key={shown}>No stays in {monthLabel(shown)}.</EmptyMonth>
       ) : (
         <ul
+          key={shown}
           aria-busy={bookings.isPlaceholderData || undefined}
-          className={cx('flex flex-col', updatingStyles(bookings.isPlaceholderData))}
+          className={cx('flex min-h-48 animate-fade-in flex-col', updatingStyles(bookings.isPlaceholderData))}
         >
           {items.map((b) => {
             const style = stayStyle(b);
@@ -89,6 +91,7 @@ export function OwnerExpenses({ propertyId, month }: { propertyId: string; month
   const expenses = useQuery(queries.propertyExpenses(api, propertyId, monthRange(month)));
   usePrefetchAdjacentMonths(month, (m) => queries.propertyExpenses(api, propertyId, monthRange(m)), expenses.isSuccess);
   const items = expenses.data?.items ?? [];
+  const shown = useShownMonth(month, expenses.data !== undefined && !expenses.isPlaceholderData);
   return (
     <Card title="Expenses" description={monthLabel(month)}>
       <ErrorAlert error={viewError} />
@@ -97,11 +100,12 @@ export function OwnerExpenses({ propertyId, month }: { propertyId: string; month
       ) : !expenses.data ? (
         <Skeleton className="h-24" />
       ) : items.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted">No expenses in {monthLabel(month)}.</p>
+        <EmptyMonth key={shown}>No expenses in {monthLabel(shown)}.</EmptyMonth>
       ) : (
         <ul
+          key={shown}
           aria-busy={expenses.isPlaceholderData || undefined}
-          className={cx('flex flex-col', updatingStyles(expenses.isPlaceholderData))}
+          className={cx('flex min-h-48 animate-fade-in flex-col', updatingStyles(expenses.isPlaceholderData))}
         >
           {items.map((e) => (
             <li key={e.id} className="flex items-center gap-4 border-b border-line-soft py-3 last:border-b-0">
@@ -138,5 +142,24 @@ export function OwnerExpenses({ propertyId, month }: { propertyId: string; month
         </ul>
       )}
     </Card>
+  );
+}
+
+/**
+ * The month whose rows are on screen: the previous one while the chosen month loads (shown dimmed), then the chosen
+ * one. Keying the list by it fades the new month's rows in once, when they arrive.
+ */
+function useShownMonth(month: string, settled: boolean) {
+  const [shown, setShown] = useState(month);
+  if (settled && shown !== month) setShown(month);
+  return shown;
+}
+
+/** A month with nothing in it: as tall as a short list, so stepping between months doesn't jump. */
+function EmptyMonth({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-48 animate-fade-in items-center justify-center rounded-inner border border-dashed border-line-soft text-sm text-muted">
+      {children}
+    </div>
   );
 }

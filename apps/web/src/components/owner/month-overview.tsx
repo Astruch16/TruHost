@@ -50,17 +50,14 @@ export function MonthOverview({
         </div>
       ) : (
         <div
+          // A month's figures fade in when they arrive (not while the previous month shows dimmed).
+          key={f.month}
           aria-busy={summary.isPlaceholderData || undefined}
-          className={cx('flex flex-col gap-6', updatingStyles(summary.isPlaceholderData))}
+          className={cx('flex animate-fade-in flex-col gap-6', updatingStyles(summary.isPlaceholderData))}
         >
           <Figures f={f} />
-          {f.grossCents > 0 || f.ownerExpensesCents > 0 ? (
-            <Breakdown f={f} />
-          ) : (
-            <p className="rounded-inner bg-ground px-4 py-5 text-center text-sm text-muted">
-              No earnings or expenses in {monthLabel(month)} yet.
-            </p>
-          )}
+          {/* Always the same shape, empty months included, so stepping between months doesn't jump. */}
+          <Breakdown f={f} />
           {f.incompleteBookings > 0 && (
             <p className="text-sm text-muted">
               {f.incompleteBookings} stay{f.incompleteBookings === 1 ? ' is' : 's are'} waiting on a payout and not
@@ -184,7 +181,7 @@ function Breakdown({ f }: { f: MonthFigures }) {
         <Line
           icon={<GrossIcon />}
           label="Gross revenue"
-          note={`${f.stays} stay${f.stays === 1 ? '' : 's'} this month`}
+          note={f.stays === 0 ? 'No stays this month' : `${f.stays} stay${f.stays === 1 ? '' : 's'} this month`}
           value={formatCents(f.grossCents)}
         />
         <Line
