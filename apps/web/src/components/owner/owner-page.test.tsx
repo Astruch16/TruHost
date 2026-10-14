@@ -78,25 +78,40 @@ describe('Your month', () => {
     ...over,
   });
 
-  it('leads with what the owner earned, and shows the fee', async () => {
+  it('leads with what the owner earned, then reads as a statement', async () => {
     renderWith(<MonthOverview propertyId="p1" month="2026-10" onMonthChange={vi.fn()} />, () => summary({}));
-    expect((await screen.findAllByText('$1,807.80')).length).toBe(2); // the headline and the breakdown
-    expect(screen.getByText('TruPlan fee (22%)')).toBeInTheDocument();
-    expect(screen.getByText('−$528.00')).toBeInTheDocument();
+    expect((await screen.findAllByText('$1,807.80')).length).toBe(2); // the headline and the statement's total
     expect(screen.getByText('12 of 31')).toBeInTheDocument();
     expect(screen.getByText(/1 stay is waiting on a payout/)).toBeInTheDocument();
+    // Gross, each deduction with what it is and its share, then what's kept.
+    const statement = screen.getByRole('region', { name: 'Where it went' });
+    expect(
+      within(statement)
+        .getAllByRole('term')
+        .map((t) => t.textContent),
+    ).toEqual(['Gross revenue', 'Management fee', 'Expenses']);
+    expect(within(statement).getByText('TruPlan · 22% of gross')).toBeInTheDocument();
+    expect(within(statement).getByText('−$528.00')).toBeInTheDocument();
+    expect(within(statement).getByText('−$64.20')).toBeInTheDocument();
+    expect(within(statement).getByText('You keep 75%')).toBeInTheDocument();
   });
 
-  it('says there’s no fee on an own property', async () => {
+  it('says there’s no fee on an own property, and no expenses, in words', async () => {
     renderWith(<MonthOverview propertyId="p1" month="2026-10" onMonthChange={vi.fn()} />, () =>
       summary({
         plan: { id: OWN_PROPERTY_PLAN_ID, name: 'Own property' },
         managementFeeBps: 0,
         managementFeeCents: 0,
-        netCents: 233_580,
+        ownerExpensesCents: 0,
+        netCents: 240_000,
       }),
     );
-    expect(await screen.findByText('No management fee (own property)')).toBeInTheDocument();
-    expect(screen.getByText('$0.00')).toBeInTheDocument();
+    const statement = await screen.findByRole('region', { name: 'Where it went' });
+    expect(within(statement).getByText('Own property · no fee')).toBeInTheDocument();
+    expect(within(statement).getByText('No fee')).toBeInTheDocument();
+    expect(within(statement).getByText('None this month')).toBeInTheDocument();
+    expect(within(statement).getByText('You keep 100%')).toBeInTheDocument();
+    // Nothing reads "−$0.00".
+    expect(screen.queryByText(/−\$0\.00/)).not.toBeInTheDocument();
   });
 });
