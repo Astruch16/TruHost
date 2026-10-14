@@ -47,9 +47,6 @@
   --color-amber-tint: #fbeecb;
   --color-amber-deep: #6f4c0e;
 
-  /* Olive: the owner's "Net to you" headline tile (components/owner/month-overview.tsx). White on it is ~4.7:1. */
-  --color-olive: #6b7a3c;
-
   /* Error/destructive (not in the mockup palette; kept muted to sit with the pairs above) */
   --color-danger-tint: #f8e1de;
   --color-danger-deep: #8a2c24;
