@@ -80,6 +80,12 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  /* Dialogs, menus and popovers lock page scrolling (Radix, via react-remove-scroll), which adds a right margin the
+     width of the scrollbar to make up for it disappearing. The gutter above already keeps that space, so the margin
+     would count it twice and shift the page left. (Important layered declarations win over the library's.) */
+  html body[data-scroll-locked] {
+    margin-right: 0 !important;
+  }
 
   /* Figures line up in columns everywhere numbers appear. */
   .figure,
