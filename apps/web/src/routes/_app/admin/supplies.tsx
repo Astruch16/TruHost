@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { RestockList } from '../../../components/supplies/restock-list';
+import { RestockSummary } from '../../../components/supplies/restock-summary';
 import { LoadError } from '../../../components/ui/alert';
 import { Card } from '../../../components/ui/card';
 import { EmptyState } from '../../../components/ui/empty-state';
@@ -32,8 +33,12 @@ function Supplies() {
       {restock.error ? (
         <LoadError what="supplies" onRetry={() => void restock.refetch()} retrying={restock.isFetching} />
       ) : !restock.data ? (
-        <div role="status" aria-label="Loading supplies" className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2">
-          <Skeleton className="h-64 rounded-card" />
+        <div role="status" aria-label="Loading supplies" className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 gap-3 @xl/content:grid-cols-3 @2xl/content:gap-4">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
+          </div>
           <Skeleton className="h-64 rounded-card" />
         </div>
       ) : items.length === 0 ? (
@@ -43,7 +48,10 @@ function Supplies() {
           </EmptyState>
         </Card>
       ) : (
-        <RestockList items={items} />
+        <div className="flex flex-col gap-6">
+          <RestockSummary items={items} />
+          <RestockList items={items} />
+        </div>
       )}
     </>
   );

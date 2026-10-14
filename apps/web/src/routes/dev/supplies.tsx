@@ -5,6 +5,7 @@ import type { ApiClient } from '@truhost/api-client';
 import type { Notification, SupplyCategory, SupplyItem } from '@truhost/shared';
 import { NotificationsBell } from '../../components/shell/notifications-bell';
 import { RestockList } from '../../components/supplies/restock-list';
+import { RestockSummary } from '../../components/supplies/restock-summary';
 import { SuppliesCard } from '../../components/supplies/supplies-card';
 import { Card } from '../../components/ui/card';
 import { EmptyState } from '../../components/ui/empty-state';
@@ -255,7 +256,12 @@ const NOTIFICATIONS: Notification[] = [
 
 function Restock() {
   const restock = useQuery(queries.restock(useApi()));
-  return restock.data ? <RestockList items={restock.data.items} /> : null;
+  return restock.data ? (
+    <div className="flex flex-col gap-6">
+      <RestockSummary items={restock.data.items} />
+      <RestockList items={restock.data.items} />
+    </div>
+  ) : null;
 }
 
 function Pane({ label, width, children }: { label: string; width?: string; children: ReactNode }) {
