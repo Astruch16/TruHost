@@ -10,9 +10,11 @@ import { MonthOverview } from '../../../components/owner/month-overview';
 import { PropertyHero } from '../../../components/owner/property-hero';
 import { PropertyRoomsCard } from '../../../components/property-basics';
 import { PropertyDialog } from '../../../components/property-dialog';
+import { RoomsEditor } from '../../../components/rooms/rooms-card';
 import { NotAvailable } from '../../../components/shell/not-available';
 import { ErrorAlert } from '../../../components/ui/alert';
 import { Button } from '../../../components/ui/button';
+import { Dialog } from '../../../components/ui/dialog';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { isAdmin, propertyPath } from '../../../lib/access';
 import { useApi } from '../../../lib/api-context';
@@ -23,8 +25,8 @@ import { queries } from '../../../lib/queries';
  * The owner's property page: a photo banner, the month (net, gross, nights, where the money went), its stays and
  * expenses, and on the side the management fee, details and rooms. Only for owners of this property. Cleaners go to
  * their own page (/cleaner/properties/:id), which has no financial sections, and admins to the admin page; anyone
- * else sees "not available". The API enforces the same on every call. Admins who own the property can edit it here,
- * and switch it to no fee (their own property).
+ * else sees "not available". The API enforces the same on every call. Admins who own the property can edit it and its
+ * rooms here, and switch it to no fee (their own property).
  */
 export const Route = createFileRoute('/_app/properties/$propertyId')({
   component: PropertyPage,
@@ -46,6 +48,7 @@ function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: b
   const list = useQuery(queries.properties(api));
   const [month, setMonth] = useState(monthKey);
   const [editing, setEditing] = useState(false);
+  const [editingRooms, setEditingRooms] = useState(false);
 
   if (property.error) {
     return property.error instanceof ApiError && property.error.status === 404 ? (
@@ -88,10 +91,24 @@ function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: b
         <aside className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
           <ManagementCard propertyId={propertyId} canMarkOwn={admin} />
           <PropertyDetailsPanel property={p} />
-          <PropertyRoomsCard propertyId={propertyId} />
+          <PropertyRoomsCard propertyId={propertyId} onEdit={admin ? () => setEditingRooms(true) : undefined} />
         </aside>
       </div>
       {admin && <PropertyDialog property={p} open={editing} onOpenChange={setEditing} />}
+      {admin && (
+        <Dialog
+          open={editingRooms}
+          onOpenChange={setEditingRooms}
+          size="xl"
+          title="Edit rooms"
+          description="The walkthrough cleaners follow and owners see photos in. Changes save as you go."
+        >
+          {/* Lays out against the dialog's width, as it does against the page's on the admin page. */}
+          <div className="@container/content">
+            <RoomsEditor propertyId={propertyId} layout={p} />
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 }
