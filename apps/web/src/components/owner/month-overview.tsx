@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { MonthFigures } from '@truhost/shared';
 import { OWN_PROPERTY_PLAN_ID } from '@truhost/shared';
+import { BadgePercent, Receipt, Wallet } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { cx } from '../../lib/cx';
 import { formatBps, formatOccupancy } from '../../lib/format';
@@ -132,71 +133,136 @@ function Tile({
   );
 }
 
-/** Where the gross went: fee, expenses, net, as a bar and as rows. */
+/**
+ * Where the gross went, read top to bottom like a statement: gross revenue, then each deduction (with what it is and
+ * its share of gross), then what the owner keeps. A bar above shows the same split. Zero deductions say so in words
+ * ("None", "No fee") instead of "−$0.00".
+ */
 function Breakdown({ f }: { f: MonthFigures }) {
   const ownProperty = f.plan?.id === OWN_PROPERTY_PLAN_ID;
-  const noFee = f.managementFeeCents === 0;
   const total = Math.max(f.grossCents, f.managementFeeCents + f.ownerExpensesCents + Math.max(f.netCents, 0), 1);
-  const parts = [
-    { key: 'net', label: 'Net to you', cents: Math.max(f.netCents, 0), dot: 'bg-primary' },
-    { key: 'fee', label: 'Management fee', cents: f.managementFeeCents, dot: 'bg-lavender-deep' },
-    { key: 'expenses', label: 'Expenses', cents: f.ownerExpensesCents, dot: 'bg-amber-deep' },
-  ];
-  const feeLabel = ownProperty
-    ? 'No management fee (own property)'
+  // Shares of gross, for reading only (the amounts themselves come from the API).
+  const share = (cents: number) => (f.grossCents > 0 ? Math.round((cents / f.grossCents) * 100) : null);
+  const keep = share(Math.max(f.netCents, 0));
+  const segments = [
+    { key: 'net', cents: Math.max(f.netCents, 0), className: 'bg-primary' },
+    { key: 'fee', cents: f.managementFeeCents, className: 'bg-lavender-deep' },
+    { key: 'expenses', cents: f.ownerExpensesCents, className: 'bg-amber-deep' },
+  ].filter((s) => s.cents > 0);
+  const feeNote = ownProperty
+    ? 'Own property · no fee'
     : f.managementFeeBps === null
-      ? 'Management fee (no plan)'
-      : `${f.plan?.name ?? 'Plan'} fee (${formatBps(f.managementFeeBps)})`;
+      ? 'No plan in force'
+      : `${f.plan?.name ?? 'Plan'} · ${formatBps(f.managementFeeBps)} of gross`;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div aria-hidden className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-line-soft">
-        {parts
-          .filter((p) => p.cents > 0)
-          .map((p) => (
-            <span key={p.key} className={cx('h-full', p.dot)} style={{ width: `${(p.cents / total) * 100}%` }} />
-          ))}
+    <section
+      aria-labelledby="where-it-went"
+      className="flex flex-col gap-4 rounded-inner bg-ground p-4 @2xl/content:p-5"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 id="where-it-went" className="font-semibold text-ink">
+          Where it went
+        </h3>
+        {keep !== null && (
+          <span className="figure rounded-full bg-sage-tint px-2.5 py-1 text-xs font-semibold text-sage-deep">
+            You keep {keep}%
+          </span>
+        )}
       </div>
-      <dl className="grid gap-x-8 text-sm @xl/content:grid-cols-2">
-        <Row label="Gross revenue" value={formatCents(f.grossCents)} />
-        <Row
-          dot="bg-lavender-deep"
-          label={feeLabel}
-          value={noFee ? '$0.00' : `−${formatCents(f.managementFeeCents)}`}
-          muted={noFee}
+      <div aria-hidden className="flex h-4 gap-1 overflow-hidden rounded-full bg-line">
+        {segments.map((s) => (
+          <span
+            key={s.key}
+            className={cx('h-full first:rounded-l-full last:rounded-r-full', s.className)}
+            style={{ width: `${(s.cents / total) * 100}%` }}
+          />
+        ))}
+      </div>
+      <dl className="flex flex-col">
+        <Line
+          icon={<Wallet />}
+          tone="bg-surface text-ink"
+          label="Gross revenue"
+          note={`${f.stays} stay${f.stays === 1 ? '' : 's'} this month`}
+          value={formatCents(f.grossCents)}
         />
-        <Row dot="bg-amber-deep" label="Expenses" value={`−${formatCents(f.ownerExpensesCents)}`} />
-        <Row dot="bg-primary" label="Net to you" value={formatCents(f.netCents)} strong />
+        <Line
+          icon={<BadgePercent />}
+          tone="bg-lavender-tint text-lavender-deep"
+          label="Management fee"
+          note={feeNote}
+          value={f.managementFeeCents > 0 ? `−${formatCents(f.managementFeeCents)}` : null}
+          empty={ownProperty || f.managementFeeBps === 0 ? 'No fee' : 'None'}
+          share={f.managementFeeCents > 0 ? share(f.managementFeeCents) : null}
+        />
+        <Line
+          icon={<Receipt />}
+          tone="bg-amber-tint text-amber-deep"
+          label="Expenses"
+          note={f.ownerExpensesCents > 0 ? 'Paid from your earnings' : 'None this month'}
+          value={f.ownerExpensesCents > 0 ? `−${formatCents(f.ownerExpensesCents)}` : null}
+          empty="None"
+          share={f.ownerExpensesCents > 0 ? share(f.ownerExpensesCents) : null}
+        />
       </dl>
-    </div>
+      <div className="flex items-center justify-between gap-4 rounded-inner bg-surface px-4 py-3.5 ring-1 ring-sage-deep/15">
+        <div>
+          <p className="font-semibold text-ink">Net to you</p>
+          <p className="text-xs text-muted">Gross, less the fee and expenses</p>
+        </div>
+        <p
+          className={cx(
+            'figure text-2xl font-bold tracking-tight',
+            f.netCents < 0 ? 'text-danger-deep' : 'text-sage-deep',
+          )}
+        >
+          {formatCents(f.netCents)}
+        </p>
+      </div>
+    </section>
   );
 }
 
-function Row({
+/** One line of the statement: an icon, what it is, and the amount (or a word when there's nothing). */
+function Line({
+  icon,
+  tone,
   label,
+  note,
   value,
-  dot,
-  strong = false,
-  muted = false,
+  empty = '—',
+  share = null,
 }: {
+  icon: ReactNode;
+  tone: string;
   label: string;
-  value: string;
-  dot?: string;
-  strong?: boolean;
-  muted?: boolean;
+  note: string;
+  value: string | null;
+  empty?: string;
+  share?: number | null;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-line-soft py-2.5">
-      <dt className="flex items-center gap-2 text-muted">
-        {dot && <span aria-hidden className={cx('size-2 shrink-0 rounded-full', dot)} />}
-        {label}
-      </dt>
-      <dd
-        className={cx(
-          'figure',
-          strong ? 'text-base font-bold text-ink' : muted ? 'text-muted' : 'font-semibold text-ink',
+    <div className="flex items-center gap-3 border-b border-line py-3 first:pt-0 last:border-b-0">
+      <span aria-hidden className={cx('grid size-9 shrink-0 place-items-center rounded-[10px] [&>svg]:size-4', tone)}>
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <dt className="font-medium text-ink">{label}</dt>
+        <p className="text-xs text-muted">{note}</p>
+      </div>
+      <dd className="flex shrink-0 items-center gap-2">
+        {/* The share gives way to the amount on narrow screens (the fee's note says it too). */}
+        {share !== null && (
+          <span className="figure hidden rounded-full bg-surface px-2 py-0.5 text-xs text-muted @md/content:inline">
+            {share}%
+          </span>
         )}
-      >
-        {value}
+        {value === null ? (
+          <span className="rounded-full bg-surface px-2.5 py-0.5 text-sm font-medium text-muted">{empty}</span>
+        ) : (
+          <span className="figure font-semibold text-ink">{value}</span>
+        )}
       </dd>
     </div>
   );
