@@ -46,8 +46,12 @@
   --color-rose-deep: #8b2350;
   --color-amber-tint: #fbeecb;
   --color-amber-deep: #6f4c0e;
-  /* Supply health bars: the fill for "running low" and "out" (the deep pairs are for text). */
+  /* Supply health bars (components/supplies/supply-bar.tsx): each fill is a gradient from light to mid. The deep
+     pairs are for text. */
+  --color-sage-light: #74bb8c;
+  --color-amber-light: #ebc25e;
   --color-amber-mid: #d29a2a;
+  --color-danger-light: #e27a6e;
   --color-danger-mid: #c4473b;
 
   /* Error/destructive (not in the mockup palette; kept muted to sit with the pairs above) */

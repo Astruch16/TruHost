@@ -285,10 +285,10 @@ function SuppliesPreview() {
               <SuppliesCard propertyId="cedar" mode="view" />
             </Pane>
             <Pane label="Admin (property page)">
-              <SuppliesCard propertyId="cedar" mode="manage" wide />
+              <SuppliesCard propertyId="cedar" mode="manage" />
             </Pane>
             <Pane label="Admin (new property)">
-              <SuppliesCard propertyId="fresh" mode="manage" wide />
+              <SuppliesCard propertyId="fresh" mode="manage" />
             </Pane>
             <Pane label="Supplies page">
               <Restock />

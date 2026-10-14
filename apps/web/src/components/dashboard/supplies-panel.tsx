@@ -52,7 +52,7 @@ export function SuppliesPanel({ items }: { items: RestockItem[] }) {
                       levelPct={item.levelPct}
                       state={item.state}
                       thresholdPct={item.thresholdPct}
-                      className="h-2"
+                      size="sm"
                     />
                   </li>
                 ))}

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   checkedAgo,
   groupByCategory,
+  restockFirst,
   groupByProperty,
   restockSummary,
   levelText,
@@ -34,6 +35,25 @@ describe('supplies helpers', () => {
       ['Bathroom', ['b']],
       ['Kitchen', ['c', 'a']],
       ['Other', ['d']],
+    ]);
+  });
+
+  it('puts what needs restocking first for owners, then everything else, each in category order', () => {
+    const items = [
+      { id: 'kitchen-ok', category: 'KITCHEN', position: 0, state: 'OK' },
+      { id: 'bath-ok', category: 'BATHROOM', position: 1, state: 'OK' },
+      { id: 'laundry-low', category: 'LAUNDRY', position: 2, state: 'LOW' },
+      { id: 'kitchen-out', category: 'KITCHEN', position: 3, state: 'OUT' },
+      { id: 'bath-low', category: 'BATHROOM', position: 4, state: 'LOW' },
+      { id: 'other-unknown', category: 'OTHER', position: 5, state: 'UNKNOWN' },
+    ] as const;
+    expect(restockFirst(items).map((i) => i.id)).toEqual([
+      'kitchen-out',
+      'bath-low',
+      'laundry-low',
+      'bath-ok',
+      'kitchen-ok',
+      'other-unknown',
     ]);
   });
 
