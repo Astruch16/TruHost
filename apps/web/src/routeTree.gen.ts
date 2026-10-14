@@ -17,6 +17,7 @@ import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
 import { Route as DevBookingsRouteImport } from './routes/dev/bookings'
 import { Route as DevCalendarRouteImport } from './routes/dev/calendar'
+import { Route as DevDamageRouteImport } from './routes/dev/damage'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevMonthSwitchRouteImport } from './routes/dev/month-switch'
@@ -36,6 +37,7 @@ import { Route as AppAccountSecurityRouteImport } from './routes/_app/account/se
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppAdminBookingsRouteImport } from './routes/_app/admin/bookings'
 import { Route as AppAdminCalendarRouteImport } from './routes/_app/admin/calendar'
+import { Route as AppAdminDamageRouteImport } from './routes/_app/admin/damage'
 import { Route as AppAdminExpensesRouteImport } from './routes/_app/admin/expenses'
 import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
 import { Route as AppAdminSuppliesRouteImport } from './routes/_app/admin/supplies'
@@ -83,6 +85,11 @@ const DevBookingsRoute = DevBookingsRouteImport.update({
 const DevCalendarRoute = DevCalendarRouteImport.update({
   id: '/dev/calendar',
   path: '/dev/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevDamageRoute = DevDamageRouteImport.update({
+  id: '/dev/damage',
+  path: '/dev/damage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevDashboardRoute = DevDashboardRouteImport.update({
@@ -180,6 +187,11 @@ const AppAdminCalendarRoute = AppAdminCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminDamageRoute = AppAdminDamageRouteImport.update({
+  id: '/damage',
+  path: '/damage',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminExpensesRoute = AppAdminExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
@@ -236,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/bookings': typeof DevBookingsRoute
   '/dev/calendar': typeof DevCalendarRoute
+  '/dev/damage': typeof DevDamageRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
@@ -253,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/account/security': typeof AppAccountSecurityRoute
   '/admin/bookings': typeof AppAdminBookingsRoute
   '/admin/calendar': typeof AppAdminCalendarRoute
+  '/admin/damage': typeof AppAdminDamageRoute
   '/admin/expenses': typeof AppAdminExpensesRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/supplies': typeof AppAdminSuppliesRoute
@@ -270,6 +284,7 @@ export interface FileRoutesByTo {
   '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/bookings': typeof DevBookingsRoute
   '/dev/calendar': typeof DevCalendarRoute
+  '/dev/damage': typeof DevDamageRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
@@ -288,6 +303,7 @@ export interface FileRoutesByTo {
   '/account/security': typeof AppAccountSecurityRoute
   '/admin/bookings': typeof AppAdminBookingsRoute
   '/admin/calendar': typeof AppAdminCalendarRoute
+  '/admin/damage': typeof AppAdminDamageRoute
   '/admin/expenses': typeof AppAdminExpensesRoute
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/supplies': typeof AppAdminSuppliesRoute
@@ -309,6 +325,7 @@ export interface FileRoutesById {
   '/_app/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/bookings': typeof DevBookingsRoute
   '/dev/calendar': typeof DevCalendarRoute
+  '/dev/damage': typeof DevDamageRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
@@ -327,6 +344,7 @@ export interface FileRoutesById {
   '/_app/account/security': typeof AppAccountSecurityRoute
   '/_app/admin/bookings': typeof AppAdminBookingsRoute
   '/_app/admin/calendar': typeof AppAdminCalendarRoute
+  '/_app/admin/damage': typeof AppAdminDamageRoute
   '/_app/admin/expenses': typeof AppAdminExpensesRoute
   '/_app/admin/plans': typeof AppAdminPlansRoute
   '/_app/admin/supplies': typeof AppAdminSuppliesRoute
@@ -349,6 +367,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/dev/bookings'
     | '/dev/calendar'
+    | '/dev/damage'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/month-switch'
@@ -366,6 +385,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/admin/bookings'
     | '/admin/calendar'
+    | '/admin/damage'
     | '/admin/expenses'
     | '/admin/plans'
     | '/admin/supplies'
@@ -383,6 +403,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/dev/bookings'
     | '/dev/calendar'
+    | '/dev/damage'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/month-switch'
@@ -401,6 +422,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/admin/bookings'
     | '/admin/calendar'
+    | '/admin/damage'
     | '/admin/expenses'
     | '/admin/plans'
     | '/admin/supplies'
@@ -421,6 +443,7 @@ export interface FileRouteTypes {
     | '/_app/cleaner'
     | '/dev/bookings'
     | '/dev/calendar'
+    | '/dev/damage'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/month-switch'
@@ -439,6 +462,7 @@ export interface FileRouteTypes {
     | '/_app/account/security'
     | '/_app/admin/bookings'
     | '/_app/admin/calendar'
+    | '/_app/admin/damage'
     | '/_app/admin/expenses'
     | '/_app/admin/plans'
     | '/_app/admin/supplies'
@@ -457,6 +481,7 @@ export interface RootRouteChildren {
   SsoCallbackRoute: typeof SsoCallbackRoute
   DevBookingsRoute: typeof DevBookingsRoute
   DevCalendarRoute: typeof DevCalendarRoute
+  DevDamageRoute: typeof DevDamageRoute
   DevDashboardRoute: typeof DevDashboardRoute
   DevLoadingRoute: typeof DevLoadingRoute
   DevMonthSwitchRoute: typeof DevMonthSwitchRoute
@@ -527,6 +552,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/calendar'
       fullPath: '/dev/calendar'
       preLoaderRoute: typeof DevCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/damage': {
+      id: '/dev/damage'
+      path: '/dev/damage'
+      fullPath: '/dev/damage'
+      preLoaderRoute: typeof DevDamageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/dashboard': {
@@ -662,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminCalendarRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/damage': {
+      id: '/_app/admin/damage'
+      path: '/damage'
+      fullPath: '/admin/damage'
+      preLoaderRoute: typeof AppAdminDamageRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/expenses': {
       id: '/_app/admin/expenses'
       path: '/expenses'
@@ -749,6 +788,7 @@ const AppAccountRouteWithChildren = AppAccountRoute._addFileChildren(
 interface AppAdminRouteChildren {
   AppAdminBookingsRoute: typeof AppAdminBookingsRoute
   AppAdminCalendarRoute: typeof AppAdminCalendarRoute
+  AppAdminDamageRoute: typeof AppAdminDamageRoute
   AppAdminExpensesRoute: typeof AppAdminExpensesRoute
   AppAdminPlansRoute: typeof AppAdminPlansRoute
   AppAdminSuppliesRoute: typeof AppAdminSuppliesRoute
@@ -761,6 +801,7 @@ interface AppAdminRouteChildren {
 const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminBookingsRoute: AppAdminBookingsRoute,
   AppAdminCalendarRoute: AppAdminCalendarRoute,
+  AppAdminDamageRoute: AppAdminDamageRoute,
   AppAdminExpensesRoute: AppAdminExpensesRoute,
   AppAdminPlansRoute: AppAdminPlansRoute,
   AppAdminSuppliesRoute: AppAdminSuppliesRoute,
@@ -811,6 +852,7 @@ const rootRouteChildren: RootRouteChildren = {
   SsoCallbackRoute: SsoCallbackRoute,
   DevBookingsRoute: DevBookingsRoute,
   DevCalendarRoute: DevCalendarRoute,
+  DevDamageRoute: DevDamageRoute,
   DevDashboardRoute: DevDashboardRoute,
   DevLoadingRoute: DevLoadingRoute,
   DevMonthSwitchRoute: DevMonthSwitchRoute,

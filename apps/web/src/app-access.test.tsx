@@ -250,6 +250,12 @@ describe('cleaners', () => {
     expect(screen.queryByRole('button', { name: 'Coffee pods: history' })).not.toBeInTheDocument();
   });
 
+  it('can report damage at a property they clean', async () => {
+    renderAt(`/cleaner/properties/${CEDAR}`, cleaner);
+    expect(await screen.findByRole('heading', { name: 'Damage reports' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Report damage' })).toBeInTheDocument();
+  });
+
   it('opening the owner page for a property they clean takes them to the cleaner page instead', async () => {
     const { router, paths } = renderAt(`/properties/${CEDAR}`, cleaner);
     expect(await screen.findByText('You clean here')).toBeInTheDocument();
@@ -298,6 +304,12 @@ describe('owners', () => {
     expect(screen.queryByRole('button', { name: 'Manage supplies' })).not.toBeInTheDocument();
   });
 
+  it('see damage reports, but don’t report damage themselves', async () => {
+    renderAt(`/properties/${CEDAR}`, owner);
+    expect(await screen.findByRole('heading', { name: 'Damage reports' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report damage' })).not.toBeInTheDocument();
+  });
+
   it('can’t edit rooms unless they’re TruHost admins', async () => {
     renderAt(`/properties/${CEDAR}`, owner);
     expect(await screen.findByRole('heading', { name: 'Rooms' })).toBeInTheDocument();
@@ -337,6 +349,7 @@ describe('admin pages by URL', () => {
     '/admin/team',
     '/admin/plans',
     '/admin/supplies',
+    '/admin/damage',
   ];
 
   it.each(

@@ -5,6 +5,7 @@ import { AppShell } from '../../components/shell/app-shell';
 import { DashboardView } from '../../components/dashboard/dashboard-view';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
+import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 import { navItems } from '../../lib/nav';
 
 /**
@@ -345,6 +346,9 @@ function Preview() {
         supplies={state === 'data' ? FIXTURE_SUPPLIES : state === 'error' ? undefined : []}
         suppliesError={state === 'error' ? new Error('preview') : null}
         onAction={() => undefined}
+        damage={state === 'data' ? DEV_DAMAGE.filter((r) => r.status !== 'RESOLVED') : []}
+        onReportDamage={() => undefined}
+        onOpenDamage={() => undefined}
         onAddProperty={() => undefined}
       />
     </AppShell>

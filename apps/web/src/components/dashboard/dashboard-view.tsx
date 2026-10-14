@@ -1,5 +1,5 @@
 import { CalendarPlus, ReceiptText, Upload } from 'lucide-react';
-import type { RestockItem } from '@truhost/shared';
+import type { DamageReport, RestockItem } from '@truhost/shared';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
@@ -20,6 +20,7 @@ import { PropertyCard } from '../property-card';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { CalendarLegend, MonthCalendar } from './month-calendar';
+import { DamagePanel } from './damage-panel';
 import { NeedsAttention } from './needs-attention';
 import { SuppliesPanel } from './supplies-panel';
 import { RevenueBreakdown } from './revenue-breakdown';
@@ -62,6 +63,9 @@ export function DashboardView({
   supplies,
   suppliesError,
   onRetrySupplies,
+  damage,
+  onReportDamage,
+  onOpenDamage,
   onAction,
   onAddProperty,
 }: {
@@ -91,6 +95,10 @@ export function DashboardView({
   supplies: RestockItem[] | undefined;
   suppliesError?: unknown;
   onRetrySupplies?: () => void;
+  /** Open damage reports in scope; undefined while loading (or if they couldn't load). */
+  damage?: DamageReport[];
+  onReportDamage?: () => void;
+  onOpenDamage?: (id: string) => void;
   onAction: (action: DashboardAction) => void;
   onAddProperty: () => void;
 }) {
@@ -298,6 +306,18 @@ export function DashboardView({
         ) : (
           railSkeleton
         )}
+        {!noProperties &&
+          (damage ? (
+            <DamagePanel
+              items={damage}
+              today={d?.today ?? now.toISOString().slice(0, 10)}
+              showProperty={multi}
+              onReport={() => onReportDamage?.()}
+              onOpen={(id) => onOpenDamage?.(id)}
+            />
+          ) : (
+            railSkeleton
+          ))}
       </aside>
     </div>
   );

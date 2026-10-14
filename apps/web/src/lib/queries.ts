@@ -135,6 +135,32 @@ export const queries = {
     }),
   restock: (api: ApiClient) =>
     queryOptions({ queryKey: ['supplies', 'restock'], queryFn: () => unwrap(api.GET('/v1/supplies/restock')) }),
+  /** Damage reports sit under one key, so any change refreshes every list that shows them. */
+  damageReports: (api: ApiClient, status: 'OPEN' | 'RESOLVED' | 'ALL', propertyId?: string) =>
+    queryOptions({
+      queryKey: ['damage', 'all', { status, propertyId: propertyId ?? null }],
+      queryFn: () => unwrap(api.GET('/v1/damage-reports', { params: { query: { status, propertyId } } })),
+    }),
+  propertyDamage: (api: ApiClient, propertyId: string) =>
+    queryOptions({
+      queryKey: ['damage', 'property', propertyId],
+      queryFn: () => unwrap(api.GET('/v1/properties/{id}/damage-reports', { params: { path: { id: propertyId } } })),
+    }),
+  damageReport: (api: ApiClient, id: string) =>
+    queryOptions({
+      queryKey: ['damage', 'report', id],
+      queryFn: () => unwrap(api.GET('/v1/damage-reports/{id}', { params: { path: { id } } })),
+    }),
+  damageStays: (api: ApiClient, propertyId: string, on: string) =>
+    queryOptions({
+      queryKey: ['damage', 'stays', propertyId, on],
+      queryFn: () =>
+        unwrap(
+          api.GET('/v1/properties/{id}/damage-report-stays', {
+            params: { path: { id: propertyId }, query: { on } },
+          }),
+        ),
+    }),
   /** The bell: checked every minute while the app is open. */
   notifications: (api: ApiClient) =>
     queryOptions({

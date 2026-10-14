@@ -16,3 +16,13 @@ export function currentMonthStart(timeZone: string, now = new Date()): string {
   const month = parts.find((p) => p.type === 'month')!.value;
   return `${year}-${month}-01`;
 }
+
+/** Today in the given IANA zone, as "YYYY-MM-DD". */
+export function todayIn(timeZone: string, now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
+/** "YYYY-MM-DD" plus (or minus) whole days. */
+export function addIsoDays(iso: string, days: number): string {
+  return toIsoDate(new Date(fromIsoDate(iso).getTime() + days * 86_400_000));
+}

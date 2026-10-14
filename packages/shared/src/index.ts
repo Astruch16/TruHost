@@ -10,6 +10,7 @@ export * from './api/audit.js';
 export * from './api/bookings.js';
 export * from './api/files.js';
 export * from './api/supplies.js';
+export * from './api/damage.js';
 export * from './api/expenses.js';
 export * from './api/reports.js';
 export * from './api/dashboard.js';

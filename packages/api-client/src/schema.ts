@@ -836,6 +836,118 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/damage-reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Damage_listAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/damage-reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Damage_list'];
+    put?: never;
+    post: operations['Damage_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/damage-report-stays': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Damage_stays'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/damage-reports/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Damage_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['Damage_update'];
+    trace?: never;
+  };
+  '/v1/damage-reports/{id}/photos': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Damage_addPhoto'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/damage-reports/{id}/submit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Damage_submit'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/damage-reports/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Damage_setStatus'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/dashboard': {
     parameters: {
       query?: never;
@@ -1140,6 +1252,7 @@ export interface operations {
               /** @enum {string} */
               category:
                 | 'SUPPLY_ALERTS'
+                | 'DAMAGE_REPORTS'
                 | 'INVITE_ACCEPTED'
                 | 'WEEKLY_SUMMARY'
                 | 'STATEMENT_RELEASED'
@@ -1167,6 +1280,7 @@ export interface operations {
             /** @enum {string} */
             category:
               | 'SUPPLY_ALERTS'
+              | 'DAMAGE_REPORTS'
               | 'INVITE_ACCEPTED'
               | 'WEEKLY_SUMMARY'
               | 'STATEMENT_RELEASED'
@@ -1189,6 +1303,7 @@ export interface operations {
               /** @enum {string} */
               category:
                 | 'SUPPLY_ALERTS'
+                | 'DAMAGE_REPORTS'
                 | 'INVITE_ACCEPTED'
                 | 'WEEKLY_SUMMARY'
                 | 'STATEMENT_RELEASED'
@@ -1244,7 +1359,7 @@ export interface operations {
               /** Format: uuid */
               id: string;
               /** @enum {string} */
-              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT';
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED';
               title: string;
               body: string | null;
               property: {
@@ -1296,7 +1411,7 @@ export interface operations {
               /** Format: uuid */
               id: string;
               /** @enum {string} */
-              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT';
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED';
               title: string;
               body: string | null;
               property: {
@@ -2010,6 +2125,7 @@ export interface operations {
             bookings: number;
             expenses: number;
             receipts: number;
+            damageReports: number;
           };
         };
       };
@@ -3450,6 +3566,18 @@ export interface operations {
             }
           | {
               /** @enum {string} */
+              purpose: 'DAMAGE_PHOTO';
+              /** Format: uuid */
+              propertyId: string;
+              /** @enum {string} */
+              contentType: 'image/jpeg';
+              sizeBytes: number;
+              sha256: string;
+              /** @default null */
+              filename?: string | null;
+            }
+          | {
+              /** @enum {string} */
               purpose: 'AVATAR';
               /** @enum {string} */
               contentType: 'image/jpeg';
@@ -4587,6 +4715,856 @@ export interface operations {
               };
               /** @enum {string} */
               urgency: 'OUT' | 'LOW' | 'SOON';
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_listAll: {
+    parameters: {
+      query?: {
+        propertyId?: string;
+        status?: 'OPEN' | 'RESOLVED' | 'ALL';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              title: string;
+              description: string;
+              /** @enum {string} */
+              severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+              /** @enum {string} */
+              status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+              /** Format: date */
+              discoveredOn: string;
+              estimatedCostCents: number | null;
+              claimReference: string | null;
+              resolutionNote: string | null;
+              booking: {
+                /** Format: uuid */
+                id: string;
+                guestName: string | null;
+                /** Format: date */
+                checkInDate: string;
+                /** Format: date */
+                checkOutDate: string;
+                /** @enum {string} */
+                channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              } | null;
+              room: {
+                /** Format: uuid */
+                id: string;
+                displayName: string;
+              } | null;
+              reportedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              submittedAt: string | null;
+              /** Format: date-time */
+              acknowledgedAt: string | null;
+              /** Format: date-time */
+              claimFiledAt: string | null;
+              /** Format: date-time */
+              resolvedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              photoCount: number;
+              coverThumbUrl: string | null;
+              /** Format: date */
+              claimDeadline: string | null;
+              can: {
+                edit: boolean;
+                addPhotos: boolean;
+                submit: boolean;
+                manage: boolean;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              title: string;
+              description: string;
+              /** @enum {string} */
+              severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+              /** @enum {string} */
+              status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+              /** Format: date */
+              discoveredOn: string;
+              estimatedCostCents: number | null;
+              claimReference: string | null;
+              resolutionNote: string | null;
+              booking: {
+                /** Format: uuid */
+                id: string;
+                guestName: string | null;
+                /** Format: date */
+                checkInDate: string;
+                /** Format: date */
+                checkOutDate: string;
+                /** @enum {string} */
+                channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              } | null;
+              room: {
+                /** Format: uuid */
+                id: string;
+                displayName: string;
+              } | null;
+              reportedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              submittedAt: string | null;
+              /** Format: date-time */
+              acknowledgedAt: string | null;
+              /** Format: date-time */
+              claimFiledAt: string | null;
+              /** Format: date-time */
+              resolvedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              photoCount: number;
+              coverThumbUrl: string | null;
+              /** Format: date */
+              claimDeadline: string | null;
+              can: {
+                edit: boolean;
+                addPhotos: boolean;
+                submit: boolean;
+                manage: boolean;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          title: string;
+          description: string;
+          /** @enum {string} */
+          severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+          /** Format: date */
+          discoveredOn: string;
+          /**
+           * Format: uuid
+           * @default null
+           */
+          bookingId?: string | null;
+          /**
+           * Format: uuid
+           * @default null
+           */
+          roomId?: string | null;
+          /** @default null */
+          estimatedCostCents?: number | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_stays: {
+    parameters: {
+      query: {
+        on: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          title?: string;
+          description?: string;
+          /** @enum {string} */
+          severity?: 'MINOR' | 'MODERATE' | 'SEVERE';
+          /** Format: date */
+          discoveredOn?: string;
+          /** Format: uuid */
+          bookingId?: string | null;
+          /** Format: uuid */
+          roomId?: string | null;
+          estimatedCostCents?: number | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_addPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          fileId: string;
+          /** Format: uuid */
+          thumbFileId: string;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_submit: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Damage_setStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          status: 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+          claimReference?: string | null;
+          resolutionNote?: string | null;
+          estimatedCostCents?: number | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
             }[];
           };
         };

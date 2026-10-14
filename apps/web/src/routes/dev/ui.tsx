@@ -582,8 +582,8 @@ function StyleGuide() {
               onDeleted={() => setDeleteDialog(null)}
               preview={
                 deleteDialog === 'blocked'
-                  ? { allowed: false, bookings: 14, expenses: 6, receipts: 5 }
-                  : { allowed: true, bookings: 0, expenses: 0, receipts: 0 }
+                  ? { allowed: false, bookings: 14, expenses: 6, receipts: 5, damageReports: 0 }
+                  : { allowed: true, bookings: 0, expenses: 0, receipts: 0, damageReports: 0 }
               }
             />
           </Card>

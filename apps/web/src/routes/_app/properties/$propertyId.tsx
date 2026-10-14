@@ -5,6 +5,7 @@ import { ApiError } from '@truhost/api-client';
 import { Pencil } from 'lucide-react';
 import { PropertyDetailsPanel } from '../../../components/owner/details-card';
 import { ManagementCard } from '../../../components/owner/management-card';
+import { DamageCard } from '../../../components/damage/damage-card';
 import { OwnerExpenses, OwnerStays } from '../../../components/owner/month-lists';
 import { MonthOverview } from '../../../components/owner/month-overview';
 import { PropertyHero } from '../../../components/owner/property-hero';
@@ -96,6 +97,7 @@ function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: b
             mode="view"
             onManage={admin ? () => setEditingSupplies(true) : undefined}
           />
+          <DamageCard propertyId={propertyId} canReport={admin} />
         </div>
         <aside className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
           <ManagementCard propertyId={propertyId} canMarkOwn={admin} />

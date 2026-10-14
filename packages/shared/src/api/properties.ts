@@ -142,6 +142,7 @@ export const propertyDeletion = z.object({
   bookings: z.number().int(),
   expenses: z.number().int(),
   receipts: z.number().int(),
+  damageReports: z.number().int(),
 });
 export type PropertyDeletion = z.infer<typeof propertyDeletion>;
 

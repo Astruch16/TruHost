@@ -20,6 +20,7 @@ import { LoadingBlock } from '../../../../components/ui/skeleton';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../../components/ui/table';
 import { useApi } from '../../../../lib/api-context';
 import { formatBps, titleCase } from '../../../../lib/format';
+import { DamageCard } from '../../../../components/damage/damage-card';
 import { RoomsCard } from '../../../../components/rooms/rooms-card';
 import { SuppliesCard } from '../../../../components/supplies/supplies-card';
 import { queries } from '../../../../lib/queries';
@@ -101,6 +102,7 @@ function AdminProperty() {
           <PlanCard propertyId={propertyId} />
         </div>
         <SuppliesCard propertyId={propertyId} mode="manage" />
+        <DamageCard propertyId={propertyId} canReport />
         <MembersCard propertyId={propertyId} defaultCleanerId={p.defaultCleanerId ?? null} />
       </div>
     </>

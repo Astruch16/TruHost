@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
 import { Sparkles } from 'lucide-react';
 import { PropertyAddressCard, PropertyRoomsCard } from '../../../../components/property-basics';
+import { DamageCard } from '../../../../components/damage/damage-card';
 import { NotAvailable } from '../../../../components/shell/not-available';
 import { SuppliesCard } from '../../../../components/supplies/supplies-card';
 import { ErrorAlert } from '../../../../components/ui/alert';
@@ -14,7 +15,8 @@ import { useApi } from '../../../../lib/api-context';
 import { queries } from '../../../../lib/queries';
 
 /**
- * A cleaner's view of a property: supplies (mark how full each one is), address, stay times and rooms. No financial
+ * A cleaner's view of a property: supplies (mark how full each one is), damage reports (report guest damage with
+ * photos), address, stay times and rooms. No financial
  * sections, ever. Cleans and photos arrive in Phase 3.
  */
 export const Route = createFileRoute('/_app/cleaner/properties/$propertyId')({
@@ -45,6 +47,7 @@ function CleanerProperty() {
       <PageHeader eyebrow="You clean here" title={p.name} description={`${p.city}, ${p.province}`} />
       <div className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2">
         <SuppliesCard propertyId={propertyId} mode="report" className="@4xl/content:col-span-2" />
+        <DamageCard propertyId={propertyId} canReport className="@4xl/content:col-span-2" />
         <PropertyAddressCard property={p} />
         <Card title="Your cleans">
           <p className="flex gap-2.5 text-sm text-muted">

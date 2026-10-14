@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { NOTIFICATION_CATALOGUE, type MarkNotificationsRead } from '@truhost/shared';
+import { NOTIFICATION_CATALOGUE, type MarkNotificationsRead, type NotificationKind } from '@truhost/shared';
 import type { Actor } from '../auth/actor.js';
 import { ENV, type Env } from '../config/env.js';
-import { EMAIL_SENDER, type EmailSender } from '../email/email-sender.js';
-import { supplyAlertEmail } from '../email/templates.js';
+import { EMAIL_SENDER, type EmailMessage, type EmailSender } from '../email/email-sender.js';
+import { damageReportEmail, supplyAlertEmail } from '../email/templates.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -12,11 +12,27 @@ type Tx = Prisma.TransactionClient;
 /** An email decided inside a transaction and sent after it commits. */
 export interface PendingEmail {
   notificationId: string | null;
-  to: { email: string; firstName: string };
-  alert: Parameters<typeof supplyAlertEmail>[1];
+  message: EmailMessage;
 }
 
-const SUPPLY_DEFAULTS = NOTIFICATION_CATALOGUE.find((c) => c.category === 'SUPPLY_ALERTS')!.defaults;
+type Category = (typeof NOTIFICATION_CATALOGUE)[number]['category'];
+const defaultsFor = (category: Category) => NOTIFICATION_CATALOGUE.find((c) => c.category === category)!.defaults;
+
+/** One event to tell people about, at a property. */
+interface Event {
+  category: Category;
+  kind: NotificationKind;
+  property: { id: string; name: string };
+  /** What the notification links to (e.g. SupplyItem + id), and the row that caused it (one per person). */
+  entityType: string;
+  entityId: string;
+  sourceId: string;
+  title: string;
+  body: string;
+  /** Who caused it, if a person: they aren't told about their own action. */
+  actorId?: string;
+  email: (to: { email: string; firstName: string }) => EmailMessage;
+}
 
 /**
  * Notifications: who hears about an event, written in the event's transaction (in-app) and emailed after it commits.
@@ -36,7 +52,7 @@ export class NotificationsService {
    * A supply reached its restock point or ran out: tell the active admins and the property's active owners (each
    * once). Returns the emails to send after commit.
    */
-  async supplyAlert(
+  supplyAlert(
     tx: Tx,
     event: {
       kind: 'SUPPLY_LOW' | 'SUPPLY_OUT';
@@ -45,9 +61,88 @@ export class NotificationsService {
       reading: { id: string; levelPct: number };
     },
   ): Promise<PendingEmail[]> {
+    const out = event.kind === 'SUPPLY_OUT';
+    const url = `${this.env.WEB_URL}/properties/${event.property.id}`;
+    return this.notify(tx, {
+      category: 'SUPPLY_ALERTS',
+      kind: event.kind,
+      property: event.property,
+      entityType: 'SupplyItem',
+      entityId: event.item.id,
+      sourceId: event.reading.id,
+      title: out ? `${event.item.name} has run out` : `${event.item.name} is running low`,
+      body: out
+        ? `${event.property.name} · marked empty`
+        : `${event.property.name} · ${event.reading.levelPct}% left (restocked at ${event.item.thresholdPct}%)`,
+      email: (to) =>
+        supplyAlertEmail(to, {
+          out,
+          item: event.item.name,
+          property: event.property.name,
+          levelPct: event.reading.levelPct,
+          thresholdPct: event.item.thresholdPct,
+          url,
+        }),
+    });
+  }
+
+  /**
+   * Damage was reported (a report was sent): tell the active admins and the property's active owners, except whoever
+   * reported it. Returns the emails to send after commit.
+   */
+  damageReported(
+    tx: Tx,
+    event: {
+      property: { id: string; name: string };
+      report: { id: string; title: string; severity: string; discoveredOn: string; photoCount: number };
+      reporter: { id: string; firstName: string; lastName: string };
+    },
+  ): Promise<PendingEmail[]> {
+    const severity = event.report.severity.charAt(0) + event.report.severity.slice(1).toLowerCase();
+    const reporter = `${event.reporter.firstName} ${event.reporter.lastName}`.trim();
+    return this.notify(tx, {
+      category: 'DAMAGE_REPORTS',
+      kind: 'DAMAGE_REPORTED',
+      property: event.property,
+      entityType: 'DamageReport',
+      entityId: event.report.id,
+      sourceId: event.report.id,
+      actorId: event.reporter.id,
+      title: `Damage reported: ${event.report.title}`,
+      body: `${event.property.name} · ${severity} · by ${reporter}`,
+      email: (to) =>
+        damageReportEmail(to, {
+          title: event.report.title,
+          property: event.property.name,
+          severity,
+          reporter,
+          discoveredOn: event.report.discoveredOn,
+          photoCount: event.report.photoCount,
+          url: `${this.env.WEB_URL}/properties/${event.property.id}`,
+        }),
+    });
+  }
+
+  /** Sends emails decided in a committed transaction. A failure is logged and never undoes the event. */
+  async sendAfterCommit(pending: PendingEmail[]): Promise<void> {
+    for (const p of pending) {
+      try {
+        await this.email.send(p.message);
+        if (p.notificationId) {
+          await this.prisma.notification.update({ where: { id: p.notificationId }, data: { emailSentAt: new Date() } });
+        }
+      } catch (e) {
+        this.logger.warn(`Notification email to ${p.message.to} failed: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+  }
+
+  /** The active admins and the property's active owners (each once), per their choices for the category. */
+  private async notify(tx: Tx, event: Event): Promise<PendingEmail[]> {
     const recipients = await tx.user.findMany({
       where: {
         status: 'ACTIVE',
+        ...(event.actorId ? { id: { not: event.actorId } } : {}),
         OR: [
           { staffRole: 'ADMIN' },
           { memberships: { some: { propertyId: event.property.id, role: 'OWNER', revokedAt: null } } },
@@ -57,17 +152,13 @@ export class NotificationsService {
         id: true,
         email: true,
         firstName: true,
-        notificationSettings: { where: { category: 'SUPPLY_ALERTS' }, select: { email: true, inApp: true } },
+        notificationSettings: { where: { category: event.category }, select: { email: true, inApp: true } },
       },
     });
-    const out = event.kind === 'SUPPLY_OUT';
-    const title = out ? `${event.item.name} has run out` : `${event.item.name} is running low`;
-    const body = out
-      ? `${event.property.name} · marked empty`
-      : `${event.property.name} · ${event.reading.levelPct}% left (restocked at ${event.item.thresholdPct}%)`;
+    const defaults = defaultsFor(event.category);
     const pending: PendingEmail[] = [];
     for (const user of recipients) {
-      const choice = user.notificationSettings[0] ?? SUPPLY_DEFAULTS;
+      const choice = user.notificationSettings[0] ?? defaults;
       let notificationId: string | null = null;
       if (choice.inApp) {
         const row = await tx.notification.create({
@@ -75,45 +166,20 @@ export class NotificationsService {
             userId: user.id,
             kind: event.kind,
             propertyId: event.property.id,
-            entityType: 'SupplyItem',
-            entityId: event.item.id,
-            sourceId: event.reading.id,
-            title,
-            body,
+            entityType: event.entityType,
+            entityId: event.entityId,
+            sourceId: event.sourceId,
+            title: event.title,
+            body: event.body,
           },
         });
         notificationId = row.id;
       }
       if (choice.email) {
-        pending.push({
-          notificationId,
-          to: { email: user.email, firstName: user.firstName },
-          alert: {
-            out,
-            item: event.item.name,
-            property: event.property.name,
-            levelPct: event.reading.levelPct,
-            thresholdPct: event.item.thresholdPct,
-            url: `${this.env.WEB_URL}/properties/${event.property.id}`,
-          },
-        });
+        pending.push({ notificationId, message: event.email({ email: user.email, firstName: user.firstName }) });
       }
     }
     return pending;
-  }
-
-  /** Sends emails decided in a committed transaction. A failure is logged and never undoes the event. */
-  async sendAfterCommit(pending: PendingEmail[]): Promise<void> {
-    for (const p of pending) {
-      try {
-        await this.email.send(supplyAlertEmail(p.to, p.alert));
-        if (p.notificationId) {
-          await this.prisma.notification.update({ where: { id: p.notificationId }, data: { emailSentAt: new Date() } });
-        }
-      } catch (e) {
-        this.logger.warn(`Supply alert email to ${p.to.email} failed: ${e instanceof Error ? e.message : String(e)}`);
-      }
-    }
   }
 
   /** The caller's own notifications, newest first (at most 50), and how many are unread. */

@@ -9,6 +9,7 @@ import {
   ReceiptText,
   Settings,
   Shield,
+  TriangleAlert,
   Users,
 } from 'lucide-react';
 import type { LinkProps } from '@tanstack/react-router';
@@ -38,6 +39,7 @@ export function navItems(me: { staffRole: string | null; memberships: unknown[] 
       { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays },
       { to: '/admin/expenses', label: 'Expenses', icon: ReceiptText },
       { to: '/admin/supplies', label: 'Supplies', icon: Package },
+      { to: '/admin/damage', label: 'Damage', icon: TriangleAlert },
       { to: '/admin/team', label: 'Team', icon: Users },
       { to: '/admin/plans', label: 'Plans', icon: Shield },
     );
