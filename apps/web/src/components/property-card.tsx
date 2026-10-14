@@ -54,7 +54,9 @@ export function PropertyCard({
     >
       <div
         className={cx(
-          'relative aspect-[16/9] overflow-hidden',
+          // At least 16:9; when the card is stretched taller (to match a card beside it), the photo takes the extra
+          // height rather than leaving a gap above the figures.
+          'relative aspect-[16/9] grow overflow-hidden',
           wide && '@[34rem]/card:aspect-auto @[34rem]/card:min-h-56 @[34rem]/card:w-[45%] @[34rem]/card:shrink-0',
           tint.bg,
         )}
@@ -70,7 +72,9 @@ export function PropertyCard({
           }
         />
       </div>
-      <div className={cx('flex flex-1 flex-col gap-3 p-4', wide && '@[34rem]/card:gap-5 @[34rem]/card:p-6')}>
+      <div
+        className={cx('flex flex-col gap-3 p-4', wide && '@[34rem]/card:flex-1 @[34rem]/card:gap-5 @[34rem]/card:p-6')}
+      >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className={cx('truncate font-semibold text-ink', wide && '@[34rem]/card:text-xl')}>{property.name}</p>

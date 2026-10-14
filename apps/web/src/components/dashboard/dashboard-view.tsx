@@ -163,7 +163,8 @@ export function DashboardView({
         ) : failed ? null : (
           <>
             <div className="grid gap-6 @[100rem]/content:grid-cols-2">
-              <Card title="Property performance" description={monthLabel(dataMonth)}>
+              {/* A column: the cards fill the card's height when it's stretched to match the one beside it. */}
+              <Card title="Property performance" description={monthLabel(dataMonth)} className="flex flex-col">
                 {!d ? (
                   <Skeleton className="h-56 rounded-inner" />
                 ) : (
@@ -172,7 +173,7 @@ export function DashboardView({
                     className={cx(
                       // auto-fit: cards share the row (two take half each) rather than leaving empty columns. One
                       // property gets the whole row, laid out wide.
-                      'grid grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-4',
+                      'grid flex-1 auto-rows-fr grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-4',
                       updatingStyles(dashboardUpdating),
                     )}
                   >
