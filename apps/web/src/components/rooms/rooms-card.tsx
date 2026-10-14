@@ -57,6 +57,27 @@ export function RoomsCard({
   /** The property's layout fields, to start quick setup with its bedroom and bathroom counts. */
   layout: { bedrooms: number | null; bathrooms: number | null; halfBathrooms: number | null };
 }) {
+  return (
+    <Card
+      title="Rooms"
+      description="The walkthrough: cleaners photograph rooms in this order, and owners see photos the same way."
+    >
+      <RoomsEditor propertyId={propertyId} layout={layout} />
+    </Card>
+  );
+}
+
+/**
+ * The rooms editor on its own (no card), for the admin property page's card and the "Edit rooms" dialog on the owner
+ * page. The same rooms either way: changes show wherever the property's rooms are listed.
+ */
+export function RoomsEditor({
+  propertyId,
+  layout,
+}: {
+  propertyId: string;
+  layout: { bedrooms: number | null; bathrooms: number | null; halfBathrooms: number | null };
+}) {
   const api = useApi();
   const qc = useQueryClient();
   // Deleted rooms too: they keep their numbers, so previews of a new room's name match what the API will give.
@@ -97,10 +118,7 @@ export function RoomsCard({
   });
 
   return (
-    <Card
-      title="Rooms"
-      description="The walkthrough: cleaners photograph rooms in this order, and owners see photos the same way."
-    >
+    <>
       {rooms.error ? (
         <ErrorAlert error={rooms.error} />
       ) : !rooms.data ? (
@@ -133,7 +151,7 @@ export function RoomsCard({
         error={remove.error}
         onConfirm={() => deleting && remove.mutate(deleting.id)}
       />
-    </Card>
+    </>
   );
 }
 

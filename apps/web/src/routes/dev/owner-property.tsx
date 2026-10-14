@@ -10,6 +10,8 @@ import { OwnerExpenses, OwnerStays } from '../../components/owner/month-lists';
 import { MonthOverview } from '../../components/owner/month-overview';
 import { PropertyHero } from '../../components/owner/property-hero';
 import { PropertyRoomsCard } from '../../components/property-basics';
+import { RoomsEditor } from '../../components/rooms/rooms-card';
+import { Dialog } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { ApiContext } from '../../lib/api-context';
 
@@ -164,26 +166,39 @@ function fakeApi(own: boolean): ApiClient {
       ],
     },
     '/v1/properties/{id}/rooms': {
-      items: [
-        'Entry',
-        'Living room',
-        'Kitchen',
-        'Bedroom · Primary',
-        'Bedroom 2',
-        'Bedroom 3',
-        'Bathroom 1',
-        'Bathroom 2',
-        'Patio/Deck',
-      ].map((displayName, i) => ({
-        id: `r${i}`,
-        propertyId: 'p1',
-        type: 'OTHER',
-        label: displayName,
-        number: 1,
-        displayName,
-        position: i,
-        archivedAt: null,
-      })),
+      items: (
+        [
+          ['ENTRY', 'Mud room', 1],
+          ['LIVING', null, 1],
+          ['KITCHEN', null, 1],
+          ['BEDROOM', 'Primary', 1],
+          ['BEDROOM', null, 2],
+          ['BEDROOM', null, 3],
+          ['BATHROOM', null, 1],
+          ['BATHROOM', null, 2],
+          ['PATIO_DECK', null, 1],
+        ] as const
+      ).map(([type, label, number], i, all) => {
+        const several = all.filter((r) => r[0] === type).length > 1;
+        const name = {
+          ENTRY: 'Entry',
+          LIVING: 'Living room',
+          KITCHEN: 'Kitchen',
+          BEDROOM: 'Bedroom',
+          BATHROOM: 'Bathroom',
+          PATIO_DECK: 'Patio/Deck',
+        }[type];
+        return {
+          id: `r${i}`,
+          propertyId: 'p1',
+          type,
+          label,
+          number,
+          displayName: label ? `${name} · ${label}` : several ? `${name} ${number}` : name,
+          position: i,
+          archivedAt: null,
+        };
+      }),
     },
   };
   return {
@@ -199,6 +214,7 @@ function Preview() {
     () => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } }),
   );
   const [month, setMonth] = useState('2026-10');
+  const [editingRooms, setEditingRooms] = useState(false);
   return (
     <ApiContext.Provider value={api}>
       <QueryClientProvider client={client}>
@@ -225,11 +241,22 @@ function Preview() {
               <aside className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
                 <ManagementCard propertyId="p1" canMarkOwn={!own} />
                 <PropertyDetailsPanel property={PROPERTY} />
-                <PropertyRoomsCard propertyId="p1" />
+                <PropertyRoomsCard propertyId="p1" onEdit={() => setEditingRooms(true)} />
               </aside>
             </div>
           </div>
         </div>
+        <Dialog
+          open={editingRooms}
+          onOpenChange={setEditingRooms}
+          size="xl"
+          title="Edit rooms"
+          description="The walkthrough cleaners follow and owners see photos in. Changes save as you go."
+        >
+          <div className="@container/content">
+            <RoomsEditor propertyId="p1" layout={PROPERTY} />
+          </div>
+        </Dialog>
       </QueryClientProvider>
     </ApiContext.Provider>
   );

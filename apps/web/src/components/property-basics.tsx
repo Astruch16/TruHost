@@ -1,9 +1,10 @@
 import type { Property } from '@truhost/shared';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, MapPin } from 'lucide-react';
+import { Clock, MapPin, Pencil } from 'lucide-react';
 import { useApi } from '../lib/api-context';
 import { queries } from '../lib/queries';
 import { ErrorAlert } from './ui/alert';
+import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 
@@ -32,17 +33,38 @@ export function PropertyAddressCard({ property: p }: { property: Property }) {
   );
 }
 
-/** The property's rooms, in the order a cleaner walks through them. */
-export function PropertyRoomsCard({ propertyId, className }: { propertyId: string; className?: string }) {
+/** The property's rooms, in the order a cleaner walks through them. `onEdit` adds an Edit button (admins). */
+export function PropertyRoomsCard({
+  propertyId,
+  className,
+  onEdit,
+}: {
+  propertyId: string;
+  className?: string;
+  onEdit?: () => void;
+}) {
   const rooms = useQuery(queries.rooms(useApi(), propertyId));
   return (
-    <Card title="Rooms" description="In cleaning-checklist order." className={className}>
+    <Card
+      title="Rooms"
+      description="In cleaning-checklist order."
+      className={className}
+      actions={
+        onEdit ? (
+          <Button variant="secondary" size="sm" onClick={onEdit}>
+            <Pencil aria-hidden className="size-4" /> Edit rooms
+          </Button>
+        ) : undefined
+      }
+    >
       {rooms.error ? (
         <ErrorAlert error={rooms.error} />
       ) : !rooms.data ? (
         <Skeleton className="h-16" />
       ) : rooms.data.items.length === 0 ? (
-        <p className="text-sm text-muted">No rooms added yet.</p>
+        <p className="text-sm text-muted">
+          No rooms added yet.{onEdit && ' Use Edit rooms to set up the walkthrough.'}
+        </p>
       ) : (
         <ol className="flex flex-col divide-y divide-line-soft text-sm">
           {rooms.data.items.map((r, i) => (

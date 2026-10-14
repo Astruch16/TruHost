@@ -220,6 +220,26 @@ describe('owners', () => {
     expect((await screen.findAllByText('Net to you')).length).toBeGreaterThan(0);
   });
 
+  it('can’t edit rooms unless they’re TruHost admins', async () => {
+    renderAt(`/properties/${CEDAR}`, owner);
+    expect(await screen.findByRole('heading', { name: 'Rooms' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit rooms' })).not.toBeInTheDocument();
+  });
+
+  it('who are admins edit the property’s rooms from its page (the same rooms as everywhere)', async () => {
+    const user = userEvent.setup();
+    const adminOwner = person([{ id: 'm1', role: 'OWNER', property: { id: CEDAR, name: 'Cedar Cabin' } }], 'ADMIN');
+    const { paths } = renderAt(`/properties/${CEDAR}`, adminOwner);
+    await user.click(await screen.findByRole('button', { name: 'Edit rooms' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit rooms' });
+    expect(await within(dialog).findByRole('list', { name: 'Rooms in walkthrough order' })).toHaveTextContent(
+      'Kitchen',
+    );
+    expect(within(dialog).getByRole('button', { name: 'Reorder Kitchen' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Add a room' })).toBeInTheDocument();
+    expect(paths.filter((p) => p === '/v1/properties/{id}/rooms').length).toBeGreaterThan(0);
+  });
+
   it('who also clean another property get the cleaner page for that one', async () => {
     const { router } = renderAt(`/properties/${SEASIDE}`, owner);
     expect(await screen.findByText('You clean here')).toBeInTheDocument();
