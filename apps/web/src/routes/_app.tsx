@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { createFileRoute, Navigate, Outlet, useMatchRoute, useNavigate, useParams } from '@tanstack/react-router';
 import { useAuth, useClerk, useUser } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
-import { ApiError } from '@truhost/api-client';
-import { AuthButton, AuthCard } from '../components/auth/auth-card';
+import { AuthButton, AuthCard, AuthLink } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
 import { NotAvailable } from '../components/shell/not-available';
 import { LiveNotificationsBell } from '../components/shell/notifications-bell';
@@ -15,6 +14,7 @@ import { GuideContext } from '../lib/guide-context';
 import { guideFromApi } from '../lib/guides';
 import { propertyPath } from '../lib/access';
 import { initials, navItems, roleLabel } from '../lib/nav';
+import { accountLoadFailure, FAILURE_TEXT } from '../lib/account-load';
 import { applyMotion, PreferencesContext } from '../lib/preferences';
 import { queries } from '../lib/queries';
 import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
@@ -55,26 +55,33 @@ function SignedInShell() {
 
   if (me.isPending) return <PortalLoading onRetry={() => void me.refetch()} />;
   if (me.error) {
-    const notInvited = me.error instanceof ApiError && me.error.problem.code === 'NOT_INVITED';
+    const failure = accountLoadFailure(me.error);
+    const text = FAILURE_TEXT[failure];
+    const signedInLine = signedInAs && (
+      <p className="text-center text-sm text-muted">
+        Signed in as <strong className="text-ink">{signedInAs}</strong>
+      </p>
+    );
     return (
       <AuthFrame>
-        <AuthCard
-          title={notInvited ? 'No access yet' : 'We couldn’t load your account'}
-          subtitle={
-            notInvited
-              ? 'TruHost is invite only. Ask your TruHost contact to invite this email address, then sign in again.'
-              : 'Something went wrong on our side. Try again in a moment.'
-          }
-        >
-          {signedInAs && (
-            <p className="text-center text-sm text-muted">
-              Signed in as <strong className="text-ink">{signedInAs}</strong>
-            </p>
+        <AuthCard title={text.title} subtitle={text.subtitle}>
+          {signedInLine}
+          {failure === 'other' && <ErrorAlert error={me.error} />}
+          {failure === 'notInvited' || failure === 'sessionEnded' ? (
+            <AuthButton type="button" onClick={handleSignOut}>
+              {failure === 'sessionEnded' ? 'Sign in again' : 'Sign out'}
+            </AuthButton>
+          ) : (
+            // Temporary: try again first; signing out is still there.
+            <>
+              <AuthButton type="button" loading={me.isFetching} onClick={() => void me.refetch()}>
+                Try again
+              </AuthButton>
+              <div className="flex justify-center">
+                <AuthLink onClick={handleSignOut}>Sign out</AuthLink>
+              </div>
+            </>
           )}
-          {!notInvited && <ErrorAlert error={me.error} />}
-          <AuthButton type="button" onClick={handleSignOut}>
-            Sign out
-          </AuthButton>
         </AuthCard>
       </AuthFrame>
     );

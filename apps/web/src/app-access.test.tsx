@@ -114,13 +114,21 @@ const SUMMARY = {
 };
 
 /** A fake API that answers as the given user and records every path asked for. */
-function fakeApi(start: Me) {
+/** GET /v1/me fails with these (in order) before answering normally. */
+type MeFailure = { status: number; code: string };
+
+function fakeApi(start: Me, meFailures: MeFailure[] = []) {
   let me = start;
+  const failures = [...meFailures];
   const created = new Map<string, ReturnType<typeof propertyData>>();
   const paths: string[] = [];
   const posts: { path: string; body: unknown }[] = [];
   const GET = vi.fn(async (path: string, init?: { params?: { path?: { id?: string } } }) => {
     paths.push(path);
+    const failure = path === '/v1/me' ? failures.shift() : undefined;
+    if (failure) {
+      return { error: { ...failure, title: 'Error' }, response: new Response(null, { status: failure.status }) };
+    }
     const id = init?.params?.path?.id ?? '';
     const data =
       path === '/v1/me'
@@ -179,8 +187,8 @@ function fakeApi(start: Me) {
   return { api: { GET, POST } as unknown as ApiClient, paths, posts };
 }
 
-function renderAt(url: string, me: Me) {
-  const { api, paths, posts } = fakeApi(me);
+function renderAt(url: string, me: Me, meFailures: MeFailure[] = []) {
+  const { api, paths, posts } = fakeApi(me, meFailures);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createRouter({
     routeTree,
@@ -424,5 +432,57 @@ describe('top bar', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Coffee pods is running low/ }));
     await waitFor(() => expect(router.state.location.pathname).toBe(`/properties/${CEDAR}`));
     expect(posts).toContainEqual({ path: '/v1/me/notifications/read', body: { ids: ['n1'] } });
+  });
+});
+
+describe('when the account can’t load', () => {
+  // These screens use the sign-in background, which follows media queries and its own size (jsdom has neither).
+  beforeEach(() => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    vi.stubGlobal(
+      'matchMedia',
+      (query: string): MediaQueryList =>
+        ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          dispatchEvent: () => false,
+        }) as MediaQueryList,
+    );
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('a sign-in service blip offers Try again, and trying again gets in', async () => {
+    renderAt('/properties', owner, [{ status: 503, code: 'AUTH_UNAVAILABLE' }]);
+    expect(await screen.findByRole('heading', { name: 'We couldn’t check your sign-in' })).toBeInTheDocument();
+    expect(screen.getByText(/Your account is fine/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('heading', { name: 'My properties' })).toBeInTheDocument();
+  });
+
+  it('an ended session asks to sign in again, with no retry', async () => {
+    renderAt('/properties', owner, [{ status: 401, code: 'UNAUTHORIZED' }]);
+    expect(await screen.findByRole('heading', { name: 'Your session has ended' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in again' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
+
+  it('someone who was never invited is told so, and can only sign out', async () => {
+    renderAt('/properties', owner, [{ status: 403, code: 'NOT_INVITED' }]);
+    expect(await screen.findByRole('heading', { name: 'No access yet' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
 });

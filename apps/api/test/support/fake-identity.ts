@@ -1,21 +1,26 @@
-import type { IdentityProvider } from '../../src/auth/identity-provider.js';
+import { IdentityUnavailableError, type IdentityProvider } from '../../src/auth/identity-provider.js';
 
 /**
  * Stand-in for Clerk. A session token is `test:<subject>`; anything else is invalid.
- * Register a subject's verified email with `users.set(subject, email)`.
+ * Register a subject's verified email with `users.set(subject, email)`. Set `unavailable` to act as if Clerk can't be
+ * reached.
  */
 export class FakeIdentityProvider implements IdentityProvider {
   readonly users = new Map<string, string | null>();
   readonly invitations: { id: string; email: string; redirectUrl: string; url: string }[] = [];
   readonly revokedInvitations: string[] = [];
   readonly revokedAccess: string[] = [];
+  /** Which calls act as if Clerk can't be reached: none, token checks (and lookups), or only first-sign-in lookups. */
+  unavailable: 'none' | 'all' | 'lookup' = 'none';
   private seq = 0;
 
   verifySessionToken(token: string): Promise<string | null> {
+    if (this.unavailable === 'all') return Promise.reject(new IdentityUnavailableError('fake: fetch failed'));
     return Promise.resolve(token.startsWith('test:') ? token.slice(5) : null);
   }
 
   getVerifiedPrimaryEmail(subject: string): Promise<string | null> {
+    if (this.unavailable !== 'none') return Promise.reject(new IdentityUnavailableError('fake: fetch failed'));
     return Promise.resolve(this.users.get(subject) ?? null);
   }
 
@@ -37,6 +42,7 @@ export class FakeIdentityProvider implements IdentityProvider {
   }
 
   reset(): void {
+    this.unavailable = 'none';
     this.users.clear();
     this.invitations.length = 0;
     this.revokedInvitations.length = 0;

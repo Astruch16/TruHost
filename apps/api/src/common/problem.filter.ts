@@ -15,6 +15,7 @@ const TITLES: Partial<Record<number, string>> = {
   422: 'Unprocessable Content',
   429: 'Too Many Requests',
   500: 'Internal Server Error',
+  503: 'Service Unavailable',
 };
 
 /** Renders every error as application/problem+json (RFC 9457). */
