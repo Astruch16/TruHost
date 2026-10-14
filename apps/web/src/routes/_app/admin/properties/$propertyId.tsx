@@ -100,7 +100,7 @@ function AdminProperty() {
           <RoomsCard propertyId={propertyId} layout={p} />
           <PlanCard propertyId={propertyId} />
         </div>
-        <SuppliesCard propertyId={propertyId} mode="manage" wide />
+        <SuppliesCard propertyId={propertyId} mode="manage" />
         <MembersCard propertyId={propertyId} defaultCleanerId={p.defaultCleanerId ?? null} />
       </div>
     </>

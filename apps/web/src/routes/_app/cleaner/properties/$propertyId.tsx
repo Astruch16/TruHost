@@ -44,7 +44,7 @@ function CleanerProperty() {
     <>
       <PageHeader eyebrow="You clean here" title={p.name} description={`${p.city}, ${p.province}`} />
       <div className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2">
-        <SuppliesCard propertyId={propertyId} mode="report" wide className="@4xl/content:col-span-2" />
+        <SuppliesCard propertyId={propertyId} mode="report" className="@4xl/content:col-span-2" />
         <PropertyAddressCard property={p} />
         <Card title="Your cleans">
           <p className="flex gap-2.5 text-sm text-muted">

@@ -11,6 +11,7 @@ import { MonthOverview } from '../../components/owner/month-overview';
 import { PropertyHero } from '../../components/owner/property-hero';
 import { PropertyRoomsCard } from '../../components/property-basics';
 import { RoomsEditor } from '../../components/rooms/rooms-card';
+import { SuppliesCard } from '../../components/supplies/supplies-card';
 import { Dialog } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { ApiContext } from '../../lib/api-context';
@@ -165,6 +166,37 @@ function fakeApi(own: boolean): ApiClient {
         },
       ],
     },
+    '/v1/properties/{id}/supplies': {
+      items: (
+        [
+          ['Toilet paper', 'BATHROOM', 50],
+          ['Hand soap', 'BATHROOM', 75],
+          ['Shampoo', 'BATHROOM', 50],
+          ['Conditioner', 'BATHROOM', 75],
+          ['Body wash', 'BATHROOM', 100],
+          ['Paper towels', 'KITCHEN', 50],
+          ['Coffee pods', 'KITCHEN', 50],
+          ['Dish soap', 'KITCHEN', 25],
+          ['Dishwasher tablets', 'KITCHEN', 75],
+          ['Condiments', 'KITCHEN', 50],
+          ['Garbage bags', 'KITCHEN', 100],
+          ['Laundry detergent', 'LAUNDRY', 25],
+          ['Dryer sheets', 'LAUNDRY', 0],
+          ['Cleaning spray', 'CLEANING', 50],
+        ] as const
+      ).map(([name, category, levelPct], position) => ({
+        id: `s${position}`,
+        propertyId: 'p1',
+        name,
+        category,
+        thresholdPct: 25,
+        position,
+        levelPct,
+        state: levelPct === 0 ? 'OUT' : levelPct <= 25 ? 'LOW' : 'OK',
+        lastCheckedAt: '2026-10-13T16:00:00.000Z',
+        archivedAt: null,
+      })),
+    },
     '/v1/properties/{id}/rooms': {
       items: (
         [
@@ -237,6 +269,7 @@ function Preview() {
                   <OwnerStays propertyId="p1" month={month} />
                   <OwnerExpenses propertyId="p1" month={month} />
                 </div>
+                <SuppliesCard propertyId="p1" mode="view" />
               </div>
               <aside className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
                 <ManagementCard propertyId="p1" canMarkOwn={!own} />

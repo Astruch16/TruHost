@@ -8,7 +8,9 @@ import { cx } from '../../lib/cx';
 import { queries } from '../../lib/queries';
 import {
   CATEGORY_ORDER,
+  checkedAgo,
   groupByCategory,
+  restockFirst,
   LEVEL_OPTIONS,
   levelText,
   restockCount,
@@ -44,14 +46,11 @@ export type SuppliesMode = 'view' | 'report' | 'manage';
 export function SuppliesCard({
   propertyId,
   mode,
-  wide = false,
   onManage,
   className,
 }: {
   propertyId: string;
   mode: SuppliesMode;
-  /** Lay the items out in two columns where there's room (the card spans the page). */
-  wide?: boolean;
   /** View mode for an admin: opens the editor (e.g. in a dialog). */
   onManage?: () => void;
   className?: string;
@@ -70,9 +69,7 @@ export function SuppliesCard({
       description={
         items.length === 0
           ? 'What’s kept stocked for guests, and how full it is.'
-          : due > 0
-            ? 'The marker on each bar is its restock point.'
-            : `${suppliesSummary(items)}. The marker on each bar is its restock point.`
+          : `${lastChecked(items)}${due > 0 ? '' : ` · ${suppliesSummary(items)}`}. The notch on each bar is its restock point.`
       }
       className={className}
       actions={
@@ -83,17 +80,17 @@ export function SuppliesCard({
         ) : undefined
       }
     >
-      <SuppliesBody propertyId={propertyId} mode={mode} wide={wide} />
+      <SuppliesBody propertyId={propertyId} mode={mode} />
     </Card>
   );
 }
 
 /** The admin editor without the card around it (for a dialog). */
 export function SuppliesEditor({ propertyId }: { propertyId: string }) {
-  return <SuppliesBody propertyId={propertyId} mode="manage" wide />;
+  return <SuppliesBody propertyId={propertyId} mode="manage" />;
 }
 
-function SuppliesBody({ propertyId, mode, wide }: { propertyId: string; mode: SuppliesMode; wide: boolean }) {
+function SuppliesBody({ propertyId, mode }: { propertyId: string; mode: SuppliesMode }) {
   const api = useApi();
   const qc = useQueryClient();
   const query = queries.supplies(api, propertyId);
@@ -160,30 +157,43 @@ function SuppliesBody({ propertyId, mode, wide }: { propertyId: string; mode: Su
             </Button>
           </div>
         ))}
-      {groupByCategory(items).map((group) => (
-        <section key={group.category} aria-label={group.label}>
-          <h3 className="mb-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase">{group.label}</h3>
-          <ul className={cx('grid grid-cols-1', wide && 'gap-x-8 @3xl/content:grid-cols-2')}>
-            {group.items.map((item) =>
-              editing === item.id ? (
-                <li key={item.id} className="border-b border-line-soft py-3 last:border-b-0">
-                  <EditSupply item={item} existing={items} onDone={() => setEditing(null)} />
-                </li>
-              ) : (
-                <SupplyRow
-                  key={item.id}
-                  item={item}
-                  mode={mode}
-                  pendingPct={pending?.supplyItemId === item.id ? pending.levelPct : null}
-                  onReport={canReport ? (levelPct) => record.mutate({ supplyItemId: item.id, levelPct }) : undefined}
-                  onEdit={mode === 'manage' ? () => setEditing(item.id) : undefined}
-                  onHistory={mode === 'report' ? undefined : () => setHistory(item)}
-                />
-              ),
+      {/* Owners: one list, what needs restocking first. Cleaners and admins: by area, as a walkthrough goes. */}
+      {(mode === 'view' ? [{ category: 'ALL', label: null, items: restockFirst(items) }] : groupByCategory(items)).map(
+        (group) => (
+          <section key={group.category} aria-label={group.label ?? 'Supplies'}>
+            {group.label && (
+              <h3 className="mb-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">{group.label}</h3>
             )}
-          </ul>
-        </section>
-      ))}
+            {/* Tiles fill the card's width: one column on a phone, three or four across a wide card. */}
+            <ul
+              className={cx(
+                'grid gap-3',
+                mode === 'view'
+                  ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]'
+                  : 'grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]',
+              )}
+            >
+              {group.items.map((item) =>
+                editing === item.id ? (
+                  <li key={item.id} className="col-span-full rounded-inner border border-line bg-surface p-4">
+                    <EditSupply item={item} existing={items} onDone={() => setEditing(null)} />
+                  </li>
+                ) : (
+                  <SupplyRow
+                    key={item.id}
+                    item={item}
+                    mode={mode}
+                    pendingPct={pending?.supplyItemId === item.id ? pending.levelPct : null}
+                    onReport={canReport ? (levelPct) => record.mutate({ supplyItemId: item.id, levelPct }) : undefined}
+                    onEdit={mode === 'manage' ? () => setEditing(item.id) : undefined}
+                    onHistory={mode === 'report' ? undefined : () => setHistory(item)}
+                  />
+                ),
+              )}
+            </ul>
+          </section>
+        ),
+      )}
       <ErrorAlert error={record.error} />
       {history && <HistoryDialog item={history} open onOpenChange={(open) => !open && setHistory(null)} />}
     </div>
@@ -209,46 +219,59 @@ function SupplyRow({
   return (
     <li
       className={cx(
-        'flex flex-col border-b border-line-soft last:border-b-0',
-        mode === 'view' ? 'gap-1.5 py-2.5' : 'gap-2 py-3',
+        'flex flex-col gap-2 rounded-inner p-3.5',
+        item.state === 'OUT' ? 'bg-danger-tint/45' : item.state === 'LOW' ? 'bg-amber-tint/50' : 'bg-ground/80',
       )}
     >
-      <div className="flex min-h-7 items-center justify-between gap-3">
-        <span className="flex min-w-0 items-center gap-2">
-          {onHistory ? (
-            <button
-              type="button"
-              onClick={onHistory}
-              className="truncate rounded-sm text-left font-semibold text-ink underline-offset-4 hover:underline"
-              aria-label={`${item.name}: history`}
-            >
-              {item.name}
-            </button>
-          ) : (
-            <span className="truncate font-semibold text-ink">{item.name}</span>
-          )}
-          <StatePill state={item.state} />
-        </span>
+      <div className="flex min-h-7 items-start justify-between gap-2">
+        {onHistory ? (
+          <button
+            type="button"
+            onClick={onHistory}
+            className="min-w-0 rounded-sm pt-0.5 text-left font-semibold text-pretty text-ink underline-offset-4 hover:underline"
+            aria-label={`${item.name}: history`}
+          >
+            {item.name}
+          </button>
+        ) : (
+          <span className="min-w-0 pt-0.5 font-semibold text-pretty text-ink">{item.name}</span>
+        )}
         <span className="flex shrink-0 items-center gap-1">
-          {mode === 'manage' && due && onReport && (
-            <Button size="sm" variant="secondary" onClick={() => onReport(100)} loading={pendingPct === 100}>
-              <Check aria-hidden className="size-4" /> Restocked
-            </Button>
-          )}
+          <StatePill state={item.state} />
           {onEdit && (
             <button
               type="button"
               onClick={onEdit}
               aria-label={`Edit ${item.name}`}
-              className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink"
+              className="-mr-1.5 grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink"
             >
               <Pencil aria-hidden className="size-4" />
             </button>
           )}
         </span>
       </div>
-      <SupplyBar name={item.name} levelPct={item.levelPct} state={item.state} thresholdPct={item.thresholdPct} />
-      <SupplyMeta levelPct={item.levelPct} lastCheckedAt={item.lastCheckedAt} thresholdPct={item.thresholdPct} />
+      {/* The level sits beside the bar, in a fixed width so bars line up across tiles; mt-auto keeps bars level in a
+          row where one name wraps onto two lines. */}
+      <div className="mt-auto flex items-center gap-3">
+        <SupplyBar
+          name={item.name}
+          levelPct={item.levelPct}
+          state={item.state}
+          thresholdPct={item.thresholdPct}
+          className="min-w-0 flex-1"
+        />
+        <span className="w-[5.25rem] shrink-0 text-right text-sm font-medium text-ink tabular-nums">
+          {item.levelPct === null ? <span className="text-muted">Not checked</span> : levelText(item.levelPct)}
+        </span>
+      </div>
+      {mode === 'manage' && (
+        <SupplyMeta
+          levelPct={item.levelPct}
+          lastCheckedAt={item.lastCheckedAt}
+          thresholdPct={item.thresholdPct}
+          showLevel={false}
+        />
+      )}
       {onReport && (
         <LevelPicker
           name={item.name}
@@ -256,6 +279,11 @@ function SupplyRow({
           pendingPct={pendingPct}
           onPick={(pct) => pct !== item.levelPct && onReport(pct)}
         />
+      )}
+      {mode === 'manage' && due && onReport && (
+        <Button size="sm" variant="secondary" onClick={() => onReport(100)} loading={pendingPct === 100}>
+          <Check aria-hidden className="size-4" /> Restocked
+        </Button>
       )}
       {mode === 'report' && due && (
         <p className="text-xs font-medium text-amber-deep">
@@ -266,10 +294,16 @@ function SupplyRow({
   );
 }
 
+/** "Checked 2 hours ago" (the most recent check of any item), or "Not checked yet". */
+function lastChecked(items: SupplyItem[]): string {
+  const times = items.flatMap((i) => (i.lastCheckedAt ? [new Date(i.lastCheckedAt).getTime()] : []));
+  return times.length ? checkedAgo(new Date(Math.max(...times))) : 'Not checked yet';
+}
+
 function StatePill({ state }: { state: SupplyItem['state'] }) {
   if (state === 'OUT') return <Pill tone="danger">Out</Pill>;
   if (state === 'LOW') return <Pill tone="amber">Running low</Pill>;
-  if (state === 'UNKNOWN') return <Pill tone="neutral">Not checked</Pill>;
+  // Not checked yet says so beside the bar; stocked needs no badge.
   return null;
 }
 

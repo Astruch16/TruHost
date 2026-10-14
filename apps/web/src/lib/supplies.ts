@@ -46,6 +46,20 @@ export function groupByCategory<T extends Pick<SupplyItem, 'category' | 'positio
   })).filter((g) => g.items.length > 0);
 }
 
+/**
+ * The owner's view: one list, what needs restocking first (out, then running low), then everything else; each part in
+ * category order (CATEGORY_ORDER), then the property's order.
+ */
+export function restockFirst<T extends Pick<SupplyItem, 'category' | 'position' | 'state'>>(items: readonly T[]): T[] {
+  const rank = (i: T) => (i.state === 'OUT' ? 0 : i.state === 'LOW' ? 1 : 2);
+  return [...items].sort(
+    (a, b) =>
+      rank(a) - rank(b) ||
+      CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category) ||
+      a.position - b.position,
+  );
+}
+
 /** How many items need restocking (low or out). */
 export const restockCount = (items: readonly Pick<SupplyItem, 'state'>[]) =>
   items.filter((i) => i.state === 'LOW' || i.state === 'OUT').length;
