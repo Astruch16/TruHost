@@ -17,6 +17,7 @@ import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
+import { Route as DevMonthSwitchRouteImport } from './routes/dev/month-switch'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
 import { Route as DevOwnerPropertyRouteImport } from './routes/dev/owner-property'
 import { Route as DevPropertiesRouteImport } from './routes/dev/properties'
@@ -78,6 +79,11 @@ const DevDashboardRoute = DevDashboardRouteImport.update({
 const DevLoadingRoute = DevLoadingRouteImport.update({
   id: '/dev/loading',
   path: '/dev/loading',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevMonthSwitchRoute = DevMonthSwitchRouteImport.update({
+  id: '/dev/month-switch',
+  path: '/dev/month-switch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevNoAccessRoute = DevNoAccessRouteImport.update({
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
+  '/dev/month-switch': typeof DevMonthSwitchRoute
   '/dev/no-access': typeof DevNoAccessRoute
   '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
+  '/dev/month-switch': typeof DevMonthSwitchRoute
   '/dev/no-access': typeof DevNoAccessRoute
   '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/_app/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
+  '/dev/month-switch': typeof DevMonthSwitchRoute
   '/dev/no-access': typeof DevNoAccessRoute
   '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/dev/dashboard'
     | '/dev/loading'
+    | '/dev/month-switch'
     | '/dev/no-access'
     | '/dev/owner-property'
     | '/dev/properties'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/dev/dashboard'
     | '/dev/loading'
+    | '/dev/month-switch'
     | '/dev/no-access'
     | '/dev/owner-property'
     | '/dev/properties'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/_app/cleaner'
     | '/dev/dashboard'
     | '/dev/loading'
+    | '/dev/month-switch'
     | '/dev/no-access'
     | '/dev/owner-property'
     | '/dev/properties'
@@ -397,6 +409,7 @@ export interface RootRouteChildren {
   SsoCallbackRoute: typeof SsoCallbackRoute
   DevDashboardRoute: typeof DevDashboardRoute
   DevLoadingRoute: typeof DevLoadingRoute
+  DevMonthSwitchRoute: typeof DevMonthSwitchRoute
   DevNoAccessRoute: typeof DevNoAccessRoute
   DevOwnerPropertyRoute: typeof DevOwnerPropertyRoute
   DevPropertiesRoute: typeof DevPropertiesRoute
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/loading'
       fullPath: '/dev/loading'
       preLoaderRoute: typeof DevLoadingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/month-switch': {
+      id: '/dev/month-switch'
+      path: '/dev/month-switch'
+      fullPath: '/dev/month-switch'
+      preLoaderRoute: typeof DevMonthSwitchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/no-access': {
@@ -710,6 +730,7 @@ const rootRouteChildren: RootRouteChildren = {
   SsoCallbackRoute: SsoCallbackRoute,
   DevDashboardRoute: DevDashboardRoute,
   DevLoadingRoute: DevLoadingRoute,
+  DevMonthSwitchRoute: DevMonthSwitchRoute,
   DevNoAccessRoute: DevNoAccessRoute,
   DevOwnerPropertyRoute: DevOwnerPropertyRoute,
   DevPropertiesRoute: DevPropertiesRoute,

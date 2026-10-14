@@ -65,6 +65,9 @@
 
 @layer base {
   html {
+    /* Keep the scrollbar's space even when a page doesn't scroll, so content never shifts sideways as the page grows
+       or shrinks (e.g. stepping from a busy month to an empty one). */
+    scrollbar-gutter: stable;
     background: var(--color-ground);
     color: var(--color-ink);
     font-family: var(--font-sans);

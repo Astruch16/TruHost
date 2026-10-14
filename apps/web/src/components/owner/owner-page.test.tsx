@@ -114,4 +114,23 @@ describe('Your month', () => {
     // Nothing reads "−$0.00".
     expect(screen.queryByText(/−\$0\.00/)).not.toBeInTheDocument();
   });
+
+  it('keeps the same shape in an empty month (no collapse, so switching months doesn’t jump)', async () => {
+    renderWith(<MonthOverview propertyId="p1" month="2026-11" onMonthChange={vi.fn()} />, () =>
+      summary({
+        month: '2026-11',
+        nightsBooked: 0,
+        stays: 0,
+        grossCents: 0,
+        managementFeeCents: 0,
+        ownerExpensesCents: 0,
+        netCents: 0,
+        incompleteBookings: 0,
+      }),
+    );
+    const statement = await screen.findByRole('region', { name: 'Where it went' });
+    expect(within(statement).getAllByRole('term')).toHaveLength(3);
+    expect(within(statement).getByText('No stays this month')).toBeInTheDocument();
+    expect(within(statement).getByText('None this month')).toBeInTheDocument();
+  });
 });
