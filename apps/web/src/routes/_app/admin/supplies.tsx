@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AllClearIllustration } from '../../../components/illustrations/all-clear';
 import { RestockList } from '../../../components/supplies/restock-list';
 import { LoadError } from '../../../components/ui/alert';
+import { Card } from '../../../components/ui/card';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { PageHeader } from '../../../components/ui/page-header';
 import { Skeleton } from '../../../components/ui/skeleton';
@@ -37,9 +38,11 @@ function Supplies() {
           <Skeleton className="h-64 rounded-card" />
         </div>
       ) : items.length === 0 ? (
-        <EmptyState size="compact" illustration={<AllClearIllustration />} title="All stocked">
-          Nothing {propertyId ? 'at this property' : 'at your properties'} is at or near its restock point.
-        </EmptyState>
+        <Card>
+          <EmptyState size="compact" illustration={<AllClearIllustration />} title="All stocked">
+            Nothing {propertyId ? 'at this property' : 'at your properties'} is at or near its restock point.
+          </EmptyState>
+        </Card>
       ) : (
         <RestockList items={items} />
       )}
