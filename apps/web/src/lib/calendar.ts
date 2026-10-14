@@ -15,6 +15,8 @@ export interface CalendarStay {
   checkInDate: string;
   checkOutDate: string;
   nights: number;
+  /** Shown on the bar when known (admins). */
+  guestName?: string | null;
 }
 
 export interface Segment {
@@ -167,4 +169,50 @@ export function monthLegend(month: string, stays: readonly CalendarStay[]): { st
     styles: STAY_STYLES.filter((s) => shown.has(s.key)),
     cleans: checkoutsByDay(month, stays as CalendarStay[]).size > 0,
   };
+}
+
+/** A bar's words: "Andrew · 8 nights", "8 nights" (no name), "Owner stay" or "Blocked". */
+export function stayLabel(stay: Pick<CalendarStay, 'kind' | 'nights' | 'guestName'>): string {
+  if (stay.kind === 'OWNER_STAY') return 'Owner stay';
+  if (stay.kind === 'BLOCK') return 'Blocked';
+  const nights = `${stay.nights} night${stay.nights === 1 ? '' : 's'}`;
+  const name = stay.guestName?.trim();
+  return name ? `${name} · ${nights}` : nights;
+}
+
+export interface AgendaEvent {
+  type: 'CHECK_IN' | 'CHECK_OUT';
+  stay: CalendarStay;
+}
+
+/**
+ * The month's arrivals and departures by day, earliest first. On a turnover day the check-out comes first, as the day
+ * runs. Blocks have neither (nobody comes or goes).
+ */
+export function monthAgenda(month: string, stays: readonly CalendarStay[]): { date: string; events: AgendaEvent[] }[] {
+  const byDay = new Map<string, AgendaEvent[]>();
+  const add = (date: string, event: AgendaEvent) => {
+    if (!date.startsWith(month)) return;
+    byDay.set(date, [...(byDay.get(date) ?? []), event]);
+  };
+  for (const stay of stays) {
+    if (stay.kind === 'BLOCK') continue;
+    add(stay.checkInDate, { type: 'CHECK_IN', stay });
+    add(stay.checkOutDate, { type: 'CHECK_OUT', stay });
+  }
+  return [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, events]) => ({
+      date,
+      events: events.sort((a, b) => (a.type === b.type ? 0 : a.type === 'CHECK_OUT' ? -1 : 1)),
+    }));
+}
+
+/** The first date on or after `from` with an event of this type, or null. */
+export function nextEvent(
+  agenda: readonly { date: string; events: AgendaEvent[] }[],
+  type: AgendaEvent['type'],
+  from: string,
+): string | null {
+  return agenda.find((d) => d.date >= from && d.events.some((e) => e.type === type))?.date ?? null;
 }

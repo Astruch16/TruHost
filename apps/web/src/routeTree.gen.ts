@@ -15,6 +15,8 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
+import { Route as DevBookingsRouteImport } from './routes/dev/bookings'
+import { Route as DevCalendarRouteImport } from './routes/dev/calendar'
 import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevMonthSwitchRouteImport } from './routes/dev/month-switch'
@@ -72,6 +74,16 @@ const AppCleanerRoute = AppCleanerRouteImport.update({
   id: '/cleaner',
   path: '/cleaner',
   getParentRoute: () => AppRoute,
+} as any)
+const DevBookingsRoute = DevBookingsRouteImport.update({
+  id: '/dev/bookings',
+  path: '/dev/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevCalendarRoute = DevCalendarRouteImport.update({
+  id: '/dev/calendar',
+  path: '/dev/calendar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DevDashboardRoute = DevDashboardRouteImport.update({
   id: '/dev/dashboard',
@@ -222,6 +234,8 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/cleaner': typeof AppCleanerRouteWithChildren
+  '/dev/bookings': typeof DevBookingsRoute
+  '/dev/calendar': typeof DevCalendarRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
@@ -254,6 +268,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
   '/cleaner': typeof AppCleanerRouteWithChildren
+  '/dev/bookings': typeof DevBookingsRoute
+  '/dev/calendar': typeof DevCalendarRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
@@ -291,6 +307,8 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/cleaner': typeof AppCleanerRouteWithChildren
+  '/dev/bookings': typeof DevBookingsRoute
+  '/dev/calendar': typeof DevCalendarRoute
   '/dev/dashboard': typeof DevDashboardRoute
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
@@ -329,6 +347,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/cleaner'
+    | '/dev/bookings'
+    | '/dev/calendar'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/month-switch'
@@ -361,6 +381,8 @@ export interface FileRouteTypes {
   to:
     | '/sso-callback'
     | '/cleaner'
+    | '/dev/bookings'
+    | '/dev/calendar'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/month-switch'
@@ -397,6 +419,8 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/admin'
     | '/_app/cleaner'
+    | '/dev/bookings'
+    | '/dev/calendar'
     | '/dev/dashboard'
     | '/dev/loading'
     | '/dev/month-switch'
@@ -431,6 +455,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   SsoCallbackRoute: typeof SsoCallbackRoute
+  DevBookingsRoute: typeof DevBookingsRoute
+  DevCalendarRoute: typeof DevCalendarRoute
   DevDashboardRoute: typeof DevDashboardRoute
   DevLoadingRoute: typeof DevLoadingRoute
   DevMonthSwitchRoute: typeof DevMonthSwitchRoute
@@ -488,6 +514,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/cleaner'
       preLoaderRoute: typeof AppCleanerRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/dev/bookings': {
+      id: '/dev/bookings'
+      path: '/dev/bookings'
+      fullPath: '/dev/bookings'
+      preLoaderRoute: typeof DevBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/calendar': {
+      id: '/dev/calendar'
+      path: '/dev/calendar'
+      fullPath: '/dev/calendar'
+      preLoaderRoute: typeof DevCalendarRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dev/dashboard': {
       id: '/dev/dashboard'
@@ -769,6 +809,8 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   SsoCallbackRoute: SsoCallbackRoute,
+  DevBookingsRoute: DevBookingsRoute,
+  DevCalendarRoute: DevCalendarRoute,
   DevDashboardRoute: DevDashboardRoute,
   DevLoadingRoute: DevLoadingRoute,
   DevMonthSwitchRoute: DevMonthSwitchRoute,

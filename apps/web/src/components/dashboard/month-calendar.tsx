@@ -1,4 +1,5 @@
-import { checkoutsByDay, monthGrid, monthLegend, stayStyle, type CalendarStay } from '../../lib/calendar';
+import { checkoutsByDay, monthGrid, monthLegend, stayLabel, stayStyle, type CalendarStay } from '../../lib/calendar';
+import { shortDate } from '../../lib/months';
 import { cx } from '../../lib/cx';
 import { monogram } from '../../lib/dashboard-format';
 import { useWeekStart, weekdayNames } from '../../lib/preferences';
@@ -8,7 +9,9 @@ const BAR_GAP = 4;
 
 /**
  * Month grid with stays as continuous bars, from the middle of the check-in day to the middle of the check-out day (as
- * on Airbnb and Vrbo), and check-outs marked as cleans to schedule.
+ * on Airbnb and Vrbo), and check-outs marked as cleans to schedule. Bars say who's staying when the name is known.
+ * With `onSelect`, each bar is a button (e.g. to open the booking). `roomy` is the full-page size: taller days,
+ * weekends shaded, days gone by quieter.
  */
 export function MonthCalendar({
   month,
@@ -16,12 +19,16 @@ export function MonthCalendar({
   propertyNames,
   today,
   showProperty,
+  onSelect,
+  roomy = false,
 }: {
   month: string;
   stays: CalendarStay[];
   propertyNames: Map<string, string>;
   today: string | null;
   showProperty: boolean;
+  onSelect?: (stayId: string) => void;
+  roomy?: boolean;
 }) {
   const weekStartsOn = useWeekStart();
   const weeks = monthGrid(month, stays, weekStartsOn);
@@ -44,15 +51,23 @@ export function MonthCalendar({
                 key={di}
                 className={cx(
                   'flex flex-col gap-1 border-r border-line-soft px-2.5 pt-2 last:border-r-0',
-                  !day && 'bg-ground/60',
+                  !day
+                    ? 'bg-ground/60'
+                    : roomy && day === today
+                      ? 'bg-sage-tint/30'
+                      : roomy && isWeekend(di, weekStartsOn) && 'bg-ground/45',
                 )}
-                style={{ minHeight: 64 + week.lanes * (BAR_H + BAR_GAP) }}
+                style={{ minHeight: (roomy ? 92 : 64) + week.lanes * (BAR_H + BAR_GAP) }}
               >
                 {day && (
                   <span
                     className={cx(
                       'figure grid size-7 place-items-center rounded-full text-sm',
-                      day === today ? 'bg-primary font-bold text-white' : 'text-ink',
+                      day === today
+                        ? 'bg-primary font-bold text-white'
+                        : roomy && today && day < today
+                          ? 'text-muted'
+                          : 'text-ink',
                     )}
                   >
                     {Number(day.slice(8))}
@@ -68,13 +83,11 @@ export function MonthCalendar({
             ))}
             {week.segments.map((seg) => {
               const style = stayStyle(seg.stay);
-              const label = `${showProperty ? `${monogram(propertyNames.get(seg.stay.propertyId) ?? '')} · ` : ''}${
-                seg.stay.kind === 'GUEST'
-                  ? `${seg.stay.nights} night${seg.stay.nights === 1 ? '' : 's'}`
-                  : seg.stay.kind === 'OWNER_STAY'
-                    ? 'Owner stay'
-                    : 'Blocked'
-              }`;
+              const property = propertyNames.get(seg.stay.propertyId) ?? '';
+              const label = `${showProperty ? `${monogram(property)} · ` : ''}${stayLabel(seg.stay)}`;
+              const description = `${showProperty ? `${property}: ` : ''}${stayLabel(seg.stay)}, ${style.label}, ${shortDate(
+                seg.stay.checkInDate,
+              )} to ${shortDate(seg.stay.checkOutDate)}`;
               // Day columns, fractional: a stay starts halfway through its check-in day and ends halfway through its
               // check-out day. A small inset at those midpoints leaves a gap between back-to-back stays.
               const from = seg.startCol + (seg.startsMidDay ? 0.5 : 0);
@@ -86,15 +99,21 @@ export function MonthCalendar({
               const room = to - from >= 1;
               const continuesBelow = seg.continuesAfter && wi < weeks.length - 1;
               const showLabel = seg.continuesBefore ? seg.startCol === 0 && room : room || !continuesBelow;
+              const Bar = onSelect ? 'button' : 'div';
               return (
-                <div
+                <Bar
                   key={seg.stay.id}
-                  title={`${propertyNames.get(seg.stay.propertyId) ?? ''}: ${style.label}, ${seg.stay.checkInDate} → ${seg.stay.checkOutDate}`}
+                  {...(onSelect
+                    ? { type: 'button' as const, onClick: () => onSelect(seg.stay.id), 'aria-label': description }
+                    : {})}
+                  title={description}
                   className={cx(
-                    'absolute flex items-center overflow-hidden px-2 text-xs font-semibold whitespace-nowrap',
+                    'absolute flex items-center overflow-hidden px-2 text-left text-xs font-semibold whitespace-nowrap',
                     style.bar,
                     seg.continuesBefore ? 'rounded-l-none' : 'rounded-l-md',
                     seg.continuesAfter ? 'rounded-r-none' : 'rounded-r-md',
+                    onSelect &&
+                      'cursor-pointer transition-[filter,box-shadow] hover:shadow-[0_2px_6px_rgb(0_0_0/0.12)] hover:brightness-[0.97] focus-visible:z-10',
                   )}
                   style={{
                     left: `calc(${(from / 7) * 100}% + ${insetStart}px)`,
@@ -104,7 +123,7 @@ export function MonthCalendar({
                   }}
                 >
                   <span className="min-w-0 truncate">{showLabel ? label : ''}</span>
-                </div>
+                </Bar>
               );
             })}
           </div>
@@ -113,6 +132,9 @@ export function MonthCalendar({
     </div>
   );
 }
+
+/** Saturday or Sunday, for a column of a week that starts on `weekStartsOn`. */
+const isWeekend = (column: number, weekStartsOn: number) => [0, 6].includes((column + weekStartsOn) % 7);
 
 /**
  * What the colours mean, for this month only: a channel (or owner stay, or block) is listed once a stay of it is on

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkoutsByDay, monthGrid, type CalendarStay } from './calendar';
+import { checkoutsByDay, monthAgenda, nextEvent, stayLabel, monthGrid, type CalendarStay } from './calendar';
 
 const stay = (id: string, checkInDate: string, checkOutDate: string, propertyId = 'a'): CalendarStay => ({
   id,
@@ -75,5 +75,36 @@ describe('checkoutsByDay', () => {
       { ...stay('d', '2026-10-05', '2026-10-07'), kind: 'BLOCK' },
     ]);
     expect([...counts]).toEqual([['2026-10-04', 2]]);
+  });
+});
+
+describe('stayLabel', () => {
+  it.each([
+    [{ kind: 'GUEST', nights: 8, guestName: 'Andrew' }, 'Andrew · 8 nights'],
+    [{ kind: 'GUEST', nights: 1, guestName: '  ' }, '1 night'],
+    [{ kind: 'GUEST', nights: 2, guestName: null }, '2 nights'],
+    [{ kind: 'OWNER_STAY', nights: 7, guestName: null }, 'Owner stay'],
+    [{ kind: 'BLOCK', nights: 3 }, 'Blocked'],
+  ] as const)('%o → %s', (stay, label) => expect(stayLabel(stay)).toBe(label));
+});
+
+describe('monthAgenda', () => {
+  const stay = (id: string, checkInDate: string, checkOutDate: string, kind: CalendarStay['kind'] = 'GUEST') =>
+    ({ id, propertyId: 'p', kind, channel: 'AIRBNB', checkInDate, checkOutDate, nights: 1 }) as CalendarStay;
+
+  it('lists check-ins and check-outs by day, check-outs first on a turnover day, skipping blocks and other months', () => {
+    const agenda = monthAgenda('2026-10', [
+      stay('a', '2026-09-28', '2026-10-03'),
+      stay('b', '2026-10-03', '2026-10-05'),
+      stay('c', '2026-10-10', '2026-10-12', 'BLOCK'),
+      stay('d', '2026-10-30', '2026-11-02', 'OWNER_STAY'),
+    ]);
+    expect(agenda.map((d) => [d.date, d.events.map((e) => `${e.type}:${e.stay.id}`)])).toEqual([
+      ['2026-10-03', ['CHECK_OUT:a', 'CHECK_IN:b']],
+      ['2026-10-05', ['CHECK_OUT:b']],
+      ['2026-10-30', ['CHECK_IN:d']],
+    ]);
+    expect(nextEvent(agenda, 'CHECK_IN', '2026-10-04')).toBe('2026-10-30');
+    expect(nextEvent(agenda, 'CHECK_OUT', '2026-10-06')).toBeNull();
   });
 });

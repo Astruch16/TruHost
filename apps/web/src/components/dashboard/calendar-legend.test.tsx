@@ -82,9 +82,9 @@ describe('legend', () => {
         .map((li) => li.textContent?.trim()),
     ).toEqual(['Airbnb', 'Booking.com', 'Clean to schedule']);
     // Oct 2–5 crosses a week, so it's drawn as two segments: both in Airbnb's colour.
-    const airbnb = screen.getAllByTitle(/Airbnb, 2026-10-02/);
+    const airbnb = screen.getAllByTitle(/Airbnb, Oct 2 to/);
     expect(airbnb).toHaveLength(2);
     for (const bar of airbnb) expect(bar).toHaveClass('bg-rose-tint');
-    expect(screen.getByTitle(/Booking\.com, 2026-10-13/)).toHaveClass('bg-amber-tint');
+    expect(screen.getByTitle(/Booking\.com, Oct 13 to/)).toHaveClass('bg-amber-tint');
   });
 });
