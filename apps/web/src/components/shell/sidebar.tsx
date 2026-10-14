@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { LogOut } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import type { NavItem } from '../../lib/nav';
+import { APP_BUILD, APP_VERSION } from '../../lib/version';
 import { Logo } from './logo';
 import { MountainScene } from './mountain-scene';
 
@@ -28,7 +29,8 @@ export function Sidebar({
           <Logo />
         </Link>
       </div>
-      <nav aria-label="Main" className="relative z-10 flex-none px-3">
+      {/* On a short screen the scene below gives way first, then the nav scrolls, so the foot stays in view. */}
+      <nav aria-label="Main" className="scroll-area relative z-10 min-h-0 flex-initial overflow-y-auto px-3 py-0.5">
         <ul className="flex flex-col gap-1">
           {items.map(({ to, label, icon: Icon, badge, exact }) => (
             <li key={to}>
@@ -44,12 +46,6 @@ export function Sidebar({
               </Link>
             </li>
           ))}
-          <li>
-            <button type="button" onClick={onSignOut} className={cx(itemClass, 'w-full text-left')}>
-              <LogOut aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
-              <span className="flex-1">Log out</span>
-            </button>
-          </li>
         </ul>
       </nav>
 
@@ -64,6 +60,21 @@ export function Sidebar({
           Better stays.
           <br />
           Higher returns.
+        </p>
+      </div>
+
+      {/* Foot: Log out and the version, on the scene's darkest ground so the trees run into it. Always at the bottom;
+          the scene above gives way first on short screens. */}
+      <div className="relative z-10 flex-none bg-[#0e2421] px-3 pt-1 pb-4">
+        <button type="button" onClick={onSignOut} className={cx(itemClass, 'w-full text-left')}>
+          <LogOut aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
+          <span className="flex-1">Log out</span>
+        </button>
+        <p className="figure mt-1 px-3.5 text-xs text-sidebar-muted/80">
+          TruHost {APP_VERSION}
+          <span aria-hidden> · </span>
+          <span className="sr-only">, build </span>
+          {APP_BUILD}
         </p>
       </div>
     </div>
