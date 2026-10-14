@@ -37,7 +37,8 @@ const KPI_GRID = 'grid grid-cols-2 gap-3 @2xl/content:grid-cols-4 @2xl/content:g
  * same thing. Layout follows the width of the content area (container queries), not the viewport:
  * - narrow: one column; rail panels stack under the main content
  * - medium (≥ 42rem): KPIs four across; rail panels in a two-column grid below
- * - wide (≥ 68.75rem ≈ 1100px of content): main column plus a 380px right rail
+ * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, calendar, supplies) plus a 380px right
+ *   rail (quick actions, needs attention, coming up)
  * - extra wide (≥ 100rem): performance and breakdown side by side, calendar full width beneath
  */
 export function DashboardView({
@@ -250,6 +251,18 @@ export function DashboardView({
             </Card>
           </>
         )}
+
+        {/* Not tied to the month: what needs restocking now or soon, full width under the calendar. */}
+        {!noProperties &&
+          (supplies ? (
+            <SuppliesPanel items={supplies} showProperty={multi} />
+          ) : suppliesError ? (
+            <Card title="Supplies">
+              <LoadError what="supplies" onRetry={() => onRetrySupplies?.()} retrying={false} />
+            </Card>
+          ) : (
+            <Skeleton className="h-48 rounded-card" />
+          ))}
       </div>
 
       {/* Rail: stacks under the main content (narrow), two columns below it (medium), right rail (wide). */}
@@ -273,15 +286,6 @@ export function DashboardView({
           </div>
         ) : (
           railSkeleton
-        )}
-        {supplies ? (
-          <SuppliesPanel items={supplies} />
-        ) : suppliesError ? (
-          <Card title="Supplies">
-            <LoadError what="supplies" onRetry={() => onRetrySupplies?.()} retrying={false} />
-          </Card>
-        ) : (
-          <Skeleton className="h-40 rounded-card" />
         )}
         {d ? (
           <div {...dim(dashboardUpdating)}>
