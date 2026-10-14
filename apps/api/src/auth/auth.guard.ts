@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ProblemException } from '../common/problem.js';
 import { ENV, type Env } from '../config/env.js';
 import { IS_PUBLIC, type Actor, type ActorRequest } from './actor.js';
-import { IDENTITY_PROVIDER, type IdentityProvider } from './identity-provider.js';
+import { IDENTITY_PROVIDER, IdentityUnavailableError, type IdentityProvider } from './identity-provider.js';
 
 const LINK_LIMIT = { ttlMs: 60_000, limit: 10 };
 
@@ -32,12 +32,12 @@ export class AuthGuard implements CanActivate {
     const token = bearer(req.headers.authorization);
     if (!token) throw new UnauthorizedException('Missing bearer token');
 
-    const subject = await this.identity.verifySessionToken(token);
+    const subject = await unlessUnavailable(this.identity.verifySessionToken(token));
     if (!subject) throw new UnauthorizedException('Invalid session token');
 
     const user =
       (await this.prisma.user.findUnique({ where: { clerkUserId: subject } })) ??
-      (await this.linkOnFirstSignIn(subject, req));
+      (await unlessUnavailable(this.linkOnFirstSignIn(subject, req)));
 
     if (user.status !== 'ACTIVE') throw new UnauthorizedException('User is not active');
 
@@ -103,6 +103,23 @@ export class AuthGuard implements CanActivate {
         },
       });
       return user;
+    });
+  }
+}
+
+/**
+ * The identity provider couldn't answer (unreachable, down, misconfigured): 503 AUTH_UNAVAILABLE, so clients offer
+ * "try again" instead of signing the person out over something that isn't their sign-in's fault.
+ */
+async function unlessUnavailable<T>(work: Promise<T>): Promise<T> {
+  try {
+    return await work;
+  } catch (e) {
+    if (!(e instanceof IdentityUnavailableError)) throw e;
+    throw new ProblemException({
+      status: HttpStatus.SERVICE_UNAVAILABLE,
+      code: 'AUTH_UNAVAILABLE',
+      detail: 'We couldn’t reach the sign-in service to check your session. Try again in a moment.',
     });
   }
 }

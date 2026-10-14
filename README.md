@@ -12,7 +12,7 @@ Needs Node 24+, pnpm (`corepack enable`) and a local Postgres (setup in [CLAUDE.
 
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env   # then fill in DATABASE_URL, Clerk dev keys, …
+cp apps/api/.env.example apps/api/.env   # then fill in DATABASE_URL, Clerk dev keys (incl. CLERK_JWT_KEY), …
 cp apps/web/.env.example apps/web/.env
 pnpm --filter @truhost/api db:deploy
 pnpm --filter @truhost/api bootstrap -- --admin-email you@example.com --first-name You --last-name Admin

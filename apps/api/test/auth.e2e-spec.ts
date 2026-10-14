@@ -43,6 +43,25 @@ describe('authentication and first sign-in', () => {
     expect(await t.prisma.auditLog.count({ where: { action: 'user.link', entityId: w.invitedUserId } })).toBe(1);
   });
 
+  it('says the sign-in service is unavailable (503), not that the session is invalid, when Clerk can’t be reached', async () => {
+    t.identity.unavailable = 'all';
+    const res = await t.as('admin').get('/v1/me').expect(503);
+    expect(res.body).toMatchObject({ status: 503, code: 'AUTH_UNAVAILABLE' });
+    // Once Clerk is back, the same session works.
+    t.identity.unavailable = 'none';
+    await t.as('admin').get('/v1/me').expect(200);
+  });
+
+  it('a first sign-in that can’t look up the email gets 503 and links nothing, then links once Clerk is back', async () => {
+    t.identity.users.set('clerk_new', 'invited@example.test');
+    t.identity.unavailable = 'lookup';
+    const res = await t.as('clerk_new').get('/v1/me').expect(503);
+    expect(res.body.code).toBe('AUTH_UNAVAILABLE');
+    expect((await t.prisma.user.findUniqueOrThrow({ where: { id: w.invitedUserId } })).clerkUserId).toBeNull();
+    t.identity.unavailable = 'none';
+    await t.as('clerk_new').get('/v1/me').expect(200);
+  });
+
   it('refuses an identity whose email was never invited', async () => {
     t.identity.users.set('clerk_stranger', 'stranger@example.test');
     const res = await t.as('clerk_stranger').get('/v1/me').expect(403);
