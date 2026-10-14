@@ -17,6 +17,16 @@ export const POLICY = {
   'membership:manage': { admin: true, roles: [] },
   'room:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
   'room:write': { admin: true, roles: [] },
+  /** The property's supplies and their current levels. */
+  'supply:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
+  /** Add, rename, re-threshold and archive supply items. */
+  'supply:write': { admin: true, roles: [] },
+  /** Report how full items are (cleaners do this on site). */
+  'supply:record': { admin: true, roles: ['CLEANER'] },
+  /** Past readings of an item, with who reported them. */
+  'supply:history': { admin: true, roles: ['OWNER'] },
+  /** What needs restocking across every property. */
+  'supply:restock': { admin: true, roles: [] },
   'plan:manage': { admin: true, roles: [] },
   'propertyPlan:read': { admin: true, roles: ['OWNER'] },
   'propertyPlan:assign': { admin: true, roles: [] },

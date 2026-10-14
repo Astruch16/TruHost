@@ -6,6 +6,7 @@ import { ApiError } from '@truhost/api-client';
 import { AuthButton, AuthCard } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
 import { NotAvailable } from '../components/shell/not-available';
+import { LiveNotificationsBell } from '../components/shell/notifications-bell';
 import { PortalLoading } from '../components/shell/portal-loading';
 import { AuthFrame } from '../components/shell/auth-frame';
 import { ErrorAlert } from '../components/ui/alert';
@@ -119,6 +120,10 @@ function SignedInShell() {
       selectedPropertyId={selectedId}
       onSelectProperty={selectProperty}
       allowAllProperties={isAdmin}
+      // Admins and owners are told when supplies run low; cleaners get no notifications.
+      notifications={
+        isAdmin || user.memberships.some((m) => m.role === 'OWNER') ? <LiveNotificationsBell me={user} /> : null
+      }
       onSignOut={handleSignOut}
     >
       <ScopeContext.Provider value={{ propertyId: selectedId, setPropertyId: setScope }}>

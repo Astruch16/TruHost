@@ -231,6 +231,79 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
 
+  // ── supplies ──
+  {
+    route: 'GET /v1/properties/:id/supplies',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/supplies`,
+    allow: A_READERS,
+  },
+  {
+    route: 'GET /v1/properties/:id/supplies',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/supplies`,
+    allow: B_READERS,
+  },
+  {
+    route: 'POST /v1/properties/:id/supplies',
+    path: (w) => `/v1/properties/${w.propertyA.id}/supplies`,
+    body: () => ({ name: 'Shampoo', category: 'BATHROOM' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/properties/:id/supplies/bulk',
+    path: (w) => `/v1/properties/${w.propertyA.id}/supplies/bulk`,
+    body: () => ({ items: [{ name: 'Shampoo' }, { name: 'Dryer sheets', category: 'LAUNDRY' }] }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/properties/:id/supply-statuses',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/supply-statuses`,
+    body: (w) => ({ readings: [{ supplyItemId: w.propertyA.supplyIds[0], levelPct: 50 }] }),
+    allow: ['admin', 'cleanerA'],
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/properties/:id/supply-statuses',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/supply-statuses`,
+    body: (w) => ({ readings: [{ supplyItemId: w.propertyB.supplyIds[0], levelPct: 50 }] }),
+    allow: ['admin', 'cleanerB'],
+    mutates: true,
+  },
+  {
+    route: 'PATCH /v1/supply-items/:id',
+    path: (w) => `/v1/supply-items/${w.propertyA.supplyIds[0]}`,
+    body: () => ({ thresholdPct: 40 }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/supply-items/:id/archive',
+    path: (w) => `/v1/supply-items/${w.propertyA.supplyIds[0]}/archive`,
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/supply-items/:id/history',
+    path: (w) => `/v1/supply-items/${w.propertyA.supplyIds[0]}/history`,
+    allow: ['admin', 'ownerA'],
+  },
+  { route: 'GET /v1/supplies/restock', path: () => '/v1/supplies/restock', allow: ADMIN },
+
+  // ── notifications (self-scoped) ──
+  { route: 'GET /v1/me/notifications', path: () => '/v1/me/notifications', allow: 'everyone' },
+  {
+    route: 'POST /v1/me/notifications/read',
+    path: () => '/v1/me/notifications/read',
+    body: () => ({ all: true }),
+    allow: 'everyone',
+    mutates: true,
+  },
+
   // ── plans ──
   { route: 'GET /v1/plans', path: () => '/v1/plans', allow: ADMIN },
   {

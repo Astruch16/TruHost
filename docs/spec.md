@@ -146,8 +146,8 @@ enum MotionPreference {
 }
 
 /// Settings → Notifications: one row per category the user changed from its default. The catalogue (which roles
-/// see a category, its channels and defaults) is NOTIFICATION_CATALOGUE in packages/shared. Nothing is sent yet;
-/// each category starts with the feature it's about, reading these choices.
+/// see a category, its channels and defaults) is NOTIFICATION_CATALOGUE in packages/shared. Supply alerts are
+/// sent; each other category starts with the feature it's about, reading these choices.
 enum NotificationCategory {
   SUPPLY_ALERTS
   INVITE_ACCEPTED
@@ -771,36 +771,41 @@ model CleanPhoto {
   @@index([cleanId, roomId, phase])
 }
 
-// ───────────────────────── Supplies ─────────────────────────  (Phase 3)
+// ───────────────────────── Supplies ─────────────────────────  (built early, 2026-10-13)
 
+enum SupplyCategory {
+  BATHROOM
+  KITCHEN
+  LAUNDRY
+  CLEANING
+  OTHER
+}
+
+/// Something kept stocked for guests (toilet paper, coffee pods…). Its level is a health bar from 0 to 100%;
+/// at or below thresholdPct it needs restocking.
 model SupplyItem {
-  id         String    @id @default(uuid(7)) @db.Uuid
-  propertyId String    @db.Uuid
-  name       String
-  unit       String?
-  sortOrder  Int       @default(0)
-  archivedAt DateTime? @db.Timestamptz
-  createdAt  DateTime  @default(now()) @db.Timestamptz
+  id           String         @id @default(uuid(7)) @db.Uuid
+  propertyId   String         @db.Uuid
+  name         String         /// CHECK supply_item_name_tidy: trimmed, 1–60 characters
+  category     SupplyCategory @default(OTHER)
+  thresholdPct Int            @default(25) /// CHECK supply_item_threshold_range: 5–95
+  position     Int            @default(0)
+  archivedAt   DateTime?      @db.Timestamptz
+  createdAt    DateTime       @default(now()) @db.Timestamptz
+  // + unique index supply_item_name_unique (propertyId, lower(name)) WHERE archivedAt IS NULL (raw SQL)
 
-  @@unique([propertyId, name])
+  @@index([propertyId, position])
 }
 
-enum SupplyLevel {
-  FULL
-  OK
-  LOW
-  OUT
-}
-
-/// Append-only. The current level is the latest row, so history is kept.
+/// Append-only (trigger). The current level is the latest row, so history is kept. Screens offer Full, ¾, ½, ¼ and
+/// Empty; state is derived: no reading UNKNOWN, 0 OUT, ≤ threshold LOW, else OK.
 model SupplyStatus {
-  id           String      @id @default(uuid(7)) @db.Uuid
-  supplyItemId String      @db.Uuid
-  level        SupplyLevel
+  id           String   @id @default(uuid(7)) @db.Uuid
+  supplyItemId String   @db.Uuid
+  levelPct     Int      /// CHECK supply_status_level_range: 0–100
   note         String?
-  cleanId      String?     @db.Uuid /// Set when recorded during a clean.
-  reportedById String      @db.Uuid
-  reportedAt   DateTime    @default(now()) @db.Timestamptz
+  reportedById String   @db.Uuid
+  reportedAt   DateTime @default(now()) @db.Timestamptz
 
   @@index([supplyItemId, reportedAt(sort: Desc)])
 }
@@ -812,8 +817,8 @@ enum NotificationKind {
   SUPPLY_OUT
 }
 
-/// In-app notification for one user. Created in the same transaction as the event that causes it. Email, when the
-/// kind calls for it, is sent after commit and recorded in emailSentAt.
+/// In-app notification for one user. Created in the same transaction as the event that causes it, when the person
+/// has in-app on for its category. Email, when they have email on, is sent after commit and recorded in emailSentAt.
 model Notification {
   id          String           @id @default(uuid(7)) @db.Uuid
   userId      String           @db.Uuid
@@ -992,7 +997,7 @@ ALTER TABLE "Booking" ADD CONSTRAINT booking_no_overlap
 
 - **Organization / multi-tenancy** [A1].
 - **Owner-owes-TruHost balances**: see §10 "Later".
-- **Notifications**: after Phase 4.
+- **Notifications other than supply alerts**: after Phase 4.
 
 ---
 
@@ -1204,8 +1209,8 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 | GET    | `/me/notification-settings` | A O C | The categories for the caller's roles, with their choices or the defaults.                                |
 | PUT    | `/me/notification-settings` | A O C | `{ items[] }`. 422 `NOT_YOUR_NOTIFICATION` / `CHANNEL_NOT_AVAILABLE`. Own settings only.                  |
 | GET    | `/me/earnings`              | C     | Completed cleans with pay and paid/unpaid status (voided payments show as unpaid), plus totals. [3]       |
-| GET    | `/me/notifications`         | A O C | `?unread=true`. Own notifications only. [3]                                                               |
-| POST   | `/me/notifications/read`    | A O C | `{ ids[] }` or `{ all: true }`. Marks own notifications read. [3]                                         |
+| GET    | `/me/notifications`         | A O C | `?unread=true`. Own notifications only.                                                                   |
+| POST   | `/me/notifications/read`    | A O C | `{ ids[] }` or `{ all: true }`. Marks own notifications read.                                             |
 
 ### Users & invites
 
@@ -1321,29 +1326,28 @@ Roles: **A** = admin, **O** = owner (own properties), **C** = cleaner
 | GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                   |
 | POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                       |
 
-### Supplies [3]
+### Supplies (built early)
 
-| Method | Path                              | Roles | Notes                          |
-| ------ | --------------------------------- | ----- | ------------------------------ |
-| GET    | `/properties/:id/supplies`        | A O C | Items with latest level.       |
-| POST   | `/properties/:id/supplies`        | A     |                                |
-| PATCH  | `/supply-items/:id`               | A     |                                |
-| POST   | `/supply-items/:id/archive`       | A     |                                |
-| POST   | `/properties/:id/supply-statuses` | A C   | Batch readings. Append-only.   |
-| GET    | `/supply-items/:id/history`       | A O   |                                |
-| GET    | `/supplies/restock`               | A     | LOW and OUT across properties. |
+| Method | Path                              | Roles | Notes                                                                                                                  |
+| ------ | --------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/properties/:id/supplies`        | A O C | Active items with latest level, `state` (UNKNOWN/OK/LOW/OUT) and when last checked.                                    |
+| POST   | `/properties/:id/supplies`        | A     | `{ name, category?, thresholdPct? }`. 409 `SUPPLY_NAME_TAKEN` (per property, ignoring case).                           |
+| POST   | `/properties/:id/supplies/bulk`   | A     | `{ items[] }` (setup from the common list). At most 60 active items per property.                                      |
+| PATCH  | `/supply-items/:id`               | A     | Name, category, threshold. A new threshold applies to the next reading; it never alerts by itself.                     |
+| POST   | `/supply-items/:id/archive`       | A     | Stops tracking; readings are kept.                                                                                     |
+| POST   | `/properties/:id/supply-statuses` | A C   | `{ readings: [{ supplyItemId, levelPct, note? }] }`. Append-only. 422 `UNKNOWN_SUPPLY_ITEM` / `DUPLICATE_SUPPLY_ITEM`. |
+| GET    | `/supply-items/:id/history`       | A O   | Newest first, with who reported each.                                                                                  |
+| GET    | `/supplies/restock`               | A     | LOW and OUT across active properties, emptiest first.                                                                  |
 
-**Supply alerts.** A `SupplyStatus` reading creates notifications only when
-the item's level **changes into** LOW or OUT (FULL/OK → LOW, anything → OUT).
-Repeating the same level, or LOW → LOW, sends nothing. Recipients:
-
-| Level | Admins                  | Owners of the property |
-| ----- | ----------------------- | ---------------------- |
-| LOW   | in-app                  | in-app                 |
-| OUT   | in-app + email (Resend) | in-app                 |
-
-Owners also see current LOW and OUT items on their dashboard, read from
-`GET /properties/:id/supplies`. Cleaners get no notifications.
+**Supply alerts.** A reading notifies only when the item **crosses into** LOW
+or OUT (OK or never checked → LOW; anything else → OUT). Repeating a level,
+or LOW → LOW, sends nothing; restocking and dropping again alerts again.
+Readings take the property's row lock, so two people reporting at once can't
+both (or neither) alert. Recipients are the active admins and the property's
+active owners, each once. Each person's Settings → Notifications "Supplies
+running low" switches decide in-app (a `Notification` row, written with the
+reading) and email (sent after commit; a failure is logged and never undoes
+the reading). Both default to on. Cleaners get no notifications.
 
 ### Damage reports [4]
 
@@ -1545,24 +1549,24 @@ Still open:
 
 Resolved (kept for traceability; 2026-10-06 unless noted):
 
-| #    | Question                                    | Decision                                                                                                               |
-| ---- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Q1   | Several owners per property?                | Yes, as built.                                                                                                         |
-| N1   | Who pays for the clean after an owner stay? | The owner: an owner-borne CLEANING expense at the property's standard cleaning fee.                                    |
-| N2   | "ADR" label                                 | Show "Avg. nightly earnings", not ADR.                                                                                 |
-| N3   | Cancelled stay that still pays out          | Revenue in its check-in month, zero nights.                                                                            |
-| N4   | Airbnb's fee on the cleaning fee            | Owners absorb it; gross = payout − full cleaning fee.                                                                  |
-| N6   | Expense month                               | Purchase date (the date on the receipt).                                                                               |
-| N7   | Lockbox codes                               | Not stored in the app. Revisit with proper secret handling ("Later").                                                  |
-| N8   | Clean assignment and timing                 | Default cleaner per property, admin override per clean; a cleaner may start any time on the scheduled day.             |
-| N9   | Mistaken cleaner payment                    | Voidable with a required reason; never deleted; audited.                                                               |
-| N10  | Bad photos                                  | Later: a separate flag record; photos stay immutable.                                                                  |
-| N11  | Damage cost recovery                        | Later: claim status and amount recovered on damage reports.                                                            |
-| N12  | Supplies                                    | TruHost restocks and records an owner-borne SUPPLIES expense with a receipt.                                           |
-| N13  | Domains and invite email                    | Not chosen: env vars with placeholders. Invite emails sent by us through Resend, not Clerk.                            |
-| N12b | Low supply alerts                           | Admins in-app on LOW and OUT, plus email on OUT; owners in-app and on their dashboard. Built with supplies in Phase 3. |
-| N14  | Owner stay cancelled after its clean        | The cleaning charge stands unless an admin voids it, with a reason, audited.                                           |
-| N15  | Mascot design                               | Resolved 2026-10-07: three guides (Sage, Juniper, Pip) from `docs/design`, chosen per user; built in PR #9.            |
+| #    | Question                                    | Decision                                                                                                              |
+| ---- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Q1   | Several owners per property?                | Yes, as built.                                                                                                        |
+| N1   | Who pays for the clean after an owner stay? | The owner: an owner-borne CLEANING expense at the property's standard cleaning fee.                                   |
+| N2   | "ADR" label                                 | Show "Avg. nightly earnings", not ADR.                                                                                |
+| N3   | Cancelled stay that still pays out          | Revenue in its check-in month, zero nights.                                                                           |
+| N4   | Airbnb's fee on the cleaning fee            | Owners absorb it; gross = payout − full cleaning fee.                                                                 |
+| N6   | Expense month                               | Purchase date (the date on the receipt).                                                                              |
+| N7   | Lockbox codes                               | Not stored in the app. Revisit with proper secret handling ("Later").                                                 |
+| N8   | Clean assignment and timing                 | Default cleaner per property, admin override per clean; a cleaner may start any time on the scheduled day.            |
+| N9   | Mistaken cleaner payment                    | Voidable with a required reason; never deleted; audited.                                                              |
+| N10  | Bad photos                                  | Later: a separate flag record; photos stay immutable.                                                                 |
+| N11  | Damage cost recovery                        | Later: claim status and amount recovered on damage reports.                                                           |
+| N12  | Supplies                                    | TruHost restocks and records an owner-borne SUPPLIES expense with a receipt.                                          |
+| N13  | Domains and invite email                    | Not chosen: env vars with placeholders. Invite emails sent by us through Resend, not Clerk.                           |
+| N12b | Low supply alerts                           | Admins and owners on LOW and OUT, in-app and email per their Settings (both on by default). Built early (2026-10-13). |
+| N14  | Owner stay cancelled after its clean        | The cleaning charge stands unless an admin voids it, with a reason, audited.                                          |
+| N15  | Mascot design                               | Resolved 2026-10-07: three guides (Sage, Juniper, Pip) from `docs/design`, chosen per user; built in PR #9.           |
 
 ---
 
@@ -1661,12 +1665,11 @@ locked booking (409) and add an adjustment that lands on the next month.
 
 Clean (auto from bookings, assigned to the property's default cleaner),
 CleanPhoto, the state machine and its guard (including the scheduled-day
-start rule), supplies, cleaner pay, payments with void, the owner-stay
-cleaning charge, and supply alerts (`Notification` model, in-app list and
-unread badge for admins and owners, email via Resend for OUT). Mobile-first
-cleaner screens: schedule, room checklist with camera upload, supplies,
-earnings. Admin schedule board, assignment, pay run and notifications. Owner
-dashboard shows LOW/OUT supplies. Completing a clean is a milestone: the
+start rule), cleaner pay, payments with void and the owner-stay cleaning
+charge. Supplies and supply alerts were built early (2026-10-13); Phase 3
+adds a supplies step to the clean walkthrough. Mobile-first cleaner screens:
+schedule, room checklist with camera upload, earnings. Admin schedule board,
+assignment and pay run. Completing a clean is a milestone: the
 cleaner sees the celebrating guide (`SuccessNotice`).
 **Run:** a booking creates a clean, a cleaner completes it on a phone
 (completion is refused while a photo is missing), and the admin records the
@@ -1883,3 +1886,4 @@ UI, and a "needs financials" queue.
 | 2026-10-13 | Stays calendar bars run from the middle of the check-in day to the middle of the check-out day, as on Airbnb and Vrbo, so a stay visibly ends on its check-out day and a same-day turnover shows as two bars meeting in one cell (sharing a lane). A stay checking out on the 1st shows as half a day on that month.                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2026-10-13 | Admins who own properties themselves add them from My properties ("Add property"): the property is created with them as its owner in one transaction (`ownedByMe`), so it appears there straight away. Owners and cleaners still can't add properties; TruHost adds them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 2026-10-13 | Staff-owned properties pay no management fee: a 0% plan, "Own property" (fixed id `OWN_PROPERTY_PLAN_ID`, created by migration, can't be archived), so fees, summaries and statements need no special case. Adding a property from My properties puts it on this plan. An admin who owns a property already on another plan can correct every month so far to it from the property page (allowed now because no statement has been finalized; Phase 2b adds that guard). The owner property page was redesigned (photo banner, the month led by net, stays by channel, expenses, management fee, details, rooms), and admins can edit their properties from My properties and the property page.                                            |
+| 2026-10-13 | Supplies built ahead of Phase 3, as a health bar rather than four named levels: each item has a level from 0 to 100% (people tap Full, ¾, ½, ¼ or Empty) and its own restock point (25% by default). Reaching the restock point or empty notifies the admins and the property's owners, in-app (the bell, now shown to admins and owners) and by email, per their Settings; cleaners report levels and get no notifications. Admins set a property up from a list of common supplies, and see everything to restock across properties on Restock. Supply readings no longer link to a clean; Phase 3 can add that.                                                                                                                          |

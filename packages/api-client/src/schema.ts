@@ -84,6 +84,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/me/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Notifications_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/notifications/read': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Notifications_markRead'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/users': {
     parameters: {
       query?: never;
@@ -692,6 +724,118 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/properties/{id}/supplies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Supplies_list'];
+    put?: never;
+    post: operations['Supplies_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/supplies/bulk': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Supplies_createMany'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/supply-statuses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Supplies_record'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/supply-items/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['Supplies_update'];
+    trace?: never;
+  };
+  '/v1/supply-items/{id}/archive': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Supplies_archive'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/supply-items/{id}/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Supplies_history'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/supplies/restock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Supplies_restock'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/dashboard': {
     parameters: {
       query?: never;
@@ -1074,6 +1218,101 @@ export interface operations {
         content: {
           'application/json': {
             taxFieldsEnabled: boolean;
+          };
+        };
+      };
+    };
+  };
+  Notifications_list: {
+    parameters: {
+      query?: {
+        unread?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT';
+              title: string;
+              body: string | null;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              entityType: string;
+              /** Format: uuid */
+              entityId: string;
+              /** Format: date-time */
+              readAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            unread: number;
+          };
+        };
+      };
+    };
+  };
+  Notifications_markRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json':
+          | {
+              ids: string[];
+            }
+          | {
+              /** @enum {boolean} */
+              all: true;
+            };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT';
+              title: string;
+              body: string | null;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              entityType: string;
+              /** Format: uuid */
+              entityId: string;
+              /** Format: date-time */
+              readAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+            unread: number;
           };
         };
       };
@@ -3986,6 +4225,366 @@ export interface operations {
               cleaningFeesCents?: number;
               name: string;
               archived: boolean;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name: string;
+          /**
+           * @default OTHER
+           * @enum {string}
+           */
+          category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+          /** @default 25 */
+          thresholdPct?: number;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            /** @enum {string} */
+            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            thresholdPct: number;
+            position: number;
+            levelPct: number | null;
+            /** @enum {string} */
+            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+            /** Format: date-time */
+            lastCheckedAt: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Supplies_createMany: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          items: {
+            name: string;
+            /**
+             * @default OTHER
+             * @enum {string}
+             */
+            category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            /** @default 25 */
+            thresholdPct?: number;
+          }[];
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_record: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          readings: {
+            /** Format: uuid */
+            supplyItemId: string;
+            levelPct: number;
+            /** @default null */
+            note?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name?: string;
+          /** @enum {string} */
+          category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+          thresholdPct?: number;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            /** @enum {string} */
+            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            thresholdPct: number;
+            position: number;
+            levelPct: number | null;
+            /** @enum {string} */
+            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+            /** Format: date-time */
+            lastCheckedAt: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Supplies_archive: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            /** @enum {string} */
+            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            thresholdPct: number;
+            position: number;
+            levelPct: number | null;
+            /** @enum {string} */
+            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+            /** Format: date-time */
+            lastCheckedAt: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Supplies_history: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              levelPct: number;
+              note: string | null;
+              /** Format: date-time */
+              reportedAt: string;
+              reportedBy: {
+                firstName: string;
+                lastName: string;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_restock: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
             }[];
           };
         };

@@ -3,8 +3,6 @@ import * as RadixDialog from '@radix-ui/react-dialog';
 import { Menu, X } from 'lucide-react';
 import type { NavItem } from '../../lib/nav';
 import { ShellContext } from '../../lib/shell-context';
-import { FEATURES } from '../../lib/features';
-import { NotificationsBell } from './notifications-bell';
 import { ProfileMenu } from './profile-menu';
 import { PropertySwitcher, type SwitcherProperty } from './property-switcher';
 import { Sidebar } from './sidebar';
@@ -28,7 +26,7 @@ export function AppShell({
   selectedPropertyId,
   onSelectProperty,
   allowAllProperties = false,
-  unreadNotifications = 0,
+  notifications,
   onSignOut,
   children,
 }: {
@@ -39,7 +37,8 @@ export function AppShell({
   onSelectProperty: (id: string | null) => void;
   /** Offer "All properties" in the switcher (admins). */
   allowAllProperties?: boolean;
-  unreadNotifications?: number;
+  /** The bell, for people who get notifications (admins and owners). */
+  notifications?: ReactNode;
   onSignOut: () => void;
   children: ReactNode;
 }) {
@@ -99,8 +98,7 @@ export function AppShell({
               />
             )}
           </div>
-          {/* Hidden until notifications are sent (lib/features.ts). */}
-          {FEATURES.notifications && <NotificationsBell unread={unreadNotifications} />}
+          {notifications}
           <ProfileMenu {...user} onSignOut={onSignOut} />
         </header>
         <main

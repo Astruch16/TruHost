@@ -11,6 +11,7 @@ import { PropertyHero } from '../../../components/owner/property-hero';
 import { PropertyRoomsCard } from '../../../components/property-basics';
 import { PropertyDialog } from '../../../components/property-dialog';
 import { RoomsEditor } from '../../../components/rooms/rooms-card';
+import { SuppliesCard, SuppliesEditor } from '../../../components/supplies/supplies-card';
 import { NotAvailable } from '../../../components/shell/not-available';
 import { ErrorAlert } from '../../../components/ui/alert';
 import { Button } from '../../../components/ui/button';
@@ -23,7 +24,7 @@ import { queries } from '../../../lib/queries';
 
 /**
  * The owner's property page: a photo banner, the month (net, gross, nights, where the money went), its stays and
- * expenses, and on the side the management fee, details and rooms. Only for owners of this property. Cleaners go to
+ * expenses, and on the side its supplies (what needs restocking), the management fee, details and rooms. Only for owners of this property. Cleaners go to
  * their own page (/cleaner/properties/:id), which has no financial sections, and admins to the admin page; anyone
  * else sees "not available". The API enforces the same on every call. Admins who own the property can edit it and its
  * rooms here, and switch it to no fee (their own property).
@@ -49,6 +50,7 @@ function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: b
   const [month, setMonth] = useState(monthKey);
   const [editing, setEditing] = useState(false);
   const [editingRooms, setEditingRooms] = useState(false);
+  const [editingSupplies, setEditingSupplies] = useState(false);
 
   if (property.error) {
     return property.error instanceof ApiError && property.error.status === 404 ? (
@@ -89,6 +91,11 @@ function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: b
           </div>
         </div>
         <aside className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
+          <SuppliesCard
+            propertyId={propertyId}
+            mode="view"
+            onManage={admin ? () => setEditingSupplies(true) : undefined}
+          />
           <ManagementCard propertyId={propertyId} canMarkOwn={admin} />
           <PropertyDetailsPanel property={p} />
           <PropertyRoomsCard propertyId={propertyId} onEdit={admin ? () => setEditingRooms(true) : undefined} />
@@ -106,6 +113,19 @@ function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: b
           {/* Lays out against the dialog's width, as it does against the page's on the admin page. */}
           <div className="@container/content">
             <RoomsEditor propertyId={propertyId} layout={p} />
+          </div>
+        </Dialog>
+      )}
+      {admin && (
+        <Dialog
+          open={editingSupplies}
+          onOpenChange={setEditingSupplies}
+          size="xl"
+          title="Manage supplies"
+          description="Mark levels, add or edit items and set restock points. Changes save as you go."
+        >
+          <div className="@container/content">
+            <SuppliesEditor propertyId={propertyId} />
           </div>
         </Dialog>
       )}

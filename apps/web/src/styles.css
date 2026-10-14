@@ -46,6 +46,9 @@
   --color-rose-deep: #8b2350;
   --color-amber-tint: #fbeecb;
   --color-amber-deep: #6f4c0e;
+  /* Supply health bars: the fill for "running low" and "out" (the deep pairs are for text). */
+  --color-amber-mid: #d29a2a;
+  --color-danger-mid: #c4473b;
 
   /* Error/destructive (not in the mockup palette; kept muted to sit with the pairs above) */
   --color-danger-tint: #f8e1de;

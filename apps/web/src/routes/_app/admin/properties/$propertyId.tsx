@@ -21,6 +21,7 @@ import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../../../compone
 import { useApi } from '../../../../lib/api-context';
 import { formatBps, titleCase } from '../../../../lib/format';
 import { RoomsCard } from '../../../../components/rooms/rooms-card';
+import { SuppliesCard } from '../../../../components/supplies/supplies-card';
 import { queries } from '../../../../lib/queries';
 
 export const Route = createFileRoute('/_app/admin/properties/$propertyId')({
@@ -99,6 +100,7 @@ function AdminProperty() {
           <RoomsCard propertyId={propertyId} layout={p} />
           <PlanCard propertyId={propertyId} />
         </div>
+        <SuppliesCard propertyId={propertyId} mode="manage" wide />
         <MembersCard propertyId={propertyId} defaultCleanerId={p.defaultCleanerId ?? null} />
       </div>
     </>

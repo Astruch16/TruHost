@@ -85,3 +85,9 @@ export type FilePurpose = z.infer<typeof FilePurpose>;
 
 export const FileStatus = z.enum(['PENDING', 'VERIFIED']);
 export type FileStatus = z.infer<typeof FileStatus>;
+
+export const SupplyCategory = z.enum(['BATHROOM', 'KITCHEN', 'LAUNDRY', 'CLEANING', 'OTHER']);
+export type SupplyCategory = z.infer<typeof SupplyCategory>;
+
+export const NotificationKind = z.enum(['SUPPLY_LOW', 'SUPPLY_OUT']);
+export type NotificationKind = z.infer<typeof NotificationKind>;

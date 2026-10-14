@@ -173,6 +173,9 @@ export class PropertiesService {
       await tx.property.update({ where: { id }, data: { coverPhotoId: null, defaultCleanerId: null } });
       await tx.propertyPhoto.deleteMany({ where: { propertyId: id } });
       await tx.storedFile.deleteMany({ where: { propertyId: id } });
+      await tx.notification.deleteMany({ where: { propertyId: id } });
+      await tx.supplyStatus.deleteMany({ where: { item: { propertyId: id } } });
+      await tx.supplyItem.deleteMany({ where: { propertyId: id } });
       await tx.room.deleteMany({ where: { propertyId: id } });
       await tx.membership.deleteMany({ where: { propertyId: id } });
       await tx.propertyPlan.deleteMany({ where: { propertyId: id } });

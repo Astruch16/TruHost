@@ -11,8 +11,8 @@ export const ACTORS = ['admin', 'ownerA', 'ownerB', 'cleanerA', 'cleanerB', 'out
 export type ActorKey = (typeof ACTORS)[number];
 
 export interface World {
-  propertyA: { id: string; roomIds: string[] };
-  propertyB: { id: string; roomIds: string[] };
+  propertyA: { id: string; roomIds: string[]; supplyIds: string[] };
+  propertyB: { id: string; roomIds: string[]; supplyIds: string[] };
   users: Record<ActorKey, { id: string; subject: string }>;
   memberships: Record<'ownerA' | 'ownerB' | 'cleanerA' | 'cleanerB' | 'adminOwnsA', string>;
   planId: string;
@@ -44,8 +44,14 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
             { type: 'BATHROOM', number: 1, position: 1 },
           ],
         },
+        supplies: {
+          create: [
+            { name: 'Toilet paper', category: 'BATHROOM', position: 0 },
+            { name: 'Coffee pods', category: 'KITCHEN', position: 1 },
+          ],
+        },
       },
-      include: { rooms: { orderBy: { position: 'asc' } } },
+      include: { rooms: { orderBy: { position: 'asc' } }, supplies: { orderBy: { position: 'asc' } } },
     });
   const a = await property('Property A');
   const b = await property('Property B');
@@ -177,8 +183,8 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },
     files: { a: ea.file, b: eb.file, truhostA: et.file },
     photoA: { id: photoA.id, fileId: photoFileId, thumbFileId: photoThumbId },
-    propertyA: { id: a.id, roomIds: a.rooms.map((r) => r.id) },
-    propertyB: { id: b.id, roomIds: b.rooms.map((r) => r.id) },
+    propertyA: { id: a.id, roomIds: a.rooms.map((r) => r.id), supplyIds: a.supplies.map((s) => s.id) },
+    propertyB: { id: b.id, roomIds: b.rooms.map((r) => r.id), supplyIds: b.supplies.map((s) => s.id) },
     users: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, { id: u.id, subject: k }])) as World['users'],
     memberships: {
       ownerA: await member(users.ownerA.id, a.id, 'OWNER'),

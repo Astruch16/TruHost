@@ -5,6 +5,7 @@ import {
   CalendarRange,
   Home,
   LayoutDashboard,
+  Package,
   ReceiptText,
   Settings,
   Shield,
@@ -23,7 +24,8 @@ export interface NavItem {
 
 /**
  * Sidebar items for the signed-in user. Role-aware for convenience only; the API enforces access.
- * The owner dashboard sections from the mockup (Calendar, Cleans, Supplies, …) are added as their phases land.
+ * The owner dashboard sections from the mockup (Calendar, Cleans, …) are added as their phases land. Owners and
+ * cleaners find supplies on each property's page.
  */
 export function navItems(me: { staffRole: string | null; memberships: unknown[] }): NavItem[] {
   const items: NavItem[] = [];
@@ -35,6 +37,7 @@ export function navItems(me: { staffRole: string | null; memberships: unknown[] 
       { to: '/admin/properties', label: 'Properties', icon: Building2 },
       { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays },
       { to: '/admin/expenses', label: 'Expenses', icon: ReceiptText },
+      { to: '/admin/supplies', label: 'Restock', icon: Package },
       { to: '/admin/team', label: 'Team', icon: Users },
       { to: '/admin/plans', label: 'Plans', icon: Shield },
     );
