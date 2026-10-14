@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { supplyAlert, supplyState } from './alerts.js';
+import { restockUrgency, supplyAlert, supplyState } from './alerts.js';
 
 describe('supply state', () => {
   it.each([
@@ -34,5 +34,24 @@ describe('supply alerts', () => {
     ['a higher restock point counts', 75, 50, 50, 'SUPPLY_LOW'],
   ] as const)('%s', (_case, previous, next, threshold, alert) =>
     expect(supplyAlert(previous, next, threshold)).toBe(alert),
+  );
+});
+
+describe('restock urgency', () => {
+  it.each([
+    [null, 25, null],
+    [100, 25, null],
+    [75, 25, null],
+    [51, 25, null],
+    [50, 25, 'SOON'],
+    [26, 25, 'SOON'],
+    [25, 25, 'LOW'],
+    [0, 25, 'OUT'],
+    [75, 50, 'SOON'],
+    [76, 50, null],
+    [95, 95, 'LOW'],
+    [100, 95, 'SOON'],
+  ] as const)('%s%% with a %s%% restock point: %s', (level, threshold, urgency) =>
+    expect(restockUrgency(level, threshold)).toBe(urgency),
   );
 });

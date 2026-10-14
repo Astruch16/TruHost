@@ -11,14 +11,14 @@ import { queries } from '../../../lib/queries';
 import { useScope } from '../../../lib/scope';
 
 /**
- * Restock: every supply at or below its restock point, across the properties (or the one chosen in the switcher).
- * Each property's own page has its full supplies list.
+ * Supplies across the properties (or the one chosen in the switcher): what needs restocking now, and what's close to
+ * it. Each property's own page has its full supplies list.
  */
 export const Route = createFileRoute('/_app/admin/supplies')({
-  component: Restock,
+  component: Supplies,
 });
 
-function Restock() {
+function Supplies() {
   const restock = useQuery(queries.restock(useApi()));
   const { propertyId } = useScope();
   const items = (restock.data?.items ?? []).filter((i) => !propertyId || i.property.id === propertyId);
@@ -26,23 +26,19 @@ function Restock() {
   return (
     <>
       <PageHeader
-        title="Restock"
-        description="Supplies at or below their restock point. Mark one restocked once it’s topped up."
+        title="Supplies"
+        description="What needs restocking now, and what’s close to it. Mark an item restocked once it’s topped up."
       />
       {restock.error ? (
-        <LoadError what="the restock list" onRetry={() => void restock.refetch()} retrying={restock.isFetching} />
+        <LoadError what="supplies" onRetry={() => void restock.refetch()} retrying={restock.isFetching} />
       ) : !restock.data ? (
-        <div
-          role="status"
-          aria-label="Loading the restock list"
-          className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2"
-        >
+        <div role="status" aria-label="Loading supplies" className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2">
           <Skeleton className="h-64 rounded-card" />
           <Skeleton className="h-64 rounded-card" />
         </div>
       ) : items.length === 0 ? (
-        <EmptyState size="compact" illustration={<AllClearIllustration />} title="Nothing to restock">
-          Every supply {propertyId ? 'at this property' : 'at your properties'} is above its restock point.
+        <EmptyState size="compact" illustration={<AllClearIllustration />} title="All stocked">
+          Nothing {propertyId ? 'at this property' : 'at your properties'} is at or near its restock point.
         </EmptyState>
       ) : (
         <RestockList items={items} />

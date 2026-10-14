@@ -119,9 +119,23 @@ function fakeSuppliesApi(): ApiClient {
       if (path === '/v1/supplies/restock') {
         const items = rows
           .filter((r) => !r.archived)
-          .map((r, i) => ({ ...toItem(r, i), property: { id: r.propertyId, name: PROPERTIES[r.propertyId]! } }))
-          .filter((i) => i.state === 'LOW' || i.state === 'OUT')
-          .sort((a, b) => a.levelPct! - b.levelPct!);
+          .map((r, i) => {
+            const item = toItem(r, i);
+            // As the API: out or low now, or within a quarter of the restock point soon.
+            const urgency =
+              item.state === 'OUT' || item.state === 'LOW'
+                ? item.state
+                : item.state === 'OK' && item.levelPct! <= item.thresholdPct + 25
+                  ? 'SOON'
+                  : null;
+            return { ...item, property: { id: r.propertyId, name: PROPERTIES[r.propertyId]! }, urgency };
+          })
+          .filter((i) => i.urgency !== null)
+          .sort(
+            (a, b) =>
+              ['OUT', 'LOW', 'SOON'].indexOf(a.urgency!) - ['OUT', 'LOW', 'SOON'].indexOf(b.urgency!) ||
+              a.levelPct! - a.thresholdPct - (b.levelPct! - b.thresholdPct),
+          );
         return respond({ items });
       }
       if (path === '/v1/supply-items/{id}/history') {
@@ -274,7 +288,7 @@ function SuppliesPreview() {
             <Pane label="Admin (new property)">
               <SuppliesCard propertyId="fresh" mode="manage" wide />
             </Pane>
-            <Pane label="Restock page">
+            <Pane label="Supplies page">
               <Restock />
             </Pane>
             <Pane label="Bell">

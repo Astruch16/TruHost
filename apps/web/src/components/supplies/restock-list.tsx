@@ -4,17 +4,17 @@ import { unwrap } from '@truhost/api-client';
 import type { RestockList } from '@truhost/shared';
 import { Check } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
+import { groupByProperty, restockSummary } from '../../lib/supplies';
 import { ErrorAlert } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { Pill } from '../ui/pill';
-import { SupplyBar, SupplyMeta } from './supply-bar';
+import { SupplyBar, SupplyMeta, UrgencyPill } from './supply-bar';
 
 type Item = RestockList['items'][number];
 
 /**
- * What needs restocking, one card per property (in the API's order: the property with the emptiest item first).
- * "Restocked" marks the item full, which takes it off the list.
+ * What needs restocking now, and what's close to it, one card per property (in the API's order: the property with the
+ * most urgent item first). "Restocked" marks the item full, which takes it off the list.
  */
 export function RestockList({ items }: { items: Item[] }) {
   const api = useApi();
@@ -33,18 +33,12 @@ export function RestockList({ items }: { items: Item[] }) {
         qc.invalidateQueries({ queryKey: ['me', 'notifications'] }),
       ]),
   });
-  const byProperty = new Map<string, { property: Item['property']; items: Item[] }>();
-  for (const item of items) {
-    const group = byProperty.get(item.property.id) ?? { property: item.property, items: [] };
-    group.items.push(item);
-    byProperty.set(item.property.id, group);
-  }
 
   return (
     <div className="flex flex-col gap-4">
       <ErrorAlert error={restocked.error} />
       <div className="grid grid-cols-1 items-start gap-6 @4xl/content:grid-cols-2">
-        {[...byProperty.values()].map(({ property, items: list }) => (
+        {groupByProperty(items).map(({ property, items: list }) => (
           <Card
             key={property.id}
             title={
@@ -56,7 +50,7 @@ export function RestockList({ items }: { items: Item[] }) {
                 {property.name}
               </Link>
             }
-            description={`${list.length} to restock`}
+            description={restockSummary(list)}
           >
             <ul className="flex flex-col">
               {list.map((item) => (
@@ -64,7 +58,7 @@ export function RestockList({ items }: { items: Item[] }) {
                   <div className="flex min-h-9 items-center justify-between gap-3">
                     <span className="flex min-w-0 items-center gap-2">
                       <span className="truncate font-semibold text-ink">{item.name}</span>
-                      {item.state === 'OUT' ? <Pill tone="danger">Out</Pill> : <Pill tone="amber">Running low</Pill>}
+                      <UrgencyPill urgency={item.urgency} />
                     </span>
                     <Button
                       size="sm"

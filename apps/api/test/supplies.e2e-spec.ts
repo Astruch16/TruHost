@@ -90,7 +90,7 @@ describe('supplies: levels, restock points and alerts', () => {
       await report('cleanerA', [{ supplyItemId: tp(), levelPct: 25 }]).expect(201);
       // Admin (who also owns A) once, ownerA once; nobody at B, no cleaners.
       const low = await t.prisma.notification.findMany({ include: { user: true } });
-      expect(low.map((n) => [n.user.firstName, n.kind]).sort()).toEqual([
+      expect(low.map((n) => [n.user.firstName, n.kind]).sort(([a], [b]) => a.localeCompare(b))).toEqual([
         ['admin', 'SUPPLY_LOW'],
         ['ownerA', 'SUPPLY_LOW'],
       ]);
@@ -235,21 +235,32 @@ describe('supplies: levels, restock points and alerts', () => {
       expect(history.body.items).toHaveLength(1);
     });
 
-    it('lists what needs restocking across properties, emptiest first', async () => {
+    it('lists what needs restocking, then what’s close to it, across properties', async () => {
       await report('cleanerA', [
         { supplyItemId: tp(), levelPct: 25 },
-        { supplyItemId: pods(), levelPct: 75 },
+        { supplyItemId: pods(), levelPct: 75 }, // well above its restock point: not listed
       ]).expect(201);
       await t
         .as('admin')
         .post(`/v1/properties/${w.propertyB.id}/supply-statuses`, {
-          readings: [{ supplyItemId: w.propertyB.supplyIds[1]!, levelPct: 0 }],
+          readings: [
+            { supplyItemId: w.propertyB.supplyIds[0]!, levelPct: 50 }, // a quarter above: close
+            { supplyItemId: w.propertyB.supplyIds[1]!, levelPct: 0 },
+          ],
         })
         .expect(201);
       const restock = (await t.as('admin').get('/v1/supplies/restock').expect(200)).body.items;
-      expect(restock.map((i: Item & { property: { name: string } }) => [i.property.name, i.name, i.state])).toEqual([
-        ['Property B', 'Coffee pods', 'OUT'],
-        ['Property A', 'Toilet paper', 'LOW'],
+      expect(
+        restock.map((i: Item & { property: { name: string }; urgency: string }) => [
+          i.property.name,
+          i.name,
+          i.state,
+          i.urgency,
+        ]),
+      ).toEqual([
+        ['Property B', 'Coffee pods', 'OUT', 'OUT'],
+        ['Property A', 'Toilet paper', 'LOW', 'LOW'],
+        ['Property B', 'Toilet paper', 'OK', 'SOON'],
       ]);
     });
   });

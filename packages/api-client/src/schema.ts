@@ -4585,6 +4585,8 @@ export interface operations {
                 id: string;
                 name: string;
               };
+              /** @enum {string} */
+              urgency: 'OUT' | 'LOW' | 'SOON';
             }[];
           };
         };

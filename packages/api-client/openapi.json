@@ -9521,6 +9521,10 @@
                             },
                             "required": ["id", "name"],
                             "additionalProperties": false
+                          },
+                          "urgency": {
+                            "type": "string",
+                            "enum": ["OUT", "LOW", "SOON"]
                           }
                         },
                         "required": [
@@ -9534,7 +9538,8 @@
                           "state",
                           "lastCheckedAt",
                           "archivedAt",
-                          "property"
+                          "property",
+                          "urgency"
                         ],
                         "additionalProperties": false
                       }

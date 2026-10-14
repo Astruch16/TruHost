@@ -100,8 +100,16 @@ export const supplyReading = z.object({
 export const supplyHistory = z.object({ items: z.array(supplyReading) });
 export type SupplyHistory = z.infer<typeof supplyHistory>;
 
-/** Admins' restock list: every LOW or OUT item across active properties, emptiest first. */
-export const restockItem = supplyItem.extend({ property: z.object({ id, name: z.string() }) });
+/** On the restock list: OUT and LOW need restocking now; SOON are a quarter or less above their restock point. */
+export const RestockUrgency = z.enum(['OUT', 'LOW', 'SOON']);
+export type RestockUrgency = z.infer<typeof RestockUrgency>;
+
+/**
+ * Admins' restock list across active properties: what needs restocking now (OUT, then LOW) and what's close (SOON),
+ * each group closest to (or furthest below) its restock point first.
+ */
+export const restockItem = supplyItem.extend({ property: z.object({ id, name: z.string() }), urgency: RestockUrgency });
+export type RestockItem = z.infer<typeof restockItem>;
 export const restockList = z.object({ items: z.array(restockItem) });
 export type RestockList = z.infer<typeof restockList>;
 

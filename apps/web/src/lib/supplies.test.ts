@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { checkedAgo, groupByCategory, levelText, restockCount, suggestedSupplies, suppliesSummary } from './supplies';
+import {
+  checkedAgo,
+  groupByCategory,
+  groupByProperty,
+  restockSummary,
+  levelText,
+  restockCount,
+  suggestedSupplies,
+  suppliesSummary,
+} from './supplies';
 
 describe('supplies helpers', () => {
   it.each([
@@ -55,5 +64,29 @@ describe('checkedAgo', () => {
     [4 * 86_400_000, 'Checked 4 days ago'],
   ])('%sms ago reads “%s”', (ms, text) => {
     expect(checkedAgo(ago(ms), now)).toBe(text);
+  });
+});
+
+describe('restock list helpers', () => {
+  const item = (id: string, propertyId: string, urgency: 'OUT' | 'LOW' | 'SOON') => ({
+    id,
+    urgency,
+    property: { id: propertyId, name: propertyId.toUpperCase() },
+  });
+
+  it('groups by property in the order given', () => {
+    const groups = groupByProperty([item('a', 'p2', 'OUT'), item('b', 'p1', 'LOW'), item('c', 'p2', 'SOON')]);
+    expect(groups.map((g) => [g.property.name, g.items.map((i) => i.id)])).toEqual([
+      ['P2', ['a', 'c']],
+      ['P1', ['b']],
+    ]);
+  });
+
+  it('sums up what to restock now and soon', () => {
+    expect(restockSummary([item('a', 'p', 'OUT'), item('b', 'p', 'LOW'), item('c', 'p', 'SOON')])).toBe(
+      '2 to restock · 1 low soon',
+    );
+    expect(restockSummary([item('c', 'p', 'SOON')])).toBe('1 low soon');
+    expect(restockSummary([])).toBe('');
   });
 });

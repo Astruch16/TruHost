@@ -1,6 +1,7 @@
-import type { SupplyState } from '@truhost/shared';
+import type { RestockUrgency, SupplyState } from '@truhost/shared';
 import { cx } from '../../lib/cx';
-import { checkedAgo, levelText } from '../../lib/supplies';
+import { checkedAgo, levelText, URGENCY_LABELS } from '../../lib/supplies';
+import { Pill } from '../ui/pill';
 
 const FILL: Record<SupplyState, string> = {
   OK: 'bg-sage-mid',
@@ -84,5 +85,12 @@ export function SupplyMeta({
         <span key={part as string}> · {part}</span>
       ))}
     </p>
+  );
+}
+
+/** Out (red), Running low (amber) or Low soon (blue): where an item on the restock list stands. */
+export function UrgencyPill({ urgency }: { urgency: RestockUrgency }) {
+  return (
+    <Pill tone={urgency === 'OUT' ? 'danger' : urgency === 'LOW' ? 'amber' : 'blue'}>{URGENCY_LABELS[urgency]}</Pill>
   );
 }

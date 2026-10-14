@@ -37,7 +37,7 @@ export function navItems(me: { staffRole: string | null; memberships: unknown[] 
       { to: '/admin/properties', label: 'Properties', icon: Building2 },
       { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays },
       { to: '/admin/expenses', label: 'Expenses', icon: ReceiptText },
-      { to: '/admin/supplies', label: 'Restock', icon: Package },
+      { to: '/admin/supplies', label: 'Supplies', icon: Package },
       { to: '/admin/team', label: 'Team', icon: Users },
       { to: '/admin/plans', label: 'Plans', icon: Shield },
     );

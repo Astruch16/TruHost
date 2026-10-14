@@ -1,5 +1,7 @@
 import {
   COMMON_SUPPLIES,
+  type RestockItem,
+  type RestockUrgency,
   SUPPLY_CATEGORY_LABELS,
   SUPPLY_LEVELS,
   type SupplyCategory,
@@ -79,3 +81,23 @@ export function since(when: Date, now: Date = new Date()): string {
 
 /** "Checked just now", "Checked 4 days ago", "Checked Oct 2". */
 export const checkedAgo = (when: Date, now: Date = new Date()) => `Checked ${since(when, now)}`;
+
+export const URGENCY_LABELS: Record<RestockUrgency, string> = { OUT: 'Out', LOW: 'Running low', SOON: 'Low soon' };
+
+/** Restock items by property, in the API's order (the property with the most urgent item first). */
+export function groupByProperty<T extends Pick<RestockItem, 'property'>>(items: readonly T[]) {
+  const groups = new Map<string, { property: T['property']; items: T[] }>();
+  for (const item of items) {
+    const group = groups.get(item.property.id) ?? { property: item.property, items: [] as T[] };
+    group.items.push(item);
+    groups.set(item.property.id, group);
+  }
+  return [...groups.values()];
+}
+
+/** "2 to restock · 1 low soon", "1 low soon", or "" for none. */
+export function restockSummary(items: readonly Pick<RestockItem, 'urgency'>[]): string {
+  const now = items.filter((i) => i.urgency !== 'SOON').length;
+  const soon = items.length - now;
+  return [now && `${now} to restock`, soon && `${soon} low soon`].filter(Boolean).join(' · ');
+}

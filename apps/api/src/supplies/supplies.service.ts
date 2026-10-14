@@ -6,7 +6,7 @@ import { conflict, notFound, unprocessable } from '../common/problem.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { NotificationsService, type PendingEmail } from '../notifications/notifications.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { supplyAlert, supplyState } from './alerts.js';
+import { restockUrgency, supplyAlert, supplyState } from './alerts.js';
 
 /** Enough for any rental's consumables; also the most one setup call can add. */
 const MAX_ACTIVE_ITEMS = 60;
@@ -158,7 +158,10 @@ export class SuppliesService {
     };
   }
 
-  /** Every tracked item that is at or below its restock point, across active properties: emptiest first. */
+  /**
+   * The restock list across active properties: what needs restocking now (out, then low) and what's close to it
+   * (restockUrgency). Within each, the item furthest below (or closest to) its restock point comes first.
+   */
   async restock(actor: Actor) {
     this.access.assert(actor, 'supply:restock');
     const items = await this.prisma.supplyItem.findMany({
@@ -166,13 +169,20 @@ export class SuppliesService {
       orderBy: ORDER,
       include: { ...WITH_LATEST, property: { select: { id: true, name: true } } },
     });
+    const rank = { OUT: 0, LOW: 1, SOON: 2 } as const;
     return {
       items: items
-        .map((i) => ({ ...toItem(i), property: i.property }))
-        .filter((i) => i.state === 'LOW' || i.state === 'OUT')
+        .map((i) => {
+          const item = toItem(i);
+          return { ...item, property: i.property, urgency: restockUrgency(item.levelPct, item.thresholdPct) };
+        })
+        .filter((i): i is typeof i & { urgency: NonNullable<typeof i.urgency> } => i.urgency !== null)
         .sort(
           (a, b) =>
-            a.levelPct! - b.levelPct! || a.property.name.localeCompare(b.property.name) || a.position - b.position,
+            rank[a.urgency] - rank[b.urgency] ||
+            a.levelPct! - a.thresholdPct - (b.levelPct! - b.thresholdPct) ||
+            a.property.name.localeCompare(b.property.name) ||
+            a.position - b.position,
         ),
     };
   }

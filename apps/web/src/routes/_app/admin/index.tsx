@@ -30,6 +30,7 @@ function Dashboard() {
   const me = useQuery(queries.me(api));
   const properties = useQuery(queries.properties(api));
   const dash = useQuery(queries.dashboard(api, month, propertyId));
+  const restock = useQuery(queries.restock(api));
   const calendar = useQuery(queries.bookings(api, monthRange(month), propertyId ?? undefined));
   usePrefetchAdjacentMonths(month, (m) => queries.dashboard(api, m, propertyId), dash.isSuccess);
   usePrefetchAdjacentMonths(
@@ -62,6 +63,9 @@ function Dashboard() {
         staysError={calendar.error}
         onRetryStays={() => void calendar.refetch()}
         retryingStays={calendar.isFetching}
+        supplies={restock.data?.items.filter((i) => !propertyId || i.property.id === propertyId)}
+        suppliesError={restock.error}
+        onRetrySupplies={() => void restock.refetch()}
         onAction={setAction}
         onAddProperty={() => void navigate({ to: '/admin/properties' })}
       />
