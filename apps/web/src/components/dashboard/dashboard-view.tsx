@@ -170,7 +170,9 @@ export function DashboardView({
                   <div
                     aria-busy={dashboardUpdating || undefined}
                     className={cx(
-                      'grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4',
+                      // auto-fit: cards share the row (two take half each) rather than leaving empty columns. One
+                      // property gets the whole row, laid out wide.
+                      'grid grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-4',
                       updatingStyles(dashboardUpdating),
                     )}
                   >
@@ -188,6 +190,7 @@ export function DashboardView({
                         figures={p}
                         index={tintIndex(p.id, i)}
                         revenueLabel={`Gross, ${shortMonth(dataMonth)}`}
+                        wide={d.properties.length === 1}
                       />
                     ))}
                   </div>
