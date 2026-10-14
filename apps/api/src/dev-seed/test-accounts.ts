@@ -47,6 +47,30 @@ export const SEED_PROPERTIES = [
   },
 ] as const;
 
+/** Supplies per property, with the level the cleaner last reported (null: not checked yet). */
+const SUPPLIES: Record<
+  (typeof SEED_PROPERTIES)[number]['key'],
+  { name: string; category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING'; level: number | null }[]
+> = {
+  seaside: [
+    { name: 'Toilet paper', category: 'BATHROOM', level: 25 },
+    { name: 'Shampoo', category: 'BATHROOM', level: 75 },
+    { name: 'Body wash', category: 'BATHROOM', level: 50 },
+    { name: 'Coffee pods', category: 'KITCHEN', level: 0 },
+    { name: 'Dish soap', category: 'KITCHEN', level: 100 },
+    { name: 'Laundry detergent', category: 'LAUNDRY', level: null },
+  ],
+  cedar: [
+    { name: 'Toilet paper', category: 'BATHROOM', level: 75 },
+    { name: 'Hand soap', category: 'BATHROOM', level: 50 },
+    { name: 'Conditioner', category: 'BATHROOM', level: 25 },
+    { name: 'Paper towels', category: 'KITCHEN', level: 50 },
+    { name: 'Condiments', category: 'KITCHEN', level: 100 },
+    { name: 'Dryer sheets', category: 'LAUNDRY', level: 75 },
+    { name: 'Cleaning spray', category: 'CLEANING', level: 100 },
+  ],
+};
+
 const ROOMS = [{ type: 'BEDROOM' }, { type: 'BATHROOM' }, { type: 'KITCHEN' }, { type: 'LIVING' }] as const;
 
 type Channel = 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT';
@@ -258,6 +282,21 @@ export async function seedTestAccounts(prisma: PrismaClient, identity: SeedIdent
     }
     if (property.defaultCleanerId !== users.cleaner.id) {
       await prisma.property.update({ where: { id: p.id }, data: { defaultCleanerId: users.cleaner.id } });
+    }
+
+    // Supplies, once: a starting level from the cleaner's last check (seeded directly, so no alerts are sent).
+    if ((await prisma.supplyItem.count({ where: { propertyId: p.id } })) === 0) {
+      for (const [position, item] of SUPPLIES[key].entries()) {
+        const created = await prisma.supplyItem.create({
+          data: { propertyId: p.id, name: item.name, category: item.category, position },
+        });
+        if (item.level !== null) {
+          await prisma.supplyStatus.create({
+            data: { supplyItemId: created.id, levelPct: item.level, reportedById: users.cleaner.id },
+          });
+        }
+      }
+      log.push(`added ${SUPPLIES[key].length} supplies to "${p.name}"`);
     }
 
     for (const month of months) {

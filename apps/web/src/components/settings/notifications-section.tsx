@@ -41,23 +41,39 @@ export function NotificationSettings() {
   if (!settings.data) return <Skeleton className="h-80 rounded-card" />;
   const items = settings.data.items;
 
+  const live = items
+    .map((i) => NOTIFICATION_CATALOGUE.find((c) => c.category === i.category))
+    .filter((entry) => entry?.live);
+  // Say what's sent today; nothing once everything is.
+  const banner =
+    live.length === 0
+      ? {
+          title: 'Choose now, hear from us as each feature arrives',
+          body: 'TruHost doesn’t send you notifications yet. Each one starts with the feature it’s about, using the choices you make here.',
+        }
+      : live.length < items.length
+        ? {
+            title: 'Some of these are on already',
+            body: `Live now: ${live.map((e) => e!.label).join(', ')}. The others start with the feature they’re about, using the choices you make here.`,
+          }
+        : null;
+
   const toggle = (category: NotificationSetting['category'], channel: Channel, on: boolean) =>
     save.mutate(items.map((i) => (i.category === category ? { ...i, [channel]: on } : i)));
 
   return (
     <>
-      <div className="flex items-start gap-3 rounded-card border border-blue-tint bg-blue-tint/40 p-4 text-sm">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface text-blue-deep">
-          <BellRing aria-hidden className="size-4" />
-        </span>
-        <div>
-          <p className="font-semibold text-blue-deep">Choose now, hear from us as each feature arrives</p>
-          <p className="mt-0.5 text-blue-deep/80">
-            TruHost doesn’t send notifications yet. Each one starts with the feature it’s about, using the choices you
-            make here.
-          </p>
+      {banner && (
+        <div className="flex items-start gap-3 rounded-card border border-blue-tint bg-blue-tint/40 p-4 text-sm">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface text-blue-deep">
+            <BellRing aria-hidden className="size-4" />
+          </span>
+          <div>
+            <p className="font-semibold text-blue-deep">{banner.title}</p>
+            <p className="mt-0.5 text-blue-deep/80">{banner.body}</p>
+          </div>
         </div>
-      </div>
+      )}
       <Card title="Notifications" description="Pick what’s worth an email, and what can wait for the app.">
         {items.length === 0 ? (
           <p className="text-sm text-muted">

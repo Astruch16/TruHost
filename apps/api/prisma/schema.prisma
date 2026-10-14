@@ -65,6 +65,8 @@ model User {
   receiptsVoided         Receipt[]        @relation("ReceiptVoidedBy")
   filesUploaded          StoredFile[]
   propertyPhotosUploaded PropertyPhoto[]
+  supplyReadings         SupplyStatus[]
+  notifications          Notification[]
 }
 
 /// SYSTEM follows the device's reduced-motion setting; REDUCED turns animations off in the app regardless.
@@ -204,14 +206,16 @@ model Property {
   createdAt                    DateTime       @default(now()) @db.Timestamptz
   updatedAt                    DateTime       @updatedAt @db.Timestamptz
 
-  memberships Membership[]
-  rooms       Room[]
-  plans       PropertyPlan[]
-  bookings    Booking[]
-  expenses    Expense[]
-  receipts    Receipt[]
-  files       StoredFile[]
-  photos      PropertyPhoto[] @relation("PropertyPhotos")
+  memberships   Membership[]
+  rooms         Room[]
+  plans         PropertyPlan[]
+  bookings      Booking[]
+  expenses      Expense[]
+  receipts      Receipt[]
+  files         StoredFile[]
+  photos        PropertyPhoto[] @relation("PropertyPhotos")
+  supplies      SupplyItem[]
+  notifications Notification[]
 }
 
 /// A property's photo, as two JPEG renditions made in the browser before upload: a large one for the property page
@@ -527,6 +531,87 @@ model StoredFile {
 
   /// Nightly purge of PENDING rows older than 24h (job comes with deploy).
   @@index([status, createdAt])
+}
+
+// ───────────────────────── Supplies ─────────────────────────
+
+/// Groups items on screen (and orders the starter list).
+enum SupplyCategory {
+  BATHROOM
+  KITCHEN
+  LAUNDRY
+  CLEANING
+  OTHER
+}
+
+/// Something a property keeps stocked (toilet paper, coffee pods, detergent…). Its level is the latest reading; at or
+/// below `thresholdPct` it needs restocking, and reaching it (or empty) alerts admins and owners.
+model SupplyItem {
+  id           String         @id @default(uuid(7)) @db.Uuid
+  propertyId   String         @db.Uuid
+  property     Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// Tidy, at most 60 characters (CHECK); unique per property among active items, ignoring case (index).
+  name         String
+  category     SupplyCategory @default(OTHER)
+  /// Restock point, percent of full (5–95, CHECK). At or below it, the item is low.
+  thresholdPct Int            @default(25)
+  /// Order within the property's list.
+  position     Int            @default(0)
+  /// Archived items leave the list and stop alerting; their readings stay.
+  archivedAt   DateTime?      @db.Timestamptz
+  createdAt    DateTime       @default(now()) @db.Timestamptz
+
+  readings SupplyStatus[]
+
+  @@index([propertyId, position])
+}
+
+/// One reading of a supply's level, by a cleaner or admin. Append-only (trigger): the current level is the latest.
+model SupplyStatus {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  supplyItemId String     @db.Uuid
+  item         SupplyItem @relation(fields: [supplyItemId], references: [id], onDelete: Restrict)
+  /// Percent of full, 0–100 (CHECK). Screens offer Full, ¾, ½, ¼ and Empty.
+  levelPct     Int
+  note         String?
+  reportedById String     @db.Uuid
+  reportedBy   User       @relation(fields: [reportedById], references: [id], onDelete: Restrict)
+  reportedAt   DateTime   @default(now()) @db.Timestamptz
+
+  @@index([supplyItemId, reportedAt(sort: Desc)])
+}
+
+// ───────────────────────── Notifications ─────────────────────────
+
+enum NotificationKind {
+  SUPPLY_LOW
+  SUPPLY_OUT
+}
+
+/// In-app notification for one user, created in the same transaction as the event that causes it. Email, when the
+/// user's settings ask for it, is sent after commit and recorded in emailSentAt.
+model Notification {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String           @db.Uuid
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  kind        NotificationKind
+  propertyId  String           @db.Uuid
+  property    Property         @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// What it is about, for linking from the UI (e.g. SupplyItem + id).
+  entityType  String
+  entityId    String           @db.Uuid
+  /// The reading that triggered it.
+  sourceId    String           @db.Uuid
+  title       String
+  body        String?
+  readAt      DateTime?        @db.Timestamptz
+  /// Null if no email was due, or sending failed.
+  emailSentAt DateTime?        @db.Timestamptz
+  createdAt   DateTime         @default(now()) @db.Timestamptz
+
+  /// One notification per user per triggering reading, so retries can't duplicate.
+  @@unique([userId, sourceId])
+  @@index([userId, readAt, createdAt])
 }
 
 // ───────────────────────── Audit & infrastructure ─────────────────────────

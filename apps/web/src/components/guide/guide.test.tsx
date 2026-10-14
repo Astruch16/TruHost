@@ -129,6 +129,15 @@ describe('the signed-in user’s guide', () => {
     expect(document.querySelector('[data-guide]')).toBeNull();
   });
 
+  it('celebrates in good-news empty states, such as “All stocked”', () => {
+    render(
+      <GuideContext.Provider value="juniper">
+        <EmptyState mood="celebrating" title="All stocked" />
+      </GuideContext.Provider>,
+    );
+    expect(screen.getByRole('img', { name: 'Juniper celebrating with both arms up' })).toBeInTheDocument();
+  });
+
   it('defaults to Sage outside the signed-in app', () => {
     render(<EmptyState title="Nothing here" />);
     expect(screen.getByRole('img', { name: 'Sage asleep' })).toBeInTheDocument();

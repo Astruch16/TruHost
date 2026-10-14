@@ -1,4 +1,5 @@
 import { CalendarPlus, ReceiptText, Upload } from 'lucide-react';
+import type { RestockItem } from '@truhost/shared';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
@@ -20,6 +21,7 @@ import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { CalendarLegend, MonthCalendar } from './month-calendar';
 import { NeedsAttention } from './needs-attention';
+import { SuppliesPanel } from './supplies-panel';
 import { RevenueBreakdown } from './revenue-breakdown';
 
 export type DashboardAction = 'booking' | 'expense' | 'receipt';
@@ -56,6 +58,9 @@ export function DashboardView({
   staysError,
   onRetryStays,
   retryingStays,
+  supplies,
+  suppliesError,
+  onRetrySupplies,
   onAction,
   onAddProperty,
 }: {
@@ -81,6 +86,10 @@ export function DashboardView({
   staysError: unknown;
   onRetryStays: () => void;
   retryingStays: boolean;
+  /** Supplies to restock now or soon, in scope; undefined while loading (or if they couldn't load). */
+  supplies: RestockItem[] | undefined;
+  suppliesError?: unknown;
+  onRetrySupplies?: () => void;
   onAction: (action: DashboardAction) => void;
   onAddProperty: () => void;
 }) {
@@ -264,6 +273,15 @@ export function DashboardView({
           </div>
         ) : (
           railSkeleton
+        )}
+        {supplies ? (
+          <SuppliesPanel items={supplies} />
+        ) : suppliesError ? (
+          <Card title="Supplies">
+            <LoadError what="supplies" onRetry={() => onRetrySupplies?.()} retrying={false} />
+          </Card>
+        ) : (
+          <Skeleton className="h-40 rounded-card" />
         )}
         {d ? (
           <div {...dim(dashboardUpdating)}>

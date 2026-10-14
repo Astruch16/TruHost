@@ -40,7 +40,7 @@ export const controlStyles = cx(
   'aria-invalid:border-danger-deep aria-invalid:focus-visible:ring-danger-tint',
 );
 
-export type PillTone = 'dark' | 'blue' | 'lavender' | 'sage' | 'neutral' | 'danger';
+export type PillTone = 'dark' | 'blue' | 'lavender' | 'sage' | 'amber' | 'neutral' | 'danger';
 
 export const pillStyles = (tone: PillTone) =>
   cx(
@@ -49,6 +49,7 @@ export const pillStyles = (tone: PillTone) =>
     tone === 'blue' && 'bg-blue-tint text-blue-deep',
     tone === 'lavender' && 'bg-lavender-tint text-lavender-deep',
     tone === 'sage' && 'bg-sage-tint text-sage-deep',
+    tone === 'amber' && 'bg-amber-tint text-amber-deep',
     tone === 'neutral' && 'bg-line-soft text-muted',
     tone === 'danger' && 'bg-danger-tint text-danger-deep',
   );

@@ -69,12 +69,11 @@ export const NOTIFICATION_CATALOGUE: readonly {
   {
     category: 'SUPPLY_ALERTS',
     label: 'Supplies running low',
-    description: 'When a cleaner marks an item low or out at one of your properties.',
+    description: 'When an item at one of your properties drops to its restock point, or runs out.',
     roles: ['ADMIN', 'OWNER'],
     channels: ['email', 'inApp'],
     defaults: { email: true, inApp: true },
-    live: false,
-    startsWith: 'cleaning schedules',
+    live: true,
   },
   {
     category: 'INVITE_ACCEPTED',

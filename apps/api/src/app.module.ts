@@ -18,10 +18,12 @@ import { FilesModule } from './files/files.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InvitesModule } from './invites/invites.module.js';
 import { MeModule } from './me/me.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
 import { PlansModule } from './plans/plans.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { PropertiesModule } from './properties/properties.module.js';
 import { ReportingModule } from './reporting/reporting.module.js';
+import { SuppliesModule } from './supplies/supplies.module.js';
 import { PostAuthThrottlerGuard, PreAuthThrottlerGuard, throttlers } from './throttling/throttling.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -39,6 +41,7 @@ import { UsersModule } from './users/users.module.js';
     AuditModule,
     HealthModule,
     MeModule,
+    NotificationsModule,
     UsersModule,
     InvitesModule,
     PropertiesModule,
@@ -47,6 +50,7 @@ import { UsersModule } from './users/users.module.js';
     FilesModule,
     ExpensesModule,
     ReportingModule,
+    SuppliesModule,
     DashboardModule,
     AuditLogsModule,
   ],

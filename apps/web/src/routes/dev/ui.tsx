@@ -19,6 +19,7 @@ import { Guide } from '../../components/guide/guide';
 import { GuidePicker } from '../../components/guide/guide-picker';
 import { PropertyCard } from '../../components/property-card';
 import { AppShell } from '../../components/shell/app-shell';
+import { NotificationsBell } from '../../components/shell/notifications-bell';
 import { ErrorAlert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
@@ -144,7 +145,35 @@ function StyleGuide() {
       properties={sampleProperties}
       selectedPropertyId={selected}
       onSelectProperty={setSelected}
-      unreadNotifications={1}
+      notifications={
+        <NotificationsBell
+          unread={1}
+          items={[
+            {
+              id: 'n1',
+              kind: 'SUPPLY_OUT',
+              title: 'Coffee pods has run out',
+              body: 'Sample Property · marked empty',
+              property: { id: 'p1', name: 'Sample Property' },
+              entityType: 'SupplyItem',
+              entityId: 's1',
+              readAt: null,
+              createdAt: '2026-10-13T09:00:00.000Z',
+            },
+            {
+              id: 'n2',
+              kind: 'SUPPLY_LOW',
+              title: 'Toilet paper is running low',
+              body: 'Sample Property · 25% left (restocked at 25%)',
+              property: { id: 'p1', name: 'Sample Property' },
+              entityType: 'SupplyItem',
+              entityId: 's2',
+              readAt: '2026-10-12T10:00:00.000Z',
+              createdAt: '2026-10-12T09:00:00.000Z',
+            },
+          ]}
+        />
+      }
       onSignOut={() => undefined}
       allowAllProperties
     >

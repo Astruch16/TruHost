@@ -36,7 +36,8 @@ To look at the owner and cleaner portals locally, sign in as these test users. T
 The test properties are **Seaside Loft (test)** and **Cedar Cabin (test)**. Each has four stays a month, from three
 months ago to next month: past and current stays have payouts, next month's are still pending, and Cedar has an
 owner stay each month. Each property also has a few owner-paid expenses a month (no receipts, so they show as
-needing one).
+needing one), and a supplies list with levels from the cleaner's last check, some at or below their restock point.
+(Seeded levels send no alerts; mark one lower as the cleaner to see the bell and email.)
 
 Statements and cleans aren't built yet (spec Phases 2b and 3), so the seed doesn't create any. It will once they
 exist.

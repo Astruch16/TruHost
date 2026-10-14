@@ -122,6 +122,26 @@ export const queries = {
       placeholderData: (prev, q) => keepWhileSameScope((k) => k[2])(prev, q, queryKey),
     });
   },
+  /** Supplies sit under one key, so a reading refreshes every list that shows it (property and restock). */
+  supplies: (api: ApiClient, propertyId: string) =>
+    queryOptions({
+      queryKey: ['supplies', 'property', propertyId],
+      queryFn: () => unwrap(api.GET('/v1/properties/{id}/supplies', { params: { path: { id: propertyId } } })),
+    }),
+  supplyHistory: (api: ApiClient, itemId: string) =>
+    queryOptions({
+      queryKey: ['supplies', 'history', itemId],
+      queryFn: () => unwrap(api.GET('/v1/supply-items/{id}/history', { params: { path: { id: itemId } } })),
+    }),
+  restock: (api: ApiClient) =>
+    queryOptions({ queryKey: ['supplies', 'restock'], queryFn: () => unwrap(api.GET('/v1/supplies/restock')) }),
+  /** The bell: checked every minute while the app is open. */
+  notifications: (api: ApiClient) =>
+    queryOptions({
+      queryKey: ['me', 'notifications'],
+      queryFn: () => unwrap(api.GET('/v1/me/notifications', { params: { query: { unread: 'false' } } })),
+      refetchInterval: 60_000,
+    }),
   plans: (api: ApiClient) => queryOptions({ queryKey: ['plans'], queryFn: () => unwrap(api.GET('/v1/plans')) }),
   users: (api: ApiClient) =>
     queryOptions({

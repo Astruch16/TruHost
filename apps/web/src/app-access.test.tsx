@@ -58,6 +58,40 @@ const propertyData = (id: string) => ({
   coverPhoto: null,
 });
 
+const SUPPLIES = {
+  items: [
+    {
+      id: 's1',
+      propertyId: CEDAR,
+      name: 'Coffee pods',
+      category: 'KITCHEN',
+      thresholdPct: 25,
+      position: 0,
+      levelPct: 25,
+      state: 'LOW',
+      lastCheckedAt: '2026-10-12T18:00:00.000Z',
+      archivedAt: null,
+    },
+  ],
+};
+
+const NOTIFICATIONS = {
+  unread: 1,
+  items: [
+    {
+      id: 'n1',
+      kind: 'SUPPLY_LOW',
+      title: 'Coffee pods is running low',
+      body: 'Cedar Cabin · 25% left (restocked at 25%)',
+      property: { id: CEDAR, name: 'Cedar Cabin' },
+      entityType: 'SupplyItem',
+      entityId: 's1',
+      readAt: null,
+      createdAt: '2026-10-12T18:00:00.000Z',
+    },
+  ],
+};
+
 const SUMMARY = {
   propertyId: CEDAR,
   month: '2026-10',
@@ -109,16 +143,26 @@ function fakeApi(start: Me) {
                     },
                   ],
                 }
-              : path === '/v1/properties/{id}/summary'
-                ? SUMMARY
-                : path === '/v1/properties/{id}/plan'
-                  ? { current: null, history: [] }
-                  : { items: [] };
+              : path === '/v1/properties/{id}/supplies'
+                ? SUPPLIES
+                : path === '/v1/me/notifications'
+                  ? NOTIFICATIONS
+                  : path === '/v1/properties/{id}/summary'
+                    ? SUMMARY
+                    : path === '/v1/properties/{id}/plan'
+                      ? { current: null, history: [] }
+                      : { items: [] };
     return { data, response: new Response(null, { status: 200 }) };
   });
   // Adding a property: answers like the API, and makes the caller its owner when asked to.
   const POST = vi.fn(async (path: string, init: { body: { name: string; ownedByMe?: boolean } }) => {
     posts.push({ path, body: init.body });
+    if (path === '/v1/properties/{id}/supply-statuses') {
+      return { data: SUPPLIES, response: new Response(null, { status: 201 }) };
+    }
+    if (path === '/v1/me/notifications/read') {
+      return { data: { ...NOTIFICATIONS, unread: 0 }, response: new Response(null, { status: 200 }) };
+    }
     const property = { ...propertyData('p-new'), name: init.body.name };
     created.set('p-new', property);
     if (init.body.ownedByMe) {
@@ -180,6 +224,24 @@ describe('cleaners', () => {
     expect(paths.filter((p) => FINANCIAL.includes(p))).toEqual([]);
   });
 
+  it('mark how full each supply is with one tap', async () => {
+    const { posts } = renderAt(`/cleaner/properties/${CEDAR}`, cleaner);
+    expect(await screen.findByRole('heading', { name: /Supplies/ })).toBeInTheDocument();
+    expect(await screen.findByRole('meter', { name: 'Coffee pods level' })).toHaveAttribute('aria-valuenow', '25');
+    expect(screen.getByText(/TruHost and the owner have been told/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Coffee pods: A quarter' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Coffee pods: Empty' }));
+    await waitFor(() =>
+      expect(posts).toContainEqual({
+        path: '/v1/properties/{id}/supply-statuses',
+        body: { readings: [{ supplyItemId: 's1', levelPct: 0, note: null }] },
+      }),
+    );
+    // Cleaners can't manage the list or see who reported what.
+    expect(screen.queryByRole('button', { name: 'Add a supply' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Coffee pods: history' })).not.toBeInTheDocument();
+  });
+
   it('opening the owner page for a property they clean takes them to the cleaner page instead', async () => {
     const { router, paths } = renderAt(`/properties/${CEDAR}`, cleaner);
     expect(await screen.findByText('You clean here')).toBeInTheDocument();
@@ -220,6 +282,14 @@ describe('owners', () => {
     expect((await screen.findAllByText('Net to you')).length).toBeGreaterThan(0);
   });
 
+  it('see supply levels and what needs restocking, read-only', async () => {
+    renderAt(`/properties/${CEDAR}`, owner);
+    expect(await screen.findByRole('meter', { name: 'Coffee pods level' })).toBeInTheDocument();
+    expect(screen.getByText('1 to restock')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Coffee pods: (Full|Empty)/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Manage supplies' })).not.toBeInTheDocument();
+  });
+
   it('can’t edit rooms unless they’re TruHost admins', async () => {
     renderAt(`/properties/${CEDAR}`, owner);
     expect(await screen.findByRole('heading', { name: 'Rooms' })).toBeInTheDocument();
@@ -258,6 +328,7 @@ describe('admin pages by URL', () => {
     '/admin/expenses',
     '/admin/team',
     '/admin/plans',
+    '/admin/supplies',
   ];
 
   it.each(
@@ -335,12 +406,23 @@ describe('adding your own property (My properties)', () => {
 });
 
 describe('top bar', () => {
-  it('has no notifications bell for any role until notifications exist', async () => {
-    for (const me of [owner, cleaner, person([], 'ADMIN')]) {
+  it('has a notifications bell for admins and owners, not for cleaners', async () => {
+    for (const me of [owner, person([], 'ADMIN')]) {
       renderAt('/account/preferences', me);
-      await screen.findByRole('button', { name: /Account menu/ });
-      expect(screen.queryByRole('button', { name: /Notifications/ })).not.toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Notifications, 1 unread' })).toBeInTheDocument();
       cleanup();
     }
+    const { paths } = renderAt('/account/preferences', cleaner);
+    await screen.findByRole('button', { name: /Account menu/ });
+    expect(screen.queryByRole('button', { name: /Notifications/ })).not.toBeInTheDocument();
+    expect(paths).not.toContain('/v1/me/notifications');
+  });
+
+  it('opening a notification marks it read and goes to the property', async () => {
+    const { router, posts } = renderAt('/account/preferences', owner);
+    await userEvent.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Coffee pods is running low/ }));
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/properties/${CEDAR}`));
+    expect(posts).toContainEqual({ path: '/v1/me/notifications/read', body: { ids: ['n1'] } });
   });
 });

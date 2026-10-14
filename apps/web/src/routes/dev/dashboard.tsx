@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute, notFound } from '@tanstack/react-router';
+import type { RestockItem } from '@truhost/shared';
 import { AppShell } from '../../components/shell/app-shell';
 import { DashboardView } from '../../components/dashboard/dashboard-view';
 import type { Dashboard } from '../../lib/api-types';
@@ -281,6 +282,34 @@ const EMPTY_SINGLE: Dashboard = {
   upcoming: { total: 0, items: [] },
 };
 
+const supply = (
+  id: string,
+  property: (typeof FIXTURE_PROPERTIES)[number],
+  name: string,
+  levelPct: number,
+  urgency: RestockItem['urgency'],
+): RestockItem => ({
+  id,
+  propertyId: property.id,
+  property: { id: property.id, name: property.name },
+  name,
+  category: 'OTHER',
+  thresholdPct: 25,
+  position: 0,
+  levelPct,
+  state: levelPct === 0 ? 'OUT' : levelPct <= 25 ? 'LOW' : 'OK',
+  lastCheckedAt: '2026-10-05T18:00:00.000Z',
+  archivedAt: null,
+  urgency,
+});
+
+const FIXTURE_SUPPLIES: RestockItem[] = [
+  supply('s1', FIXTURE_PROPERTIES[1]!, 'Coffee pods', 0, 'OUT'),
+  supply('s2', FIXTURE_PROPERTIES[0]!, 'Toilet paper', 25, 'LOW'),
+  supply('s3', FIXTURE_PROPERTIES[1]!, 'Dryer sheets', 25, 'LOW'),
+  supply('s4', FIXTURE_PROPERTIES[0]!, 'Shampoo', 50, 'SOON'),
+];
+
 function Preview() {
   const { state } = Route.useSearch();
   const [month, setMonth] = useState('2026-10');
@@ -313,6 +342,8 @@ function Preview() {
         staysError={state === 'error' ? new Error('preview') : null}
         onRetryStays={() => undefined}
         retryingStays={false}
+        supplies={state === 'data' ? FIXTURE_SUPPLIES : state === 'error' ? undefined : []}
+        suppliesError={state === 'error' ? new Error('preview') : null}
         onAction={() => undefined}
         onAddProperty={() => undefined}
       />
