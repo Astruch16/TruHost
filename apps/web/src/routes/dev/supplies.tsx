@@ -3,7 +3,6 @@ import { createFileRoute, notFound } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import type { ApiClient } from '@truhost/api-client';
 import type { Notification, SupplyCategory, SupplyItem } from '@truhost/shared';
-import { CelebratingGuide } from '../../components/guide/celebrating-guide';
 import { NotificationsBell } from '../../components/shell/notifications-bell';
 import { RestockList } from '../../components/supplies/restock-list';
 import { SuppliesCard } from '../../components/supplies/supplies-card';
@@ -296,7 +295,7 @@ function SuppliesPreview() {
             </Pane>
             <Pane label="Supplies page (all stocked)">
               <Card>
-                <EmptyState size="compact" illustration={<CelebratingGuide />} title="All stocked">
+                <EmptyState mood="celebrating" title="All stocked">
                   Nothing at your properties is at or near its restock point.
                 </EmptyState>
               </Card>

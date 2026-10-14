@@ -9,9 +9,13 @@ type EmptyStateProps = {
   action?: ReactNode;
 } & (
   | {
-      /** The page's main content is empty: the signed-in user's guide, asleep. At most one per screen. */
+      /**
+       * The page's main content is empty: the signed-in user's guide, asleep (nothing yet) or celebrating (good news,
+       * e.g. "All stocked"). At most one per screen.
+       */
       size?: 'page';
       illustration?: never;
+      mood?: 'sleeping' | 'celebrating';
     }
   | {
       /**
@@ -20,6 +24,7 @@ type EmptyStateProps = {
        */
       size: 'compact';
       illustration: ReactNode;
+      mood?: never;
     }
 );
 
@@ -39,7 +44,7 @@ export function EmptyState(props: EmptyStateProps) {
   }
   return (
     <div className="flex flex-col items-center gap-3 rounded-inner border border-dashed border-line px-6 py-10 text-center">
-      <SleepingGuide />
+      <PageGuide pose={props.mood ?? 'sleeping'} />
       <div className="max-w-sm">
         <p className="font-semibold text-ink">{title}</p>
         {children && <div className="mt-1 text-sm text-muted">{children}</div>}
@@ -49,11 +54,11 @@ export function EmptyState(props: EmptyStateProps) {
   );
 }
 
-function SleepingGuide() {
+function PageGuide({ pose }: { pose: 'sleeping' | 'celebrating' }) {
   const guide = useMyGuide();
   return (
     <span className="grid size-[120px] place-items-center rounded-full" style={{ backgroundColor: GUIDES[guide].tint }}>
-      <Guide character={guide} pose="sleeping" size={108} />
+      <Guide character={guide} pose={pose} size={108} />
     </span>
   );
 }

@@ -7,7 +7,6 @@ import { BookingsIllustration } from '../illustrations/bookings';
 import { Confirmation } from '../ui/confirmation';
 import { EmptyState } from '../ui/empty-state';
 import { SuccessNotice } from '../ui/success-notice';
-import { CelebratingGuide } from './celebrating-guide';
 import { Guide } from './guide';
 import { GuidePicker } from './guide-picker';
 
@@ -133,7 +132,7 @@ describe('the signed-in user’s guide', () => {
   it('celebrates in good-news empty states, such as “All stocked”', () => {
     render(
       <GuideContext.Provider value="juniper">
-        <EmptyState size="compact" illustration={<CelebratingGuide />} title="All stocked" />
+        <EmptyState mood="celebrating" title="All stocked" />
       </GuideContext.Provider>,
     );
     expect(screen.getByRole('img', { name: 'Juniper celebrating with both arms up' })).toBeInTheDocument();
