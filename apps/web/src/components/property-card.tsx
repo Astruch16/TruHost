@@ -57,7 +57,8 @@ export function PropertyCard({
           // At least 16:9; when the card is stretched taller (to match a card beside it), the photo takes the extra
           // height rather than leaving a gap above the figures.
           'relative aspect-[16/9] grow overflow-hidden',
-          wide && '@[34rem]/card:aspect-auto @[34rem]/card:min-h-56 @[34rem]/card:w-[45%] @[34rem]/card:shrink-0',
+          wide &&
+            '@[34rem]/card:aspect-auto @[34rem]/card:min-h-56 @[34rem]/card:w-[45%] @[34rem]/card:shrink-0 @[34rem]/card:grow-0',
           tint.bg,
         )}
       >
