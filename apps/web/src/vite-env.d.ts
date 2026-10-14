@@ -8,3 +8,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** From package.json, at build time (vite.config.ts). */
+declare const __APP_VERSION__: string;
+/** The commit the build came from (7 characters), or "dev". */
+declare const __APP_COMMIT__: string;
