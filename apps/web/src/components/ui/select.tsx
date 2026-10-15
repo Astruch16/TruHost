@@ -45,7 +45,9 @@ export function Select({
   return (
     <RadixSelect.Root
       value={value === '' && !hasEmptyOption ? undefined : toRadix(value)}
-      onValueChange={(v) => onValueChange(fromRadix(v))}
+      // A real choice arrives as an option's value (EMPTY for ""). A bare "" is Radix's hidden native <select>
+      // syncing itself when the options change under it (e.g. they load after the value was set): not a choice.
+      onValueChange={(v) => v !== '' && onValueChange(fromRadix(v))}
       disabled={disabled}
       required={required ?? field?.required}
     >
@@ -56,7 +58,7 @@ export function Select({
         aria-invalid={field?.invalid || undefined}
         className={cx(
           controlStyles,
-          'flex items-center justify-between gap-2 text-left',
+          'group flex items-center justify-between gap-2 text-left',
           'data-[placeholder]:text-muted/80 data-[state=open]:border-blue-deep',
           className,
         )}
@@ -67,7 +69,7 @@ export function Select({
         <RadixSelect.Icon asChild>
           <ChevronDown
             aria-hidden
-            className="size-4 shrink-0 text-muted transition-transform duration-150 [[data-state=open]_&]:rotate-180"
+            className="size-4 shrink-0 text-muted transition-transform duration-150 group-data-[state=open]:rotate-180"
           />
         </RadixSelect.Icon>
       </RadixSelect.Trigger>

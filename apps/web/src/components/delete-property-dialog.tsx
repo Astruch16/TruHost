@@ -13,7 +13,7 @@ import { Skeleton } from './ui/skeleton';
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
- * Deleting a property. Only one with no bookings, expenses or receipts can be deleted, completely; the dialog
+ * Deleting a property. Only one with no bookings, expenses, receipts or damage reports can be deleted, completely; the dialog
  * checks first and, for any other, explains why and offers Archive instead. Deleting asks for the name, since it
  * can't be undone.
  */
@@ -120,11 +120,13 @@ export function DeletePropertyDialog({
               d.bookings && plural(d.bookings, 'booking', 'bookings'),
               d.expenses && plural(d.expenses, 'expense', 'expenses'),
               d.receipts && plural(d.receipts, 'receipt', 'receipts'),
+              d.damageReports && plural(d.damageReports, 'damage report', 'damage reports'),
             ]
               .filter(Boolean)
               .join(', ')
               .replace(/, ([^,]*)$/, ' and $1')}
-            . Financial records are kept (for your books and tax records), so a property with any can’t be deleted.
+            . Financial records and damage evidence are kept (for your books, tax records and claims), so a property
+            with any can’t be deleted.
           </p>
           <p className="text-muted">
             {property.archivedAt

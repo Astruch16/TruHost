@@ -20,7 +20,8 @@ export function fitWithin(width: number, height: number, max: number): { width: 
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
 }
 
-async function decode(file: File): Promise<ImageBitmap> {
+/** Decodes a photo (upright, from its EXIF rotation). */
+export async function decode(file: File): Promise<ImageBitmap> {
   if (file.size > MAX_PHOTO_INPUT_BYTES) throw new UploadError('Photos can be at most 40 MB.');
   try {
     // Applies the camera's EXIF rotation, so portrait phone photos stay upright.
@@ -30,7 +31,12 @@ async function decode(file: File): Promise<ImageBitmap> {
   }
 }
 
-async function renderJpeg(image: ImageBitmap, maxEdge: number): Promise<ArrayBuffer> {
+/** A JPEG of the image, its long edge at most `maxEdge`, under `maxBytes` (lowering quality if it must). */
+export async function renderJpeg(
+  image: ImageBitmap,
+  maxEdge: number,
+  maxBytes: number = MAX_RENDITION_BYTES,
+): Promise<ArrayBuffer> {
   const { width, height } = fitWithin(image.width, image.height, maxEdge);
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -42,7 +48,7 @@ async function renderJpeg(image: ImageBitmap, maxEdge: number): Promise<ArrayBuf
   for (const quality of [0.85, 0.7, 0.55]) {
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
     if (!blob) break;
-    if (blob.size <= MAX_RENDITION_BYTES) return blob.arrayBuffer();
+    if (blob.size <= maxBytes) return blob.arrayBuffer();
   }
   throw new UploadError('This photo couldn’t be made small enough. Try a different photo.');
 }

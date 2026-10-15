@@ -162,7 +162,7 @@ export class PropertiesService {
           status: 409,
           code: 'PROPERTY_HAS_RECORDS',
           detail:
-            'This property has bookings, expenses or receipts, which must be kept. Archive it instead to hide it everywhere.',
+            'This property has bookings, expenses, receipts or damage reports, which must be kept. Archive it instead to hide it everywhere.',
         });
       }
       const before = await tx.property.findUniqueOrThrow({ where: { id } });
@@ -201,13 +201,21 @@ export class PropertiesService {
     await this.files.deleteObjects(objectKeys);
   }
 
-  private async blockers(db: Pick<PrismaService, 'booking' | 'expense' | 'receipt'>, id: string) {
-    const [bookings, expenses, receipts] = await Promise.all([
+  private async blockers(db: Pick<PrismaService, 'booking' | 'expense' | 'receipt' | 'damageReport'>, id: string) {
+    const [bookings, expenses, receipts, damageReports] = await Promise.all([
       db.booking.count({ where: { propertyId: id } }),
       db.expense.count({ where: { propertyId: id } }),
       db.receipt.count({ where: { propertyId: id } }),
+      // Evidence for claims (drafts included: their photos are evidence too).
+      db.damageReport.count({ where: { propertyId: id } }),
     ]);
-    return { allowed: bookings + expenses + receipts === 0, bookings, expenses, receipts };
+    return {
+      allowed: bookings + expenses + receipts + damageReports === 0,
+      bookings,
+      expenses,
+      receipts,
+      damageReports,
+    };
   }
 
   /**

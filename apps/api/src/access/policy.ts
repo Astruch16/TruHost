@@ -27,6 +27,12 @@ export const POLICY = {
   'supply:history': { admin: true, roles: ['OWNER'] },
   /** What needs restocking across every property. */
   'supply:restock': { admin: true, roles: [] },
+  /** Damage reports at a property: owners see sent ones; cleaners see sent ones and their own drafts (service). */
+  'damage:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
+  /** Report damage (and add photos to, edit and send one's own reports). */
+  'damage:report': { admin: true, roles: ['CLEANER'] },
+  /** Move reports on (acknowledged, claim filed, resolved) and act on anyone's. */
+  'damage:manage': { admin: true, roles: [] },
   'plan:manage': { admin: true, roles: [] },
   'propertyPlan:read': { admin: true, roles: ['OWNER'] },
   'propertyPlan:assign': { admin: true, roles: [] },

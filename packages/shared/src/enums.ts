@@ -16,6 +16,7 @@ export type MotionPreference = z.infer<typeof MotionPreference>;
 
 export const NotificationCategory = z.enum([
   'SUPPLY_ALERTS',
+  'DAMAGE_REPORTS',
   'INVITE_ACCEPTED',
   'WEEKLY_SUMMARY',
   'STATEMENT_RELEASED',
@@ -89,5 +90,12 @@ export type FileStatus = z.infer<typeof FileStatus>;
 export const SupplyCategory = z.enum(['BATHROOM', 'KITCHEN', 'LAUNDRY', 'CLEANING', 'OTHER']);
 export type SupplyCategory = z.infer<typeof SupplyCategory>;
 
-export const NotificationKind = z.enum(['SUPPLY_LOW', 'SUPPLY_OUT']);
+export const NotificationKind = z.enum(['SUPPLY_LOW', 'SUPPLY_OUT', 'DAMAGE_REPORTED']);
 export type NotificationKind = z.infer<typeof NotificationKind>;
+
+export const DamageSeverity = z.enum(['MINOR', 'MODERATE', 'SEVERE']);
+export type DamageSeverity = z.infer<typeof DamageSeverity>;
+
+/** In workflow order; a report only moves forward. */
+export const DamageStatus = z.enum(['DRAFT', 'SUBMITTED', 'ACKNOWLEDGED', 'CLAIM_FILED', 'RESOLVED']);
+export type DamageStatus = z.infer<typeof DamageStatus>;

@@ -67,6 +67,8 @@ model User {
   propertyPhotosUploaded PropertyPhoto[]
   supplyReadings         SupplyStatus[]
   notifications          Notification[]
+  damageReported         DamageReport[]   @relation("DamageReporter")
+  damagePhotosUploaded   DamagePhoto[]
 }
 
 /// SYSTEM follows the device's reduced-motion setting; REDUCED turns animations off in the app regardless.
@@ -78,6 +80,7 @@ enum MotionPreference {
 /// What a user can be notified about. Which ones apply depends on their roles (see the shared catalogue).
 enum NotificationCategory {
   SUPPLY_ALERTS
+  DAMAGE_REPORTS
   INVITE_ACCEPTED
   WEEKLY_SUMMARY
   STATEMENT_RELEASED
@@ -215,6 +218,7 @@ model Property {
   files         StoredFile[]
   photos        PropertyPhoto[] @relation("PropertyPhotos")
   supplies      SupplyItem[]
+  damageReports DamageReport[]
   notifications Notification[]
 }
 
@@ -275,6 +279,8 @@ model Room {
   /// Archived ("deleted") rooms leave the walkthrough and the name checks but keep their history and photos.
   archivedAt DateTime? @db.Timestamptz
   createdAt  DateTime  @default(now()) @db.Timestamptz
+
+  damageReports DamageReport[]
 
   /// Target of CleanPhoto's composite FK (Phase 3), proving the room belongs to the clean's property.
   @@unique([propertyId, id])
@@ -394,6 +400,10 @@ model Booking {
   updatedAt        DateTime  @updatedAt @db.Timestamptz
   // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
 
+  damageReports DamageReport[]
+
+  /// Target of DamageReport's composite FK, proving a report's stay belongs to its property.
+  @@unique([propertyId, id])
   @@unique([propertyId, source, externalId])
   @@index([propertyId, checkInDate])
   @@index([propertyId, checkOutDate])
@@ -526,6 +536,8 @@ model StoredFile {
 
   receipt            Receipt?
   avatarOf           User?          @relation("UserAvatar")
+  damagePhoto        DamagePhoto?   @relation("DamagePhotoLarge")
+  damagePhotoThumb   DamagePhoto?   @relation("DamagePhotoThumb")
   propertyPhoto      PropertyPhoto? @relation("PropertyPhotoLarge")
   propertyPhotoThumb PropertyPhoto? @relation("PropertyPhotoThumb")
 
@@ -586,6 +598,7 @@ model SupplyStatus {
 enum NotificationKind {
   SUPPLY_LOW
   SUPPLY_OUT
+  DAMAGE_REPORTED
 }
 
 /// In-app notification for one user, created in the same transaction as the event that causes it. Email, when the
@@ -612,6 +625,85 @@ model Notification {
   /// One notification per user per triggering reading, so retries can't duplicate.
   @@unique([userId, sourceId])
   @@index([userId, readAt, createdAt])
+}
+
+// ───────────────────────── Damage ─────────────────────────
+
+enum DamageSeverity {
+  MINOR
+  MODERATE
+  SEVERE
+}
+
+/// Forward only (trigger): a report never goes back a step.
+enum DamageStatus {
+  /// Being written: visible to its reporter and admins only.
+  DRAFT
+  /// Sent: the details (what, where, when, which stay) are locked from here on; photos can still be added.
+  SUBMITTED
+  /// An admin has seen it.
+  ACKNOWLEDGED
+  /// A claim is lodged with the channel (Airbnb's AirCover: within 14 days of checkout).
+  CLAIM_FILED
+  RESOLVED
+}
+
+/// Damage found at a property, with photos, for a claim against the stay responsible (e.g. AirCover).
+model DamageReport {
+  id                 String         @id @default(uuid(7)) @db.Uuid
+  propertyId         String         @db.Uuid
+  property           Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// The stay believed responsible: must be at the same property (composite FK).
+  bookingId          String?        @db.Uuid
+  booking            Booking?       @relation(fields: [propertyId, bookingId], references: [propertyId, id], onDelete: Restrict)
+  /// Where in the property: must be one of its rooms (composite FK).
+  roomId             String?        @db.Uuid
+  room               Room?          @relation(fields: [propertyId, roomId], references: [propertyId, id], onDelete: Restrict)
+  reportedById       String         @db.Uuid
+  reportedBy         User           @relation("DamageReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+  /// Tidy, 1–120 characters (CHECK).
+  title              String
+  /// 1–4000 characters (CHECK).
+  description        String
+  severity           DamageSeverity
+  status             DamageStatus   @default(DRAFT)
+  /// The day it was found, in property-local time.
+  discoveredOn       DateTime       @db.Date
+  /// What fixing or replacing it should cost; optional, at least 0 (CHECK).
+  estimatedCostCents Int?
+  /// The channel's claim or case number, once filed.
+  claimReference     String?
+  resolutionNote     String?
+  /// Set when submitted (CHECK: exactly when the status isn't DRAFT).
+  submittedAt        DateTime?      @db.Timestamptz
+  acknowledgedAt     DateTime?      @db.Timestamptz
+  claimFiledAt       DateTime?      @db.Timestamptz
+  resolvedAt         DateTime?      @db.Timestamptz
+  createdAt          DateTime       @default(now()) @db.Timestamptz
+  updatedAt          DateTime       @updatedAt @db.Timestamptz
+  photos             DamagePhoto[]
+  // + damage_report_guard trigger: no deletes, details locked once submitted, status forward only (raw SQL)
+
+  @@index([propertyId, status])
+  @@index([status, submittedAt])
+}
+
+/// Evidence: immutable (trigger). Photos can be added after a report is submitted, never changed or removed.
+model DamagePhoto {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  damageReportId String       @db.Uuid
+  report         DamageReport @relation(fields: [damageReportId], references: [id], onDelete: Restrict)
+  /// Large JPEG (long edge up to 2400px): the evidence copy.
+  fileId         String       @unique @db.Uuid
+  file           StoredFile   @relation("DamagePhotoLarge", fields: [fileId], references: [id], onDelete: Restrict)
+  /// Small JPEG for lists.
+  thumbFileId    String       @unique @db.Uuid
+  thumbFile      StoredFile   @relation("DamagePhotoThumb", fields: [thumbFileId], references: [id], onDelete: Restrict)
+  uploadedById   String       @db.Uuid
+  uploadedBy     User         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt      DateTime     @default(now()) @db.Timestamptz
+
+  @@index([damageReportId, createdAt])
 }
 
 // ───────────────────────── Audit & infrastructure ─────────────────────────

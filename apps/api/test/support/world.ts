@@ -27,6 +27,11 @@ export interface World {
   files: { a: string; b: string; truhostA: string };
   /** A photo of property A (large and card files), not set as its cover. */
   photoA: { id: string; fileId: string; thumbFileId: string };
+  /**
+   * Damage at property A, reported by cleanerA: one sent (with a photo, blaming booking A), one still a draft. The
+   * sent one's photo files are `damageFiles`.
+   */
+  damage: { sentA: string; draftA: string; sentPhotoFile: string; sentPhotoThumb: string };
 }
 
 export async function seedWorld(prisma: PrismaService): Promise<World> {
@@ -177,12 +182,67 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     data: { propertyId: a.id, fileId: photoFileId, thumbFileId: photoThumbId, uploadedById: users.admin.id },
   });
 
+  const damageFile = async (sha: string) => {
+    const id = crypto.randomUUID();
+    await prisma.storedFile.create({
+      data: {
+        id,
+        purpose: 'DAMAGE_PHOTO',
+        propertyId: a.id,
+        objectKey: `properties/${a.id}/damage_photo/${id}`,
+        contentType: 'image/jpeg',
+        sizeBytes: 4096,
+        sha256: sha.repeat(64),
+        status: 'VERIFIED',
+        verifiedAt: new Date(),
+        uploadedById: users.cleanerA.id,
+      },
+    });
+    return id;
+  };
+  const sentA = await prisma.damageReport.create({
+    data: {
+      propertyId: a.id,
+      reportedById: users.cleanerA.id,
+      title: 'Wine stain on the sofa',
+      description: 'Large red wine stain on the living room sofa cushion.',
+      severity: 'MODERATE',
+      discoveredOn: new Date('2026-11-13T00:00:00.000Z'),
+      bookingId: bookings.a,
+      roomId: a.rooms[0]!.id,
+      estimatedCostCents: 25_000,
+      status: 'SUBMITTED',
+      submittedAt: new Date('2026-11-13T18:00:00.000Z'),
+    },
+  });
+  const sentPhotoFile = await damageFile('e');
+  const sentPhotoThumb = await damageFile('f');
+  await prisma.damagePhoto.create({
+    data: {
+      damageReportId: sentA.id,
+      fileId: sentPhotoFile,
+      thumbFileId: sentPhotoThumb,
+      uploadedById: users.cleanerA.id,
+    },
+  });
+  const draftA = await prisma.damageReport.create({
+    data: {
+      propertyId: a.id,
+      reportedById: users.cleanerA.id,
+      title: 'Chipped mug',
+      description: 'One of the kitchen mugs has a chip on the rim.',
+      severity: 'MINOR',
+      discoveredOn: new Date('2026-11-13T00:00:00.000Z'),
+    },
+  });
+
   return {
     bookings,
     expenses: { a: ea.expense, b: eb.expense, truhostA: et.expense },
     receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },
     files: { a: ea.file, b: eb.file, truhostA: et.file },
     photoA: { id: photoA.id, fileId: photoFileId, thumbFileId: photoThumbId },
+    damage: { sentA: sentA.id, draftA: draftA.id, sentPhotoFile, sentPhotoThumb },
     propertyA: { id: a.id, roomIds: a.rooms.map((r) => r.id), supplyIds: a.supplies.map((s) => s.id) },
     propertyB: { id: b.id, roomIds: b.rooms.map((r) => r.id), supplyIds: b.supplies.map((s) => s.id) },
     users: Object.fromEntries(Object.entries(users).map(([k, u]) => [k, { id: u.id, subject: k }])) as World['users'],

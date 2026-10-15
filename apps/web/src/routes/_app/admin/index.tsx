@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { BookingDialog } from '../../../components/booking-dialog';
+import { DamageReportDialog } from '../../../components/damage/damage-report-dialog';
+import { ReportDamageDialog } from '../../../components/damage/report-damage-dialog';
 import { DashboardView, type DashboardAction } from '../../../components/dashboard/dashboard-view';
 import { ExpenseDialog } from '../../../components/expense-dialog';
 import { ReceiptDialog } from '../../../components/receipt-dialog';
@@ -31,6 +33,9 @@ function Dashboard() {
   const properties = useQuery(queries.properties(api));
   const dash = useQuery(queries.dashboard(api, month, propertyId));
   const restock = useQuery(queries.restock(api));
+  const damage = useQuery(queries.damageReports(api, 'OPEN', propertyId ?? undefined));
+  const [reportingDamage, setReportingDamage] = useState(false);
+  const [openDamage, setOpenDamage] = useState<string | null>(null);
   const calendar = useQuery(queries.bookings(api, monthRange(month), propertyId ?? undefined));
   usePrefetchAdjacentMonths(month, (m) => queries.dashboard(api, m, propertyId), dash.isSuccess);
   usePrefetchAdjacentMonths(
@@ -66,6 +71,9 @@ function Dashboard() {
         supplies={restock.data?.items.filter((i) => !propertyId || i.property.id === propertyId)}
         suppliesError={restock.error}
         onRetrySupplies={() => void restock.refetch()}
+        damage={damage.data?.items}
+        onReportDamage={() => setReportingDamage(true)}
+        onOpenDamage={setOpenDamage}
         onAction={setAction}
         onAddProperty={() => void navigate({ to: '/admin/properties' })}
       />
@@ -84,6 +92,15 @@ function Dashboard() {
           initialPropertyId={propertyId ?? undefined}
         />
       )}
+      {reportingDamage && (
+        <ReportDamageDialog
+          open
+          onOpenChange={(o) => !o && setReportingDamage(false)}
+          properties={propertyList}
+          initialPropertyId={propertyId ?? undefined}
+        />
+      )}
+      {openDamage && <DamageReportDialog reportId={openDamage} open onOpenChange={(o) => !o && setOpenDamage(null)} />}
       {action === 'receipt' && (
         <ReceiptDialog
           onClose={() => setAction(null)}

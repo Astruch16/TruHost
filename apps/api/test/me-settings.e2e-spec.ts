@@ -144,11 +144,17 @@ describe('settings: preferences, avatar and notifications', () => {
       );
 
     it('offers each role its own categories, with defaults', async () => {
-      expect(await categories('ownerB')).toEqual(['SUPPLY_ALERTS', 'WEEKLY_SUMMARY', 'STATEMENT_RELEASED']);
+      expect(await categories('ownerB')).toEqual([
+        'SUPPLY_ALERTS',
+        'DAMAGE_REPORTS',
+        'WEEKLY_SUMMARY',
+        'STATEMENT_RELEASED',
+      ]);
       expect(await categories('cleanerA')).toEqual(['CLEAN_ASSIGNED', 'PAYMENT_RECORDED']);
       // The admin also owns property A: both sets, once each.
       expect(await categories('admin')).toEqual([
         'SUPPLY_ALERTS',
+        'DAMAGE_REPORTS',
         'INVITE_ACCEPTED',
         'WEEKLY_SUMMARY',
         'STATEMENT_RELEASED',

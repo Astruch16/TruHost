@@ -294,6 +294,85 @@ export const CASES: AuthzCase[] = [
   },
   { route: 'GET /v1/supplies/restock', path: () => '/v1/supplies/restock', allow: ADMIN },
 
+  // ── damage reports ──
+  { route: 'GET /v1/damage-reports', path: () => '/v1/damage-reports?status=OPEN', allow: ADMIN },
+  {
+    route: 'GET /v1/properties/:id/damage-reports',
+    label: 'A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/damage-reports`,
+    allow: A_READERS,
+  },
+  {
+    route: 'GET /v1/properties/:id/damage-reports',
+    label: 'B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/damage-reports`,
+    allow: B_READERS,
+  },
+  {
+    route: 'POST /v1/properties/:id/damage-reports',
+    path: (w) => `/v1/properties/${w.propertyA.id}/damage-reports`,
+    body: () => ({
+      title: 'Broken lamp',
+      description: 'The bedside lamp base is cracked.',
+      severity: 'MINOR',
+      discoveredOn: '2026-10-01',
+    }),
+    allow: ['admin', 'cleanerA'],
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/properties/:id/damage-report-stays',
+    path: (w) => `/v1/properties/${w.propertyA.id}/damage-report-stays?on=2026-11-13`,
+    allow: ['admin', 'cleanerA'],
+  },
+  {
+    route: 'GET /v1/damage-reports/:id',
+    label: 'sent',
+    path: (w) => `/v1/damage-reports/${w.damage.sentA}`,
+    allow: A_READERS,
+  },
+  {
+    route: 'GET /v1/damage-reports/:id',
+    label: 'draft',
+    // A draft: its reporter and admins only (not the owner).
+    path: (w) => `/v1/damage-reports/${w.damage.draftA}`,
+    allow: ['admin', 'cleanerA'],
+  },
+  {
+    route: 'PATCH /v1/damage-reports/:id',
+    path: (w) => `/v1/damage-reports/${w.damage.draftA}`,
+    body: () => ({ title: 'Chipped mug (kitchen)' }),
+    allow: ['admin', 'cleanerA'],
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/damage-reports/:id/photos',
+    path: (w) => `/v1/damage-reports/${w.damage.draftA}/photos`,
+    // With no upload in the fixture, the files aren't found (and never another's).
+    body: () => ({
+      fileId: '00000000-0000-7000-8000-000000000001',
+      thumbFileId: '00000000-0000-7000-8000-000000000002',
+    }),
+    allow: ['admin', 'cleanerA'],
+    allowedGets: 422,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/damage-reports/:id/submit',
+    path: (w) => `/v1/damage-reports/${w.damage.draftA}/submit`,
+    // The draft has no photos yet, so sending it is refused (422) for whoever may send it.
+    allow: ['admin', 'cleanerA'],
+    allowedGets: 422,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/damage-reports/:id/status',
+    path: (w) => `/v1/damage-reports/${w.damage.sentA}/status`,
+    body: () => ({ status: 'ACKNOWLEDGED' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+
   // ── notifications (self-scoped) ──
   { route: 'GET /v1/me/notifications', path: () => '/v1/me/notifications', allow: 'everyone' },
   {

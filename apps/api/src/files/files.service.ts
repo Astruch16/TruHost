@@ -17,9 +17,11 @@ type UploadInput = z.output<typeof createUpload>;
 const UPLOAD_ACTION: Record<Exclude<UploadInput['purpose'], 'AVATAR'>, Action> = {
   RECEIPT: 'receipt:write',
   PROPERTY_PHOTO: 'property:write',
+  DAMAGE_PHOTO: 'damage:report',
 };
 
 type FileRef = { objectKey: string; contentType: string };
+type DamageVisibility = { status: string; reportedById: string };
 
 @Injectable()
 export class FilesService {
@@ -138,6 +140,8 @@ export class FilesService {
         propertyPhoto: { select: { id: true } },
         propertyPhotoThumb: { select: { id: true } },
         avatarOf: { select: { id: true } },
+        damagePhoto: { select: { report: { select: { status: true, reportedById: true } } } },
+        damagePhotoThumb: { select: { report: { select: { status: true, reportedById: true } } } },
       },
     });
     if (!file || !this.canView(actor, file)) throw notFound('File');
@@ -152,6 +156,8 @@ export class FilesService {
       propertyPhoto: { id: string } | null;
       propertyPhotoThumb: { id: string } | null;
       avatarOf: { id: string } | null;
+      damagePhoto: { report: DamageVisibility } | null;
+      damagePhotoThumb: { report: DamageVisibility } | null;
     },
   ): boolean {
     // Avatars: their owner and admins (who see everyone on the team page).
@@ -159,6 +165,13 @@ export class FilesService {
     if (!file.propertyId) return false;
     // Property photos: anyone who can see the property.
     if (file.propertyPhoto || file.propertyPhotoThumb) return this.access.can(actor, 'property:read', file.propertyId);
+    // Damage photos: whoever can see the report (DamageService.visible has the same rule).
+    const damage = (file.damagePhoto ?? file.damagePhotoThumb)?.report;
+    if (damage) {
+      if (this.access.can(actor, 'damage:manage', file.propertyId)) return true;
+      if (!this.access.can(actor, 'damage:read', file.propertyId)) return false;
+      return damage.status !== 'DRAFT' || damage.reportedById === actor.userId;
+    }
     // Unattached uploads are visible only to whoever uploaded them.
     if (!file.receipt) return file.uploadedById === actor.userId;
     if (this.access.can(actor, 'expense:readAdminFields', file.propertyId)) return true;

@@ -11,6 +11,7 @@ import { cx } from '../../lib/cx';
 import { queries } from '../../lib/queries';
 import { menuSurfaceStyles } from '../../lib/styles';
 import { since } from '../../lib/supplies';
+import { DamageAlertIcon } from '../illustrations/damage';
 import { SupplyAlertIcon } from '../illustrations/supplies';
 import { ErrorAlert } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
@@ -130,7 +131,11 @@ export function NotificationsBell({
                       !n.readAt && 'bg-blue-tint/25',
                     )}
                   >
-                    <SupplyAlertIcon out={n.kind === 'SUPPLY_OUT'} size={36} className="shrink-0" />
+                    {n.kind === 'DAMAGE_REPORTED' ? (
+                      <DamageAlertIcon size={36} className="shrink-0" />
+                    ) : (
+                      <SupplyAlertIcon out={n.kind === 'SUPPLY_OUT'} size={36} className="shrink-0" />
+                    )}
                     <span className="min-w-0 flex-1">
                       <span className={cx('block text-sm text-ink', n.readAt ? 'font-medium' : 'font-semibold')}>
                         {n.title}
