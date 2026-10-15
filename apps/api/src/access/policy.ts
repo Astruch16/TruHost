@@ -53,6 +53,10 @@ export const POLICY = {
   'report:adminFields': { admin: true, roles: [] },
   'report:portfolio': { admin: true, roles: [] },
   'dashboard:read': { admin: true, roles: [] },
+  /** Owner statements and their PDFs. Admin-only until the owner portal's statement pages (they add OWNER here). */
+  'statement:read': { admin: true, roles: [] },
+  /** Create drafts, add and void adjustments, finalize, release. */
+  'statement:manage': { admin: true, roles: [] },
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },

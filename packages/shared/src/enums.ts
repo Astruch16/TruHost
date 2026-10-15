@@ -99,3 +99,10 @@ export type DamageSeverity = z.infer<typeof DamageSeverity>;
 /** In workflow order; a report only moves forward. */
 export const DamageStatus = z.enum(['DRAFT', 'SUBMITTED', 'ACKNOWLEDGED', 'CLAIM_FILED', 'RESOLVED']);
 export type DamageStatus = z.infer<typeof DamageStatus>;
+
+/** DRAFT → FINALIZED → RELEASED, forward only. */
+export const StatementStatus = z.enum(['DRAFT', 'FINALIZED', 'RELEASED']);
+export type StatementStatus = z.infer<typeof StatementStatus>;
+
+export const StatementLineKind = z.enum(['STAY', 'EXPENSE', 'OWNER_STAY_CLEANING', 'ADJUSTMENT']);
+export type StatementLineKind = z.infer<typeof StatementLineKind>;

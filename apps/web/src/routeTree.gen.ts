@@ -26,6 +26,7 @@ import { Route as DevOwnerPropertyRouteImport } from './routes/dev/owner-propert
 import { Route as DevPropertiesRouteImport } from './routes/dev/properties'
 import { Route as DevRoomsRouteImport } from './routes/dev/rooms'
 import { Route as DevSettingsRouteImport } from './routes/dev/settings'
+import { Route as DevStatementsRouteImport } from './routes/dev/statements'
 import { Route as DevSuppliesRouteImport } from './routes/dev/supplies'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
@@ -46,6 +47,8 @@ import { Route as AppPropertiesIndexRouteImport } from './routes/_app/properties
 import { Route as AppPropertiesPropertyIdRouteImport } from './routes/_app/properties/$propertyId'
 import { Route as AppAdminPropertiesIndexRouteImport } from './routes/_app/admin/properties/index'
 import { Route as AppAdminPropertiesPropertyIdRouteImport } from './routes/_app/admin/properties/$propertyId'
+import { Route as AppAdminStatementsIndexRouteImport } from './routes/_app/admin/statements/index'
+import { Route as AppAdminStatementsStatementIdRouteImport } from './routes/_app/admin/statements/$statementId'
 import { Route as AppCleanerPropertiesPropertyIdRouteImport } from './routes/_app/cleaner/properties/$propertyId'
 
 const AppRoute = AppRouteImport.update({
@@ -130,6 +133,11 @@ const DevRoomsRoute = DevRoomsRouteImport.update({
 const DevSettingsRoute = DevSettingsRouteImport.update({
   id: '/dev/settings',
   path: '/dev/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevStatementsRoute = DevStatementsRouteImport.update({
+  id: '/dev/statements',
+  path: '/dev/statements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevSuppliesRoute = DevSuppliesRouteImport.update({
@@ -233,6 +241,17 @@ const AppAdminPropertiesPropertyIdRoute =
     path: '/properties/$propertyId',
     getParentRoute: () => AppAdminRoute,
   } as any)
+const AppAdminStatementsIndexRoute = AppAdminStatementsIndexRouteImport.update({
+  id: '/statements/',
+  path: '/statements/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminStatementsStatementIdRoute =
+  AppAdminStatementsStatementIdRouteImport.update({
+    id: '/statements/$statementId',
+    path: '/statements/$statementId',
+    getParentRoute: () => AppAdminRoute,
+  } as any)
 const AppCleanerPropertiesPropertyIdRoute =
   AppCleanerPropertiesPropertyIdRouteImport.update({
     id: '/properties/$propertyId',
@@ -257,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
+  '/dev/statements': typeof DevStatementsRoute
   '/dev/supplies': typeof DevSuppliesRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -276,8 +296,10 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AppAdminIndexRoute
   '/properties/': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
   '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/admin/properties/': typeof AppAdminPropertiesIndexRoute
+  '/admin/statements/': typeof AppAdminStatementsIndexRoute
 }
 export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
@@ -293,6 +315,7 @@ export interface FileRoutesByTo {
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
+  '/dev/statements': typeof DevStatementsRoute
   '/dev/supplies': typeof DevSuppliesRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -313,8 +336,10 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminIndexRoute
   '/properties': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
   '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/admin/properties': typeof AppAdminPropertiesIndexRoute
+  '/admin/statements': typeof AppAdminStatementsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -334,6 +359,7 @@ export interface FileRoutesById {
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
   '/dev/settings': typeof DevSettingsRoute
+  '/dev/statements': typeof DevStatementsRoute
   '/dev/supplies': typeof DevSuppliesRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
@@ -354,8 +380,10 @@ export interface FileRoutesById {
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/properties/': typeof AppPropertiesIndexRoute
   '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
+  '/_app/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
   '/_app/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/_app/admin/properties/': typeof AppAdminPropertiesIndexRoute
+  '/_app/admin/statements/': typeof AppAdminStatementsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -376,6 +404,7 @@ export interface FileRouteTypes {
     | '/dev/properties'
     | '/dev/rooms'
     | '/dev/settings'
+    | '/dev/statements'
     | '/dev/supplies'
     | '/dev/ui'
     | '/sign-in/$'
@@ -395,8 +424,10 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/properties/'
     | '/admin/properties/$propertyId'
+    | '/admin/statements/$statementId'
     | '/cleaner/properties/$propertyId'
     | '/admin/properties/'
+    | '/admin/statements/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sso-callback'
@@ -412,6 +443,7 @@ export interface FileRouteTypes {
     | '/dev/properties'
     | '/dev/rooms'
     | '/dev/settings'
+    | '/dev/statements'
     | '/dev/supplies'
     | '/dev/ui'
     | '/sign-in/$'
@@ -432,8 +464,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/properties'
     | '/admin/properties/$propertyId'
+    | '/admin/statements/$statementId'
     | '/cleaner/properties/$propertyId'
     | '/admin/properties'
+    | '/admin/statements'
   id:
     | '__root__'
     | '/_app'
@@ -452,6 +486,7 @@ export interface FileRouteTypes {
     | '/dev/properties'
     | '/dev/rooms'
     | '/dev/settings'
+    | '/dev/statements'
     | '/dev/supplies'
     | '/dev/ui'
     | '/sign-in/$'
@@ -472,8 +507,10 @@ export interface FileRouteTypes {
     | '/_app/admin/'
     | '/_app/properties/'
     | '/_app/admin/properties/$propertyId'
+    | '/_app/admin/statements/$statementId'
     | '/_app/cleaner/properties/$propertyId'
     | '/_app/admin/properties/'
+    | '/_app/admin/statements/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -490,6 +527,7 @@ export interface RootRouteChildren {
   DevPropertiesRoute: typeof DevPropertiesRoute
   DevRoomsRoute: typeof DevRoomsRoute
   DevSettingsRoute: typeof DevSettingsRoute
+  DevStatementsRoute: typeof DevStatementsRoute
   DevSuppliesRoute: typeof DevSuppliesRoute
   DevUiRoute: typeof DevUiRoute
   SignInSplatRoute: typeof SignInSplatRoute
@@ -615,6 +653,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/settings'
       fullPath: '/dev/settings'
       preLoaderRoute: typeof DevSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/statements': {
+      id: '/dev/statements'
+      path: '/dev/statements'
+      fullPath: '/dev/statements'
+      preLoaderRoute: typeof DevStatementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/supplies': {
@@ -757,6 +802,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminPropertiesPropertyIdRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/statements/': {
+      id: '/_app/admin/statements/'
+      path: '/statements'
+      fullPath: '/admin/statements/'
+      preLoaderRoute: typeof AppAdminStatementsIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/statements/$statementId': {
+      id: '/_app/admin/statements/$statementId'
+      path: '/statements/$statementId'
+      fullPath: '/admin/statements/$statementId'
+      preLoaderRoute: typeof AppAdminStatementsStatementIdRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/cleaner/properties/$propertyId': {
       id: '/_app/cleaner/properties/$propertyId'
       path: '/properties/$propertyId'
@@ -795,7 +854,9 @@ interface AppAdminRouteChildren {
   AppAdminTeamRoute: typeof AppAdminTeamRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAdminPropertiesPropertyIdRoute: typeof AppAdminPropertiesPropertyIdRoute
+  AppAdminStatementsStatementIdRoute: typeof AppAdminStatementsStatementIdRoute
   AppAdminPropertiesIndexRoute: typeof AppAdminPropertiesIndexRoute
+  AppAdminStatementsIndexRoute: typeof AppAdminStatementsIndexRoute
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
@@ -808,7 +869,9 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminTeamRoute: AppAdminTeamRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAdminPropertiesPropertyIdRoute: AppAdminPropertiesPropertyIdRoute,
+  AppAdminStatementsStatementIdRoute: AppAdminStatementsStatementIdRoute,
   AppAdminPropertiesIndexRoute: AppAdminPropertiesIndexRoute,
+  AppAdminStatementsIndexRoute: AppAdminStatementsIndexRoute,
 }
 
 const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
@@ -861,6 +924,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevPropertiesRoute: DevPropertiesRoute,
   DevRoomsRoute: DevRoomsRoute,
   DevSettingsRoute: DevSettingsRoute,
+  DevStatementsRoute: DevStatementsRoute,
   DevSuppliesRoute: DevSuppliesRoute,
   DevUiRoute: DevUiRoute,
   SignInSplatRoute: SignInSplatRoute,

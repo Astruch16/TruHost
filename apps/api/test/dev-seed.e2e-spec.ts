@@ -1,4 +1,12 @@
-import { SEED_PROPERTIES, seedTestAccounts, TEST_ACCOUNTS, type SeedIdentity } from '../src/dev-seed/test-accounts.js';
+import {
+  SEED_PROPERTIES,
+  seedTestAccounts,
+  TEST_ACCOUNTS,
+  type SeedIdentity,
+  type SeedServices,
+} from '../src/dev-seed/test-accounts.js';
+import { FILE_STORAGE } from '../src/files/storage.js';
+import { StatementsService } from '../src/statements/statements.service.js';
 import { createTestApp, type TestApp } from './support/app.js';
 import { resetDb } from './support/db.js';
 import { seedWorld } from './support/world.js';
@@ -75,6 +83,36 @@ describe('dev seed: local test accounts', () => {
       await t.prisma.expense.count({ where: { ...seeded, incurredOn: { gt: new Date('2026-10-09T00:00:00Z') } } }),
     ).toBe(0);
     expect(await t.prisma.expense.count({ where: seeded })).toBeGreaterThan(0);
+  });
+
+  it('attaches receipts and releases last month’s statement for both properties, once', async () => {
+    const services: SeedServices = { storage: t.app.get(FILE_STORAGE), statements: t.app.get(StatementsService) };
+    const { log } = await seedTestAccounts(t.prisma, identity, now, services);
+    expect(log.filter((l) => l.startsWith('released the 2026-09 statement'))).toHaveLength(2);
+
+    const seeded = { propertyId: { in: SEED_PROPERTIES.map((p) => p.id) } };
+    expect(await t.prisma.expense.count({ where: { ...seeded, receipts: { none: {} } } })).toBe(0);
+    const statements = await t.prisma.ownerStatement.findMany({ where: seeded, include: { pdfFile: true } });
+    expect(statements.map((s) => [s.status, s.periodMonth.toISOString().slice(0, 10)])).toEqual([
+      ['RELEASED', '2026-09-01'],
+      ['RELEASED', '2026-09-01'],
+    ]);
+    expect(statements.every((s) => s.pdfFile?.purpose === 'STATEMENT_PDF' && s.netCents! > 0)).toBe(true);
+    // Cedar had an owner stay: its standard cleaning fee is on the statement.
+    const cedar = statements.find((s) => s.propertyId === SEED_PROPERTIES[1].id)!;
+    expect(cedar.ownerStayCleaningCents).toBe(15_000);
+    expect(await t.prisma.auditLog.count({ where: { action: 'statement.release' } })).toBe(2);
+
+    // The owner's figures for September match what was released.
+    const summary = await t
+      .as('seed-owner')
+      .get(`/v1/properties/${cedar.propertyId}/summary?month=2026-09`)
+      .expect(200);
+    expect(summary.body.netCents).toBe(cedar.netCents);
+
+    const again = await seedTestAccounts(t.prisma, identity, now, services);
+    expect(again.log.filter((l) => l.includes('already released'))).toHaveLength(2);
+    expect(await t.prisma.storedFile.count({ where: { purpose: 'STATEMENT_PDF' } })).toBe(2);
   });
 
   it('needs an admin to record who entered the data', async () => {

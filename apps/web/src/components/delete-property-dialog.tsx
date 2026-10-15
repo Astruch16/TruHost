@@ -121,6 +121,7 @@ export function DeletePropertyDialog({
               d.expenses && plural(d.expenses, 'expense', 'expenses'),
               d.receipts && plural(d.receipts, 'receipt', 'receipts'),
               d.damageReports && plural(d.damageReports, 'damage report', 'damage reports'),
+              d.statements && plural(d.statements, 'owner statement', 'owner statements'),
             ]
               .filter(Boolean)
               .join(', ')

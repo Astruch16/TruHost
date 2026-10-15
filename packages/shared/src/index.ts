@@ -13,4 +13,5 @@ export * from './api/supplies.js';
 export * from './api/damage.js';
 export * from './api/expenses.js';
 export * from './api/reports.js';
+export * from './api/statements.js';
 export * from './api/dashboard.js';

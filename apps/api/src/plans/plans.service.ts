@@ -9,6 +9,7 @@ import { currentMonthStart, fromIsoDate, toIsoDate } from '../common/dates.js';
 import { conflict, notFound, unprocessable } from '../common/problem.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { monthName } from '../reporting/statement.js';
 
 type PlanRow = Prisma.PlanGetPayload<{ include: { _count: { select: { properties: true } } } }>;
 const WITH_USAGE = { _count: { select: { properties: true } } } as const;
@@ -129,8 +130,8 @@ export class PlansService {
 
   /**
    * Starts `planId` on `effectiveFrom` (1st of a month) and closes the open period. New periods
-   * must start after the latest one, so history is never rewritten.
-   * TODO(phase 2b): also reject months covered by a FINALIZED statement.
+   * must start after the latest one, so history is never rewritten, and after the latest finalized statement, whose
+   * fee is already fixed.
    */
   async assign(actor: Actor, propertyId: string, input: AssignPlan) {
     this.access.assert(actor, 'propertyPlan:assign', propertyId, 'Property');
@@ -150,6 +151,7 @@ export class PlansService {
           `effectiveFrom must be after the latest plan period (${toIsoDate(latest.effectiveFrom)})`,
         );
       }
+      await assertPlanOpen(tx, propertyId, from);
       if (latest && latest.effectiveTo === null) {
         await tx.propertyPlan.update({ where: { id: latest.id }, data: { effectiveTo: from } });
       }
@@ -172,8 +174,8 @@ export class PlansService {
 /**
  * Correct a property's plan for every month so far: each plan period switches to `planId`, keeping its dates; with no
  * periods yet, one starts in the month the property was added. For a plan that was wrong from the start (e.g. an
- * admin's own property put on TruPlan). Audited with the periods before and after.
- * TODO(phase 2b): reject while a FINALIZED statement covers any of these months.
+ * admin's own property put on TruPlan). Audited with the periods before and after. Refused once any month has a
+ * finalized statement: its fee is part of an issued document (correct it with an adjustment instead).
  */
 export async function correctPlanHistory(
   tx: Prisma.TransactionClient,
@@ -183,6 +185,7 @@ export async function correctPlanHistory(
   planId: string,
 ) {
   await tx.$queryRaw`SELECT id FROM "Property" WHERE id = ${property.id}::uuid FOR UPDATE`;
+  await assertPlanOpen(tx, property.id, null);
   const periods = await tx.propertyPlan.findMany({
     where: { propertyId: property.id },
     orderBy: { effectiveFrom: 'asc' },
@@ -212,6 +215,26 @@ export async function correctPlanHistory(
     before: { periods: before },
     after: { periods: before.map((p) => ({ ...p, planId })) },
   });
+}
+
+/**
+ * Refuses a plan change reaching a month whose statement is finalized (from `from` on; every month when null). The
+ * caller holds the property row lock, which finalize also takes.
+ */
+async function assertPlanOpen(tx: Prisma.TransactionClient, propertyId: string, from: Date | null) {
+  const locked = await tx.ownerStatement.findFirst({
+    where: { propertyId, status: { not: 'DRAFT' }, ...(from ? { periodMonth: { gte: from } } : {}) },
+    orderBy: { periodMonth: 'desc' },
+    select: { periodMonth: true },
+  });
+  if (!locked) return;
+  const month = monthName(toIsoDate(locked.periodMonth).slice(0, 7));
+  throw conflict(
+    'PERIOD_LOCKED',
+    from
+      ? `${month} already has a finalized statement for this property. A new plan can start after it.`
+      : `${month} already has a finalized statement for this property, so its plan history can’t be corrected. Assign a new plan from next month instead, and record any fee correction as an adjustment.`,
+  );
 }
 
 function presentPlan(p: PlanRow) {

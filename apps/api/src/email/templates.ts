@@ -110,3 +110,37 @@ export function damageReportEmail(
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: `${headline}: ${report.title}`, text, html };
 }
+
+/** An owner's monthly statement was released (the money is on its way). `url` opens the statement in TruHost. */
+export function statementReleasedEmail(
+  to: { email: string; firstName: string },
+  s: { property: string; month: string; net: string; releasedOn: string; url: string },
+): EmailMessage {
+  const name = to.firstName.trim() || 'there';
+  const headline = `Your ${s.month} statement for ${s.property}`;
+  const detail = `Your statement for ${s.month} is ready. We sent you ${s.net} on ${s.releasedOn}.`;
+  const text = [
+    `Hi ${name},`,
+    '',
+    detail,
+    'Open it to see your stays, the TruPlan fee and expenses, with receipts.',
+    '',
+    s.url,
+    '',
+    '— TruHost',
+  ].join('\n');
+  const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
+<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="padding:28px">
+<p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
+<p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
+<p style="margin:0 0 4px;font-size:13px;color:#5b6068;text-transform:uppercase;letter-spacing:0.08em">Net to you</p>
+<p style="margin:0 0 20px;font-size:32px;font-weight:bold;color:#173f3a">${escape(s.net)}</p>
+<p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escape(detail)} Open it to see your stays, the TruPlan fee and expenses, with receipts.</p>
+<p style="margin:0 0 8px"><a href="${escape(s.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">View statement</a></p>
+<p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because statement emails are on in your TruHost settings.</p>
+</td></tr></table></td></tr></table></body></html>`;
+  return { to: to.email, subject: headline, text, html };
+}

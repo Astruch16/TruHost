@@ -294,6 +294,69 @@ export const CASES: AuthzCase[] = [
   },
   { route: 'GET /v1/supplies/restock', path: () => '/v1/supplies/restock', allow: ADMIN },
 
+  // ── owner statements (admin only until the owner portal's statement pages) ──
+  { route: 'GET /v1/statements', path: () => '/v1/statements?month=2026-10', allow: ADMIN },
+  {
+    route: 'POST /v1/statements/generate',
+    path: () => '/v1/statements/generate',
+    body: () => ({ month: '2026-10' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'GET /v1/properties/:id/statements',
+    label: 'property A',
+    path: (w) => `/v1/properties/${w.propertyA.id}/statements`,
+    allow: ADMIN,
+  },
+  {
+    route: 'GET /v1/properties/:id/statements',
+    label: 'property B',
+    path: (w) => `/v1/properties/${w.propertyB.id}/statements`,
+    allow: ADMIN,
+  },
+  {
+    route: 'POST /v1/properties/:id/statements',
+    path: (w) => `/v1/properties/${w.propertyA.id}/statements`,
+    body: () => ({ month: '2026-11' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  { route: 'GET /v1/statements/:id', path: (w) => `/v1/statements/${w.statements.draftA}`, allow: ADMIN },
+  {
+    route: 'GET /v1/statements/:id/preview',
+    path: (w) => `/v1/statements/${w.statements.draftA}/preview`,
+    allow: ADMIN,
+  },
+  {
+    route: 'POST /v1/statements/:id/finalize',
+    path: (w) => `/v1/statements/${w.statements.draftA}/finalize`,
+    body: () => ({ confirmPendingPayouts: false }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/statements/:id/release',
+    path: (w) => `/v1/statements/${w.statements.finalizedB}/release`,
+    body: () => ({ releasedOn: '2026-01-05', paymentReference: 'ETF-1' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/statements/:id/adjustments',
+    path: (w) => `/v1/statements/${w.statements.draftA}/adjustments`,
+    body: () => ({ amountCents: -1_000, reason: 'Owner asked for a correction' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/adjustments/:id/void',
+    path: (w) => `/v1/adjustments/${w.statements.adjustmentA}/void`,
+    body: () => ({ reason: 'Entered twice' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+
   // ── damage reports ──
   { route: 'GET /v1/damage-reports', path: () => '/v1/damage-reports?status=OPEN', allow: ADMIN },
   {
