@@ -201,20 +201,26 @@ export class PropertiesService {
     await this.files.deleteObjects(objectKeys);
   }
 
-  private async blockers(db: Pick<PrismaService, 'booking' | 'expense' | 'receipt' | 'damageReport'>, id: string) {
-    const [bookings, expenses, receipts, damageReports] = await Promise.all([
+  private async blockers(
+    db: Pick<PrismaService, 'booking' | 'expense' | 'receipt' | 'damageReport' | 'ownerStatement'>,
+    id: string,
+  ) {
+    const [bookings, expenses, receipts, damageReports, statements] = await Promise.all([
       db.booking.count({ where: { propertyId: id } }),
       db.expense.count({ where: { propertyId: id } }),
       db.receipt.count({ where: { propertyId: id } }),
       // Evidence for claims (drafts included: their photos are evidence too).
       db.damageReport.count({ where: { propertyId: id } }),
+      // Owner statements, drafts included (they can carry adjustments).
+      db.ownerStatement.count({ where: { propertyId: id } }),
     ]);
     return {
-      allowed: bookings + expenses + receipts + damageReports === 0,
+      allowed: bookings + expenses + receipts + damageReports + statements === 0,
       bookings,
       expenses,
       receipts,
       damageReports,
+      statements,
     };
   }
 

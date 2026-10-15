@@ -145,6 +145,7 @@ describe('property details and deletion', () => {
         expenses: 0,
         receipts: 0,
         damageReports: 0,
+        statements: 0,
       });
       await t.as('admin').delete(`/v1/properties/${id}`).expect(204);
 
@@ -174,6 +175,7 @@ describe('property details and deletion', () => {
         expenses: 2,
         receipts: 2,
         damageReports: 2,
+        statements: 1,
       });
       const res = await t.as('admin').delete(`/v1/properties/${w.propertyA.id}`).expect(409);
       expect(res.body.code).toBe('PROPERTY_HAS_RECORDS');

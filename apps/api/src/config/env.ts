@@ -34,6 +34,11 @@ export const envSchema = z
     RESEND_API_KEY: z.string().optional(),
     TAX_FIELDS_ENABLED: bool,
     /**
+     * Email owners when their statement is released (net and a link). Off until the owner statement page it links to
+     * exists.
+     */
+    STATEMENT_EMAILS_ENABLED: bool,
+    /**
      * File storage. `r2` (Cloudflare R2) in deployed environments; `local` (disk, signed URLs served by this API)
      * for development and tests. Production refuses `local`.
      */

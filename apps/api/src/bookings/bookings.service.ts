@@ -12,6 +12,7 @@ import { ENV, type Env } from '../config/env.js';
 import type { Booking } from '../generated/prisma/client.js';
 import { PrismaService, type Tx } from '../prisma/prisma.service.js';
 import { isComplete, nightsBetween, ownerGrossCents } from '../reporting/booking-money.js';
+import { assertOpen, bookingDays } from '../statements/period-lock.js';
 
 type CreateInput = z.output<typeof createBooking>;
 
@@ -30,6 +31,20 @@ const WRITABLE = [
   'guestCleaningFeeCents',
   'taxesCollectedCents',
   'notes',
+] as const;
+
+/**
+ * Fields that feed a statement (money, dates, kind, and the channel printed on it). Changing one in a finalized month
+ * is refused (409 PERIOD_LOCKED); guest details and notes stay editable.
+ */
+const STATEMENT_FIELDS = [
+  'channel',
+  'kind',
+  'checkInDate',
+  'checkOutDate',
+  'payoutCents',
+  'guestCleaningFeeCents',
+  'taxesCollectedCents',
 ] as const;
 
 @Injectable()
@@ -78,6 +93,7 @@ export class BookingsService {
         checkOutDate: fromIsoDate(input.checkOutDate),
       };
       await this.assertNoOverlap(tx, propertyId, data.checkInDate, data.checkOutDate);
+      await assertOpen(tx, propertyId, [bookingDays(data)], 'This stay');
       const row = await tx.booking.create({
         data: { ...data, propertyId, source: 'MANUAL', enteredById: actor.userId },
       });
@@ -121,7 +137,12 @@ export class BookingsService {
         await this.assertNoOverlap(tx, merged.propertyId, merged.checkInDate, merged.checkOutDate, id);
       }
 
-      // TODO(phase 2b): reject with 409 PERIOD_LOCKED when any night (before or after) is in a finalized month.
+      const feedsStatement = STATEMENT_FIELDS.some(
+        (key) => key in changes && !sameValue(changes[key], before[key as keyof Booking]),
+      );
+      if (feedsStatement) {
+        await assertOpen(tx, before.propertyId, [bookingDays(before), bookingDays(merged)], 'This stay');
+      }
       const { count } = await tx.booking.updateMany({
         where: { id, version: input.version },
         data: { ...changes, version: { increment: 1 } },
@@ -149,6 +170,7 @@ export class BookingsService {
       this.assertVersion(before, input.version);
       if (before.status === 'CANCELLED')
         throw conflict('BOOKING_ALREADY_CANCELLED', 'This booking is already cancelled');
+      await assertOpen(tx, before.propertyId, [bookingDays(before)], 'This stay');
       const { count } = await tx.booking.updateMany({
         where: { id, version: input.version, status: 'CONFIRMED' },
         data: {
@@ -279,6 +301,9 @@ function auditView(b: Booking) {
     guestCount: b.guestCount,
   };
 }
+
+const sameValue = (a: unknown, b: unknown) =>
+  a instanceof Date && b instanceof Date ? a.getTime() === b.getTime() : a === b;
 
 function overlap(clash: { id: string; checkInDate: Date; checkOutDate: Date } | null) {
   return new ProblemException({

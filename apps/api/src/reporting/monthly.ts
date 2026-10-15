@@ -38,8 +38,13 @@ export interface MonthFigures {
   managementFeeBps: number | null;
   /** grossCents × rate, rounded once on the month total, half up. 0 when no plan is in force. */
   managementFeeCents: number;
-  /** Non-voided owner-borne expenses purchased in the month. */
+  /**
+   * Non-voided owner-borne expenses purchased in the month, plus the cleaning charged for owner stays checking out in
+   * it (`ownerStayCleaningCents`, part of this figure).
+   */
   ownerExpensesCents: number;
+  /** The property's standard cleaning fee for each confirmed owner stay checking out in the month (decision A16). */
+  ownerStayCleaningCents: number;
   /** gross − fee − owner expenses. Can be negative (owner owes: see spec "Later"). */
   netCents: number;
   /**
@@ -71,6 +76,30 @@ export interface MonthFigures {
    */
   nightlyLowCents: number | null;
   nightlyHighCents: number | null;
+  /**
+   * Line detail for statements, pointing into the input arrays by index: every guest stay in the month (its share,
+   * or pending while its money isn't entered), each owner stay charged for cleaning, and each owner expense counted.
+   */
+  detail: {
+    stays: StayShare[];
+    ownerStayCleaning: { booking: number; amountCents: number }[];
+    ownerExpenses: number[];
+  };
+}
+
+export interface StayShare {
+  /** Index into the input bookings. */
+  booking: number;
+  /** Nights of the stay in this month (0 for a cancelled stay), and in the whole stay. */
+  nights: number;
+  totalNights: number;
+  /** Owner gross of the whole stay; null while its payout or cleaning fee isn't entered. */
+  stayGrossCents: number | null;
+  /** This month's share of it (0 while pending). */
+  grossCents: number;
+  cancelled: boolean;
+  /** Payout or cleaning fee not entered yet: counted as 0 for now. */
+  pending: boolean;
 }
 
 const DAY = 86_400_000;
@@ -123,6 +152,8 @@ export function computeMonth(input: {
   feeBps: number | null;
   bookings: MonthBooking[];
   expenses: MonthExpense[];
+  /** The property's standard cleaning fee, charged to the owner for each owner stay checking out in the month. */
+  ownerStayCleaningFeeCents?: number;
 }): MonthFigures {
   const { first, next, days } = monthBounds(input.month);
   const inMonth = (iso: string) => iso >= first && iso < next;
@@ -140,13 +171,19 @@ export function computeMonth(input: {
   const bookedByDay = Array.from({ length: days }, () => 0);
   const unavailableByDay = Array.from({ length: days }, () => 0);
   const nightly: number[] = [];
+  const stayShares: StayShare[] = [];
+  const ownerStayCleaning: { booking: number; amountCents: number }[] = [];
+  const ownerExpenses: number[] = [];
+  let ownerStayCleaningCents = 0;
+  const cleaningCharge = input.ownerStayCleaningFeeCents ?? 0;
   /** Marks `count` nights starting `from` nights into a stay that checks in on `checkIn`. */
   const mark = (byDay: number[], checkIn: string, from: number, count: number) => {
     const start = toDay(checkIn) + from - toDay(first);
     for (let d = start; d < start + count; d++) byDay[d] = 1;
   };
 
-  for (const b of input.bookings) {
+  for (const [index, b] of input.bookings.entries()) {
+    const totalNights = toDay(b.checkOut) - toDay(b.checkIn);
     if (b.kind === 'GUEST' && b.guestCleaningFeeCents !== null && inMonth(b.checkOut)) {
       cleaningFeesCents += b.guestCleaningFeeCents;
     }
@@ -156,9 +193,26 @@ export function computeMonth(input: {
       const gross = ownerGrossCents(b);
       if (gross !== null && inMonth(b.checkIn)) {
         grossCents += gross;
-        if (gross > 0) grossByStay.push({ checkIn: b.checkIn, grossCents: gross });
+        if (gross > 0) {
+          grossByStay.push({ checkIn: b.checkIn, grossCents: gross });
+          stayShares.push({
+            booking: index,
+            nights: 0,
+            totalNights,
+            stayGrossCents: gross,
+            grossCents: gross,
+            cancelled: true,
+            pending: false,
+          });
+        }
       }
       continue;
+    }
+
+    // Decision A16: the owner pays the standard cleaning fee for the turnover after their stay (checkout month).
+    if (b.kind === 'OWNER_STAY' && inMonth(b.checkOut) && cleaningCharge > 0) {
+      ownerStayCleaningCents += cleaningCharge;
+      ownerStayCleaning.push({ booking: index, amountCents: cleaningCharge });
     }
 
     const { from, count } = nightsInMonth(b.checkIn, b.checkOut, first, next);
@@ -180,12 +234,29 @@ export function computeMonth(input: {
     const gross = ownerGrossCents(b);
     if (gross === null) {
       incompleteBookings += 1;
+      stayShares.push({
+        booking: index,
+        nights: count,
+        totalNights,
+        stayGrossCents: null,
+        grossCents: 0,
+        cancelled: false,
+        pending: true,
+      });
       continue;
     }
-    const totalNights = toDay(b.checkOut) - toDay(b.checkIn);
     const share = allocatePerNight(gross, totalNights)
       .slice(from, from + count)
       .reduce((sum, c) => sum + c, 0);
+    stayShares.push({
+      booking: index,
+      nights: count,
+      totalNights,
+      stayGrossCents: gross,
+      grossCents: share,
+      cancelled: false,
+      pending: false,
+    });
     grossCents += share;
     completeGross += share;
     completeNights += count;
@@ -196,11 +267,18 @@ export function computeMonth(input: {
 
   let ownerExpensesCents = 0;
   let expensesMissingReceipt = 0;
-  for (const e of input.expenses) {
+  for (const [index, e] of input.expenses.entries()) {
     if (e.voided || e.bearer !== 'OWNER' || !inMonth(e.incurredOn)) continue;
     ownerExpensesCents += e.amountCents;
+    ownerExpenses.push(index);
     if (!e.hasReceipt) expensesMissingReceipt += 1;
   }
+  ownerExpensesCents += ownerStayCleaningCents;
+  const byCheckIn = (a: StayShare, b: StayShare) => {
+    const x = input.bookings[a.booking]!.checkIn;
+    const y = input.bookings[b.booking]!.checkIn;
+    return x < y ? -1 : x > y ? 1 : 0;
+  };
 
   const availableNights = days - ownerStayNights - blockNights;
   const managementFeeCents = managementFee(grossCents, input.feeBps);
@@ -218,6 +296,7 @@ export function computeMonth(input: {
     managementFeeBps: input.feeBps,
     managementFeeCents,
     ownerExpensesCents,
+    ownerStayCleaningCents,
     netCents: grossCents - managementFeeCents - ownerExpensesCents,
     avgNightlyEarningsCents: completeNights > 0 ? divideHalfUp(completeGross, completeNights) : null,
     completeNights,
@@ -230,5 +309,6 @@ export function computeMonth(input: {
     unavailableByDay,
     nightlyLowCents: nightly.length > 0 ? Math.min(...nightly) : null,
     nightlyHighCents: nightly.length > 0 ? Math.max(...nightly) : null,
+    detail: { stays: stayShares.sort(byCheckIn), ownerStayCleaning, ownerExpenses },
   };
 }

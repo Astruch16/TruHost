@@ -18,6 +18,11 @@ export interface FileStorage {
   /** A short-lived PUT that only accepts exactly this type, length and SHA-256. */
   presignPut(o: { key: string; contentType: string; sizeBytes: number; sha256Hex: string }): Promise<PutTarget>;
   head(key: string): Promise<ObjectInfo | null>;
+  /**
+   * Stores bytes the API made itself (a statement PDF), with the same SHA-256 check as a client upload: the store
+   * rejects a body that doesn't match `sha256Hex`.
+   */
+  put(key: string, body: Buffer, o: { contentType: string; sha256Hex: string }): Promise<void>;
   /** Removes an object. Missing objects are not an error. */
   delete(key: string): Promise<void>;
   /**

@@ -4,10 +4,18 @@
  * Idempotent: rows have fixed ids or natural keys, so running it again changes nothing that is already there and
  * only fills in months that are new since the last run.
  *
- * Statements (Phase 2b) and cleans (Phase 3) don't exist yet; seed them here when they land.
+ * With the running API's services (the CLI passes them), it also attaches a sample receipt to each seeded expense
+ * and issues last month's statement for both properties through the real lifecycle (draft, finalize, release), so
+ * the owner has statements with PDFs. Cleans (Phase 3) don't exist yet; seed them here when they land.
  */
+import { createHash } from 'node:crypto';
+import type { Actor } from '../auth/actor.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
-import { currentMonthStart, fromIsoDate } from '../common/dates.js';
+import { currentMonthStart, fromIsoDate, toIsoDate } from '../common/dates.js';
+import { uuidv7 } from '../common/uuid.js';
+import type { FileStorage } from '../files/storage.js';
+import type { StatementsService } from '../statements/statements.service.js';
+import { sampleReceiptPdf } from './sample-receipt.js';
 
 export const TEST_ACCOUNTS = {
   owner: { email: 'adamstruch+owner+clerk_test@gmail.com', firstName: 'Test', lastName: 'Owner' },
@@ -32,6 +40,7 @@ export const SEED_PROPERTIES = [
     bedrooms: 1,
     bathrooms: 1,
     maxGuests: 3,
+    standardCleaningFeeCents: 9_000,
   },
   {
     id: '0192f5e0-5eed-7000-8000-00000000a002',
@@ -44,6 +53,7 @@ export const SEED_PROPERTIES = [
     bedrooms: 3,
     bathrooms: 2,
     maxGuests: 6,
+    standardCleaningFeeCents: 15_000,
   },
 ] as const;
 
@@ -189,12 +199,23 @@ export function assertSafeToSeed(env: { NODE_ENV?: string; CLERK_SECRET_KEY?: st
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set.');
 }
 
+/** What the seed needs from the running API to attach receipts and issue statements. */
+export interface SeedServices {
+  storage: FileStorage;
+  statements: Pick<StatementsService, 'create' | 'finalize' | 'release'>;
+}
+
 /** Creates or finds the sign-in account; returns its id. The Clerk version lives in the CLI. */
 export interface SeedIdentity {
   ensureUser(account: { email: string; firstName: string; lastName: string }): Promise<string>;
 }
 
-export async function seedTestAccounts(prisma: PrismaClient, identity: SeedIdentity, now = new Date()) {
+export async function seedTestAccounts(
+  prisma: PrismaClient,
+  identity: SeedIdentity,
+  now = new Date(),
+  services?: SeedServices,
+) {
   const log: string[] = [];
 
   const admin = await prisma.user.findFirst({ where: { staffRole: 'ADMIN' }, orderBy: { createdAt: 'asc' } });
@@ -257,6 +278,13 @@ export async function seedTestAccounts(prisma: PrismaClient, identity: SeedIdent
     }
     if (property.archivedAt) {
       property = await prisma.property.update({ where: { id: p.id }, data: { archivedAt: null } });
+    }
+    // Charged to the owner after each owner stay; set once, so an admin's later change sticks.
+    if (property.standardCleaningFeeCents === 0) {
+      property = await prisma.property.update({
+        where: { id: p.id },
+        data: { standardCleaningFeeCents: p.standardCleaningFeeCents },
+      });
     }
 
     if (!(await prisma.propertyPlan.findFirst({ where: { propertyId: p.id } }))) {
@@ -334,5 +362,85 @@ export async function seedTestAccounts(prisma: PrismaClient, identity: SeedIdent
   }
 
   log.push(`added ${bookings} bookings and ${expenses} expenses (${months[0]} to ${months.at(-1)})`);
+
+  if (services) {
+    const actor: Actor = { userId: admin.id, staffRole: 'ADMIN', memberships: [] };
+    const receipts = await attachSampleReceipts(prisma, services.storage, admin.id);
+    if (receipts > 0) log.push(`attached sample receipts to ${receipts} expenses`);
+    const lastMonth = seedMonths(now, -1, -1)[0]!;
+    // Paid on the 5th, or today if that's still ahead.
+    const releasedOn = [`${thisMonth}-05`, today].sort()[0]!;
+    for (const p of SEED_PROPERTIES) {
+      log.push(await releaseStatement(prisma, services.statements, actor, p, lastMonth, releasedOn));
+    }
+  }
   return { log, users, months };
+}
+
+/** A sample receipt PDF for each seeded expense that has none, stored like an upload. Returns how many. */
+async function attachSampleReceipts(prisma: PrismaClient, storage: FileStorage, adminId: string) {
+  const missing = await prisma.expense.findMany({
+    where: {
+      propertyId: { in: SEED_PROPERTIES.map((p) => p.id) },
+      voidedAt: null,
+      receipts: { none: { voidedAt: null } },
+    },
+  });
+  for (const e of missing) {
+    const date = toIsoDate(e.incurredOn);
+    const body = await sampleReceiptPdf({
+      vendor: e.vendor ?? 'Receipt',
+      description: e.description,
+      amountCents: e.amountCents,
+      date,
+    });
+    const sha256 = createHash('sha256').update(body).digest('hex');
+    const id = uuidv7();
+    const objectKey = `properties/${e.propertyId}/receipt/${id}`;
+    await storage.put(objectKey, body, { contentType: 'application/pdf', sha256Hex: sha256 });
+    await prisma.storedFile.create({
+      data: {
+        id,
+        purpose: 'RECEIPT',
+        propertyId: e.propertyId,
+        objectKey,
+        contentType: 'application/pdf',
+        sizeBytes: body.length,
+        sha256,
+        status: 'VERIFIED',
+        verifiedAt: new Date(),
+        uploadedById: adminId,
+        originalFilename: `receipt-${date}.pdf`,
+      },
+    });
+    await prisma.receipt.create({
+      data: { propertyId: e.propertyId, expenseId: e.id, fileId: id, receiptDate: e.incurredOn, uploadedById: adminId },
+    });
+  }
+  return missing.length;
+}
+
+/** Takes one property's statement for `month` through draft, finalize and release, picking up wherever it stands. */
+async function releaseStatement(
+  prisma: PrismaClient,
+  statements: SeedServices['statements'],
+  actor: Actor,
+  p: (typeof SEED_PROPERTIES)[number],
+  month: string,
+  releasedOn: string,
+): Promise<string> {
+  const existing = await prisma.ownerStatement.findUnique({
+    where: { propertyId_periodMonth: { propertyId: p.id, periodMonth: fromIsoDate(`${month}-01`) } },
+  });
+  if (existing?.status === 'RELEASED') return `${month} statement for "${p.name}" already released`;
+  try {
+    let st = await statements.create(actor, p.id, month);
+    if (st.status === 'DRAFT') st = await statements.finalize(actor, st.id, { confirmPendingPayouts: true });
+    await statements.release(actor, st.id, { releasedOn, paymentReference: `SEED-${month}` });
+    return `released the ${month} statement for "${p.name}" (paid ${releasedOn})`;
+  } catch (e) {
+    const detail = (e as { problem?: { detail?: string; extras?: { blockers?: { message: string }[] } } }).problem;
+    const why = detail?.extras?.blockers?.map((b) => b.message).join(' ') ?? detail?.detail ?? (e as Error).message;
+    return `couldn't release the ${month} statement for "${p.name}": ${why}`;
+  }
 }

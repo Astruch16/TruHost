@@ -161,6 +161,19 @@ export const queries = {
           }),
         ),
     }),
+  /** Statements sit under one key, so any change (a draft, a finalize, an adjustment) refreshes every view of them. */
+  statementMonth: (api: ApiClient, month: string) =>
+    queryOptions({
+      queryKey: ['statements', 'month', month],
+      queryFn: () => unwrap(api.GET('/v1/statements', { params: { query: { month } } })),
+      // Keep the month on screen (dimmed) while the next one loads.
+      placeholderData: (previous) => previous,
+    }),
+  statement: (api: ApiClient, id: string) =>
+    queryOptions({
+      queryKey: ['statements', 'one', id],
+      queryFn: () => unwrap(api.GET('/v1/statements/{id}', { params: { path: { id } } })),
+    }),
   /** The bell: checked every minute while the app is open. */
   notifications: (api: ApiClient) =>
     queryOptions({

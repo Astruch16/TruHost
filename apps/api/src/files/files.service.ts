@@ -142,6 +142,7 @@ export class FilesService {
         avatarOf: { select: { id: true } },
         damagePhoto: { select: { report: { select: { status: true, reportedById: true } } } },
         damagePhotoThumb: { select: { report: { select: { status: true, reportedById: true } } } },
+        statementPdf: { select: { id: true } },
       },
     });
     if (!file || !this.canView(actor, file)) throw notFound('File');
@@ -158,6 +159,7 @@ export class FilesService {
       avatarOf: { id: string } | null;
       damagePhoto: { report: DamageVisibility } | null;
       damagePhotoThumb: { report: DamageVisibility } | null;
+      statementPdf: { id: string } | null;
     },
   ): boolean {
     // Avatars: their owner and admins (who see everyone on the team page).
@@ -172,6 +174,8 @@ export class FilesService {
       if (!this.access.can(actor, 'damage:read', file.propertyId)) return false;
       return damage.status !== 'DRAFT' || damage.reportedById === actor.userId;
     }
+    // Statement PDFs: whoever may read statements of the property.
+    if (file.statementPdf) return this.access.can(actor, 'statement:read', file.propertyId);
     // Unattached uploads are visible only to whoever uploaded them.
     if (!file.receipt) return file.uploadedById === actor.userId;
     if (this.access.can(actor, 'expense:readAdminFields', file.propertyId)) return true;

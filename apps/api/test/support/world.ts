@@ -32,6 +32,11 @@ export interface World {
    * sent one's photo files are `damageFiles`.
    */
   damage: { sentA: string; draftA: string; sentPhotoFile: string; sentPhotoThumb: string };
+  /**
+   * Owner statements: property A's October 2026 is a draft with one adjustment (ready to finalize: no stays or
+   * expenses that month); property B's December 2025 is finalized with zero figures (ready to release).
+   */
+  statements: { draftA: string; adjustmentA: string; finalizedB: string };
 }
 
 export async function seedWorld(prisma: PrismaService): Promise<World> {
@@ -236,7 +241,41 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     },
   });
 
+  const octoberA = await prisma.ownerStatement.create({
+    data: { propertyId: a.id, periodMonth: new Date('2026-10-01T00:00:00Z'), createdById: users.admin.id },
+  });
+  const adjustmentA = await prisma.statementAdjustment.create({
+    data: {
+      propertyId: a.id,
+      statementId: octoberA.id,
+      amountCents: 2_500,
+      reason: 'Late payout from September',
+      createdById: users.admin.id,
+    },
+  });
+  const finalizedB = await prisma.ownerStatement.create({
+    data: {
+      propertyId: b.id,
+      periodMonth: new Date('2025-12-01T00:00:00Z'),
+      status: 'FINALIZED',
+      managementFeeBps: 2200,
+      planName: 'TruPlan',
+      nightsBooked: 0,
+      grossCents: 0,
+      managementFeeCents: 0,
+      expensesCents: 0,
+      ownerStayCleaningCents: 0,
+      adjustmentsCents: 0,
+      netCents: 0,
+      calcVersion: 1,
+      finalizedAt: new Date('2026-01-03T18:00:00Z'),
+      finalizedById: users.admin.id,
+      createdById: users.admin.id,
+    },
+  });
+
   return {
+    statements: { draftA: octoberA.id, adjustmentA: adjustmentA.id, finalizedB: finalizedB.id },
     bookings,
     expenses: { a: ea.expense, b: eb.expense, truhostA: et.expense },
     receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },

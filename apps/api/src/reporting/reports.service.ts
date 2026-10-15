@@ -76,6 +76,7 @@ export class ReportsService {
         // Fees are rounded per property-month (as on each statement) and then summed.
         managementFeeCents: sum('managementFeeCents'),
         ownerExpensesCents: sum('ownerExpensesCents'),
+        ownerStayCleaningCents: sum('ownerStayCleaningCents'),
         netCents: sum('netCents'),
         avgNightlyEarningsCents: completeNights > 0 ? divideHalfUp(completeGross, completeNights) : null,
         cleaningFeesCents: sum('cleaningFeesCents'),
@@ -86,13 +87,13 @@ export class ReportsService {
     };
   }
 
-  /** Figures for each property in `propertyIds`, in the same order. Three queries regardless of property count. */
+  /** Figures for each property in `propertyIds`, in the same order. Four queries regardless of property count. */
   async compute(propertyIds: string[], month: string) {
     const { first, next } = monthBounds(month);
     const firstDate = fromIsoDate(first);
     const nextDate = fromIsoDate(next);
 
-    const [bookings, expenses, plans] = await Promise.all([
+    const [bookings, expenses, plans, properties] = await Promise.all([
       // Stays with a night in the month, cancellations checking in during it, and checkouts on or after the 1st
       // (cleaning fees go to the checkout month).
       this.prisma.booking.findMany({
@@ -127,6 +128,11 @@ export class ReportsService {
         },
         select: { propertyId: true, plan: { select: { id: true, name: true, managementFeeBps: true } } },
       }),
+      // The standard cleaning fee, charged to the owner for each owner stay (decision A16).
+      this.prisma.property.findMany({
+        where: { id: { in: propertyIds } },
+        select: { id: true, standardCleaningFeeCents: true },
+      }),
     ]);
 
     return propertyIds.map((propertyId) => {
@@ -155,6 +161,7 @@ export class ReportsService {
         feeBps: plan?.managementFeeBps ?? null,
         bookings: monthBookings,
         expenses: monthExpenses,
+        ownerStayCleaningFeeCents: properties.find((p) => p.id === propertyId)?.standardCleaningFeeCents ?? 0,
       });
       return { propertyId, ...f, plan: plan ? { id: plan.id, name: plan.name } : null };
     });
@@ -180,6 +187,7 @@ function strip<T extends MonthFigures>(f: T) {
     unavailableByDay: _u,
     nightlyLowCents: _l,
     nightlyHighCents: _h,
+    detail: _d,
     ...rest
   } = f;
   return rest;

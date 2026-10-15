@@ -54,6 +54,7 @@ describe('monthly figures', () => {
       managementFeeBps: 2200,
       managementFeeCents: 22_220, // 22220.44 → 22220
       ownerExpensesCents: 4_199,
+      ownerStayCleaningCents: 0,
       netCents: 74_583,
       avgNightlyEarningsCents: 20_200, // 101002 / 5 complete nights = 20200.4
       incompleteBookings: 1,

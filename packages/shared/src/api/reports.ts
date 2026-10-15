@@ -17,7 +17,10 @@ export const monthFigures = z.object({
   plan: z.object({ id, name: z.string() }).nullable(),
   managementFeeBps: bps.nullable(),
   managementFeeCents: nonNegativeCents,
+  /** Owner-borne expenses purchased in the month, including owner-stay cleaning (`ownerStayCleaningCents`). */
   ownerExpensesCents: nonNegativeCents,
+  /** The property's standard cleaning fee for each owner stay checking out in the month (part of the above). */
+  ownerStayCleaningCents: nonNegativeCents,
   netCents: cents,
   avgNightlyEarningsCents: nonNegativeCents.nullable(),
   incompleteBookings: z.number().int(),

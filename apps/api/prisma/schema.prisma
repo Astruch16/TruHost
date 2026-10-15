@@ -49,26 +49,31 @@ model User {
   createdAt            DateTime              @default(now()) @db.Timestamptz
   updatedAt            DateTime              @updatedAt @db.Timestamptz
 
-  memberships            Membership[]     @relation("MembershipUser")
-  membershipsCreated     Membership[]     @relation("MembershipCreatedBy")
-  membershipsRevoked     Membership[]     @relation("MembershipRevokedBy")
-  invites                Invite[]         @relation("InviteUser")
-  invitesSent            Invite[]         @relation("InviteInvitedBy")
+  memberships            Membership[]          @relation("MembershipUser")
+  membershipsCreated     Membership[]          @relation("MembershipCreatedBy")
+  membershipsRevoked     Membership[]          @relation("MembershipRevokedBy")
+  invites                Invite[]              @relation("InviteUser")
+  invitesSent            Invite[]              @relation("InviteInvitedBy")
   propertyPlansSet       PropertyPlan[]
   auditLogs              AuditLog[]
   idempotencyKeys        IdempotencyKey[]
-  defaultCleanerFor      Property[]       @relation("PropertyDefaultCleaner")
+  defaultCleanerFor      Property[]            @relation("PropertyDefaultCleaner")
   bookingsEntered        Booking[]
-  expensesEntered        Expense[]        @relation("ExpenseEnteredBy")
-  expensesVoided         Expense[]        @relation("ExpenseVoidedBy")
-  receiptsUploaded       Receipt[]        @relation("ReceiptUploadedBy")
-  receiptsVoided         Receipt[]        @relation("ReceiptVoidedBy")
+  expensesEntered        Expense[]             @relation("ExpenseEnteredBy")
+  expensesVoided         Expense[]             @relation("ExpenseVoidedBy")
+  receiptsUploaded       Receipt[]             @relation("ReceiptUploadedBy")
+  receiptsVoided         Receipt[]             @relation("ReceiptVoidedBy")
   filesUploaded          StoredFile[]
   propertyPhotosUploaded PropertyPhoto[]
   supplyReadings         SupplyStatus[]
   notifications          Notification[]
-  damageReported         DamageReport[]   @relation("DamageReporter")
+  damageReported         DamageReport[]        @relation("DamageReporter")
   damagePhotosUploaded   DamagePhoto[]
+  statementsCreated      OwnerStatement[]      @relation("StatementCreatedBy")
+  statementsFinalized    OwnerStatement[]      @relation("StatementFinalizedBy")
+  statementsReleased     OwnerStatement[]      @relation("StatementReleasedBy")
+  adjustmentsCreated     StatementAdjustment[] @relation("AdjustmentCreatedBy")
+  adjustmentsVoided      StatementAdjustment[] @relation("AdjustmentVoidedBy")
 }
 
 /// SYSTEM follows the device's reduced-motion setting; REDUCED turns animations off in the app regardless.
@@ -216,10 +221,11 @@ model Property {
   expenses      Expense[]
   receipts      Receipt[]
   files         StoredFile[]
-  photos        PropertyPhoto[] @relation("PropertyPhotos")
+  photos        PropertyPhoto[]  @relation("PropertyPhotos")
   supplies      SupplyItem[]
   damageReports DamageReport[]
   notifications Notification[]
+  statements    OwnerStatement[]
 }
 
 /// A property's photo, as two JPEG renditions made in the browser before upload: a large one for the property page
@@ -400,7 +406,8 @@ model Booking {
   updatedAt        DateTime  @updatedAt @db.Timestamptz
   // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
 
-  damageReports DamageReport[]
+  damageReports  DamageReport[]
+  statementLines OwnerStatementLine[]
 
   /// Target of DamageReport's composite FK, proving a report's stay belongs to its property.
   @@unique([propertyId, id])
@@ -461,7 +468,8 @@ model Expense {
   createdAt   DateTime        @default(now()) @db.Timestamptz
   updatedAt   DateTime        @updatedAt @db.Timestamptz
 
-  receipts Receipt[]
+  receipts       Receipt[]
+  statementLines OwnerStatementLine[]
 
   /// Target of Receipt's composite FK, proving a receipt and its expense share a property.
   @@unique([propertyId, id])
@@ -493,6 +501,150 @@ model Receipt {
   @@index([expenseId])
 }
 
+// ───────────────────────── Owner statements ─────────────────────────
+
+enum StatementStatus {
+  /// Computed live on every read; only the row (and its adjustments) is stored.
+  DRAFT
+  /// Lines and totals copied in. The month's bookings and expenses are locked (409 PERIOD_LOCKED, and a trigger).
+  FINALIZED
+  /// Paid out to the owner; the PDF is stored. Nothing changes after this.
+  RELEASED
+}
+
+/// One per property per month (docs/spec.md §4). A DRAFT holds no figures: they are computed live by
+/// reporting/statement.ts. Finalizing copies that function's output in; a trigger keeps the copy immutable.
+model OwnerStatement {
+  id          String          @id @default(uuid(7)) @db.Uuid
+  propertyId  String          @db.Uuid
+  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// First day of the month this statement covers (CHECK).
+  periodMonth DateTime        @db.Date
+  status      StatementStatus @default(DRAFT)
+
+  // Server-computed copy taken at finalize. Never entered by a person. Null while DRAFT (CHECK).
+  /// Plan rate in force for the month, copied so a later plan change can't alter history.
+  managementFeeBps       Int?
+  planName               String?
+  nightsBooked           Int?
+  grossCents             Int?
+  managementFeeCents     Int?
+  /// Owner-borne expenses purchased in the month.
+  expensesCents          Int?
+  /// The property's standard cleaning fee for each owner stay checking out in the month.
+  ownerStayCleaningCents Int?
+  /// Signed.
+  adjustmentsCents       Int?
+  /// Signed: gross − fee − expenses − owner-stay cleaning + adjustments. Release refuses a negative net (N5).
+  netCents               Int?
+  /// Version of reporting/statement.ts that produced the copy.
+  calcVersion            Int?
+
+  createdById      String      @db.Uuid
+  createdBy        User        @relation("StatementCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  finalizedAt      DateTime?   @db.Timestamptz
+  finalizedById    String?     @db.Uuid
+  finalizedBy      User?       @relation("StatementFinalizedBy", fields: [finalizedById], references: [id], onDelete: Restrict)
+  /// Date the money was sent (a business date the admin enters). Distinct from releasedAt.
+  releasedOn       DateTime?   @db.Date
+  releasedAt       DateTime?   @db.Timestamptz
+  releasedById     String?     @db.Uuid
+  releasedBy       User?       @relation("StatementReleasedBy", fields: [releasedById], references: [id], onDelete: Restrict)
+  /// e-Transfer or bank reference, for reconciliation.
+  paymentReference String?
+  /// The PDF rendered at release and stored in R2; its SHA-256 is on the StoredFile.
+  pdfFileId        String?     @unique @db.Uuid
+  pdfFile          StoredFile? @relation("StatementPdf", fields: [pdfFileId], references: [id], onDelete: Restrict)
+  createdAt        DateTime    @default(now()) @db.Timestamptz
+  updatedAt        DateTime    @updatedAt @db.Timestamptz
+  // + owner_statement_guard trigger: no deletes once finalized, status forward only, the copy and release fixed
+
+  lines       OwnerStatementLine[]
+  adjustments StatementAdjustment[] @relation("AdjustmentStatement")
+  correctedBy StatementAdjustment[] @relation("AdjustmentCorrects")
+
+  @@unique([propertyId, periodMonth])
+  /// Target of StatementAdjustment's composite FKs, proving an adjustment and the statements it names share a property.
+  @@unique([propertyId, id])
+}
+
+enum StatementLineKind {
+  /// Owner gross allocated to the month (per night), or a cancelled stay that still paid out. Positive or 0.
+  STAY
+  /// An owner-borne expense purchased in the month. Negative.
+  EXPENSE
+  /// The standard cleaning fee for an owner stay checking out in the month. Negative.
+  OWNER_STAY_CLEANING
+  /// Signed.
+  ADJUSTMENT
+}
+
+/// Immutable copy written at finalize (trigger: no UPDATE or DELETE). What a finalized statement shows and prints.
+model OwnerStatementLine {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  statementId    String               @db.Uuid
+  statement      OwnerStatement       @relation(fields: [statementId], references: [id], onDelete: Restrict)
+  kind           StatementLineKind
+  bookingId      String?              @db.Uuid
+  booking        Booking?             @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  expenseId      String?              @db.Uuid
+  expense        Expense?             @relation(fields: [expenseId], references: [id], onDelete: Restrict)
+  adjustmentId   String?              @unique @db.Uuid
+  adjustment     StatementAdjustment? @relation(fields: [adjustmentId], references: [id], onDelete: Restrict)
+  /// Stays and owner-stay cleaning: check-in. Expense: purchase date. Adjustment: the day it was added.
+  date           DateTime             @db.Date
+  /// Stays and owner-stay cleaning: check-out (the cleaning is charged in the check-out month).
+  endDate        DateTime?            @db.Date
+  channel        BookingChannel?
+  category       ExpenseCategory?
+  /// What the line is ("Airbnb stay", the expense's description, the adjustment's reason).
+  description    String
+  /// Second line (an expense's vendor; "Corrects September 2026").
+  detail         String?
+  /// Stays: nights in this month, and in the whole stay.
+  nights         Int?
+  totalNights    Int?
+  /// Stays: owner gross of the whole stay, of which `amountCents` is this month's share.
+  stayGrossCents Int?
+  /// Stays: cancelled but paid out (all of it lands in the check-in month).
+  cancelled      Boolean              @default(false)
+  /// Stays: payout not entered when finalized, so counted at $0 (finalize asks for confirmation).
+  payoutPending  Boolean              @default(false)
+  /// Signed, from the owner's point of view.
+  amountCents    Int
+  sortOrder      Int
+
+  @@index([statementId, sortOrder])
+}
+
+/// A line an admin adds to a DRAFT statement (amount and a reason), usually a correction to an earlier, finalized
+/// month. Voided rather than deleted. Frozen with its statement (trigger: only while the statement is a DRAFT).
+model StatementAdjustment {
+  id                  String              @id @default(uuid(7)) @db.Uuid
+  propertyId          String              @db.Uuid
+  /// The statement it is on (same property: composite FK).
+  statementId         String              @db.Uuid
+  statement           OwnerStatement      @relation("AdjustmentStatement", fields: [propertyId, statementId], references: [propertyId, id], onDelete: Restrict)
+  /// Signed, from the owner's point of view (+ the owner receives more). Never 0 (CHECK).
+  amountCents         Int
+  /// Required, 1–500 characters (CHECK).
+  reason              String
+  /// The earlier, finalized statement it corrects (same property: composite FK), shown on the line.
+  correctsStatementId String?             @db.Uuid
+  correctsStatement   OwnerStatement?     @relation("AdjustmentCorrects", fields: [propertyId, correctsStatementId], references: [propertyId, id], onDelete: Restrict)
+  createdById         String              @db.Uuid
+  createdBy           User                @relation("AdjustmentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt           DateTime            @default(now()) @db.Timestamptz
+  /// Only while its statement is a DRAFT. Reason required (CHECK).
+  voidedAt            DateTime?           @db.Timestamptz
+  voidedById          String?             @db.Uuid
+  voidedBy            User?               @relation("AdjustmentVoidedBy", fields: [voidedById], references: [id], onDelete: Restrict)
+  voidReason          String?
+  statementLine       OwnerStatementLine?
+
+  @@index([statementId])
+}
+
 // ───────────────────────── Files ─────────────────────────
 
 enum FilePurpose {
@@ -500,6 +652,8 @@ enum FilePurpose {
   CLEAN_PHOTO
   DAMAGE_PHOTO
   PROPERTY_PHOTO
+  /// A released owner statement, rendered by the API (never uploaded by a client).
+  STATEMENT_PDF
   /// A user's profile photo: one small square JPEG. Not property-scoped; replaced and removed outright.
   AVATAR
 }
@@ -535,11 +689,12 @@ model StoredFile {
   originalFilename String?
 
   receipt            Receipt?
-  avatarOf           User?          @relation("UserAvatar")
-  damagePhoto        DamagePhoto?   @relation("DamagePhotoLarge")
-  damagePhotoThumb   DamagePhoto?   @relation("DamagePhotoThumb")
-  propertyPhoto      PropertyPhoto? @relation("PropertyPhotoLarge")
-  propertyPhotoThumb PropertyPhoto? @relation("PropertyPhotoThumb")
+  avatarOf           User?           @relation("UserAvatar")
+  damagePhoto        DamagePhoto?    @relation("DamagePhotoLarge")
+  damagePhotoThumb   DamagePhoto?    @relation("DamagePhotoThumb")
+  propertyPhoto      PropertyPhoto?  @relation("PropertyPhotoLarge")
+  propertyPhotoThumb PropertyPhoto?  @relation("PropertyPhotoThumb")
+  statementPdf       OwnerStatement? @relation("StatementPdf")
 
   /// Nightly purge of PENDING rows older than 24h (job comes with deploy).
   @@index([status, createdAt])

@@ -76,6 +76,11 @@ export class LocalStorage implements FileStorage {
     return params;
   }
 
+  async put(key: string, body: Buffer, o: { contentType: string; sha256Hex: string }): Promise<void> {
+    if (LocalStorage.sha256Hex(body) !== o.sha256Hex) throw new Error('Body does not match its SHA-256');
+    await this.write(key, body, { contentType: o.contentType, sizeBytes: body.length, sha256Hex: o.sha256Hex });
+  }
+
   async delete(key: string): Promise<void> {
     const path = this.pathFor(key);
     await rm(path, { force: true });

@@ -125,3 +125,61 @@ export function ExpensesIcon(props: StatementIconProps) {
     </Frame>
   );
 }
+
+/** Owner-stay cleaning: a spray bottle with gold sparkles, on blue. */
+export function CleaningIcon(props: StatementIconProps) {
+  const { id, url } = useIllustrationIds();
+  const bottle = 'M14 17 Q14 14.5 16.5 14.5 H21.5 Q24 14.5 24 17 V29 Q24 30.5 22.5 30.5 H15.5 Q14 30.5 14 29 Z';
+  return (
+    <Frame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'sheen', 'gold']} />
+      <circle cx="20" cy="20" r="19" fill="#DCE9F6" />
+      <ellipse cx="19" cy="32.8" rx="10" ry="2.1" fill={url.shadow} />
+      {/* Trigger head and nozzle */}
+      <path d="M15.5 14.8 V11.5 Q15.5 10 17 10 H24.5 L26.5 12 V13.2 H22.5 V14.8 Z" fill="#2E4F73" />
+      <rect x="26" y="11.3" width="2.2" height="1.6" rx="0.5" fill="#2E4F73" />
+      <path d="M21.6 13.2 L20.2 17.2" stroke="#2E4F73" strokeWidth="1.4" strokeLinecap="round" />
+      <path d={bottle} transform="translate(0.8 1)" fill="#2E4F73" />
+      <path d={bottle} fill="#5B87B8" />
+      <rect x="15.8" y="20" width="6.4" height="6" rx="1" fill="#FFFFFF" fillOpacity="0.85" />
+      <path d="M17.2 22.2 H20.8 M17.2 24 H19.8" stroke="#9DB7D3" strokeWidth="0.9" strokeLinecap="round" />
+      <path d={bottle} fill={url.sheen} />
+      {/* Sparkles */}
+      <path d="M30.5 15.5 L31.3 17.4 L33.2 18.2 L31.3 19 L30.5 20.9 L29.7 19 L27.8 18.2 L29.7 17.4 Z" fill={url.gold} />
+      <path d="M29 8.3 L29.5 9.4 L30.6 9.9 L29.5 10.4 L29 11.5 L28.5 10.4 L27.4 9.9 L28.5 9.4 Z" fill={url.gold} />
+    </Frame>
+  );
+}
+
+/** Adjustments: a note being corrected with a gold pencil, on lavender-grey. */
+export function AdjustmentIcon(props: StatementIconProps) {
+  const { id, url } = useIllustrationIds();
+  return (
+    <Frame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'gold', 'paper']} />
+      <circle cx="20" cy="20" r="19" fill="#E9E6F2" />
+      <ellipse cx="19" cy="32.8" rx="11" ry="2.1" fill={url.shadow} />
+      <rect x="10.5" y="10" width="16" height="20" rx="2" transform="translate(1 1.2)" fill="#CFC8E0" />
+      <rect x="10.5" y="10" width="16" height="20" rx="2" fill={url.paper} />
+      <rect x="10.5" y="10" width="16" height="20" rx="2" fill="none" stroke="#DDD6EC" strokeWidth="0.8" />
+      <path d="M13.5 14.5 H23.5 M13.5 18 H21" stroke="#B9AFD3" strokeWidth="1.3" strokeLinecap="round" />
+      {/* A struck-out figure and its correction */}
+      <path d="M13.5 22 H19" stroke="#B9AFD3" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M13 22.2 L19.5 21.8" stroke="#6E5DB0" strokeWidth="1" strokeLinecap="round" />
+      <path d="M13.5 25.5 H18.5" stroke="#6E5DB0" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Pencil */}
+      <path
+        d="M22.8 27.6 L30.6 19.8 L33.2 22.4 L25.4 30.2 L22.2 30.8 Z"
+        fill="#8A6A1C"
+        transform="translate(0.6 0.8)"
+      />
+      <path d="M22.8 27.6 L30.6 19.8 L33.2 22.4 L25.4 30.2 L22.2 30.8 Z" fill={url.gold} />
+      <path
+        d="M30.6 19.8 L33.2 22.4 L34.2 21.4 Q34.8 20.8 34.2 20.2 L32.8 18.8 Q32.2 18.2 31.6 18.8 Z"
+        fill="#E7A2A2"
+      />
+      <path d="M22.8 27.6 L25.4 30.2 L22.2 30.8 Z" fill="#F4E4C1" />
+      <path d="M22.2 30.8 L23.2 29.8 L22.6 30.7 Z" fill="#3C3A35" />
+    </Frame>
+  );
+}

@@ -79,6 +79,19 @@ export class R2Storage implements FileStorage {
     }
   }
 
+  async put(key: string, body: Buffer, o: { contentType: string; sha256Hex: string }): Promise<void> {
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: o.contentType,
+        ContentLength: body.length,
+        ChecksumSHA256: hexToBase64(o.sha256Hex),
+      }),
+    );
+  }
+
   async delete(key: string): Promise<void> {
     // S3 semantics: deleting a missing key succeeds.
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));

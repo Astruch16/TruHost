@@ -724,6 +724,150 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/statements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Statements_month'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/generate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Statements_generate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/statements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Statements_list'];
+    put?: never;
+    post: operations['Statements_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Statements_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{id}/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Statements_preview'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{id}/finalize': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Statements_finalize'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{id}/release': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Statements_release'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{id}/adjustments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Statements_addAdjustment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/adjustments/{id}/void': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Statements_voidAdjustment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/properties/{id}/supplies': {
     parameters: {
       query?: never;
@@ -2126,6 +2270,7 @@ export interface operations {
             expenses: number;
             receipts: number;
             damageReports: number;
+            statements: number;
           };
         };
       };
@@ -4231,6 +4376,7 @@ export interface operations {
             managementFeeBps: number | null;
             managementFeeCents: number;
             ownerExpensesCents: number;
+            ownerStayCleaningCents: number;
             netCents: number;
             avgNightlyEarningsCents: number | null;
             incompleteBookings: number;
@@ -4280,6 +4426,7 @@ export interface operations {
               managementFeeBps: number | null;
               managementFeeCents: number;
               ownerExpensesCents: number;
+              ownerStayCleaningCents: number;
               netCents: number;
               avgNightlyEarningsCents: number | null;
               incompleteBookings: number;
@@ -4319,6 +4466,7 @@ export interface operations {
               grossCents: number;
               managementFeeCents: number;
               ownerExpensesCents: number;
+              ownerStayCleaningCents: number;
               netCents: number;
               avgNightlyEarningsCents: number | null;
               incompleteBookings: number;
@@ -4346,6 +4494,7 @@ export interface operations {
               managementFeeBps: number | null;
               managementFeeCents: number;
               ownerExpensesCents: number;
+              ownerStayCleaningCents: number;
               netCents: number;
               avgNightlyEarningsCents: number | null;
               incompleteBookings: number;
@@ -4354,6 +4503,1398 @@ export interface operations {
               name: string;
               archived: boolean;
             }[];
+          };
+        };
+      };
+    };
+  };
+  Statements_month: {
+    parameters: {
+      query: {
+        month: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            items: {
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                archived: boolean;
+              };
+              /** Format: uuid */
+              statementId: string | null;
+              /** @enum {string} */
+              state: 'NOT_STARTED' | 'DRAFT' | 'FINALIZED' | 'RELEASED';
+              nightsBooked: number;
+              grossCents: number;
+              netCents: number;
+              blockers: number;
+              pendingPayouts: number;
+              /** Format: date-time */
+              finalizedAt: string | null;
+              /** Format: date */
+              releasedOn: string | null;
+            }[];
+            totals: {
+              netCents: number;
+              toReleaseCents: number;
+              releasedCents: number;
+              counts: {
+                NOT_STARTED: number;
+                DRAFT: number;
+                FINALIZED: number;
+                RELEASED: number;
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+  Statements_generate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          month: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            items: {
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                archived: boolean;
+              };
+              /** Format: uuid */
+              statementId: string | null;
+              /** @enum {string} */
+              state: 'NOT_STARTED' | 'DRAFT' | 'FINALIZED' | 'RELEASED';
+              nightsBooked: number;
+              grossCents: number;
+              netCents: number;
+              blockers: number;
+              pendingPayouts: number;
+              /** Format: date-time */
+              finalizedAt: string | null;
+              /** Format: date */
+              releasedOn: string | null;
+            }[];
+            totals: {
+              netCents: number;
+              toReleaseCents: number;
+              releasedCents: number;
+              counts: {
+                NOT_STARTED: number;
+                DRAFT: number;
+                FINALIZED: number;
+                RELEASED: number;
+              };
+            };
+            created: number;
+          };
+        };
+      };
+    };
+  };
+  Statements_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+              netCents: number;
+              /** Format: date-time */
+              finalizedAt: string | null;
+              /** Format: date */
+              releasedOn: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Statements_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          month: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              archived: boolean;
+            };
+            owners: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            } | null;
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              guestName?: string | null;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            adjustments: {
+              /** Format: uuid */
+              id: string;
+              amountCents: number;
+              reason: string;
+              corrects: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              createdBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason: string | null;
+            }[];
+            blockers: {
+              /** @enum {string} */
+              code: 'MONTH_NOT_OVER' | 'EARLIER_DRAFT' | 'NO_PLAN' | 'MISSING_RECEIPTS';
+              message: string;
+              /** Format: uuid */
+              statementId?: string;
+              expenseIds?: string[];
+            }[];
+            pendingPayouts: {
+              /** Format: uuid */
+              bookingId: string;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              guestName: string | null;
+            }[];
+            correctable: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            }[];
+            created: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            };
+            finalized: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            } | null;
+            released: {
+              /** Format: date */
+              on: string;
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              paymentReference: string | null;
+            } | null;
+            pdf: {
+              /** Format: uuid */
+              fileId: string;
+              sha256: string;
+              sizeBytes: number;
+            } | null;
+            calcVersion: number | null;
+            can: {
+              finalize: boolean;
+              release: boolean;
+              adjust: boolean;
+              preview: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Statements_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              archived: boolean;
+            };
+            owners: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            } | null;
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              guestName?: string | null;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            adjustments: {
+              /** Format: uuid */
+              id: string;
+              amountCents: number;
+              reason: string;
+              corrects: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              createdBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason: string | null;
+            }[];
+            blockers: {
+              /** @enum {string} */
+              code: 'MONTH_NOT_OVER' | 'EARLIER_DRAFT' | 'NO_PLAN' | 'MISSING_RECEIPTS';
+              message: string;
+              /** Format: uuid */
+              statementId?: string;
+              expenseIds?: string[];
+            }[];
+            pendingPayouts: {
+              /** Format: uuid */
+              bookingId: string;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              guestName: string | null;
+            }[];
+            correctable: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            }[];
+            created: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            };
+            finalized: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            } | null;
+            released: {
+              /** Format: date */
+              on: string;
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              paymentReference: string | null;
+            } | null;
+            pdf: {
+              /** Format: uuid */
+              fileId: string;
+              sha256: string;
+              sizeBytes: number;
+            } | null;
+            calcVersion: number | null;
+            can: {
+              finalize: boolean;
+              release: boolean;
+              adjust: boolean;
+              preview: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Statements_preview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/pdf': string;
+        };
+      };
+    };
+  };
+  Statements_finalize: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @default false */
+          confirmPendingPayouts?: boolean;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              archived: boolean;
+            };
+            owners: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            } | null;
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              guestName?: string | null;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            adjustments: {
+              /** Format: uuid */
+              id: string;
+              amountCents: number;
+              reason: string;
+              corrects: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              createdBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason: string | null;
+            }[];
+            blockers: {
+              /** @enum {string} */
+              code: 'MONTH_NOT_OVER' | 'EARLIER_DRAFT' | 'NO_PLAN' | 'MISSING_RECEIPTS';
+              message: string;
+              /** Format: uuid */
+              statementId?: string;
+              expenseIds?: string[];
+            }[];
+            pendingPayouts: {
+              /** Format: uuid */
+              bookingId: string;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              guestName: string | null;
+            }[];
+            correctable: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            }[];
+            created: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            };
+            finalized: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            } | null;
+            released: {
+              /** Format: date */
+              on: string;
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              paymentReference: string | null;
+            } | null;
+            pdf: {
+              /** Format: uuid */
+              fileId: string;
+              sha256: string;
+              sizeBytes: number;
+            } | null;
+            calcVersion: number | null;
+            can: {
+              finalize: boolean;
+              release: boolean;
+              adjust: boolean;
+              preview: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Statements_release: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          releasedOn: string;
+          /** @default null */
+          paymentReference?: string | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              archived: boolean;
+            };
+            owners: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            } | null;
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              guestName?: string | null;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            adjustments: {
+              /** Format: uuid */
+              id: string;
+              amountCents: number;
+              reason: string;
+              corrects: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              createdBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason: string | null;
+            }[];
+            blockers: {
+              /** @enum {string} */
+              code: 'MONTH_NOT_OVER' | 'EARLIER_DRAFT' | 'NO_PLAN' | 'MISSING_RECEIPTS';
+              message: string;
+              /** Format: uuid */
+              statementId?: string;
+              expenseIds?: string[];
+            }[];
+            pendingPayouts: {
+              /** Format: uuid */
+              bookingId: string;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              guestName: string | null;
+            }[];
+            correctable: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            }[];
+            created: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            };
+            finalized: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            } | null;
+            released: {
+              /** Format: date */
+              on: string;
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              paymentReference: string | null;
+            } | null;
+            pdf: {
+              /** Format: uuid */
+              fileId: string;
+              sha256: string;
+              sizeBytes: number;
+            } | null;
+            calcVersion: number | null;
+            can: {
+              finalize: boolean;
+              release: boolean;
+              adjust: boolean;
+              preview: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Statements_addAdjustment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          amountCents: number;
+          reason: string;
+          /**
+           * Format: uuid
+           * @default null
+           */
+          correctsStatementId?: string | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              archived: boolean;
+            };
+            owners: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            } | null;
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              guestName?: string | null;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            adjustments: {
+              /** Format: uuid */
+              id: string;
+              amountCents: number;
+              reason: string;
+              corrects: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              createdBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason: string | null;
+            }[];
+            blockers: {
+              /** @enum {string} */
+              code: 'MONTH_NOT_OVER' | 'EARLIER_DRAFT' | 'NO_PLAN' | 'MISSING_RECEIPTS';
+              message: string;
+              /** Format: uuid */
+              statementId?: string;
+              expenseIds?: string[];
+            }[];
+            pendingPayouts: {
+              /** Format: uuid */
+              bookingId: string;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              guestName: string | null;
+            }[];
+            correctable: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            }[];
+            created: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            };
+            finalized: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            } | null;
+            released: {
+              /** Format: date */
+              on: string;
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              paymentReference: string | null;
+            } | null;
+            pdf: {
+              /** Format: uuid */
+              fileId: string;
+              sha256: string;
+              sizeBytes: number;
+            } | null;
+            calcVersion: number | null;
+            can: {
+              finalize: boolean;
+              release: boolean;
+              adjust: boolean;
+              preview: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Statements_voidAdjustment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          reason: string;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              archived: boolean;
+            };
+            owners: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            }[];
+            month: string;
+            /** @enum {string} */
+            status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            } | null;
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              guestName?: string | null;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            adjustments: {
+              /** Format: uuid */
+              id: string;
+              amountCents: number;
+              reason: string;
+              corrects: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+              } | null;
+              /** Format: date-time */
+              createdAt: string;
+              createdBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              voidedAt: string | null;
+              voidReason: string | null;
+            }[];
+            blockers: {
+              /** @enum {string} */
+              code: 'MONTH_NOT_OVER' | 'EARLIER_DRAFT' | 'NO_PLAN' | 'MISSING_RECEIPTS';
+              message: string;
+              /** Format: uuid */
+              statementId?: string;
+              expenseIds?: string[];
+            }[];
+            pendingPayouts: {
+              /** Format: uuid */
+              bookingId: string;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              guestName: string | null;
+            }[];
+            correctable: {
+              /** Format: uuid */
+              id: string;
+              month: string;
+              /** @enum {string} */
+              status: 'DRAFT' | 'FINALIZED' | 'RELEASED';
+            }[];
+            created: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            };
+            finalized: {
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+            } | null;
+            released: {
+              /** Format: date */
+              on: string;
+              /** Format: date-time */
+              at: string;
+              by: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              paymentReference: string | null;
+            } | null;
+            pdf: {
+              /** Format: uuid */
+              fileId: string;
+              sha256: string;
+              sizeBytes: number;
+            } | null;
+            calcVersion: number | null;
+            can: {
+              finalize: boolean;
+              release: boolean;
+              adjust: boolean;
+              preview: boolean;
+            };
           };
         };
       };

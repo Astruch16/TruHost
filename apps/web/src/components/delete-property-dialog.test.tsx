@@ -30,7 +30,14 @@ const open = (preview: PropertyDeletion, over: Partial<Property> = {}) => {
 
 describe('DeletePropertyDialog', () => {
   it('explains why a property with records can’t be deleted, and offers Archive', async () => {
-    const { onArchive, user } = open({ allowed: false, bookings: 14, expenses: 1, receipts: 0, damageReports: 0 });
+    const { onArchive, user } = open({
+      allowed: false,
+      bookings: 14,
+      expenses: 1,
+      receipts: 0,
+      damageReports: 0,
+      statements: 0,
+    });
     expect(screen.getByRole('heading', { name: 'Spare Cabin can’t be deleted' })).toBeInTheDocument();
     expect(screen.getByText(/It has 14 bookings and 1 expense\./)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete property' })).toBeNull();
@@ -40,7 +47,7 @@ describe('DeletePropertyDialog', () => {
 
   it('doesn’t offer Archive for a property that’s already archived', () => {
     open(
-      { allowed: false, bookings: 1, expenses: 0, receipts: 0, damageReports: 0 },
+      { allowed: false, bookings: 1, expenses: 0, receipts: 0, damageReports: 0, statements: 0 },
       { archivedAt: '2026-10-01T00:00:00Z' },
     );
     expect(screen.queryByRole('button', { name: 'Archive instead' })).toBeNull();
@@ -48,7 +55,14 @@ describe('DeletePropertyDialog', () => {
   });
 
   it('deletes only after the name is typed exactly', async () => {
-    const { del, user } = open({ allowed: true, bookings: 0, expenses: 0, receipts: 0, damageReports: 0 });
+    const { del, user } = open({
+      allowed: true,
+      bookings: 0,
+      expenses: 0,
+      receipts: 0,
+      damageReports: 0,
+      statements: 0,
+    });
     expect(screen.getByText(/permanently deletes the property/)).toBeInTheDocument();
     const button = screen.getByRole('button', { name: 'Delete property' });
     expect(button).toBeDisabled();

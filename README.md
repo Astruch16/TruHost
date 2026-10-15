@@ -39,8 +39,9 @@ owner stay each month. Each property also has a few owner-paid expenses a month 
 needing one), and a supplies list with levels from the cleaner's last check, some at or below their restock point.
 (Seeded levels send no alerts; mark one lower as the cleaner to see the bell and email.)
 
-Statements and cleans aren't built yet (spec Phases 2b and 3), so the seed doesn't create any. It will once they
-exist.
+Each seeded expense gets a sample receipt (a small PDF), and last month's owner statement for both properties is
+generated, finalized and released through the real lifecycle, with its PDF, so the owner portal has statements to
+show. Cleans aren't built yet (spec Phase 3), so the seed doesn't create any.
 
 ### Creating or refreshing them
 
@@ -53,4 +54,6 @@ pnpm --filter @truhost/api seed:dev
   key (`sk_live_…`) and refuses to run with `NODE_ENV=production`.
 - It is safe to run again. It finds the Clerk users and properties it made before, resets the test password, and
   only adds months that are new since the last run (the window moves with today's date). It never edits or deletes
-  existing bookings or expenses, and never touches other properties.
+  existing bookings or expenses, and never touches other properties. A statement already released is left alone.
+- It builds the API first (`nest build`) and runs the API's own services, so a running `pnpm dev` API restarts
+  once while it does.

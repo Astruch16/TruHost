@@ -10,7 +10,8 @@ import { conflict, notFound, ProblemException, unprocessable } from '../common/p
 import { ENV, type Env } from '../config/env.js';
 import { FilesService } from '../files/files.service.js';
 import { Prisma, type Expense } from '../generated/prisma/client.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService, type Tx } from '../prisma/prisma.service.js';
+import { assertOpen, dayRange } from '../statements/period-lock.js';
 
 const RECEIPT_INCLUDE = { file: { select: { originalFilename: true, contentType: true } } } as const;
 const EXPENSE_INCLUDE = {
@@ -29,6 +30,9 @@ const WRITABLE = [
   'gstCents',
   'pstCents',
 ] as const;
+
+/** Fields that feed an owner statement; changing one in a finalized month is refused (409 PERIOD_LOCKED). */
+const STATEMENT_FIELDS = ['category', 'bearer', 'incurredOn', 'amountCents'] as const;
 
 /** Expenses and their receipts. Owners see only owner-borne, non-voided expenses and their receipts. */
 @Injectable()
@@ -72,7 +76,9 @@ export class ExpensesService {
     this.assertTaxFields(input);
     await this.assertPropertyExists(propertyId);
     return this.prisma.$transaction(async (tx) => {
-      // TODO(phase 2b): 409 PERIOD_LOCKED when incurredOn falls in a finalized month.
+      if (input.bearer === 'OWNER') {
+        await assertOpen(tx, propertyId, [dayRange(fromIsoDate(input.incurredOn))], 'This expense');
+      }
       const row = await tx.expense.create({
         data: { ...input, incurredOn: fromIsoDate(input.incurredOn), propertyId, enteredById: actor.userId },
         include: EXPENSE_INCLUDE,
@@ -96,6 +102,12 @@ export class ExpensesService {
       const changes: Record<string, unknown> = {};
       for (const key of WRITABLE) if (input[key] !== undefined) changes[key] = input[key];
       if (typeof changes.incurredOn === 'string') changes.incurredOn = fromIsoDate(changes.incurredOn);
+      const merged = { ...existing, ...changes } as Expense;
+      const feedsStatement = STATEMENT_FIELDS.some((key) => {
+        const [a, b] = [merged[key], existing[key]];
+        return a instanceof Date && b instanceof Date ? a.getTime() !== b.getTime() : a !== b;
+      });
+      if (feedsStatement) await this.assertOpen(tx, [existing, merged]);
       const { count } = await tx.expense.updateMany({
         where: { id, version: input.version, voidedAt: null },
         data: { ...changes, version: { increment: 1 } },
@@ -116,6 +128,7 @@ export class ExpensesService {
   async void(actor: Actor, id: string, reason: string) {
     const existing = await this.findWritable(actor, id);
     return this.prisma.$transaction(async (tx) => {
+      await this.assertOpen(tx, [existing]);
       const { count } = await tx.expense.updateMany({
         where: { id, voidedAt: null },
         data: { voidedAt: new Date(), voidedById: actor.userId, voidReason: reason, version: { increment: 1 } },
@@ -218,6 +231,18 @@ export class ExpensesService {
       incurredOn: { gte: fromIsoDate(q.from), lt: fromIsoDate(q.to) },
       ...(admin && q.includeVoided ? {} : { voidedAt: null }),
     };
+  }
+
+  /** Owner-borne expenses feed statements: refuse changes in a finalized month. TruHost's own costs never do. */
+  private async assertOpen(tx: Tx, versions: Expense[]) {
+    const owner = versions.filter((e) => e.bearer === 'OWNER');
+    if (owner.length === 0) return;
+    await assertOpen(
+      tx,
+      owner[0]!.propertyId,
+      owner.map((e) => dayRange(e.incurredOn)),
+      'This expense',
+    );
   }
 
   private async findWritable(actor: Actor, id: string): Promise<Expense> {
