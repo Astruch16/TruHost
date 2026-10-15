@@ -134,7 +134,7 @@ function StyleGuide() {
   const [stay, setStay] = useState({ checkIn: '2026-10-14', checkOut: '2026-10-18' });
   const [purchased, setPurchased] = useState('');
   const [startMonth, setStartMonth] = useState('2026-11');
-  const nav = navItems({ staffRole: 'ADMIN', memberships: [{}] }).map((item, i) =>
+  const nav = navItems({ staffRole: 'ADMIN', memberships: [{ role: 'OWNER' }] }).map((item, i) =>
     i === 3 ? { ...item, badge: 2 } : item,
   );
 

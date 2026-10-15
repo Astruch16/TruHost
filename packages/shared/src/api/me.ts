@@ -41,6 +41,8 @@ export type UpdateMe = z.infer<typeof updateMe>;
 
 export const appConfig = z.object({
   taxFieldsEnabled: z.boolean(),
+  /** Where owners write to TruHost ("Message TruHost"). */
+  contactEmail: z.string(),
 });
 export type AppConfig = z.infer<typeof appConfig>;
 
@@ -107,12 +109,11 @@ export const NOTIFICATION_CATALOGUE: readonly {
   {
     category: 'STATEMENT_RELEASED',
     label: 'Monthly statement ready',
-    description: 'When your statement for the month is released.',
+    description: 'An email when your statement for the month is released, with the amount sent to you.',
     roles: ['OWNER'],
-    channels: ['email', 'inApp'],
-    defaults: { email: true, inApp: true },
-    live: false,
-    startsWith: 'owner statements',
+    channels: ['email'],
+    defaults: { email: true, inApp: false },
+    live: true,
   },
   {
     category: 'CLEAN_ASSIGNED',

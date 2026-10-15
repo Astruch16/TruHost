@@ -1,6 +1,6 @@
 import * as Menu from '@radix-ui/react-dropdown-menu';
 import { Link } from '@tanstack/react-router';
-import { KeyRound, LogOut, Settings } from 'lucide-react';
+import { UserRound, LogOut, Settings } from 'lucide-react';
 import { Avatar } from '../ui/avatar';
 import { cx } from '../../lib/cx';
 import { menuItemStyles, menuSurfaceStyles } from '../../lib/styles';
@@ -46,12 +46,12 @@ export function ProfileMenu({
           <Menu.Separator className="my-1 h-px bg-line-soft" />
           <Menu.Item asChild className={itemClass}>
             <Link to="/account">
-              <Settings aria-hidden className="size-4 text-muted" /> Settings
+              <UserRound aria-hidden className="size-4 text-muted" /> Profile
             </Link>
           </Menu.Item>
           <Menu.Item asChild className={itemClass}>
-            <Link to="/account/security">
-              <KeyRound aria-hidden className="size-4 text-muted" /> Sign-in & security
+            <Link to="/account/preferences">
+              <Settings aria-hidden className="size-4 text-muted" /> Settings
             </Link>
           </Menu.Item>
           <Menu.Item className={itemClass} onSelect={onSignOut}>

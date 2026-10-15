@@ -868,6 +868,102 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/owner/properties': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_properties'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/owner/home': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_home'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/owner/statements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_statements'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/owner/statements/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_statement'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/owner/statements/{id}/pdf': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_pdf'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/owner/calendar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_calendar'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/properties/{id}/supplies': {
     parameters: {
       query?: never;
@@ -1477,6 +1573,7 @@ export interface operations {
         content: {
           'application/json': {
             taxFieldsEnabled: boolean;
+            contactEmail: string;
           };
         };
       };
@@ -5895,6 +5992,347 @@ export interface operations {
               adjust: boolean;
               preview: boolean;
             };
+          };
+        };
+      };
+    };
+  };
+  Owner_properties: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+              province: string;
+              photo: {
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+              } | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Owner_home: {
+    parameters: {
+      query?: {
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: date */
+            today: string;
+            month: string;
+            properties: number;
+            latest: {
+              month: string;
+              statementIds: string[];
+              netCents: number;
+              grossCents: number;
+              nightsBooked: number;
+              /** Format: date */
+              releasedOn: string;
+              change: {
+                month: string;
+                netCents: number;
+                changeCents: number;
+              } | null;
+            } | null;
+            thisMonth: {
+              month: string;
+              estimatedNetCents: number;
+              grossCents: number;
+              nightsBooked: number;
+              nightsStayed: number;
+              nightsUpcoming: number;
+              daysInMonth: number;
+              stays: number;
+              pendingPayouts: number;
+              statementExpected: string;
+            };
+            yearToDate: {
+              year: number;
+              months: number;
+              netCents: number;
+              nightsBooked: number;
+              occupancyBps: number | null;
+              avgNightlyEarningsCents: number | null;
+            };
+            netByMonth: {
+              month: string;
+              netCents: number | null;
+              /** @enum {string} */
+              state: 'RELEASED' | 'IN_PROGRESS' | 'PENDING';
+            }[];
+            comingUp: {
+              /** Format: uuid */
+              bookingId: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY';
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              nights: number;
+            }[];
+            goodToKnow: {
+              /** Format: uuid */
+              id: string;
+              /** @enum {string} */
+              kind: 'EXPENSE' | 'ADJUSTMENT';
+              /** Format: date */
+              date: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              title: string;
+              detail: string;
+              amountCents: number;
+              /** Format: uuid */
+              receiptFileId: string | null;
+              /** Format: uuid */
+              statementId: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Owner_statements: {
+    parameters: {
+      query?: {
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              month: string;
+              netCents: number;
+              grossCents: number;
+              /** Format: date */
+              releasedOn: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Owner_statement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            month: string;
+            plan: {
+              name: string;
+              managementFeeBps: number;
+            };
+            totals: {
+              nightsBooked: number;
+              grossCents: number;
+              managementFeeBps: number | null;
+              managementFeeCents: number;
+              expensesCents: number;
+              ownerStayCleaningCents: number;
+              adjustmentsCents: number;
+              netCents: number;
+            };
+            lines: {
+              /** @enum {string} */
+              kind: 'STAY' | 'EXPENSE' | 'OWNER_STAY_CLEANING' | 'ADJUSTMENT';
+              /** Format: uuid */
+              bookingId: string | null;
+              /** Format: uuid */
+              expenseId: string | null;
+              /** Format: uuid */
+              adjustmentId: string | null;
+              /** Format: date */
+              date: string;
+              /** Format: date */
+              endDate: string | null;
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              description: string;
+              detail: string | null;
+              nights: number | null;
+              totalNights: number | null;
+              stayGrossCents: number | null;
+              cancelled: boolean;
+              payoutPending: boolean;
+              amountCents: number;
+              receipts?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                fileId: string;
+                /** Format: date */
+                receiptDate: string;
+                description: string | null;
+                filename: string | null;
+                contentType: string;
+              }[];
+            }[];
+            released: {
+              /** Format: date */
+              on: string;
+              paymentReference: string | null;
+            };
+          };
+        };
+      };
+    };
+  };
+  Owner_pdf: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+          };
+        };
+      };
+    };
+  };
+  Owner_calendar: {
+    parameters: {
+      query: {
+        propertyId?: string;
+        month: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            items: {
+              /** Format: uuid */
+              bookingId: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** @enum {string|null} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER' | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              nights: number;
+              nightsInMonth: number;
+              ownerGrossCents: number | null;
+              monthShareCents: number | null;
+              payoutPending: boolean;
+            }[];
           };
         };
       };

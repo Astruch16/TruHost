@@ -13,7 +13,7 @@ import { useApi } from '../lib/api-context';
 import { GuideContext } from '../lib/guide-context';
 import { guideFromApi } from '../lib/guides';
 import { propertyPath } from '../lib/access';
-import { initials, navItems, roleLabel } from '../lib/nav';
+import { initials, navItems, roleLabel, usesOwnerPortal } from '../lib/nav';
 import { accountLoadFailure, FAILURE_TEXT } from '../lib/account-load';
 import { applyMotion, PreferencesContext } from '../lib/preferences';
 import { queries } from '../lib/queries';
@@ -40,7 +40,10 @@ function SignedInShell() {
   const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const me = useQuery(queries.me(api));
-  const properties = useQuery({ ...queries.properties(api), enabled: me.isSuccess });
+  const ownerPortal = me.data ? usesOwnerPortal(me.data) : false;
+  const properties = useQuery({ ...queries.properties(api), enabled: me.isSuccess && !ownerPortal });
+  // Owners switch between the properties they own (the owner portal's own list).
+  const ownedProperties = useQuery({ ...queries.ownerProperties(api), enabled: ownerPortal });
   const matchRoute = useMatchRoute();
   const { propertyId: routePropertyId } = useParams({ strict: false });
   const [scope, setScopeState] = useState(readStoredScope);
@@ -89,17 +92,22 @@ function SignedInShell() {
 
   const user = me.data;
   const isAdmin = user.staffRole === 'ADMIN';
-  const list = properties.data?.items ?? [];
+  const list: { id: string; name: string; city: string; province: string; photoUrl: string | null }[] = ownerPortal
+    ? (ownedProperties.data?.items ?? []).map((p) => ({ ...p, photoUrl: p.photo?.thumbUrl ?? null }))
+    : (properties.data?.items ?? []).map((p) => ({ ...p, photoUrl: p.coverPhoto?.thumbUrl ?? null }));
   const known = (id: string | null | undefined): id is string => !!id && list.some((p) => p.id === id);
 
   // Admins: the switcher narrows the admin pages (null = all properties); on a property's own page it follows it.
   // Owners and cleaners: the switcher takes them to that property's page.
   const adminScope = known(routePropertyId) ? routePropertyId : known(scope) ? scope : null;
   const memberSelected = [routePropertyId, scope].find(known) ?? list[0]?.id ?? null;
-  const selectedId = isAdmin ? adminScope : memberSelected;
+  // Owners: the pages follow the switcher, with "All properties" (null) when they own more than one.
+  const ownerSelected = known(scope) ? scope : list.length === 1 ? list[0]!.id : null;
+  const selectedId = isAdmin ? adminScope : ownerPortal ? ownerSelected : memberSelected;
 
   const selectProperty = (id: string | null) => {
     setScope(id);
+    if (ownerPortal) return;
     if (!isAdmin) {
       // The owner page for properties they own, the cleaner page for ones they clean.
       const to = id ? propertyPath(user, id) : null;
@@ -123,10 +131,11 @@ function SignedInShell() {
         email: user.email,
         avatarUrl: user.avatar?.url ?? null,
       }}
-      properties={list.map((p) => ({ ...p, photoUrl: p.coverPhoto?.thumbUrl ?? null }))}
+      properties={list}
       selectedPropertyId={selectedId}
       onSelectProperty={selectProperty}
-      allowAllProperties={isAdmin}
+      allowAllProperties={isAdmin || (ownerPortal && list.length > 1)}
+      tabs={ownerPortal}
       // Admins and owners are told when supplies run low; cleaners get no notifications.
       notifications={
         isAdmin || user.memberships.some((m) => m.role === 'OWNER') ? <LiveNotificationsBell me={user} /> : null

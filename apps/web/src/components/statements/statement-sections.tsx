@@ -22,15 +22,24 @@ function Row({ children }: { children: ReactNode }) {
   );
 }
 
-const lines = (s: Statement, kind: StatementLine['kind']) => s.lines.filter((l) => l.kind === kind);
+const lines = (s: Pick<Statement, 'lines'>, kind: StatementLine['kind']) => s.lines.filter((l) => l.kind === kind);
 
 /** Guest stays: dates, guest and channel, nights in the month (with the split when a stay crosses a month end). */
-export function StaysSection({ statement: s }: { statement: Statement }) {
+export function StaysSection({
+  statement: s,
+  description,
+}: {
+  statement: Pick<Statement, 'lines' | 'month'>;
+  description?: string;
+}) {
   const stays = lines(s, 'STAY');
   return (
     <Card
       title="Stays"
-      description={`Each guest stay’s owner gross: its payout less the cleaning fee, per night in ${monthLabel(s.month)}.`}
+      description={
+        description ??
+        `Each guest stay’s owner gross: its payout less the cleaning fee, per night in ${monthLabel(s.month)}.`
+      }
     >
       {stays.length === 0 ? (
         <EmptyState size="compact" illustration={<BookingsIllustration />} title="No guest stays">
@@ -70,7 +79,7 @@ export function StaysSection({ statement: s }: { statement: Statement }) {
 }
 
 /** Owner stays checking out this month, each charged the property's standard cleaning fee. */
-export function OwnerStaysSection({ statement: s }: { statement: Statement }) {
+export function OwnerStaysSection({ statement: s }: { statement: Pick<Statement, 'lines'> }) {
   const cleanings = lines(s, 'OWNER_STAY_CLEANING');
   if (cleanings.length === 0) return null;
   return (
@@ -98,11 +107,11 @@ export function ExpensesSection({
   statement: s,
   onViewReceipt,
 }: {
-  statement: Statement;
+  statement: Pick<Statement, 'lines'> & { blockers?: Statement['blockers'] };
   onViewReceipt: (fileId: string) => void;
 }) {
   const expenses = lines(s, 'EXPENSE');
-  const missing = new Set(s.blockers.flatMap((b) => b.expenseIds ?? []));
+  const missing = new Set((s.blockers ?? []).flatMap((b) => b.expenseIds ?? []));
   return (
     <Card title="Expenses" description="Owner-borne purchases, dated by receipt.">
       {expenses.length === 0 ? (

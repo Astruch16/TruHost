@@ -357,6 +357,39 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
 
+  // ── owner portal: OWNER memberships only (the admin owns property A) ──
+  { route: 'GET /v1/owner/properties', path: () => '/v1/owner/properties', allow: ['admin', 'ownerA', 'ownerB'] },
+  { route: 'GET /v1/owner/home', path: () => '/v1/owner/home', allow: ['admin', 'ownerA', 'ownerB'] },
+  {
+    route: 'GET /v1/owner/home',
+    label: 'property B',
+    path: (w) => `/v1/owner/home?propertyId=${w.propertyB.id}`,
+    allow: ['ownerB'],
+  },
+  { route: 'GET /v1/owner/statements', path: () => '/v1/owner/statements', allow: ['admin', 'ownerA', 'ownerB'] },
+  {
+    route: 'GET /v1/owner/statements/:id',
+    label: 'released, property B',
+    path: (w) => `/v1/owner/statements/${w.statements.releasedB}`,
+    allow: ['ownerB'],
+  },
+  {
+    route: 'GET /v1/owner/statements/:id',
+    label: 'finalized, not released',
+    path: (w) => `/v1/owner/statements/${w.statements.finalizedB}`,
+    allow: [],
+  },
+  {
+    route: 'GET /v1/owner/statements/:id/pdf',
+    path: (w) => `/v1/owner/statements/${w.statements.releasedB}/pdf`,
+    allow: ['ownerB'],
+  },
+  {
+    route: 'GET /v1/owner/calendar',
+    path: (w) => `/v1/owner/calendar?month=2026-11&propertyId=${w.propertyA.id}`,
+    allow: ['admin', 'ownerA'],
+  },
+
   // ── damage reports ──
   { route: 'GET /v1/damage-reports', path: () => '/v1/damage-reports?status=OPEN', allow: ADMIN },
   {

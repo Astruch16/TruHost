@@ -33,11 +33,13 @@ export const envSchema = z
     /** Resend API key. When unset outside production, emails are logged instead of sent. */
     RESEND_API_KEY: z.string().optional(),
     TAX_FIELDS_ENABLED: bool,
-    /**
-     * Email owners when their statement is released (net and a link). Off until the owner statement page it links to
-     * exists.
-     */
-    STATEMENT_EMAILS_ENABLED: bool,
+    /** Email owners when their statement is released (net and a link to it in the owner portal). On by default. */
+    STATEMENT_EMAILS_ENABLED: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((v) => v === 'true'),
+    /** Where owners write to TruHost ("Message TruHost" in the owner portal). Placeholder until domains are chosen. */
+    CONTACT_EMAIL: z.email().default('hello@truhost.example'),
     /**
      * File storage. `r2` (Cloudflare R2) in deployed environments; `local` (disk, signed URLs served by this API)
      * for development and tests. Production refuses `local`.

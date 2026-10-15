@@ -174,6 +174,32 @@ export const queries = {
       queryKey: ['statements', 'one', id],
       queryFn: () => unwrap(api.GET('/v1/statements/{id}', { params: { path: { id } } })),
     }),
+  /** The owner portal: the caller's owned properties only (the API scopes every read). */
+  ownerProperties: (api: ApiClient) =>
+    queryOptions({ queryKey: ['owner', 'properties'], queryFn: () => unwrap(api.GET('/v1/owner/properties')) }),
+  ownerHome: (api: ApiClient, propertyId: string | null) =>
+    queryOptions({
+      queryKey: ['owner', 'home', { propertyId }],
+      queryFn: () => unwrap(api.GET('/v1/owner/home', { params: { query: { propertyId: propertyId ?? undefined } } })),
+    }),
+  ownerStatements: (api: ApiClient, propertyId: string | null) =>
+    queryOptions({
+      queryKey: ['owner', 'statements', { propertyId }],
+      queryFn: () =>
+        unwrap(api.GET('/v1/owner/statements', { params: { query: { propertyId: propertyId ?? undefined } } })),
+    }),
+  ownerStatement: (api: ApiClient, id: string) =>
+    queryOptions({
+      queryKey: ['owner', 'statement', id],
+      queryFn: () => unwrap(api.GET('/v1/owner/statements/{id}', { params: { path: { id } } })),
+    }),
+  ownerCalendar: (api: ApiClient, month: string, propertyId: string | null) =>
+    queryOptions({
+      queryKey: ['owner', 'calendar', { month, propertyId }],
+      queryFn: () =>
+        unwrap(api.GET('/v1/owner/calendar', { params: { query: { month, propertyId: propertyId ?? undefined } } })),
+      placeholderData: (previous) => previous,
+    }),
   /** The bell: checked every minute while the app is open. */
   notifications: (api: ApiClient) =>
     queryOptions({

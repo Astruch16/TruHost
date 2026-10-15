@@ -33,3 +33,22 @@ export function formatBps(bps: number): string {
   const frac = bps % 100;
   return frac === 0 ? `${whole}%` : `${whole}.${String(frac).padStart(2, '0').replace(/0$/, '')}%`;
 }
+
+const CATEGORY_NAMES: Record<string, string> = {
+  SUPPLIES: 'Supplies',
+  REPAIRS_MAINTENANCE: 'Repairs',
+  FURNISHINGS: 'Furnishings',
+  UTILITIES: 'Utilities',
+  INTERNET: 'Internet',
+  SUBSCRIPTIONS: 'Subscriptions',
+  LICENSING_PERMITS: 'Licences & permits',
+  INSURANCE: 'Insurance',
+  STRATA: 'Strata',
+  CLEANING: 'Cleaning',
+  OTHER: 'Other',
+};
+
+/** "REPAIRS_MAINTENANCE" → "Repairs" (the same names the web app shows). */
+export function categoryName(category: string): string {
+  return CATEGORY_NAMES[category] ?? category;
+}

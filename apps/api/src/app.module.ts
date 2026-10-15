@@ -25,6 +25,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { PropertiesModule } from './properties/properties.module.js';
 import { ReportingModule } from './reporting/reporting.module.js';
 import { StatementsModule } from './statements/statements.module.js';
+import { OwnerModule } from './owner/owner.module.js';
 import { SuppliesModule } from './supplies/supplies.module.js';
 import { PostAuthThrottlerGuard, PreAuthThrottlerGuard, throttlers } from './throttling/throttling.js';
 import { UsersModule } from './users/users.module.js';
@@ -53,6 +54,7 @@ import { UsersModule } from './users/users.module.js';
     ExpensesModule,
     ReportingModule,
     StatementsModule,
+    OwnerModule,
     SuppliesModule,
     DamageModule,
     DashboardModule,
