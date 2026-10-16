@@ -1,6 +1,21 @@
+import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import type { OwnerHome, OwnerMonth } from '@truhost/shared';
-import { ArrowRight, CalendarRange, FileText, Moon, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarRange,
+  FileText,
+  Minus,
+  Moon,
+  Percent,
+  ReceiptText,
+  SlidersHorizontal,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { channelLabel } from '../../lib/format';
 import { formatCents, splitCents } from '../../lib/money';
@@ -91,16 +106,34 @@ export function MonthEarningsHero({
           )}
         </p>
         {m && (
-          <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-sm">
-            <Stat label="Gross revenue" value={formatCents(m.grossCents)} />
-            <Stat
-              label="TruPlan fee"
-              value={m.managementFeeCents > 0 ? `−${formatCents(m.managementFeeCents)}` : '$0.00'}
+          <dl className="mt-6 flex flex-wrap gap-2.5">
+            <StatTile icon={Wallet} label="Gross revenue" value={<Money cents={m.grossCents} />} />
+            <StatTile icon={Percent} label="TruPlan fee" value={<Money cents={-m.managementFeeCents} />} />
+            <StatTile icon={ReceiptText} label="Expenses" value={<Money cents={-m.expensesCents} />} />
+            {m.adjustmentsCents !== 0 && (
+              <StatTile
+                icon={SlidersHorizontal}
+                label="Adjustments"
+                value={<Money cents={m.adjustmentsCents} signed />}
+              />
+            )}
+            <StatTile icon={Moon} label="Nights booked" value={m.nightsBooked} />
+            <StatTile
+              icon={m.change.changeCents > 0 ? TrendingUp : m.change.changeCents < 0 ? TrendingDown : Minus}
+              label={`vs ${monthOnly(m.change.month)}`}
+              value={
+                <span
+                  className={cx(
+                    'inline-flex items-center rounded-full px-2 py-0.5 text-sm',
+                    m.change.changeCents > 0 && 'bg-sage-light/20 text-[#bfe6cb]',
+                    m.change.changeCents < 0 && 'bg-danger-light/20 text-[#f6c3bc]',
+                    m.change.changeCents === 0 && 'bg-white/10 text-primary-ink-muted',
+                  )}
+                >
+                  {changeAmount(m.change.changeCents)}
+                </span>
+              }
             />
-            <Stat label="Expenses" value={m.expensesCents > 0 ? `−${formatCents(m.expensesCents)}` : '$0.00'} />
-            {m.adjustmentsCents !== 0 && <Stat label="Adjustments" value={formatSigned(m.adjustmentsCents)} />}
-            <Stat label="Nights booked" value={String(m.nightsBooked)} />
-            <Stat label={`vs ${monthOnly(m.change.month)}`} value={changeAmount(m.change.changeCents)} />
           </dl>
         )}
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -145,12 +178,32 @@ export function MonthEarningsHero({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+/**
+ * One figure on the earnings card: a translucent tile with its icon and label above the amount. Tiles share a
+ * wrapping row, and any left over on the last row stretch to fill it.
+ */
+function StatTile({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: ReactNode }) {
   return (
-    <div>
-      <dt className="text-primary-ink-muted">{label}</dt>
-      <dd className="figure font-semibold">{value}</dd>
+    <div className="flex min-w-0 flex-1 basis-[8.5rem] flex-col gap-1.5 rounded-xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-white/10 ring-inset">
+      <dt className="flex items-center gap-1.5 text-xs font-medium text-primary-ink-muted">
+        <Icon aria-hidden className="size-3.5 shrink-0" />
+        <span className="truncate">{label}</span>
+      </dt>
+      <dd className="figure text-lg leading-tight font-semibold whitespace-nowrap text-white">{value}</dd>
     </div>
+  );
+}
+
+/** "$6,937" with ".50" smaller; deductions as "−$1,526.25"; `signed` adds "+" to credits. */
+function Money({ cents, signed = false }: { cents: number; signed?: boolean }) {
+  const { whole, cents: fraction } = splitCents(Math.abs(cents));
+  const sign = cents < 0 ? '−' : signed && cents > 0 ? '+' : '';
+  return (
+    <>
+      {sign}
+      {whole}
+      <span className="text-[0.75em] text-primary-ink-muted">{fraction}</span>
+    </>
   );
 }
 
