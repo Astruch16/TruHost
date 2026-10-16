@@ -48,6 +48,7 @@ import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
 import { Route as AppOwnerIndexRouteImport } from './routes/_app/owner/index'
 import { Route as AppOwnerCalendarRouteImport } from './routes/_app/owner/calendar'
 import { Route as AppOwnerCareRouteImport } from './routes/_app/owner/care'
+import { Route as AppOwnerDamageRouteImport } from './routes/_app/owner/damage'
 import { Route as AppPropertiesIndexRouteImport } from './routes/_app/properties/index'
 import { Route as AppPropertiesPropertyIdRouteImport } from './routes/_app/properties/$propertyId'
 import { Route as AppAdminPropertiesIndexRouteImport } from './routes/_app/admin/properties/index'
@@ -252,6 +253,11 @@ const AppOwnerCareRoute = AppOwnerCareRouteImport.update({
   path: '/care',
   getParentRoute: () => AppOwnerRoute,
 } as any)
+const AppOwnerDamageRoute = AppOwnerDamageRouteImport.update({
+  id: '/damage',
+  path: '/damage',
+  getParentRoute: () => AppOwnerRoute,
+} as any)
 const AppPropertiesIndexRoute = AppPropertiesIndexRouteImport.update({
   id: '/properties/',
   path: '/properties/',
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/admin/team': typeof AppAdminTeamRoute
   '/owner/calendar': typeof AppOwnerCalendarRoute
   '/owner/care': typeof AppOwnerCareRoute
+  '/owner/damage': typeof AppOwnerDamageRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/account/': typeof AppAccountIndexRoute
   '/admin/': typeof AppAdminIndexRoute
@@ -384,6 +391,7 @@ export interface FileRoutesByTo {
   '/admin/team': typeof AppAdminTeamRoute
   '/owner/calendar': typeof AppOwnerCalendarRoute
   '/owner/care': typeof AppOwnerCareRoute
+  '/owner/damage': typeof AppOwnerDamageRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/account': typeof AppAccountIndexRoute
   '/admin': typeof AppAdminIndexRoute
@@ -435,6 +443,7 @@ export interface FileRoutesById {
   '/_app/admin/team': typeof AppAdminTeamRoute
   '/_app/owner/calendar': typeof AppOwnerCalendarRoute
   '/_app/owner/care': typeof AppOwnerCareRoute
+  '/_app/owner/damage': typeof AppOwnerDamageRoute
   '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/_app/account/': typeof AppAccountIndexRoute
   '/_app/admin/': typeof AppAdminIndexRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/owner/calendar'
     | '/owner/care'
+    | '/owner/damage'
     | '/properties/$propertyId'
     | '/account/'
     | '/admin/'
@@ -532,6 +542,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/owner/calendar'
     | '/owner/care'
+    | '/owner/damage'
     | '/properties/$propertyId'
     | '/account'
     | '/admin'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/_app/admin/team'
     | '/_app/owner/calendar'
     | '/_app/owner/care'
+    | '/_app/owner/damage'
     | '/_app/properties/$propertyId'
     | '/_app/account/'
     | '/_app/admin/'
@@ -893,6 +905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOwnerCareRouteImport
       parentRoute: typeof AppOwnerRoute
     }
+    '/_app/owner/damage': {
+      id: '/_app/owner/damage'
+      path: '/damage'
+      fullPath: '/owner/damage'
+      preLoaderRoute: typeof AppOwnerDamageRouteImport
+      parentRoute: typeof AppOwnerRoute
+    }
     '/_app/properties/': {
       id: '/_app/properties/'
       path: '/properties'
@@ -1026,6 +1045,7 @@ const AppCleanerRouteWithChildren = AppCleanerRoute._addFileChildren(
 interface AppOwnerRouteChildren {
   AppOwnerCalendarRoute: typeof AppOwnerCalendarRoute
   AppOwnerCareRoute: typeof AppOwnerCareRoute
+  AppOwnerDamageRoute: typeof AppOwnerDamageRoute
   AppOwnerIndexRoute: typeof AppOwnerIndexRoute
   AppOwnerStatementsStatementIdRoute: typeof AppOwnerStatementsStatementIdRoute
   AppOwnerStatementsIndexRoute: typeof AppOwnerStatementsIndexRoute
@@ -1034,6 +1054,7 @@ interface AppOwnerRouteChildren {
 const AppOwnerRouteChildren: AppOwnerRouteChildren = {
   AppOwnerCalendarRoute: AppOwnerCalendarRoute,
   AppOwnerCareRoute: AppOwnerCareRoute,
+  AppOwnerDamageRoute: AppOwnerDamageRoute,
   AppOwnerIndexRoute: AppOwnerIndexRoute,
   AppOwnerStatementsStatementIdRoute: AppOwnerStatementsStatementIdRoute,
   AppOwnerStatementsIndexRoute: AppOwnerStatementsIndexRoute,

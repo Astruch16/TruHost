@@ -18,6 +18,8 @@ import { AppShell } from '../shell/app-shell';
 import { OwnerHomePage } from './owner-home';
 import { OwnerStatementPage, OwnerStatementsPage } from './owner-statements';
 import { OwnerSuppliesCard } from './supplies-card';
+import { OwnerDamagePage } from './owner-damage';
+import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 
 const ok = (data: unknown) => Promise.resolve({ data, response: new Response(null, { status: 200 }) });
 
@@ -131,9 +133,15 @@ const SUPPLIES: OwnerSupplies = {
 };
 
 describe('owner navigation', () => {
-  it('gives owners Home, Calendar, Statements and Care, all on the phone tab bar', () => {
+  it('gives owners Home, Calendar, Statements, Damage and Care, all on the phone tab bar', () => {
     const items = navItems({ staffRole: null, memberships: [{ role: 'OWNER' }] });
-    expect(items.filter((i) => i.tab).map((i) => i.label)).toEqual(['Home', 'Calendar', 'Statements', 'Care']);
+    expect(items.filter((i) => i.tab).map((i) => i.label)).toEqual([
+      'Home',
+      'Calendar',
+      'Statements',
+      'Damage',
+      'Care',
+    ]);
     expect(items.map((i) => i.to)).not.toContain('/admin');
     // Admins keep the admin nav, even when they own a property.
     expect(navItems({ staffRole: 'ADMIN', memberships: [{ role: 'OWNER' }] }).some((i) => i.tab)).toBe(false);
@@ -161,7 +169,7 @@ describe('owner navigation', () => {
       within(tabs)
         .getAllByRole('link')
         .map((a) => a.textContent),
-    ).toEqual(['Home', 'Calendar', 'Statements', 'Care']);
+    ).toEqual(['Home', 'Calendar', 'Statements', 'Damage', 'Care']);
     expect(screen.getByRole('button', { name: 'Open menu' }).className).toContain('hidden');
   });
 });
@@ -298,5 +306,30 @@ describe('owner supplies', () => {
     };
     renderWith(() => ({}), <OwnerSuppliesCard data={{ properties: [empty] }} />);
     expect(await screen.findByText('No supplies tracked yet')).toBeInTheDocument();
+  });
+});
+
+describe('owner damage', () => {
+  it('lists the reports read through the owner API, and opens one read-only', async () => {
+    const owned = DEV_DAMAGE.filter((r) => r.status !== 'DRAFT').map((r) => ({
+      ...r,
+      booking: r.booking && { ...r.booking, guestName: null },
+      can: { edit: false, addPhotos: false, submit: false, manage: false },
+    }));
+    const api = renderWith(
+      (p) => (p === '/v1/owner/damage' ? { items: owned } : owned[0]),
+      <OwnerDamagePage propertyId={null} />,
+    );
+    const first = await screen.findByRole('button', { name: new RegExp(owned[0]!.title) });
+    await userEvent.click(first);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).queryByRole('button', { name: /Add photos|Send|Mark/ })).not.toBeInTheDocument();
+    expect(api.GET).toHaveBeenCalledWith('/v1/owner/damage/{id}', { params: { path: { id: owned[0]!.id } } });
+    expect(api.GET).not.toHaveBeenCalledWith('/v1/damage-reports/{id}', expect.anything());
+  });
+
+  it('says so when nothing has been reported', async () => {
+    renderWith(() => ({ items: [] }), <OwnerDamagePage propertyId="p1" />);
+    expect(await screen.findByText('No damage reported')).toBeInTheDocument();
   });
 });

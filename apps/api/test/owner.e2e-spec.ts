@@ -303,6 +303,37 @@ describe('owner portal', () => {
     });
   });
 
+  describe('damage', () => {
+    it('lists sent reports at the owner’s properties only, with the stay but never the guest', async () => {
+      // World: at property A, a sent report (blaming booking A, guest "Guest Person") and a draft.
+      const a = await t.as('ownerA').get('/v1/owner/damage').expect(200);
+      expect(a.body.items.map((r: { id: string }) => r.id)).toEqual([w.damage.sentA]);
+      const [report] = a.body.items;
+      expect(report).toMatchObject({
+        title: 'Wine stain on the sofa',
+        status: 'SUBMITTED',
+        booking: { checkInDate: '2026-11-10', checkOutDate: '2026-11-13', guestName: null },
+        can: { edit: false, addPhotos: false, submit: false, manage: false },
+      });
+      expect(JSON.stringify(a.body)).not.toContain('Guest Person');
+
+      const one = await t.as('ownerA').get(`/v1/owner/damage/${w.damage.sentA}`).expect(200);
+      expect(one.body.photos).toHaveLength(1);
+      expect(one.body.booking.guestName).toBeNull();
+
+      // The admin owns property A too: through the owner portal they see exactly what any owner sees.
+      const adminView = await t.as('admin').get(`/v1/owner/damage/${w.damage.sentA}`).expect(200);
+      expect(adminView.body.booking.guestName).toBeNull();
+      expect(adminView.body.can.manage).toBe(false);
+
+      expect((await t.as('ownerB').get('/v1/owner/damage').expect(200)).body.items).toEqual([]);
+      await t.as('ownerB').get(`/v1/owner/damage/${w.damage.sentA}`).expect(404);
+      await t.as('ownerB').get(`/v1/owner/damage?propertyId=${A}`).expect(404);
+      await t.as('ownerA').get(`/v1/owner/damage/${w.damage.draftA}`).expect(404);
+      await t.as('cleanerA').get('/v1/owner/damage').expect(404);
+    });
+  });
+
   describe('calendar', () => {
     it('shows the month’s stays with nights and the owner’s share, never guest details', async () => {
       await booking({

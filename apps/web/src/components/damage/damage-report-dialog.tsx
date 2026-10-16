@@ -36,12 +36,19 @@ export function DamageReportDialog({
   reportId,
   open,
   onOpenChange,
+  owner = false,
 }: {
   reportId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The owner portal: read through the owner API (read-only, as any owner sees it). */
+  owner?: boolean;
 }) {
-  const report = useQuery({ ...queries.damageReport(useApi(), reportId), enabled: open });
+  const api = useApi();
+  const report = useQuery({
+    ...(owner ? queries.ownerDamageReport(api, reportId) : queries.damageReport(api, reportId)),
+    enabled: open,
+  });
   const r = report.data;
   return (
     <Dialog
@@ -59,13 +66,13 @@ export function DamageReportDialog({
           <Skeleton className="h-40" />
         </div>
       ) : (
-        <ReportBody report={r} />
+        <ReportBody report={r} owner={owner} />
       )}
     </Dialog>
   );
 }
 
-function ReportBody({ report: r }: { report: DamageReportDetail }) {
+function ReportBody({ report: r, owner }: { report: DamageReportDetail; owner: boolean }) {
   const window = claimWindow(r, todayIso());
   return (
     <div className="@container/content flex flex-col gap-5">
@@ -79,13 +86,16 @@ function ReportBody({ report: r }: { report: DamageReportDetail }) {
             'rounded-inner px-4 py-3 text-sm',
             window.closed
               ? 'bg-ground text-muted'
-              : window.urgent
+              : window.urgent && !owner
                 ? 'bg-danger-tint text-danger-deep'
                 : 'bg-amber-tint text-amber-deep',
           )}
         >
           {window.closed ? (
             <>The AirCover claim window closed on {shortDate(r.claimDeadline)}.</>
+          ) : owner ? (
+            // Owners: TruHost files the claim; they just see when it's due.
+            <>TruHost files the AirCover claim for you by {shortDate(r.claimDeadline)} (14 days after checkout).</>
           ) : (
             <>
               <strong>{window.label}.</strong> File the AirCover claim by {shortDate(r.claimDeadline)} (14 days after

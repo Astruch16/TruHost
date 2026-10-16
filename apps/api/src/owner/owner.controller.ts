@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  damageReportDetail,
+  damageReportList,
   fileUrl,
   ownerCalendar,
   ownerCalendarQuery,
@@ -63,6 +65,20 @@ export class OwnerController {
   @ZodResponse(ownerSupplies)
   supplies(@CurrentActor() actor: Actor, @Query(new ZodPipe(ownerScopeQuery)) q: z.output<typeof ownerScopeQuery>) {
     return this.owner.supplies(actor, q.propertyId);
+  }
+
+  /** Damage reported at the owned properties: sent reports, newest first, no guest names. */
+  @Get('damage')
+  @ZodQuery(ownerScopeQuery)
+  @ZodResponse(damageReportList)
+  damage(@CurrentActor() actor: Actor, @Query(new ZodPipe(ownerScopeQuery)) q: z.output<typeof ownerScopeQuery>) {
+    return this.owner.damageReports(actor, q.propertyId);
+  }
+
+  @Get('damage/:id')
+  @ZodResponse(damageReportDetail)
+  damageReport(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
+    return this.owner.damageReport(actor, id);
   }
 
   @Get('calendar')

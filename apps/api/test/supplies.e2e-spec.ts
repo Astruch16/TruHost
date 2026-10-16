@@ -96,7 +96,10 @@ describe('supplies: levels, restock points and alerts', () => {
       ]);
       expect(t.email.sent.map((m) => m.to).sort()).toEqual(['admin@example.test', 'ownera@example.test']);
       expect(t.email.sent[0]!.subject).toBe('Toilet paper is running low · Property A');
-      expect(t.email.sent[0]!.text).toContain(`/properties/${w.propertyA.id}`);
+      // Admins' link opens the property's admin page; owners' opens their portal.
+      const byTo = (to: string) => t.email.sent.find((m) => m.to === to)!.text;
+      expect(byTo('admin@example.test')).toContain(`/admin/properties/${w.propertyA.id}`);
+      expect(byTo('ownera@example.test')).toContain('https://app.truhost.example/owner');
 
       // Still low: no repeat.
       await report('cleanerA', [{ supplyItemId: tp(), levelPct: 25 }]).expect(201);

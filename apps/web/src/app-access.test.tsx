@@ -440,11 +440,11 @@ describe('top bar', () => {
     expect(paths).not.toContain('/v1/me/notifications');
   });
 
-  it('opening a notification marks it read and goes to the property', async () => {
+  it('opening a notification marks it read and goes to the owner’s portal (supplies: Home)', async () => {
     const { router, posts } = renderAt('/account/preferences', owner);
     await userEvent.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }));
     await userEvent.click(await screen.findByRole('button', { name: /Coffee pods is running low/ }));
-    await waitFor(() => expect(router.state.location.pathname).toBe(`/properties/${CEDAR}`));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/owner'));
     expect(posts).toContainEqual({ path: '/v1/me/notifications/read', body: { ids: ['n1'] } });
   });
 });

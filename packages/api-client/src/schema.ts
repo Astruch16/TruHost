@@ -964,6 +964,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/owner/damage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_damage'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/owner/damage/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_damageReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/owner/calendar': {
     parameters: {
       query?: never;
@@ -972,118 +1004,6 @@ export interface paths {
       cookie?: never;
     };
     get: operations['Owner_calendar'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/properties/{id}/supplies': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['Supplies_list'];
-    put?: never;
-    post: operations['Supplies_create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/properties/{id}/supplies/bulk': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['Supplies_createMany'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/properties/{id}/supply-statuses': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['Supplies_record'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/supply-items/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations['Supplies_update'];
-    trace?: never;
-  };
-  '/v1/supply-items/{id}/archive': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['Supplies_archive'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/supply-items/{id}/history': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['Supplies_history'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/supplies/restock': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['Supplies_restock'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1198,6 +1118,118 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['Damage_setStatus'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/supplies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Supplies_list'];
+    put?: never;
+    post: operations['Supplies_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/supplies/bulk': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Supplies_createMany'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/properties/{id}/supply-statuses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Supplies_record'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/supply-items/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['Supplies_update'];
+    trace?: never;
+  };
+  '/v1/supply-items/{id}/archive': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Supplies_archive'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/supply-items/{id}/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Supplies_history'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/supplies/restock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Supplies_restock'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -6366,6 +6398,188 @@ export interface operations {
       };
     };
   };
+  Owner_damage: {
+    parameters: {
+      query?: {
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              title: string;
+              description: string;
+              /** @enum {string} */
+              severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+              /** @enum {string} */
+              status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+              /** Format: date */
+              discoveredOn: string;
+              estimatedCostCents: number | null;
+              claimReference: string | null;
+              resolutionNote: string | null;
+              booking: {
+                /** Format: uuid */
+                id: string;
+                guestName: string | null;
+                /** Format: date */
+                checkInDate: string;
+                /** Format: date */
+                checkOutDate: string;
+                /** @enum {string} */
+                channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+              } | null;
+              room: {
+                /** Format: uuid */
+                id: string;
+                displayName: string;
+              } | null;
+              reportedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              submittedAt: string | null;
+              /** Format: date-time */
+              acknowledgedAt: string | null;
+              /** Format: date-time */
+              claimFiledAt: string | null;
+              /** Format: date-time */
+              resolvedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              photoCount: number;
+              coverThumbUrl: string | null;
+              /** Format: date */
+              claimDeadline: string | null;
+              can: {
+                edit: boolean;
+                addPhotos: boolean;
+                submit: boolean;
+                manage: boolean;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Owner_damageReport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+            };
+            title: string;
+            description: string;
+            /** @enum {string} */
+            severity: 'MINOR' | 'MODERATE' | 'SEVERE';
+            /** @enum {string} */
+            status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+            /** Format: date */
+            discoveredOn: string;
+            estimatedCostCents: number | null;
+            claimReference: string | null;
+            resolutionNote: string | null;
+            booking: {
+              /** Format: uuid */
+              id: string;
+              guestName: string | null;
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+              /** @enum {string} */
+              channel: 'AIRBNB' | 'VRBO' | 'BOOKING_COM' | 'DIRECT' | 'OTHER';
+            } | null;
+            room: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+            } | null;
+            reportedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: date-time */
+            claimFiledAt: string | null;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            photoCount: number;
+            coverThumbUrl: string | null;
+            /** Format: date */
+            claimDeadline: string | null;
+            can: {
+              edit: boolean;
+              addPhotos: boolean;
+              submit: boolean;
+              manage: boolean;
+            };
+            photos: {
+              /** Format: uuid */
+              id: string;
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
   Owner_calendar: {
     parameters: {
       query: {
@@ -6406,368 +6620,6 @@ export interface operations {
               ownerGrossCents: number | null;
               monthShareCents: number | null;
               payoutPending: boolean;
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Supplies_list: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              propertyId: string;
-              name: string;
-              /** @enum {string} */
-              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-              thresholdPct: number;
-              position: number;
-              levelPct: number | null;
-              /** @enum {string} */
-              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-              /** Format: date-time */
-              lastCheckedAt: string | null;
-              /** Format: date-time */
-              archivedAt: string | null;
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Supplies_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          name: string;
-          /**
-           * @default OTHER
-           * @enum {string}
-           */
-          category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-          /** @default 25 */
-          thresholdPct?: number;
-        };
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            propertyId: string;
-            name: string;
-            /** @enum {string} */
-            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-            thresholdPct: number;
-            position: number;
-            levelPct: number | null;
-            /** @enum {string} */
-            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-            /** Format: date-time */
-            lastCheckedAt: string | null;
-            /** Format: date-time */
-            archivedAt: string | null;
-          };
-        };
-      };
-    };
-  };
-  Supplies_createMany: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          items: {
-            name: string;
-            /**
-             * @default OTHER
-             * @enum {string}
-             */
-            category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-            /** @default 25 */
-            thresholdPct?: number;
-          }[];
-        };
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              propertyId: string;
-              name: string;
-              /** @enum {string} */
-              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-              thresholdPct: number;
-              position: number;
-              levelPct: number | null;
-              /** @enum {string} */
-              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-              /** Format: date-time */
-              lastCheckedAt: string | null;
-              /** Format: date-time */
-              archivedAt: string | null;
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Supplies_record: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          readings: {
-            /** Format: uuid */
-            supplyItemId: string;
-            levelPct: number;
-            /** @default null */
-            note?: string | null;
-          }[];
-        };
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              propertyId: string;
-              name: string;
-              /** @enum {string} */
-              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-              thresholdPct: number;
-              position: number;
-              levelPct: number | null;
-              /** @enum {string} */
-              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-              /** Format: date-time */
-              lastCheckedAt: string | null;
-              /** Format: date-time */
-              archivedAt: string | null;
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Supplies_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          name?: string;
-          /** @enum {string} */
-          category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-          thresholdPct?: number;
-        };
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            propertyId: string;
-            name: string;
-            /** @enum {string} */
-            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-            thresholdPct: number;
-            position: number;
-            levelPct: number | null;
-            /** @enum {string} */
-            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-            /** Format: date-time */
-            lastCheckedAt: string | null;
-            /** Format: date-time */
-            archivedAt: string | null;
-          };
-        };
-      };
-    };
-  };
-  Supplies_archive: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            propertyId: string;
-            name: string;
-            /** @enum {string} */
-            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-            thresholdPct: number;
-            position: number;
-            levelPct: number | null;
-            /** @enum {string} */
-            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-            /** Format: date-time */
-            lastCheckedAt: string | null;
-            /** Format: date-time */
-            archivedAt: string | null;
-          };
-        };
-      };
-    };
-  };
-  Supplies_history: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              levelPct: number;
-              note: string | null;
-              /** Format: date-time */
-              reportedAt: string;
-              reportedBy: {
-                firstName: string;
-                lastName: string;
-              };
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Supplies_restock: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              propertyId: string;
-              name: string;
-              /** @enum {string} */
-              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
-              thresholdPct: number;
-              position: number;
-              levelPct: number | null;
-              /** @enum {string} */
-              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
-              /** Format: date-time */
-              lastCheckedAt: string | null;
-              /** Format: date-time */
-              archivedAt: string | null;
-              property: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-              };
-              /** @enum {string} */
-              urgency: 'OUT' | 'LOW' | 'SOON';
             }[];
           };
         };
@@ -7618,6 +7470,368 @@ export interface operations {
               };
               /** Format: date-time */
               createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name: string;
+          /**
+           * @default OTHER
+           * @enum {string}
+           */
+          category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+          /** @default 25 */
+          thresholdPct?: number;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            /** @enum {string} */
+            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            thresholdPct: number;
+            position: number;
+            levelPct: number | null;
+            /** @enum {string} */
+            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+            /** Format: date-time */
+            lastCheckedAt: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Supplies_createMany: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          items: {
+            name: string;
+            /**
+             * @default OTHER
+             * @enum {string}
+             */
+            category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            /** @default 25 */
+            thresholdPct?: number;
+          }[];
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_record: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          readings: {
+            /** Format: uuid */
+            supplyItemId: string;
+            levelPct: number;
+            /** @default null */
+            note?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          name?: string;
+          /** @enum {string} */
+          category?: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+          thresholdPct?: number;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            /** @enum {string} */
+            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            thresholdPct: number;
+            position: number;
+            levelPct: number | null;
+            /** @enum {string} */
+            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+            /** Format: date-time */
+            lastCheckedAt: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Supplies_archive: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            /** @enum {string} */
+            category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+            thresholdPct: number;
+            position: number;
+            levelPct: number | null;
+            /** @enum {string} */
+            state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+            /** Format: date-time */
+            lastCheckedAt: string | null;
+            /** Format: date-time */
+            archivedAt: string | null;
+          };
+        };
+      };
+    };
+  };
+  Supplies_history: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              levelPct: number;
+              note: string | null;
+              /** Format: date-time */
+              reportedAt: string;
+              reportedBy: {
+                firstName: string;
+                lastName: string;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Supplies_restock: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              propertyId: string;
+              name: string;
+              /** @enum {string} */
+              category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+              thresholdPct: number;
+              position: number;
+              levelPct: number | null;
+              /** @enum {string} */
+              state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+              /** Format: date-time */
+              archivedAt: string | null;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              /** @enum {string} */
+              urgency: 'OUT' | 'LOW' | 'SOON';
             }[];
           };
         };
