@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router';
-import type { OwnerHome } from '@truhost/shared';
-import { ArrowRight, FileText, Moon, Sparkles } from 'lucide-react';
+import type { OwnerHome, OwnerMonth } from '@truhost/shared';
+import { ArrowRight, CalendarRange, FileText, Moon, Sparkles } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { channelLabel } from '../../lib/format';
 import { formatCents, splitCents } from '../../lib/money';
 import { monthLabel, shortDate } from '../../lib/months';
-import { barHeights, changeText, monthOnly, monthShort, widthOf } from '../../lib/owner';
+import { barHeights, changeAmount, monthOnly, monthShort, widthOf } from '../../lib/owner';
 import { formatSigned } from '../../lib/statements';
 import { useMyGuide } from '../../lib/guide-context';
 import { GUIDES } from '../../lib/guides';
@@ -14,15 +14,46 @@ import { ComingUpIllustration } from '../illustrations/coming-up';
 import { RevenueIllustration } from '../illustrations/revenue';
 import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
+import { MonthStepper } from '../ui/month-stepper';
 import { Pill } from '../ui/pill';
 
-/** The latest released statement: what was sent, when, and how it compares with the month before. */
-export function LatestStatementHero({ latest }: { latest: NonNullable<OwnerHome['latest']> }) {
-  const { whole, cents } = splitCents(latest.netCents);
-  const single = latest.statementIds.length === 1;
+/**
+ * Earnings for the month the owner picks (the stepper): the released statement's figures when it's out, otherwise an
+ * estimate from the stays booked, clearly marked. Before the first statement, it says when that arrives.
+ */
+export function MonthEarningsHero({
+  month,
+  onMonthChange,
+  data,
+  loading,
+  firstStatementExpected,
+}: {
+  month: string;
+  onMonthChange: (month: string) => void;
+  data: OwnerMonth | undefined;
+  loading: boolean;
+  /** Set while nothing has been released yet: the month the first statement is due. */
+  firstStatementExpected: string | null;
+}) {
+  const guide = useMyGuide();
+  const m = data;
+  const { whole, cents } = splitCents(m?.netCents ?? 0);
+  const single = m?.statementIds.length === 1;
+  const released = m && m.basis !== 'ESTIMATE';
+  const chip = !m
+    ? null
+    : m.basis === 'RELEASED'
+      ? `Released ${shortDate(m.releasedOn!)}`
+      : m.basis === 'MIXED'
+        ? `Released ${shortDate(m.releasedOn!)} · ${m.estimatedProperties} estimated`
+        : m.timing === 'CURRENT'
+          ? 'In progress · estimated'
+          : m.timing === 'FUTURE'
+            ? 'Booked so far · estimated'
+            : 'Not released yet · estimated';
   return (
     <section
-      aria-labelledby="latest-statement"
+      aria-labelledby="month-earnings"
       className="relative overflow-hidden rounded-card bg-primary px-6 py-6 text-primary-ink @2xl/content:px-8 @2xl/content:py-7"
     >
       <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full bg-white/5" />
@@ -30,66 +61,96 @@ export function LatestStatementHero({ latest }: { latest: NonNullable<OwnerHome[
         aria-hidden
         className="pointer-events-none absolute -right-24 bottom-[-6rem] size-64 rounded-full bg-white/5"
       />
-      <div className="relative flex flex-wrap items-start justify-between gap-3">
-        <h2 id="latest-statement" className="text-sm font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
-          {monthLabel(latest.month)} statement
-        </h2>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-primary-ink">
-          <span aria-hidden className="size-1.5 rounded-full bg-sage-light" />
-          Released {shortDate(latest.releasedOn)}
-        </span>
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 id="month-earnings" className="text-sm font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
+            {monthLabel(month)} {released ? 'statement' : 'earnings'}
+          </h2>
+          {chip && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-primary-ink">
+              <span
+                aria-hidden
+                className={cx('size-1.5 rounded-full', released ? 'bg-sage-light' : 'bg-amber-light')}
+              />
+              {chip}
+            </span>
+          )}
+        </div>
+        <MonthStepper month={month} onChange={onMonthChange} />
       </div>
-      <p className="relative mt-4 text-sm text-primary-ink-muted">Net to you</p>
-      <p className="figure relative text-[2.75rem] leading-none font-bold tracking-[-0.03em] @2xl/content:text-[3.5rem]">
-        {whole}
-        <span className="text-[0.5em] text-primary-ink-muted">{cents}</span>
-      </p>
-      <dl className="relative mt-5 flex flex-wrap gap-x-8 gap-y-3 text-sm">
-        <div>
-          <dt className="text-primary-ink-muted">Gross revenue</dt>
-          <dd className="figure font-semibold">{formatCents(latest.grossCents)}</dd>
-        </div>
-        <div>
-          <dt className="text-primary-ink-muted">Nights booked</dt>
-          <dd className="figure font-semibold">{latest.nightsBooked}</dd>
-        </div>
-        {latest.change && (
-          <div>
-            <dt className="text-primary-ink-muted">Change</dt>
-            <dd className="figure font-semibold">{changeText(latest.change)}</dd>
-          </div>
+      <div className={cx('relative transition-opacity', loading && 'opacity-60')} aria-busy={loading || undefined}>
+        <p className="mt-4 text-sm text-primary-ink-muted">{released ? 'Net to you' : 'Estimated net to you'}</p>
+        <p className="figure text-[2.75rem] leading-none font-bold tracking-[-0.03em] @2xl/content:text-[3.5rem]">
+          {m ? (
+            <>
+              {whole}
+              <span className="text-[0.5em] text-primary-ink-muted">{cents}</span>
+            </>
+          ) : (
+            <span className="inline-block h-12 w-56 animate-pulse rounded-lg bg-white/10" />
+          )}
+        </p>
+        {m && (
+          <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+            <Stat label="Gross revenue" value={formatCents(m.grossCents)} />
+            <Stat
+              label="TruPlan fee"
+              value={m.managementFeeCents > 0 ? `−${formatCents(m.managementFeeCents)}` : '$0.00'}
+            />
+            <Stat label="Expenses" value={m.expensesCents > 0 ? `−${formatCents(m.expensesCents)}` : '$0.00'} />
+            {m.adjustmentsCents !== 0 && <Stat label="Adjustments" value={formatSigned(m.adjustmentsCents)} />}
+            <Stat label="Nights booked" value={String(m.nightsBooked)} />
+            <Stat label={`vs ${monthOnly(m.change.month)}`} value={changeAmount(m.change.changeCents)} />
+          </dl>
         )}
-      </dl>
-      <Link
-        to={single ? '/owner/statements/$statementId' : '/owner/statements'}
-        params={single ? { statementId: latest.statementIds[0]! } : undefined}
-        className="relative mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary-ink-muted"
-      >
-        <FileText aria-hidden className="size-4" /> View statement
-      </Link>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {m && m.statementIds.length > 0 ? (
+            <Link
+              to={single ? '/owner/statements/$statementId' : '/owner/statements'}
+              params={single ? { statementId: m.statementIds[0]! } : undefined}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary-ink-muted"
+            >
+              <FileText aria-hidden className="size-4" /> View statement
+            </Link>
+          ) : (
+            <Link
+              to="/owner/calendar"
+              search={{ month }}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary-ink-muted"
+            >
+              <CalendarRange aria-hidden className="size-4" /> See the stays
+            </Link>
+          )}
+          {m && !released && (
+            <p className="text-sm text-primary-ink-muted">
+              {firstStatementExpected && m.timing !== 'FUTURE'
+                ? `Your first statement arrives in early ${monthOnly(firstStatementExpected)}.`
+                : m.timing === 'PAST'
+                  ? 'No statement released for this month yet: estimated from its stays and expenses.'
+                  : 'Figures change as stays are booked and paid.'}
+            </p>
+          )}
+        </div>
+      </div>
+      {firstStatementExpected && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-6 bottom-5 hidden size-20 place-items-center rounded-full @3xl/content:grid"
+          style={{ backgroundColor: GUIDES[guide].tint }}
+        >
+          <Guide character={guide} pose="waving" size={72} />
+        </span>
+      )}
     </section>
   );
 }
 
-/** Before the first release: what to expect, with the user's guide. */
-export function FirstStatementHero({ expected }: { expected: string }) {
-  const guide = useMyGuide();
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <section className="flex flex-col items-start gap-5 rounded-card bg-primary px-6 py-6 text-primary-ink @2xl/content:flex-row @2xl/content:items-center @2xl/content:px-8">
-      <span
-        className="grid size-20 shrink-0 place-items-center rounded-full"
-        style={{ backgroundColor: GUIDES[guide].tint }}
-      >
-        <Guide character={guide} pose="waving" size={72} />
-      </span>
-      <div>
-        <h2 className="text-xl font-bold">Your first statement is on its way</h2>
-        <p className="mt-1 max-w-xl text-sm text-primary-ink-muted">
-          Statements arrive after each month ends, once TruHost has checked every payout and receipt. Your first one is
-          expected in early {monthOnly(expected)}. Until then, “This month so far” shows how the month is going.
-        </p>
-      </div>
-    </section>
+    <div>
+      <dt className="text-primary-ink-muted">{label}</dt>
+      <dd className="figure font-semibold">{value}</dd>
+    </div>
   );
 }
 

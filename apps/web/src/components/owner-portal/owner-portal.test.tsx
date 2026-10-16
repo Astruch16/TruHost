@@ -10,8 +10,8 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import type { ApiClient } from '@truhost/api-client';
-import type { OwnerHome, OwnerStatement, OwnerSupplies } from '@truhost/shared';
-import type { ReactNode } from 'react';
+import type { OwnerHome, OwnerMonth, OwnerStatement, OwnerSupplies } from '@truhost/shared';
+import { useState, type ReactNode } from 'react';
 import { ApiContext } from '../../lib/api-context';
 import { navItems } from '../../lib/nav';
 import { AppShell } from '../shell/app-shell';
@@ -23,7 +23,7 @@ import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 
 const ok = (data: unknown) => Promise.resolve({ data, response: new Response(null, { status: 200 }) });
 
-function renderWith(get: (path: string) => unknown, ui: ReactNode) {
+function renderWith(get: (path: string, init?: { params?: { query?: { month?: string } } }) => unknown, ui: ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const root = createRootRoute();
   const page = createRoute({ getParentRoute: () => root, path: '/', component: () => <>{ui}</> });
@@ -32,7 +32,9 @@ function renderWith(get: (path: string) => unknown, ui: ReactNode) {
     routeTree: root.addChildren([page, other]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
-  const api = { GET: vi.fn((path: string) => ok(get(path))) } as unknown as ApiClient;
+  const api = {
+    GET: vi.fn((path: string, init?: { params?: { query?: { month?: string } } }) => ok(get(path, init))),
+  } as unknown as ApiClient;
   render(
     <ApiContext.Provider value={api}>
       <QueryClientProvider client={client}>
@@ -174,22 +176,79 @@ describe('owner navigation', () => {
   });
 });
 
+const SEPTEMBER: OwnerMonth = {
+  month: '2026-09',
+  basis: 'RELEASED',
+  statementIds: ['s1'],
+  releasedOn: '2026-10-05',
+  netCents: 276_215,
+  grossCents: 398_000,
+  managementFeeCents: 87_560,
+  expensesCents: 38_475,
+  adjustmentsCents: 4_250,
+  nightsBooked: 12,
+  estimatedProperties: 0,
+  change: { month: '2026-08', netCents: 250_000, changeCents: 26_215 },
+  timing: 'PAST',
+};
+const OCTOBER: OwnerMonth = {
+  ...SEPTEMBER,
+  month: '2026-10',
+  basis: 'ESTIMATE',
+  statementIds: [],
+  releasedOn: null,
+  netCents: 180_050,
+  adjustmentsCents: 0,
+  change: { month: '2026-09', netCents: 276_215, changeCents: -96_165 },
+  timing: 'CURRENT',
+};
+
+/** The owner API as Home reads it; `month` answers by the month asked for. */
+const homeApi = (home: OwnerHome) => (path: string, init?: { params?: { query?: { month?: string } } }) =>
+  path === '/v1/owner/home'
+    ? home
+    : path === '/v1/owner/month'
+      ? init?.params?.query?.month === '2026-10'
+        ? OCTOBER
+        : SEPTEMBER
+      : path === '/v1/owner/supplies'
+        ? SUPPLIES
+        : CONFIG;
+
+/** Home with the month held in state, as the route keeps it in the URL. */
+function HomeWithMonth() {
+  const [month, setMonth] = useState<string | null>(null);
+  return (
+    <OwnerHomePage firstName="Test" propertyId="p1" propertyName="Cedar Cabin" month={month} onMonthChange={setMonth} />
+  );
+}
+
 describe('owner home', () => {
-  it('leads with the released statement, then this month marked as estimated', async () => {
-    renderWith(
-      (p) => (p === '/v1/owner/home' ? HOME : p === '/v1/owner/supplies' ? SUPPLIES : CONFIG),
-      <OwnerHomePage firstName="Test" propertyId="p1" propertyName="Cedar Cabin" />,
-    );
+  it('opens on the latest released statement, and steps to other months, estimated when not released', async () => {
+    const api = renderWith(homeApi(HOME), <HomeWithMonth />);
     const hero = (await screen.findByRole('heading', { name: 'September 2026 statement' })).closest('section')!;
-    expect(hero.textContent).toContain('$2,762.15');
+    await waitFor(() => expect(hero.textContent).toContain('$2,762.15'));
     expect(hero.textContent).toContain('Released Oct 5');
-    expect(hero.textContent).toContain('+$262.15 vs August');
+    expect(hero.textContent).toContain('+$262.15');
+    expect(hero.textContent).toContain('−$875.60');
     expect(within(hero).getByRole('link', { name: /View statement/ })).toHaveAttribute('href', '/owner/statements/s1');
-    expect(screen.getByText('Estimated')).toBeInTheDocument();
+
+    await userEvent.click(within(hero).getByRole('button', { name: 'Next month' }));
+    const october = (await screen.findByRole('heading', { name: 'October 2026 earnings' })).closest('section')!;
+    await waitFor(() => expect(october.textContent).toContain('$1,800.50'));
+    expect(october.textContent).toContain('In progress · estimated');
+    expect(october.textContent).toContain('Estimated net to you');
+    expect(within(october).getByRole('link', { name: /See the stays/ })).toHaveAttribute(
+      'href',
+      '/owner/calendar?month=2026-10',
+    );
+    expect(api.GET).toHaveBeenCalledWith('/v1/owner/month', {
+      params: { query: { month: '2026-10', propertyId: 'p1' } },
+    });
+
     expect(screen.getByText(/Statement ready in early November/)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /9 nights stayed and 5 still to come/ })).toBeInTheDocument();
     expect(screen.getByText('Owner stay')).toBeInTheDocument();
-    // Nothing to know: the card stays hidden.
     expect(screen.queryByText('Good to know')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Message TruHost/ })).toHaveAttribute(
       'href',
@@ -197,13 +256,11 @@ describe('owner home', () => {
     );
   });
 
-  it('explains when the first statement arrives before there is one', async () => {
-    renderWith(
-      (p) => (p === '/v1/owner/home' ? { ...HOME, latest: null } : p === '/v1/owner/supplies' ? SUPPLIES : CONFIG),
-      <OwnerHomePage firstName="Test" propertyId={null} propertyName={null} />,
-    );
-    expect(await screen.findByText('Your first statement is on its way')).toBeInTheDocument();
-    expect(screen.getByText(/expected in early November/)).toBeInTheDocument();
+  it('opens on this month before the first release, saying when the first statement arrives', async () => {
+    const first = { ...HOME, latest: null };
+    renderWith(homeApi(first), <HomeWithMonth />);
+    expect(await screen.findByRole('heading', { name: 'October 2026 earnings' })).toBeInTheDocument();
+    expect(await screen.findByText(/Your first statement arrives in early November/)).toBeInTheDocument();
   });
 });
 

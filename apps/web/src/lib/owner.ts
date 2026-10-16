@@ -18,13 +18,6 @@ export const monthOnly = (month: string) => monthLabel(month).split(' ')[0]!;
 /** "Sep" from "2026-09". */
 export const monthShort = (month: string) => monthOnly(month).slice(0, 3);
 
-/** "+$120.00 vs August" / "−$45.10 vs August" / "Same as August". */
-export function changeText(change: { month: string; changeCents: number }): string {
-  if (change.changeCents === 0) return `Same as ${monthOnly(change.month)}`;
-  const sign = change.changeCents > 0 ? '+' : '−';
-  return `${sign}${formatCents(Math.abs(change.changeCents))} vs ${monthOnly(change.month)}`;
-}
-
 /**
  * Bar heights for the net-by-month chart, as percentages of the tallest bar (screen geometry only). Months without
  * a figure, and negative months, get no bar.
@@ -49,4 +42,10 @@ export function suppliesLine(c: { total: number; out: number; low: number; soon:
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+/** "+$145.00", "−$45.10" or "No change": the month-on-month difference beside its "vs August" label. */
+export function changeAmount(changeCents: number): string {
+  if (changeCents === 0) return 'No change';
+  return `${changeCents > 0 ? '+' : '−'}${formatCents(Math.abs(changeCents))}`;
 }

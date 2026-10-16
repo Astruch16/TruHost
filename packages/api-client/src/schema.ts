@@ -900,6 +900,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/owner/month': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_month'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/owner/statements': {
     parameters: {
       query?: never;
@@ -6176,6 +6192,49 @@ export interface operations {
               /** Format: uuid */
               statementId: string | null;
             }[];
+          };
+        };
+      };
+    };
+  };
+  Owner_month: {
+    parameters: {
+      query: {
+        propertyId?: string;
+        month: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            month: string;
+            /** @enum {string} */
+            basis: 'RELEASED' | 'ESTIMATE' | 'MIXED';
+            statementIds: string[];
+            /** Format: date */
+            releasedOn: string | null;
+            netCents: number;
+            grossCents: number;
+            managementFeeCents: number;
+            expensesCents: number;
+            adjustmentsCents: number;
+            nightsBooked: number;
+            estimatedProperties: number;
+            change: {
+              month: string;
+              netCents: number;
+              changeCents: number;
+            };
+            /** @enum {string} */
+            timing: 'PAST' | 'CURRENT' | 'FUTURE';
           };
         };
       };

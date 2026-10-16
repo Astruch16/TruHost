@@ -71,6 +71,22 @@ function fakeApi(): ApiClient {
     GET: (path: string) => {
       if (path === '/v1/owner/home') return respond(NEW_OWNER);
       if (path === '/v1/owner/calendar') return respond({ month: '2026-10', items: [] });
+      if (path === '/v1/owner/month')
+        return respond({
+          month: '2026-10',
+          basis: 'ESTIMATE',
+          statementIds: [],
+          releasedOn: null,
+          netCents: 0,
+          grossCents: 0,
+          managementFeeCents: 0,
+          expensesCents: 0,
+          adjustmentsCents: 0,
+          nightsBooked: 0,
+          estimatedProperties: 1,
+          change: { month: '2026-09', netCents: 0, changeCents: 0 },
+          timing: 'CURRENT',
+        });
       // As the owner API shapes them: sent reports only, no guest names, nothing to act on.
       const owned = DEV_DAMAGE.filter((r) => r.status !== 'DRAFT').map((r) => ({
         ...r,
@@ -103,7 +119,15 @@ function OwnerPreview() {
           onSignOut={() => undefined}
           tabs
         >
-          {view === 'home' && <OwnerHomePage firstName="Nadia" propertyId="p1" propertyName="Harbour Suite" />}
+          {view === 'home' && (
+            <OwnerHomePage
+              firstName="Nadia"
+              propertyId="p1"
+              propertyName="Harbour Suite"
+              month={month}
+              onMonthChange={setMonth}
+            />
+          )}
           {view === 'statements' && <OwnerStatementsPage propertyId="p1" />}
           {view === 'calendar' && (
             <OwnerCalendarPage month={month} onMonthChange={setMonth} propertyId="p1" today="2026-10-15" />

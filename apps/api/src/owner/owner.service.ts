@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { OwnerCalendar, OwnerHome, OwnerStatement } from '@truhost/shared';
+import type { OwnerCalendar, OwnerHome, OwnerMonth, OwnerStatement } from '@truhost/shared';
 import { AccessService } from '../access/access.service.js';
 import type { Actor } from '../auth/actor.js';
 import { CLOCK, type Clock } from '../common/clock.js';
@@ -473,5 +473,57 @@ export class OwnerService {
   /** One report with its photos; another owner's, or a draft, is 404. */
   damageReport(actor: Actor, id: string) {
     return this.damage.getForOwner(actor, id);
+  }
+
+  /** One month's earnings: released statement figures where released, an estimate for the rest. */
+  async month(actor: Actor, month: string, propertyId?: string): Promise<OwnerMonth> {
+    const properties = await this.scope(actor, propertyId);
+    const ids = properties.map((p) => p.id);
+    const today = this.today(properties);
+    const [current, previous] = await Promise.all([
+      this.monthFigures(ids, month),
+      this.monthFigures(ids, addMonths(month, -1)),
+    ]);
+    const thisMonth = today.slice(0, 7);
+    return {
+      ...current,
+      change: {
+        month: addMonths(month, -1),
+        netCents: previous.netCents,
+        changeCents: current.netCents - previous.netCents,
+      },
+      timing: month < thisMonth ? 'PAST' : month === thisMonth ? 'CURRENT' : 'FUTURE',
+    };
+  }
+
+  /** Released statements for the month, plus the reporting functions' figures for properties not released yet. */
+  private async monthFigures(ids: string[], month: string) {
+    const released = await this.prisma.ownerStatement.findMany({
+      where: { propertyId: { in: ids }, status: 'RELEASED', periodMonth: fromIsoDate(`${month}-01`) },
+    });
+    const releasedIds = new Set(released.map((r) => r.propertyId));
+    const rest = ids.filter((id) => !releasedIds.has(id));
+    const estimated = rest.length > 0 ? await this.reports.compute(rest, month) : [];
+    const sum = <T>(rows: T[], f: (r: T) => number) => rows.reduce((acc, r) => acc + f(r), 0);
+    return {
+      month,
+      basis: (rest.length === 0 ? 'RELEASED' : released.length === 0 ? 'ESTIMATE' : 'MIXED') as OwnerMonth['basis'],
+      statementIds: released.map((r) => r.id),
+      releasedOn: released.length
+        ? released
+            .map((r) => toIsoDate(r.releasedOn!))
+            .sort()
+            .at(-1)!
+        : null,
+      netCents: sum(released, (r) => r.netCents!) + sum(estimated, (f) => f.netCents),
+      grossCents: sum(released, (r) => r.grossCents!) + sum(estimated, (f) => f.grossCents),
+      managementFeeCents: sum(released, (r) => r.managementFeeCents!) + sum(estimated, (f) => f.managementFeeCents),
+      expensesCents:
+        sum(released, (r) => r.expensesCents! + r.ownerStayCleaningCents!) +
+        sum(estimated, (f) => f.ownerExpensesCents),
+      adjustmentsCents: sum(released, (r) => r.adjustmentsCents!),
+      nightsBooked: sum(released, (r) => r.nightsBooked!) + sum(estimated, (f) => f.nightsBooked),
+      estimatedProperties: rest.length,
+    };
   }
 }

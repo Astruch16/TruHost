@@ -7,6 +7,8 @@ import {
   ownerCalendar,
   ownerCalendarQuery,
   ownerHome,
+  ownerMonth,
+  ownerMonthQuery,
   ownerProperties,
   ownerScopeQuery,
   ownerStatement,
@@ -36,6 +38,14 @@ export class OwnerController {
   @ZodResponse(ownerHome)
   home(@CurrentActor() actor: Actor, @Query(new ZodPipe(ownerScopeQuery)) q: z.output<typeof ownerScopeQuery>) {
     return this.owner.home(actor, q.propertyId);
+  }
+
+  /** One month's earnings: released figures where released, an estimate otherwise. */
+  @Get('month')
+  @ZodQuery(ownerMonthQuery)
+  @ZodResponse(ownerMonth)
+  month(@CurrentActor() actor: Actor, @Query(new ZodPipe(ownerMonthQuery)) q: z.output<typeof ownerMonthQuery>) {
+    return this.owner.month(actor, q.month, q.propertyId);
   }
 
   /** Released statements only, newest first. */
