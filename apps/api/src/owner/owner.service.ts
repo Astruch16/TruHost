@@ -5,6 +5,7 @@ import type { Actor } from '../auth/actor.js';
 import { CLOCK, type Clock } from '../common/clock.js';
 import { addIsoDays, fromIsoDate, toIsoDate, todayIn } from '../common/dates.js';
 import { notFound } from '../common/problem.js';
+import { DamageService } from '../damage/damage.service.js';
 import { FilesService } from '../files/files.service.js';
 import { FILE_STORAGE, type FileStorage } from '../files/storage.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -40,6 +41,7 @@ export class OwnerService {
     private readonly access: AccessService,
     private readonly reports: ReportsService,
     private readonly files: FilesService,
+    private readonly damage: DamageService,
     @Inject(FILE_STORAGE) private readonly storage: FileStorage,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
@@ -457,5 +459,19 @@ export class OwnerService {
         };
       }),
     };
+  }
+
+  /** Damage reported at the owned properties (sent reports only), newest first. */
+  async damageReports(actor: Actor, propertyId?: string) {
+    const properties = await this.scope(actor, propertyId);
+    return this.damage.listForOwner(
+      actor,
+      properties.map((p) => p.id),
+    );
+  }
+
+  /** One report with its photos; another owner's, or a draft, is 404. */
+  damageReport(actor: Actor, id: string) {
+    return this.damage.getForOwner(actor, id);
   }
 }

@@ -2,5 +2,5 @@ import { Module } from '@nestjs/common';
 import { DamageController } from './damage.controller.js';
 import { DamageService } from './damage.service.js';
 
-@Module({ controllers: [DamageController], providers: [DamageService] })
+@Module({ controllers: [DamageController], providers: [DamageService], exports: [DamageService] })
 export class DamageModule {}

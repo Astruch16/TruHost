@@ -44,6 +44,7 @@ export function navItems(me: { staffRole: string | null; memberships: { role: st
       { to: '/owner', label: 'Home', icon: Home, exact: true, tab: true },
       { to: '/owner/calendar', label: 'Calendar', icon: CalendarRange, tab: true },
       { to: '/owner/statements', label: 'Statements', icon: FileText, tab: true },
+      { to: '/owner/damage', label: 'Damage', icon: TriangleAlert, tab: true },
       { to: '/owner/care', label: 'Care', icon: Camera, tab: true },
     );
     // Someone who also cleans a property keeps their cleaner pages.

@@ -98,6 +98,28 @@ export class DamageService {
     return { items: await this.toReports(actor, rows) };
   }
 
+  /**
+   * The owner portal: sent reports at `propertyIds` (the caller's owned properties, decided by OwnerService), newest
+   * first, shaped as any owner sees them (no guest names, nothing to act on), even for an admin who owns the property.
+   */
+  async listForOwner(actor: Actor, propertyIds: string[]) {
+    const rows = await this.prisma.damageReport.findMany({
+      where: { propertyId: { in: propertyIds }, status: { not: 'DRAFT' } },
+      orderBy: [{ discoveredOn: 'desc' }, { createdAt: 'desc' }],
+      include: LIST,
+    });
+    return { items: await this.toReports(actor, rows, true) };
+  }
+
+  /** One sent report at a property the caller owns, as an owner sees it (with photos); anything else is 404. */
+  async getForOwner(actor: Actor, id: string) {
+    const row = await this.prisma.damageReport.findUnique({ where: { id }, include: DETAIL });
+    if (!row || row.status === 'DRAFT' || !this.access.can(actor, 'owner:portal', row.propertyId)) {
+      throw notFound('Damage report');
+    }
+    return this.toDetail(actor, row, true);
+  }
+
   async get(actor: Actor, id: string) {
     const row = await this.prisma.damageReport.findUnique({ where: { id }, include: DETAIL });
     if (!row || !this.visible(actor, row)) throw notFound('Damage report');
@@ -366,18 +388,18 @@ export class DamageService {
     return names;
   }
 
-  private async toReports(actor: Actor, rows: ListRow[]) {
+  private async toReports(actor: Actor, rows: ListRow[], ownerView = false) {
     const names = await this.roomNames(rows.map((r) => r.propertyId));
     return Promise.all(
       rows.map(async (r) => {
         const first = r.photos[0];
         const cover = first ? await this.files.photoLinks(first) : null;
-        return this.shape(actor, r, names, cover?.thumbUrl ?? null);
+        return this.shape(actor, r, names, cover?.thumbUrl ?? null, ownerView);
       }),
     );
   }
 
-  private async toDetail(actor: Actor, row: DetailRow) {
+  private async toDetail(actor: Actor, row: DetailRow, ownerView = false) {
     const names = await this.roomNames([row.propertyId]);
     const photos = await Promise.all(
       row.photos.map(async (p) => ({
@@ -386,16 +408,24 @@ export class DamageService {
         createdAt: p.createdAt,
       })),
     );
-    return { ...this.shape(actor, row, names, photos[0]?.thumbUrl ?? null), photos };
+    return { ...this.shape(actor, row, names, photos[0]?.thumbUrl ?? null, ownerView), photos };
   }
 
-  private shape(actor: Actor, r: ListRow | DetailRow, roomNames: Map<string, string>, coverThumbUrl: string | null) {
-    const manage = this.access.can(actor, 'damage:manage', r.propertyId);
-    const act = this.actionable(actor, r);
+  /** `ownerView`: as any owner sees it, whatever else the caller may be (the owner portal). */
+  private shape(
+    actor: Actor,
+    r: ListRow | DetailRow,
+    roomNames: Map<string, string>,
+    coverThumbUrl: string | null,
+    ownerView = false,
+  ) {
+    const manage = !ownerView && this.access.can(actor, 'damage:manage', r.propertyId);
+    const act = !ownerView && this.actionable(actor, r);
     // Guest names are for TruHost and the reporter's side (cleaners), as on bookings; owners see the dates only.
     const seesGuest =
-      this.access.can(actor, 'booking:readAdminFields', r.propertyId) ||
-      this.access.can(actor, 'damage:report', r.propertyId);
+      !ownerView &&
+      (this.access.can(actor, 'booking:readAdminFields', r.propertyId) ||
+        this.access.can(actor, 'damage:report', r.propertyId));
     const stay = r.booking ? this.toStay(r.booking) : null;
     return {
       id: r.id,

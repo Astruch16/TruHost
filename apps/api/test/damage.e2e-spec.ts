@@ -127,6 +127,9 @@ describe('damage reports', () => {
       expect(told[0]!.title).toBe('Damage reported: Burn mark on the counter');
       expect(t.email.sent.map((m) => m.to).sort()).toEqual(['admin@example.test', 'ownera@example.test']);
       expect(t.email.sent[0]!.subject).toBe('Damage reported at Property A: Burn mark on the counter');
+      const byTo = (to: string) => t.email.sent.find((m) => m.to === to)!.text;
+      expect(byTo('admin@example.test')).toContain('https://app.truhost.example/admin/damage');
+      expect(byTo('ownera@example.test')).toContain('https://app.truhost.example/owner/damage');
       expect(await t.prisma.auditLog.count({ where: { action: 'damage.submit', entityId: draft.id } })).toBe(1);
 
       // Now the owner sees it, without the guest's name (as on bookings).

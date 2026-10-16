@@ -31,7 +31,8 @@ interface Event {
   body: string;
   /** Who caused it, if a person: they aren't told about their own action. */
   actorId?: string;
-  email: (to: { email: string; firstName: string }) => EmailMessage;
+  /** `admin`: the recipient is staff (their link opens the admin pages; owners' open the owner portal). */
+  email: (to: { email: string; firstName: string; admin: boolean }) => EmailMessage;
 }
 
 /**
@@ -62,7 +63,6 @@ export class NotificationsService {
     },
   ): Promise<PendingEmail[]> {
     const out = event.kind === 'SUPPLY_OUT';
-    const url = `${this.env.WEB_URL}/properties/${event.property.id}`;
     return this.notify(tx, {
       category: 'SUPPLY_ALERTS',
       kind: event.kind,
@@ -81,7 +81,8 @@ export class NotificationsService {
           property: event.property.name,
           levelPct: event.reading.levelPct,
           thresholdPct: event.item.thresholdPct,
-          url,
+          // Admins: the property's page (supplies are managed there); owners: their home's Supplies card.
+          url: to.admin ? `${this.env.WEB_URL}/admin/properties/${event.property.id}` : `${this.env.WEB_URL}/owner`,
         }),
     });
   }
@@ -118,7 +119,7 @@ export class NotificationsService {
           reporter,
           discoveredOn: event.report.discoveredOn,
           photoCount: event.report.photoCount,
-          url: `${this.env.WEB_URL}/properties/${event.property.id}`,
+          url: to.admin ? `${this.env.WEB_URL}/admin/damage` : `${this.env.WEB_URL}/owner/damage`,
         }),
     });
   }
@@ -152,6 +153,7 @@ export class NotificationsService {
         id: true,
         email: true,
         firstName: true,
+        staffRole: true,
         notificationSettings: { where: { category: event.category }, select: { email: true, inApp: true } },
       },
     });
@@ -176,7 +178,10 @@ export class NotificationsService {
         notificationId = row.id;
       }
       if (choice.email) {
-        pending.push({ notificationId, message: event.email({ email: user.email, firstName: user.firstName }) });
+        pending.push({
+          notificationId,
+          message: event.email({ email: user.email, firstName: user.firstName, admin: user.staffRole === 'ADMIN' }),
+        });
       }
     }
     return pending;

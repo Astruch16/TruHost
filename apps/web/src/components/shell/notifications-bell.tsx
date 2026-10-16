@@ -6,6 +6,7 @@ import { unwrap } from '@truhost/api-client';
 import type { Me, Notification } from '@truhost/shared';
 import { Bell, BellOff } from 'lucide-react';
 import { propertyPath } from '../../lib/access';
+import { usesOwnerPortal } from '../../lib/nav';
 import { useApi } from '../../lib/api-context';
 import { cx } from '../../lib/cx';
 import { queries } from '../../lib/queries';
@@ -37,6 +38,11 @@ export function LiveNotificationsBell({ me }: { me: Pick<Me, 'staffRole' | 'memb
       error={list.error ?? markRead.error}
       onOpenItem={(n) => {
         if (!n.readAt) markRead.mutate({ ids: [n.id] });
+        // Owners open their portal: damage on its Damage page, supplies on Home.
+        if (usesOwnerPortal(me)) {
+          void navigate({ to: n.kind === 'DAMAGE_REPORTED' ? '/owner/damage' : '/owner' });
+          return;
+        }
         const to = propertyPath(me, n.property.id);
         if (to) void navigate({ to, params: { propertyId: n.property.id } });
       }}

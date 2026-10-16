@@ -6,16 +6,19 @@ import type { OwnerHome } from '@truhost/shared';
 import { OwnerCalendarPage } from '../../components/owner-portal/owner-calendar';
 import { OwnerHomePage } from '../../components/owner-portal/owner-home';
 import { OwnerCarePage, OwnerStatementsPage } from '../../components/owner-portal/owner-statements';
+import { OwnerDamagePage } from '../../components/owner-portal/owner-damage';
+import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 import { AppShell } from '../../components/shell/app-shell';
 import { ApiContext } from '../../lib/api-context';
 import { navItems } from '../../lib/nav';
 
-const VIEWS = ['home', 'statements', 'calendar', 'care'] as const;
+const VIEWS = ['home', 'statements', 'calendar', 'damage', 'care'] as const;
 type View = (typeof VIEWS)[number];
 
 /**
  * Dev only: the owner portal for a brand-new owner (nothing released, nothing booked) on a fake API, in the real
- * shell, for review screenshots of the empty states. `?view=home|statements|calendar|care`. The real pages are
+ * shell, for review screenshots of the empty states (and, for `damage`, reports as owners see them).
+ * `?view=home|statements|calendar|damage|care`. The real pages are
  * /owner/....
  */
 export const Route = createFileRoute('/dev/owner')({
@@ -68,6 +71,14 @@ function fakeApi(): ApiClient {
     GET: (path: string) => {
       if (path === '/v1/owner/home') return respond(NEW_OWNER);
       if (path === '/v1/owner/calendar') return respond({ month: '2026-10', items: [] });
+      // As the owner API shapes them: sent reports only, no guest names, nothing to act on.
+      const owned = DEV_DAMAGE.filter((r) => r.status !== 'DRAFT').map((r) => ({
+        ...r,
+        booking: r.booking && { ...r.booking, guestName: null },
+        can: { edit: false, addPhotos: false, submit: false, manage: false },
+      }));
+      if (path === '/v1/owner/damage') return respond({ items: owned });
+      if (path === '/v1/owner/damage/{id}') return respond(owned[0]);
       if (path === '/v1/config') return respond({ taxFieldsEnabled: false, contactEmail: 'hello@truhost.example' });
       return respond({ items: [] });
     },
@@ -97,6 +108,7 @@ function OwnerPreview() {
           {view === 'calendar' && (
             <OwnerCalendarPage month={month} onMonthChange={setMonth} propertyId="p1" today="2026-10-15" />
           )}
+          {view === 'damage' && <OwnerDamagePage propertyId={null} />}
           {view === 'care' && <OwnerCarePage />}
         </AppShell>
       </QueryClientProvider>
