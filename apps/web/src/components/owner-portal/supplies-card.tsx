@@ -24,7 +24,7 @@ export function OwnerSuppliesCard({ data }: { data: OwnerSupplies }) {
           TruHost will list the supplies kept at your property here, with how full each one is.
         </EmptyState>
       ) : (
-        <div className="flex flex-col gap-6 divide-y divide-line [&>*:not(:first-child)]:pt-6">
+        <div className="flex flex-col gap-4">
           {data.properties
             .filter((p) => p.items.length > 0)
             .map((p) => (
@@ -43,9 +43,13 @@ function PropertySupplies({ group, showName }: { group: OwnerSupplies['propertie
   const hidden = group.items.length - shown.length;
   const listId = `supplies-${group.property.id}`;
   return (
-    <section aria-label={showName ? `Supplies at ${group.property.name}` : undefined}>
-      {showName && <h3 className="text-sm font-semibold text-ink">{group.property.name}</h3>}
-      <p className="text-xs text-muted">
+    // With several properties, each sits in its own panel, evenly spaced, so it's clear where one ends.
+    <section
+      aria-label={showName ? `Supplies at ${group.property.name}` : undefined}
+      className={showName ? 'rounded-inner border border-line p-4 @2xl/content:p-5' : undefined}
+    >
+      {showName && <h3 className="text-base font-semibold text-ink">{group.property.name}</h3>}
+      <p className={showName ? 'mt-0.5 text-xs text-muted' : 'text-xs text-muted'}>
         {suppliesLine(group.counts)}
         {group.lastCheckedAt ? ` · ${checkedAgo(new Date(group.lastCheckedAt))}` : ''}
       </p>
@@ -76,7 +80,7 @@ function PropertySupplies({ group, showName }: { group: OwnerSupplies['propertie
           aria-expanded={all}
           aria-controls={listId}
           onClick={() => setAll(!all)}
-          className="mt-3 text-sm font-semibold text-primary hover:underline"
+          className="mt-4 text-sm font-semibold text-primary hover:underline"
         >
           {all ? 'Show fewer' : `Show all ${group.items.length} items`}
         </button>
