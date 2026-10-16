@@ -262,6 +262,63 @@ describe('owner portal', () => {
     });
   });
 
+  describe('earnings by month', () => {
+    it('gives a released month’s statement figures exactly, and an estimate for months not released', async () => {
+      const sep = await releaseSeptember();
+      const res = await t.as('ownerA').get(`/v1/owner/month?month=2026-09&propertyId=${A}`).expect(200);
+      expect(res.body).toMatchObject({
+        month: '2026-09',
+        basis: 'RELEASED',
+        statementIds: [sep.id],
+        releasedOn: '2026-10-05',
+        netCents: 50_340,
+        grossCents: 92_000,
+        managementFeeCents: 20_240,
+        expensesCents: 6_420 + 15_000,
+        adjustmentsCents: 0,
+        nightsBooked: 5,
+        estimatedProperties: 0,
+        timing: 'PAST',
+      });
+      // August isn't released: estimated by the same functions as the owner's summary.
+      const aug = await t.as('ownerA').get(`/v1/properties/${A}/summary?month=2026-08`).expect(200);
+      expect(res.body.change).toEqual({
+        month: '2026-08',
+        netCents: aug.body.netCents,
+        changeCents: 50_340 - aug.body.netCents,
+      });
+
+      const nov = await t.as('ownerA').get(`/v1/owner/month?month=2026-11&propertyId=${A}`).expect(200);
+      const summary = await t.as('ownerA').get(`/v1/properties/${A}/summary?month=2026-11`).expect(200);
+      expect(nov.body).toMatchObject({
+        basis: 'ESTIMATE',
+        statementIds: [],
+        releasedOn: null,
+        netCents: summary.body.netCents,
+        grossCents: summary.body.grossCents,
+        timing: 'CURRENT',
+      });
+      expect((await t.as('ownerA').get(`/v1/owner/month?month=2027-01&propertyId=${A}`).expect(200)).body.timing).toBe(
+        'FUTURE',
+      );
+    });
+
+    it('mixes released and estimated properties, and only ever the owner’s own', async () => {
+      await releaseSeptember();
+      await t.prisma.membership.create({
+        data: { userId: w.users.ownerA.id, propertyId: w.propertyB.id, role: 'OWNER' },
+      });
+      const both = await t.as('ownerA').get('/v1/owner/month?month=2026-09').expect(200);
+      expect(both.body).toMatchObject({ basis: 'MIXED', estimatedProperties: 1 });
+      expect(both.body.statementIds).toHaveLength(1);
+      // Owner B alone never sees property A's month.
+      await t.as('ownerB').get(`/v1/owner/month?month=2026-09&propertyId=${A}`).expect(404);
+      const b = await t.as('ownerB').get('/v1/owner/month?month=2026-09').expect(200);
+      expect(b.body).toMatchObject({ basis: 'ESTIMATE', statementIds: [] });
+      await t.as('cleanerA').get('/v1/owner/month?month=2026-09').expect(404);
+    });
+  });
+
   describe('supplies', () => {
     it('shows each owned property’s levels, those to restock first, and nobody else’s', async () => {
       // Property A: toilet paper half full (restock point 25%: "low soon"), coffee pods out.

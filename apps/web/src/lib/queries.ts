@@ -210,6 +210,14 @@ export const queries = {
       queryKey: ['owner', 'damage', 'report', id],
       queryFn: () => unwrap(api.GET('/v1/owner/damage/{id}', { params: { path: { id } } })),
     }),
+  ownerMonth: (api: ApiClient, month: string, propertyId: string | null) =>
+    queryOptions({
+      queryKey: ['owner', 'month', { month, propertyId }],
+      queryFn: () =>
+        unwrap(api.GET('/v1/owner/month', { params: { query: { month, propertyId: propertyId ?? undefined } } })),
+      // Keep the month on screen (dimmed) while the next one loads.
+      placeholderData: (previous) => previous,
+    }),
   ownerCalendar: (api: ApiClient, month: string, propertyId: string | null) =>
     queryOptions({
       queryKey: ['owner', 'calendar', { month, propertyId }],

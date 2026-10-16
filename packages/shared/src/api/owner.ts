@@ -175,3 +175,34 @@ export const ownerSupplies = z.object({
   ),
 });
 export type OwnerSupplies = z.infer<typeof ownerSupplies>;
+
+export const ownerMonthQuery = ownerScopeQuery.extend({ month });
+
+/**
+ * One month's earnings at the owned properties: the released statements' figures where they exist, and an estimate
+ * from the reporting functions for properties whose statement isn't released yet (`basis` says which).
+ */
+export const ownerMonth = z.object({
+  month,
+  /** RELEASED: every property's statement is released. ESTIMATE: none is. MIXED: some are. */
+  basis: z.enum(['RELEASED', 'ESTIMATE', 'MIXED']),
+  /** The released statements counted (one per property). */
+  statementIds: z.array(id),
+  /** The latest payment date among them. */
+  releasedOn: isoDate.nullable(),
+  netCents: cents,
+  grossCents: nonNegativeCents,
+  managementFeeCents: nonNegativeCents,
+  /** Owner-paid expenses, owner-stay cleaning included. */
+  expensesCents: nonNegativeCents,
+  /** Released statements only (an estimate has none). */
+  adjustmentsCents: cents,
+  nightsBooked: z.number().int(),
+  /** Properties not released yet, counted as an estimate. */
+  estimatedProperties: z.number().int(),
+  /** Against the month before, on the same terms. */
+  change: z.object({ month, netCents: cents, changeCents: cents }),
+  /** Where the month stands against today: before it, during it, or after it. */
+  timing: z.enum(['PAST', 'CURRENT', 'FUTURE']),
+});
+export type OwnerMonth = z.infer<typeof ownerMonth>;

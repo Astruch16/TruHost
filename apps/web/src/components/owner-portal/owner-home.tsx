@@ -11,14 +11,7 @@ import { ErrorAlert, LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
 import { PageHeader } from '../ui/page-header';
 import { Skeleton } from '../ui/skeleton';
-import {
-  ComingUpCard,
-  FirstStatementHero,
-  GoodToKnowCard,
-  LatestStatementHero,
-  NetByMonthChart,
-  ThisMonthCard,
-} from './home-cards';
+import { ComingUpCard, GoodToKnowCard, MonthEarningsHero, NetByMonthChart, ThisMonthCard } from './home-cards';
 import { OwnerSuppliesCard } from './supplies-card';
 
 /**
@@ -29,11 +22,16 @@ export function OwnerHomePage({
   firstName,
   propertyId,
   propertyName,
+  month,
+  onMonthChange,
 }: {
   firstName: string;
   propertyId: string | null;
   /** The chosen property's name, or null for all of them. */
   propertyName: string | null;
+  /** The month the earnings card shows; null: the latest released one (or this month before the first release). */
+  month: string | null;
+  onMonthChange: (month: string) => void;
 }) {
   const api = useApi();
   const home = useQuery(queries.ownerHome(api, propertyId));
@@ -41,6 +39,11 @@ export function OwnerHomePage({
   const supplies = useQuery(queries.ownerSupplies(api, propertyId));
   const [actionError, setActionError] = useState<unknown>(null);
   const h = home.data;
+  const shown = month ?? h?.latest?.month ?? h?.month ?? null;
+  const earnings = useQuery({
+    ...queries.ownerMonth(api, shown ?? '', propertyId),
+    enabled: shown !== null,
+  });
   const many = (h?.properties ?? 1) > 1;
 
   return (
@@ -70,11 +73,13 @@ export function OwnerHomePage({
       ) : (
         <div className="flex flex-col gap-6">
           <ErrorAlert error={actionError} />
-          {h.latest ? (
-            <LatestStatementHero latest={h.latest} />
-          ) : (
-            <FirstStatementHero expected={h.thisMonth.statementExpected} />
-          )}
+          <MonthEarningsHero
+            month={shown ?? h.month}
+            onMonthChange={onMonthChange}
+            data={earnings.data}
+            loading={earnings.isFetching}
+            firstStatementExpected={h.latest ? null : h.thisMonth.statementExpected}
+          />
           <div className="grid items-start gap-6 @5xl/content:grid-cols-[minmax(0,1fr)_24rem]">
             <div className="flex min-w-0 flex-col gap-6">
               <ThisMonthCard m={h.thisMonth} />
