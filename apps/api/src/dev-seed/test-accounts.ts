@@ -17,15 +17,30 @@ import type { FileStorage } from '../files/storage.js';
 import type { StatementsService } from '../statements/statements.service.js';
 import { sampleReceiptPdf } from './sample-receipt.js';
 
-export const TEST_ACCOUNTS = {
-  owner: { email: 'adamstruch+owner+clerk_test@gmail.com', firstName: 'Test', lastName: 'Owner' },
-  cleaner: { email: 'adamstruch+cleaner+clerk_test@gmail.com', firstName: 'Test', lastName: 'Cleaner' },
-} as const;
+/**
+ * The two sign-in accounts. Their addresses and password come from each developer's own apps/api/.env
+ * (SEED_OWNER_EMAIL, SEED_CLEANER_EMAIL, SEED_TEST_PASSWORD) and are never written in the repository.
+ */
+export interface TestAccount {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+export interface TestAccounts {
+  owner: TestAccount;
+  cleaner: TestAccount;
+}
 
-/** Clerk dev instances accept this code for any `+clerk_test` email (sign-in device checks, password resets). */
-export const TEST_VERIFICATION_CODE = '424242';
-/** Password for both accounts, dev instance only. Override with SEED_TEST_PASSWORD. */
-export const DEFAULT_TEST_PASSWORD = 'TruHost-local-test-2026';
+/** The accounts named in the environment (assertSafeToSeed has checked they're set). */
+export function testAccountsFrom(env: { SEED_OWNER_EMAIL?: string; SEED_CLEANER_EMAIL?: string }): TestAccounts {
+  return {
+    owner: { email: env.SEED_OWNER_EMAIL!.trim().toLowerCase(), firstName: 'Test', lastName: 'Owner' },
+    cleaner: { email: env.SEED_CLEANER_EMAIL!.trim().toLowerCase(), firstName: 'Test', lastName: 'Cleaner' },
+  };
+}
+
+/** The shortest SEED_TEST_PASSWORD accepted. */
+export const MIN_TEST_PASSWORD_LENGTH = 12;
 
 /** Fixed ids, so the seed finds its own properties again and never touches anyone else's. */
 export const SEED_PROPERTIES = [
@@ -189,7 +204,14 @@ export function plannedBookings(propertyKey: keyof typeof STAYS, month: string, 
  * Refuses anything but a local, dev-instance setup: production, a live Clerk key, or a missing key. Throws with
  * the reason.
  */
-export function assertSafeToSeed(env: { NODE_ENV?: string; CLERK_SECRET_KEY?: string; DATABASE_URL?: string }) {
+export function assertSafeToSeed(env: {
+  NODE_ENV?: string;
+  CLERK_SECRET_KEY?: string;
+  DATABASE_URL?: string;
+  SEED_OWNER_EMAIL?: string;
+  SEED_CLEANER_EMAIL?: string;
+  SEED_TEST_PASSWORD?: string;
+}) {
   if (env.NODE_ENV === 'production') throw new Error('Refusing to seed: NODE_ENV is production.');
   const key = env.CLERK_SECRET_KEY ?? '';
   if (key.startsWith('sk_live_'))
@@ -197,6 +219,19 @@ export function assertSafeToSeed(env: { NODE_ENV?: string; CLERK_SECRET_KEY?: st
   if (!key.startsWith('sk_test_'))
     throw new Error('CLERK_SECRET_KEY must be set to the dev instance’s key (sk_test_…).');
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set.');
+  // The accounts are each developer's own: set in apps/api/.env, never in the repository.
+  for (const key of ['SEED_OWNER_EMAIL', 'SEED_CLEANER_EMAIL'] as const) {
+    const value = env[key]?.trim() ?? '';
+    if (!value)
+      throw new Error(
+        `${key} is not set (apps/api/.env): the address the test ${key === 'SEED_OWNER_EMAIL' ? 'owner' : 'cleaner'} signs in with.`,
+      );
+    // Clerk treats `+clerk_test` addresses as test addresses: no real email is sent to them.
+    if (!/\+clerk_test@/i.test(value)) throw new Error(`${key} must be a Clerk test address (name+clerk_test@domain).`);
+  }
+  if ((env.SEED_TEST_PASSWORD ?? '').length < MIN_TEST_PASSWORD_LENGTH) {
+    throw new Error(`SEED_TEST_PASSWORD must be set (apps/api/.env), at least ${MIN_TEST_PASSWORD_LENGTH} characters.`);
+  }
 }
 
 /** What the seed needs from the running API to attach receipts and issue statements. */
@@ -213,6 +248,7 @@ export interface SeedIdentity {
 export async function seedTestAccounts(
   prisma: PrismaClient,
   identity: SeedIdentity,
+  accounts: TestAccounts,
   now = new Date(),
   services?: SeedServices,
 ) {
@@ -227,11 +263,8 @@ export async function seedTestAccounts(
     }));
 
   // Users: a sign-in account in Clerk, linked to our row directly (no invite needed).
-  const users = {} as Record<keyof typeof TEST_ACCOUNTS, { id: string }>;
-  for (const [role, account] of Object.entries(TEST_ACCOUNTS) as [
-    keyof typeof TEST_ACCOUNTS,
-    (typeof TEST_ACCOUNTS)[keyof typeof TEST_ACCOUNTS],
-  ][]) {
+  const users = {} as Record<keyof TestAccounts, { id: string }>;
+  for (const [role, account] of Object.entries(accounts) as [keyof TestAccounts, TestAccount][]) {
     const clerkUserId = await identity.ensureUser(account);
     const existing = await prisma.user.findUnique({ where: { email: account.email } });
     if (existing && existing.clerkUserId === clerkUserId && existing.status === 'ACTIVE') {
