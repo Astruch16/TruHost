@@ -36,3 +36,17 @@ export function barHeights(values: (number | null)[]): (number | null)[] {
 
 /** Share of a month's nights, as a width percentage for the "this month so far" bar (screen geometry only). */
 export const widthOf = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
+
+/** "1 out · 2 running low · 1 low soon · 5 stocked" for an owner's supplies card (from the API's counts). */
+export function suppliesLine(c: { total: number; out: number; low: number; soon: number; unchecked: number }): string {
+  const stocked = c.total - c.out - c.low - c.soon - c.unchecked;
+  return [
+    c.out > 0 && `${c.out} out`,
+    c.low > 0 && `${c.low} running low`,
+    c.soon > 0 && `${c.soon} low soon`,
+    stocked > 0 && `${stocked} stocked`,
+    c.unchecked > 0 && `${c.unchecked} not checked yet`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}

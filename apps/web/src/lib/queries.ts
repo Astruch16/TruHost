@@ -193,6 +193,12 @@ export const queries = {
       queryKey: ['owner', 'statement', id],
       queryFn: () => unwrap(api.GET('/v1/owner/statements/{id}', { params: { path: { id } } })),
     }),
+  ownerSupplies: (api: ApiClient, propertyId: string | null) =>
+    queryOptions({
+      queryKey: ['owner', 'supplies', { propertyId }],
+      queryFn: () =>
+        unwrap(api.GET('/v1/owner/supplies', { params: { query: { propertyId: propertyId ?? undefined } } })),
+    }),
   ownerCalendar: (api: ApiClient, month: string, propertyId: string | null) =>
     queryOptions({
       queryKey: ['owner', 'calendar', { month, propertyId }],

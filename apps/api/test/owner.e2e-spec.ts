@@ -262,6 +262,47 @@ describe('owner portal', () => {
     });
   });
 
+  describe('supplies', () => {
+    it('shows each owned property’s levels, those to restock first, and nobody else’s', async () => {
+      // Property A: toilet paper half full (restock point 25%: "low soon"), coffee pods out.
+      const [toiletPaper, coffee] = w.propertyA.supplyIds;
+      const reading = (supplyItemId: string, levelPct: number) =>
+        t.prisma.supplyStatus.create({ data: { supplyItemId, levelPct, reportedById: w.users.cleanerA.id } });
+      await reading(toiletPaper!, 50);
+      await reading(coffee!, 0);
+      // Property B: one reading, which owner A must never see.
+      await t.prisma.supplyStatus.create({
+        data: { supplyItemId: w.propertyB.supplyIds[0]!, levelPct: 75, reportedById: w.users.cleanerB.id },
+      });
+
+      const a = await t.as('ownerA').get('/v1/owner/supplies').expect(200);
+      expect(a.body.properties).toHaveLength(1);
+      const [prop] = a.body.properties;
+      expect(prop.property).toEqual({ id: A, name: 'Property A' });
+      expect(
+        prop.items.map((i: { name: string; levelPct: number; urgency: string | null }) => [
+          i.name,
+          i.levelPct,
+          i.urgency,
+        ]),
+      ).toEqual([
+        ['Coffee pods', 0, 'OUT'],
+        ['Toilet paper', 50, 'SOON'],
+      ]);
+      expect(prop.counts).toEqual({ total: 2, out: 1, low: 0, soon: 1, unchecked: 0 });
+      expect(prop.lastCheckedAt).not.toBeNull();
+      expect(JSON.stringify(a.body)).not.toContain(w.propertyB.id);
+
+      const b = await t.as('ownerB').get('/v1/owner/supplies').expect(200);
+      expect(b.body.properties.map((p: { property: { id: string } }) => p.property.id)).toEqual([w.propertyB.id]);
+      expect(b.body.properties[0].counts).toEqual({ total: 2, out: 0, low: 0, soon: 0, unchecked: 1 });
+
+      await t.as('ownerB').get(`/v1/owner/supplies?propertyId=${A}`).expect(404);
+      await t.as('cleanerA').get('/v1/owner/supplies').expect(404);
+      await t.as('outsider').get('/v1/owner/supplies').expect(404);
+    });
+  });
+
   describe('calendar', () => {
     it('shows the month’s stays with nights and the owner’s share, never guest details', async () => {
       await booking({

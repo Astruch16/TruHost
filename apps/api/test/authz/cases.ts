@@ -384,6 +384,13 @@ export const CASES: AuthzCase[] = [
     path: (w) => `/v1/owner/statements/${w.statements.releasedB}/pdf`,
     allow: ['ownerB'],
   },
+  { route: 'GET /v1/owner/supplies', path: () => '/v1/owner/supplies', allow: ['admin', 'ownerA', 'ownerB'] },
+  {
+    route: 'GET /v1/owner/supplies',
+    label: 'property A',
+    path: (w) => `/v1/owner/supplies?propertyId=${w.propertyA.id}`,
+    allow: ['admin', 'ownerA'],
+  },
   {
     route: 'GET /v1/owner/calendar',
     path: (w) => `/v1/owner/calendar?month=2026-11&propertyId=${w.propertyA.id}`,
