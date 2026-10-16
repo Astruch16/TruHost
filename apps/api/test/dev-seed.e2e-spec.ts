@@ -1,7 +1,7 @@
 import {
   SEED_PROPERTIES,
   seedTestAccounts,
-  TEST_ACCOUNTS,
+  type TestAccounts,
   type SeedIdentity,
   type SeedServices,
 } from '../src/dev-seed/test-accounts.js';
@@ -10,6 +10,12 @@ import { StatementsService } from '../src/statements/statements.service.js';
 import { createTestApp, type TestApp } from './support/app.js';
 import { resetDb } from './support/db.js';
 import { seedWorld } from './support/world.js';
+
+/** Made-up test accounts (each developer's real ones live in their own apps/api/.env). */
+const ACCOUNTS: TestAccounts = {
+  owner: { email: 'seed+owner+clerk_test@example.test', firstName: 'Test', lastName: 'Owner' },
+  cleaner: { email: 'seed+cleaner+clerk_test@example.test', firstName: 'Test', lastName: 'Cleaner' },
+};
 
 /** Stands in for Clerk: the sign-in id is derived from the email, as a stable fake. */
 const identity: SeedIdentity = {
@@ -39,9 +45,9 @@ describe('dev seed: local test accounts', () => {
   });
 
   it('signs the owner and cleaner in to their own two properties, with figures for the owner', async () => {
-    await seedTestAccounts(t.prisma, identity, now);
+    await seedTestAccounts(t.prisma, identity, ACCOUNTS, now);
     const owner = await t.as('seed-owner').get('/v1/me').expect(200);
-    expect(owner.body).toMatchObject({ email: TEST_ACCOUNTS.owner.email, staffRole: null });
+    expect(owner.body).toMatchObject({ email: ACCOUNTS.owner.email, staffRole: null });
     expect(owner.body.memberships.map((m: { role: string }) => m.role)).toEqual(['OWNER', 'OWNER']);
 
     const cleaner = await t.as('seed-cleaner').get('/v1/properties').expect(200);
@@ -58,12 +64,12 @@ describe('dev seed: local test accounts', () => {
   });
 
   it('is idempotent, and a later run only adds the new month', async () => {
-    await seedTestAccounts(t.prisma, identity, now);
+    await seedTestAccounts(t.prisma, identity, ACCOUNTS, now);
     const first = await counts();
-    await seedTestAccounts(t.prisma, identity, now);
+    await seedTestAccounts(t.prisma, identity, ACCOUNTS, now);
     expect(await counts()).toEqual(first);
 
-    await seedTestAccounts(t.prisma, identity, new Date('2026-11-09T18:00:00Z'));
+    await seedTestAccounts(t.prisma, identity, ACCOUNTS, new Date('2026-11-09T18:00:00Z'));
     const later = await counts();
     expect(later.bookings - first.bookings).toBe(8); // December: four stays at each property
     expect({ ...later, bookings: 0, expenses: 0 }).toEqual({ ...first, bookings: 0, expenses: 0 });
@@ -77,7 +83,7 @@ describe('dev seed: local test accounts', () => {
   });
 
   it('dates no expense after today', async () => {
-    await seedTestAccounts(t.prisma, identity, now);
+    await seedTestAccounts(t.prisma, identity, ACCOUNTS, now);
     const seeded = { propertyId: { in: SEED_PROPERTIES.map((p) => p.id) } };
     expect(
       await t.prisma.expense.count({ where: { ...seeded, incurredOn: { gt: new Date('2026-10-09T00:00:00Z') } } }),
@@ -87,7 +93,7 @@ describe('dev seed: local test accounts', () => {
 
   it('attaches receipts and releases last month’s statement for both properties, once', async () => {
     const services: SeedServices = { storage: t.app.get(FILE_STORAGE), statements: t.app.get(StatementsService) };
-    const { log } = await seedTestAccounts(t.prisma, identity, now, services);
+    const { log } = await seedTestAccounts(t.prisma, identity, ACCOUNTS, now, services);
     expect(log.filter((l) => l.startsWith('released the 2026-09 statement'))).toHaveLength(2);
 
     const seeded = { propertyId: { in: SEED_PROPERTIES.map((p) => p.id) } };
@@ -110,13 +116,13 @@ describe('dev seed: local test accounts', () => {
       .expect(200);
     expect(summary.body.netCents).toBe(cedar.netCents);
 
-    const again = await seedTestAccounts(t.prisma, identity, now, services);
+    const again = await seedTestAccounts(t.prisma, identity, ACCOUNTS, now, services);
     expect(again.log.filter((l) => l.includes('already released'))).toHaveLength(2);
     expect(await t.prisma.storedFile.count({ where: { ...seeded, purpose: 'STATEMENT_PDF' } })).toBe(2);
   });
 
   it('needs an admin to record who entered the data', async () => {
     await resetDb(t.prisma);
-    await expect(seedTestAccounts(t.prisma, identity, now)).rejects.toThrow(/bootstrap/);
+    await expect(seedTestAccounts(t.prisma, identity, ACCOUNTS, now)).rejects.toThrow(/bootstrap/);
   });
 });

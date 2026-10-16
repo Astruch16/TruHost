@@ -5,7 +5,8 @@
  *
  *   pnpm --filter @truhost/api seed:dev
  *
- * Needs an admin (run `bootstrap` first) and CLERK_SECRET_KEY set to the dev instance (sk_test_…).
+ * Needs an admin (run `bootstrap` first), CLERK_SECRET_KEY set to the dev instance (sk_test_…), and the test
+ * accounts in apps/api/.env: SEED_OWNER_EMAIL, SEED_CLEANER_EMAIL (Clerk +clerk_test addresses) and SEED_TEST_PASSWORD.
  * See README → "Local test accounts".
  */
 import 'dotenv/config';
@@ -15,16 +16,11 @@ import { AppModule } from '../app.module.js';
 import { FILE_STORAGE, type FileStorage } from '../files/storage.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { StatementsService } from '../statements/statements.service.js';
-import {
-  assertSafeToSeed,
-  DEFAULT_TEST_PASSWORD,
-  seedTestAccounts,
-  TEST_VERIFICATION_CODE,
-  type SeedIdentity,
-} from '../dev-seed/test-accounts.js';
+import { assertSafeToSeed, seedTestAccounts, testAccountsFrom, type SeedIdentity } from '../dev-seed/test-accounts.js';
 
 assertSafeToSeed(process.env);
-const password = process.env.SEED_TEST_PASSWORD || DEFAULT_TEST_PASSWORD;
+const password = process.env.SEED_TEST_PASSWORD!;
+const accounts = testAccountsFrom(process.env);
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
 const prisma = app.get(PrismaService);
@@ -50,14 +46,15 @@ const identity: SeedIdentity = {
 };
 
 try {
-  const { log } = await seedTestAccounts(prisma, identity, new Date(), {
+  const { log } = await seedTestAccounts(prisma, identity, accounts, new Date(), {
     storage: app.get<FileStorage>(FILE_STORAGE),
     statements: app.get(StatementsService),
   });
   for (const line of log) console.log(`• ${line}`);
   console.log(
-    `\nSign in at ${process.env.WEB_URL ?? 'http://localhost:3001'} with either email and the test password` +
-      `${process.env.SEED_TEST_PASSWORD ? ' (SEED_TEST_PASSWORD)' : ''}. If asked for a code, use ${TEST_VERIFICATION_CODE}.`,
+    `\nSign in at ${process.env.WEB_URL ?? 'http://localhost:3001'} with SEED_OWNER_EMAIL or SEED_CLEANER_EMAIL and ` +
+      'SEED_TEST_PASSWORD (apps/api/.env). If Clerk asks for a code, use its test code for +clerk_test addresses ' +
+      '(Clerk docs: Testing → test emails).',
   );
 } finally {
   await app.close();

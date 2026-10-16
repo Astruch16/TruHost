@@ -21,17 +21,19 @@ pnpm dev                                  # API on :3000, web on :3001
 
 ## Local test accounts
 
-To look at the owner and cleaner portals locally, sign in as these test users. They exist only in the Clerk
-**dev** instance and your local database.
+To look at the owner and cleaner portals locally, the seed creates an owner and a cleaner you can sign in as. They
+exist only in the Clerk **dev** instance and your local database, and you choose their sign-in details yourself, in
+`apps/api/.env` (never commit them, and never put them in this README, an issue or a PR):
 
-| Role    | Email                                     | Sees                                                      |
-| ------- | ----------------------------------------- | --------------------------------------------------------- |
-| Owner   | `adamstruch+owner+clerk_test@gmail.com`   | Owner of the two test properties, with stays and expenses |
-| Cleaner | `adamstruch+cleaner+clerk_test@gmail.com` | Cleaner on the two test properties                        |
+| Variable             | What to put                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `SEED_OWNER_EMAIL`   | A Clerk test address for the owner, `yourname+owner+clerk_test@yourdomain`                             |
+| `SEED_CLEANER_EMAIL` | A Clerk test address for the cleaner, `yourname+cleaner+clerk_test@yourdomain`                         |
+| `SEED_TEST_PASSWORD` | A password of at least 12 characters, used for both (each run sets it, so changing it here rotates it) |
 
-- **Password:** `TruHost-local-test-2026` (or whatever you set in `SEED_TEST_PASSWORD`).
-- **Code:** if sign-in asks for a code (for example, the new-device check, or "Forgot password?"), enter `424242`.
-  No email is sent: Clerk dev instances accept this code for any `+clerk_test` address.
+The owner owns the two test properties (stays and expenses); the cleaner cleans both. Clerk sends no email to
+`+clerk_test` addresses: if sign-in asks for a code, use Clerk's test verification code (Clerk docs: Testing, "test
+emails").
 
 The test properties are **Seaside Loft (test)** and **Cedar Cabin (test)**. Each has four stays a month, from three
 months ago to next month: past and current stays have payouts, next month's are still pending, and Cedar has an
@@ -52,6 +54,7 @@ pnpm --filter @truhost/api seed:dev
 - Run `bootstrap` first. The seed records the admin as the person who entered the sample data.
 - `CLERK_SECRET_KEY` in `apps/api/.env` must be the dev instance's key (`sk_test_…`). The seed refuses a live
   key (`sk_live_…`) and refuses to run with `NODE_ENV=production`.
+- It refuses to run without `SEED_OWNER_EMAIL`, `SEED_CLEANER_EMAIL` and `SEED_TEST_PASSWORD`.
 - It is safe to run again. It finds the Clerk users and properties it made before, resets the test password, and
   only adds months that are new since the last run (the window moves with today's date). It never edits or deletes
   existing bookings or expenses, and never touches other properties. A statement already released is left alone.
