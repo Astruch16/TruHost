@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppCleanerRouteImport } from './routes/_app/cleaner'
+import { Route as AppOwnerRouteImport } from './routes/_app/owner'
 import { Route as DevBookingsRouteImport } from './routes/dev/bookings'
 import { Route as DevCalendarRouteImport } from './routes/dev/calendar'
 import { Route as DevDamageRouteImport } from './routes/dev/damage'
@@ -22,6 +23,7 @@ import { Route as DevDashboardRouteImport } from './routes/dev/dashboard'
 import { Route as DevLoadingRouteImport } from './routes/dev/loading'
 import { Route as DevMonthSwitchRouteImport } from './routes/dev/month-switch'
 import { Route as DevNoAccessRouteImport } from './routes/dev/no-access'
+import { Route as DevOwnerRouteImport } from './routes/dev/owner'
 import { Route as DevOwnerPropertyRouteImport } from './routes/dev/owner-property'
 import { Route as DevPropertiesRouteImport } from './routes/dev/properties'
 import { Route as DevRoomsRouteImport } from './routes/dev/rooms'
@@ -43,6 +45,9 @@ import { Route as AppAdminExpensesRouteImport } from './routes/_app/admin/expens
 import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
 import { Route as AppAdminSuppliesRouteImport } from './routes/_app/admin/supplies'
 import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
+import { Route as AppOwnerIndexRouteImport } from './routes/_app/owner/index'
+import { Route as AppOwnerCalendarRouteImport } from './routes/_app/owner/calendar'
+import { Route as AppOwnerCareRouteImport } from './routes/_app/owner/care'
 import { Route as AppPropertiesIndexRouteImport } from './routes/_app/properties/index'
 import { Route as AppPropertiesPropertyIdRouteImport } from './routes/_app/properties/$propertyId'
 import { Route as AppAdminPropertiesIndexRouteImport } from './routes/_app/admin/properties/index'
@@ -50,6 +55,8 @@ import { Route as AppAdminPropertiesPropertyIdRouteImport } from './routes/_app/
 import { Route as AppAdminStatementsIndexRouteImport } from './routes/_app/admin/statements/index'
 import { Route as AppAdminStatementsStatementIdRouteImport } from './routes/_app/admin/statements/$statementId'
 import { Route as AppCleanerPropertiesPropertyIdRouteImport } from './routes/_app/cleaner/properties/$propertyId'
+import { Route as AppOwnerStatementsIndexRouteImport } from './routes/_app/owner/statements/index'
+import { Route as AppOwnerStatementsStatementIdRouteImport } from './routes/_app/owner/statements/$statementId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -78,6 +85,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
 const AppCleanerRoute = AppCleanerRouteImport.update({
   id: '/cleaner',
   path: '/cleaner',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOwnerRoute = AppOwnerRouteImport.update({
+  id: '/owner',
+  path: '/owner',
   getParentRoute: () => AppRoute,
 } as any)
 const DevBookingsRoute = DevBookingsRouteImport.update({
@@ -113,6 +125,11 @@ const DevMonthSwitchRoute = DevMonthSwitchRouteImport.update({
 const DevNoAccessRoute = DevNoAccessRouteImport.update({
   id: '/dev/no-access',
   path: '/dev/no-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevOwnerRoute = DevOwnerRouteImport.update({
+  id: '/dev/owner',
+  path: '/dev/owner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevOwnerPropertyRoute = DevOwnerPropertyRouteImport.update({
@@ -220,6 +237,21 @@ const AppAdminTeamRoute = AppAdminTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppOwnerIndexRoute = AppOwnerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppOwnerRoute,
+} as any)
+const AppOwnerCalendarRoute = AppOwnerCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AppOwnerRoute,
+} as any)
+const AppOwnerCareRoute = AppOwnerCareRouteImport.update({
+  id: '/care',
+  path: '/care',
+  getParentRoute: () => AppOwnerRoute,
+} as any)
 const AppPropertiesIndexRoute = AppPropertiesIndexRouteImport.update({
   id: '/properties/',
   path: '/properties/',
@@ -258,6 +290,17 @@ const AppCleanerPropertiesPropertyIdRoute =
     path: '/properties/$propertyId',
     getParentRoute: () => AppCleanerRoute,
   } as any)
+const AppOwnerStatementsIndexRoute = AppOwnerStatementsIndexRouteImport.update({
+  id: '/statements/',
+  path: '/statements/',
+  getParentRoute: () => AppOwnerRoute,
+} as any)
+const AppOwnerStatementsStatementIdRoute =
+  AppOwnerStatementsStatementIdRouteImport.update({
+    id: '/statements/$statementId',
+    path: '/statements/$statementId',
+    getParentRoute: () => AppOwnerRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -265,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/cleaner': typeof AppCleanerRouteWithChildren
+  '/owner': typeof AppOwnerRouteWithChildren
   '/dev/bookings': typeof DevBookingsRoute
   '/dev/calendar': typeof DevCalendarRoute
   '/dev/damage': typeof DevDamageRoute
@@ -272,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/owner': typeof DevOwnerRoute
   '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
@@ -291,15 +336,20 @@ export interface FileRoutesByFullPath {
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/supplies': typeof AppAdminSuppliesRoute
   '/admin/team': typeof AppAdminTeamRoute
+  '/owner/calendar': typeof AppOwnerCalendarRoute
+  '/owner/care': typeof AppOwnerCareRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/account/': typeof AppAccountIndexRoute
   '/admin/': typeof AppAdminIndexRoute
+  '/owner/': typeof AppOwnerIndexRoute
   '/properties/': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
   '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
+  '/owner/statements/$statementId': typeof AppOwnerStatementsStatementIdRoute
   '/admin/properties/': typeof AppAdminPropertiesIndexRoute
   '/admin/statements/': typeof AppAdminStatementsIndexRoute
+  '/owner/statements/': typeof AppOwnerStatementsIndexRoute
 }
 export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
@@ -311,6 +361,7 @@ export interface FileRoutesByTo {
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/owner': typeof DevOwnerRoute
   '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
@@ -331,15 +382,20 @@ export interface FileRoutesByTo {
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/supplies': typeof AppAdminSuppliesRoute
   '/admin/team': typeof AppAdminTeamRoute
+  '/owner/calendar': typeof AppOwnerCalendarRoute
+  '/owner/care': typeof AppOwnerCareRoute
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/account': typeof AppAccountIndexRoute
   '/admin': typeof AppAdminIndexRoute
+  '/owner': typeof AppOwnerIndexRoute
   '/properties': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
   '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
+  '/owner/statements/$statementId': typeof AppOwnerStatementsStatementIdRoute
   '/admin/properties': typeof AppAdminPropertiesIndexRoute
   '/admin/statements': typeof AppAdminStatementsIndexRoute
+  '/owner/statements': typeof AppOwnerStatementsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -348,6 +404,7 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/cleaner': typeof AppCleanerRouteWithChildren
+  '/_app/owner': typeof AppOwnerRouteWithChildren
   '/dev/bookings': typeof DevBookingsRoute
   '/dev/calendar': typeof DevCalendarRoute
   '/dev/damage': typeof DevDamageRoute
@@ -355,6 +412,7 @@ export interface FileRoutesById {
   '/dev/loading': typeof DevLoadingRoute
   '/dev/month-switch': typeof DevMonthSwitchRoute
   '/dev/no-access': typeof DevNoAccessRoute
+  '/dev/owner': typeof DevOwnerRoute
   '/dev/owner-property': typeof DevOwnerPropertyRoute
   '/dev/properties': typeof DevPropertiesRoute
   '/dev/rooms': typeof DevRoomsRoute
@@ -375,15 +433,20 @@ export interface FileRoutesById {
   '/_app/admin/plans': typeof AppAdminPlansRoute
   '/_app/admin/supplies': typeof AppAdminSuppliesRoute
   '/_app/admin/team': typeof AppAdminTeamRoute
+  '/_app/owner/calendar': typeof AppOwnerCalendarRoute
+  '/_app/owner/care': typeof AppOwnerCareRoute
   '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/_app/account/': typeof AppAccountIndexRoute
   '/_app/admin/': typeof AppAdminIndexRoute
+  '/_app/owner/': typeof AppOwnerIndexRoute
   '/_app/properties/': typeof AppPropertiesIndexRoute
   '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/_app/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
   '/_app/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
+  '/_app/owner/statements/$statementId': typeof AppOwnerStatementsStatementIdRoute
   '/_app/admin/properties/': typeof AppAdminPropertiesIndexRoute
   '/_app/admin/statements/': typeof AppAdminStatementsIndexRoute
+  '/_app/owner/statements/': typeof AppOwnerStatementsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -393,6 +456,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/cleaner'
+    | '/owner'
     | '/dev/bookings'
     | '/dev/calendar'
     | '/dev/damage'
@@ -400,6 +464,7 @@ export interface FileRouteTypes {
     | '/dev/loading'
     | '/dev/month-switch'
     | '/dev/no-access'
+    | '/dev/owner'
     | '/dev/owner-property'
     | '/dev/properties'
     | '/dev/rooms'
@@ -419,15 +484,20 @@ export interface FileRouteTypes {
     | '/admin/plans'
     | '/admin/supplies'
     | '/admin/team'
+    | '/owner/calendar'
+    | '/owner/care'
     | '/properties/$propertyId'
     | '/account/'
     | '/admin/'
+    | '/owner/'
     | '/properties/'
     | '/admin/properties/$propertyId'
     | '/admin/statements/$statementId'
     | '/cleaner/properties/$propertyId'
+    | '/owner/statements/$statementId'
     | '/admin/properties/'
     | '/admin/statements/'
+    | '/owner/statements/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sso-callback'
@@ -439,6 +509,7 @@ export interface FileRouteTypes {
     | '/dev/loading'
     | '/dev/month-switch'
     | '/dev/no-access'
+    | '/dev/owner'
     | '/dev/owner-property'
     | '/dev/properties'
     | '/dev/rooms'
@@ -459,15 +530,20 @@ export interface FileRouteTypes {
     | '/admin/plans'
     | '/admin/supplies'
     | '/admin/team'
+    | '/owner/calendar'
+    | '/owner/care'
     | '/properties/$propertyId'
     | '/account'
     | '/admin'
+    | '/owner'
     | '/properties'
     | '/admin/properties/$propertyId'
     | '/admin/statements/$statementId'
     | '/cleaner/properties/$propertyId'
+    | '/owner/statements/$statementId'
     | '/admin/properties'
     | '/admin/statements'
+    | '/owner/statements'
   id:
     | '__root__'
     | '/_app'
@@ -475,6 +551,7 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/admin'
     | '/_app/cleaner'
+    | '/_app/owner'
     | '/dev/bookings'
     | '/dev/calendar'
     | '/dev/damage'
@@ -482,6 +559,7 @@ export interface FileRouteTypes {
     | '/dev/loading'
     | '/dev/month-switch'
     | '/dev/no-access'
+    | '/dev/owner'
     | '/dev/owner-property'
     | '/dev/properties'
     | '/dev/rooms'
@@ -502,15 +580,20 @@ export interface FileRouteTypes {
     | '/_app/admin/plans'
     | '/_app/admin/supplies'
     | '/_app/admin/team'
+    | '/_app/owner/calendar'
+    | '/_app/owner/care'
     | '/_app/properties/$propertyId'
     | '/_app/account/'
     | '/_app/admin/'
+    | '/_app/owner/'
     | '/_app/properties/'
     | '/_app/admin/properties/$propertyId'
     | '/_app/admin/statements/$statementId'
     | '/_app/cleaner/properties/$propertyId'
+    | '/_app/owner/statements/$statementId'
     | '/_app/admin/properties/'
     | '/_app/admin/statements/'
+    | '/_app/owner/statements/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -523,6 +606,7 @@ export interface RootRouteChildren {
   DevLoadingRoute: typeof DevLoadingRoute
   DevMonthSwitchRoute: typeof DevMonthSwitchRoute
   DevNoAccessRoute: typeof DevNoAccessRoute
+  DevOwnerRoute: typeof DevOwnerRoute
   DevOwnerPropertyRoute: typeof DevOwnerPropertyRoute
   DevPropertiesRoute: typeof DevPropertiesRoute
   DevRoomsRoute: typeof DevRoomsRoute
@@ -578,6 +662,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCleanerRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/owner': {
+      id: '/_app/owner'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof AppOwnerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/dev/bookings': {
       id: '/dev/bookings'
       path: '/dev/bookings'
@@ -625,6 +716,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/no-access'
       fullPath: '/dev/no-access'
       preLoaderRoute: typeof DevNoAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/owner': {
+      id: '/dev/owner'
+      path: '/dev/owner'
+      fullPath: '/dev/owner'
+      preLoaderRoute: typeof DevOwnerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/owner-property': {
@@ -774,6 +872,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminTeamRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/owner/': {
+      id: '/_app/owner/'
+      path: '/'
+      fullPath: '/owner/'
+      preLoaderRoute: typeof AppOwnerIndexRouteImport
+      parentRoute: typeof AppOwnerRoute
+    }
+    '/_app/owner/calendar': {
+      id: '/_app/owner/calendar'
+      path: '/calendar'
+      fullPath: '/owner/calendar'
+      preLoaderRoute: typeof AppOwnerCalendarRouteImport
+      parentRoute: typeof AppOwnerRoute
+    }
+    '/_app/owner/care': {
+      id: '/_app/owner/care'
+      path: '/care'
+      fullPath: '/owner/care'
+      preLoaderRoute: typeof AppOwnerCareRouteImport
+      parentRoute: typeof AppOwnerRoute
+    }
     '/_app/properties/': {
       id: '/_app/properties/'
       path: '/properties'
@@ -822,6 +941,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/cleaner/properties/$propertyId'
       preLoaderRoute: typeof AppCleanerPropertiesPropertyIdRouteImport
       parentRoute: typeof AppCleanerRoute
+    }
+    '/_app/owner/statements/': {
+      id: '/_app/owner/statements/'
+      path: '/statements'
+      fullPath: '/owner/statements/'
+      preLoaderRoute: typeof AppOwnerStatementsIndexRouteImport
+      parentRoute: typeof AppOwnerRoute
+    }
+    '/_app/owner/statements/$statementId': {
+      id: '/_app/owner/statements/$statementId'
+      path: '/statements/$statementId'
+      fullPath: '/owner/statements/$statementId'
+      preLoaderRoute: typeof AppOwnerStatementsStatementIdRouteImport
+      parentRoute: typeof AppOwnerRoute
     }
   }
 }
@@ -890,10 +1023,31 @@ const AppCleanerRouteWithChildren = AppCleanerRoute._addFileChildren(
   AppCleanerRouteChildren,
 )
 
+interface AppOwnerRouteChildren {
+  AppOwnerCalendarRoute: typeof AppOwnerCalendarRoute
+  AppOwnerCareRoute: typeof AppOwnerCareRoute
+  AppOwnerIndexRoute: typeof AppOwnerIndexRoute
+  AppOwnerStatementsStatementIdRoute: typeof AppOwnerStatementsStatementIdRoute
+  AppOwnerStatementsIndexRoute: typeof AppOwnerStatementsIndexRoute
+}
+
+const AppOwnerRouteChildren: AppOwnerRouteChildren = {
+  AppOwnerCalendarRoute: AppOwnerCalendarRoute,
+  AppOwnerCareRoute: AppOwnerCareRoute,
+  AppOwnerIndexRoute: AppOwnerIndexRoute,
+  AppOwnerStatementsStatementIdRoute: AppOwnerStatementsStatementIdRoute,
+  AppOwnerStatementsIndexRoute: AppOwnerStatementsIndexRoute,
+}
+
+const AppOwnerRouteWithChildren = AppOwnerRoute._addFileChildren(
+  AppOwnerRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRouteWithChildren
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppCleanerRoute: typeof AppCleanerRouteWithChildren
+  AppOwnerRoute: typeof AppOwnerRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppPropertiesPropertyIdRoute: typeof AppPropertiesPropertyIdRoute
   AppPropertiesIndexRoute: typeof AppPropertiesIndexRoute
@@ -903,6 +1057,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRouteWithChildren,
   AppAdminRoute: AppAdminRouteWithChildren,
   AppCleanerRoute: AppCleanerRouteWithChildren,
+  AppOwnerRoute: AppOwnerRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppPropertiesPropertyIdRoute: AppPropertiesPropertyIdRoute,
   AppPropertiesIndexRoute: AppPropertiesIndexRoute,
@@ -920,6 +1075,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevLoadingRoute: DevLoadingRoute,
   DevMonthSwitchRoute: DevMonthSwitchRoute,
   DevNoAccessRoute: DevNoAccessRoute,
+  DevOwnerRoute: DevOwnerRoute,
   DevOwnerPropertyRoute: DevOwnerPropertyRoute,
   DevPropertiesRoute: DevPropertiesRoute,
   DevRoomsRoute: DevRoomsRoute,

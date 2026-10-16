@@ -21,6 +21,7 @@ export function MonthCalendar({
   showProperty,
   onSelect,
   roomy = false,
+  showCleans = true,
 }: {
   month: string;
   stays: CalendarStay[];
@@ -29,6 +30,8 @@ export function MonthCalendar({
   showProperty: boolean;
   onSelect?: (stayId: string) => void;
   roomy?: boolean;
+  /** Mark check-outs as cleans to schedule (staff); owners see the stays only. */
+  showCleans?: boolean;
 }) {
   const weekStartsOn = useWeekStart();
   const weeks = monthGrid(month, stays, weekStartsOn);
@@ -73,7 +76,7 @@ export function MonthCalendar({
                     {Number(day.slice(8))}
                   </span>
                 )}
-                {day && checkouts.has(day) && (
+                {showCleans && day && checkouts.has(day) && (
                   <span className="mt-auto mb-1.5 flex items-center gap-1 text-xs font-medium text-lavender-deep">
                     <span aria-hidden className="size-1.5 rounded-full bg-lavender-deep" />
                     Clean{checkouts.get(day)! > 1 ? ` ×${checkouts.get(day)}` : ''}
@@ -140,8 +143,18 @@ const isWeekend = (column: number, weekStartsOn: number) => [0, 6].includes((col
  * What the colours mean, for this month only: a channel (or owner stay, or block) is listed once a stay of it is on
  * the calendar, and "Clean to schedule" once a check-out falls in the month. Nothing on the calendar, no legend.
  */
-export function CalendarLegend({ month, stays }: { month: string; stays: readonly CalendarStay[] | undefined }) {
-  const { styles, cleans } = monthLegend(month, stays ?? []);
+export function CalendarLegend({
+  month,
+  stays,
+  showCleans = true,
+}: {
+  month: string;
+  stays: readonly CalendarStay[] | undefined;
+  showCleans?: boolean;
+}) {
+  const legend = monthLegend(month, stays ?? []);
+  const styles = legend.styles;
+  const cleans = showCleans && legend.cleans;
   if (styles.length === 0 && !cleans) return null;
   return (
     <ul aria-label="Calendar key" className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted">

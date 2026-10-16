@@ -863,7 +863,7 @@ export class StatementsService {
         month: monthName(month),
         net: formatCad(st.netCents!),
         releasedOn: formatDate(releasedOn),
-        url: `${this.env.WEB_URL}/properties/${st.propertyId}/statements/${st.id}`,
+        url: `${this.env.WEB_URL}/owner/statements/${st.id}`,
       });
       try {
         await this.email.send(message);

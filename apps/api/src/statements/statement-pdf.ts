@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit';
-import { formatBps, formatCad, formatDate, formatDay } from '../reporting/format.js';
+import { categoryName, formatBps, formatCad, formatDate, formatDay } from '../reporting/format.js';
 import { channelName, monthName, type StatementLine, type StatementTotals } from '../reporting/statement.js';
 
 /**
@@ -37,20 +37,6 @@ const C = {
 const PAGE = { width: 612, height: 792, margin: 48 };
 const CONTENT = PAGE.width - PAGE.margin * 2;
 const FOOTER_TOP = PAGE.height - 56;
-
-const CATEGORY: Record<string, string> = {
-  SUPPLIES: 'Supplies',
-  REPAIRS_MAINTENANCE: 'Repairs',
-  FURNISHINGS: 'Furnishings',
-  UTILITIES: 'Utilities',
-  INTERNET: 'Internet',
-  SUBSCRIPTIONS: 'Subscriptions',
-  LICENSING_PERMITS: 'Licences & permits',
-  INSURANCE: 'Insurance',
-  STRATA: 'Strata',
-  CLEANING: 'Cleaning',
-  OTHER: 'Other',
-};
 
 /** PDF standard fonts have no U+2212, so documents use a plain hyphen for negatives. */
 const money = (cents: number) => formatCad(cents).replace('−', '-');
@@ -151,7 +137,7 @@ export function renderStatementPdf(d: StatementDocument): Promise<Buffer> {
     expenses.map((l) => [
       { text: formatDate(l.date) },
       { text: l.description, note: l.detail ?? undefined },
-      { text: l.category ? (CATEGORY[l.category] ?? l.category) : '' },
+      { text: l.category ? categoryName(l.category) : '' },
       { text: money(l.amountCents), bold: true },
     ]),
     'No expenses this month.',

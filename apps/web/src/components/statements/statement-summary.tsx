@@ -18,7 +18,17 @@ import { StatementLine } from '../statement-line';
  * The statement's totals, read top to bottom like the PDF: gross, the plan fee, expenses, owner-stay cleaning,
  * adjustments, then the net to the owner on the brand green. Every amount is the API's.
  */
-export function StatementSummary({ statement: s }: { statement: Statement }) {
+export function StatementSummary({
+  statement: s,
+  netLabel = 'Net to owner',
+}: {
+  /** "Net to you" on the owner's own pages. */
+  netLabel?: string;
+  /** An admin statement, or an owner's released one. */
+  statement: Pick<Statement, 'totals' | 'plan' | 'lines' | 'status'> & {
+    released: { on: string; paymentReference: string | null } | null;
+  };
+}) {
   const t = s.totals;
   const noFee = t.managementFeeBps === 0;
   const hasAdjustments = s.lines.some((l) => l.kind === 'ADJUSTMENT');
@@ -70,7 +80,7 @@ export function StatementSummary({ statement: s }: { statement: Statement }) {
         )}
       </dl>
       <div className="rounded-inner bg-primary px-5 py-4 text-primary-ink">
-        <p className="text-xs font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">Net to owner</p>
+        <p className="text-xs font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">{netLabel}</p>
         <p
           className={cx(
             'figure mt-1 text-[2rem] leading-tight font-bold tracking-tight',

@@ -74,6 +74,6 @@ export class MeController {
   @Get('config')
   @ZodResponse(appConfig)
   config(): AppConfig {
-    return { taxFieldsEnabled: this.env.TAX_FIELDS_ENABLED };
+    return { taxFieldsEnabled: this.env.TAX_FIELDS_ENABLED, contactEmail: this.env.CONTACT_EMAIL };
   }
 }

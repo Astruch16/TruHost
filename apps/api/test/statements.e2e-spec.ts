@@ -158,8 +158,8 @@ describe('owner statements', () => {
       expect(future.body.code).toBe('MONTH_IN_FUTURE');
       await admin().post(`/v1/properties/${A}/statements`, { month: '2026-11' }).expect(200); // the month in progress
 
-      // Property B's December 2025 is finalized: November 2025 can't be started after it.
-      const early = await admin().post(`/v1/properties/${w.propertyB.id}/statements`, { month: '2025-11' }).expect(409);
+      // Property B's December 2025 is finalized: October 2025 can't be started after it.
+      const early = await admin().post(`/v1/properties/${w.propertyB.id}/statements`, { month: '2025-10' }).expect(409);
       expect(early.body.code).toBe('STATEMENT_OUT_OF_ORDER');
     });
 
@@ -428,7 +428,8 @@ describe('owner statements', () => {
         ['statement.finalize', w.users.admin.id],
         ['statement.release', w.users.admin.id],
       ]);
-      expect(t.email.sent).toEqual([]); // STATEMENT_EMAILS_ENABLED is off
+      // Property A's owners are emailed (ownerA, and the admin who owns it too).
+      expect(t.email.sent.map((m) => m.to).sort()).toEqual(['admin@example.test', 'ownera@example.test']);
     });
 
     it('checks the payment date and refuses a negative month', async () => {
@@ -553,18 +554,14 @@ describe('owner statements', () => {
   });
 });
 
-describe('owner statements: release email (STATEMENT_EMAILS_ENABLED=true)', () => {
+describe('owner statements: release email', () => {
   let t: TestApp;
   let w: World;
 
   beforeAll(async () => {
-    process.env.STATEMENT_EMAILS_ENABLED = 'true';
     t = await createTestApp();
   });
-  afterAll(async () => {
-    delete process.env.STATEMENT_EMAILS_ENABLED;
-    await t.close();
-  });
+  afterAll(() => t.close());
   beforeEach(async () => {
     await resetDb(t.prisma);
     t.email.reset();
@@ -588,8 +585,33 @@ describe('owner statements: release email (STATEMENT_EMAILS_ENABLED=true)', () =
     const [m] = t.email.sent;
     expect(m!.subject).toBe('Your December 2025 statement for Property B');
     expect(m!.text).toContain('We sent you $0.00 on Jan 5, 2026.');
-    expect(m!.text).toContain(
-      `https://app.truhost.example/properties/${w.propertyB.id}/statements/${w.statements.finalizedB}`,
-    );
+    expect(m!.text).toContain(`https://app.truhost.example/owner/statements/${w.statements.finalizedB}`);
+  });
+});
+
+describe('owner statements: release email turned off (STATEMENT_EMAILS_ENABLED=false)', () => {
+  let t: TestApp;
+  let w: World;
+
+  beforeAll(async () => {
+    process.env.STATEMENT_EMAILS_ENABLED = 'false';
+    t = await createTestApp();
+  });
+  afterAll(async () => {
+    delete process.env.STATEMENT_EMAILS_ENABLED;
+    await t.close();
+  });
+  beforeEach(async () => {
+    await resetDb(t.prisma);
+    t.email.reset();
+    w = await seedWorld(t.prisma);
+  });
+
+  it('releases without emailing anyone', async () => {
+    await t
+      .as('admin')
+      .post(`/v1/statements/${w.statements.finalizedB}/release`, { releasedOn: '2026-01-05' })
+      .expect(200);
+    expect(t.email.sent).toEqual([]);
   });
 });

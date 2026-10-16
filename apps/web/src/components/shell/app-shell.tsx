@@ -6,6 +6,8 @@ import { ShellContext } from '../../lib/shell-context';
 import { ProfileMenu } from './profile-menu';
 import { PropertySwitcher, type SwitcherProperty } from './property-switcher';
 import { Sidebar } from './sidebar';
+import { TabBar } from './tab-bar';
+import { cx } from '../../lib/cx';
 
 export interface ShellUser {
   name: string;
@@ -28,6 +30,7 @@ export function AppShell({
   allowAllProperties = false,
   notifications,
   onSignOut,
+  tabs = false,
   children,
 }: {
   nav: NavItem[];
@@ -40,6 +43,8 @@ export function AppShell({
   /** The bell, for people who get notifications (admins and owners). */
   notifications?: ReactNode;
   onSignOut: () => void;
+  /** Phones (below 768px) get a bottom tab bar of the nav items instead of the menu drawer (owners). */
+  tabs?: boolean;
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -84,7 +89,10 @@ export function AppShell({
             type="button"
             aria-label="Open menu"
             onClick={() => setMenuOpen(true)}
-            className="grid size-11 shrink-0 place-items-center rounded-full text-ink transition-colors hover:bg-ink/5 lg:hidden"
+            className={cx(
+              'size-11 shrink-0 place-items-center rounded-full text-ink transition-colors hover:bg-ink/5 lg:hidden',
+              tabs ? 'hidden md:grid' : 'grid',
+            )}
           >
             <Menu aria-hidden className="size-5" />
           </button>
@@ -95,6 +103,7 @@ export function AppShell({
                 selectedId={selectedPropertyId}
                 onSelect={onSelectProperty}
                 allowAll={allowAllProperties}
+                manage={allowAllProperties && !tabs}
               />
             )}
           </div>
@@ -104,11 +113,16 @@ export function AppShell({
         <main
           id="main"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[1680px] flex-1 px-4 py-6 focus:outline-none @2xl/content:px-8 @2xl/content:py-8 @[100rem]/content:px-10"
+          className={cx(
+            'mx-auto w-full max-w-[1680px] flex-1 px-4 py-6 focus:outline-none @2xl/content:px-8 @2xl/content:py-8 @[100rem]/content:px-10',
+            // Room for the tab bar (and the home indicator under it).
+            tabs && 'pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8',
+          )}
         >
           <ShellContext.Provider value={true}>{children}</ShellContext.Provider>
         </main>
       </div>
+      {tabs && <TabBar items={nav.filter((item) => item.tab)} />}
     </div>
   );
 }

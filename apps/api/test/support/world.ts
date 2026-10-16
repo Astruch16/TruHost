@@ -34,9 +34,10 @@ export interface World {
   damage: { sentA: string; draftA: string; sentPhotoFile: string; sentPhotoThumb: string };
   /**
    * Owner statements: property A's October 2026 is a draft with one adjustment (ready to finalize: no stays or
-   * expenses that month); property B's December 2025 is finalized with zero figures (ready to release).
+   * expenses that month); property B's December 2025 is finalized with zero figures (ready to release), and its
+   * November 2025 is released ($123.45 net, with its PDF file `releasedBPdf`).
    */
-  statements: { draftA: string; adjustmentA: string; finalizedB: string };
+  statements: { draftA: string; adjustmentA: string; finalizedB: string; releasedB: string; releasedBPdf: string };
 }
 
 export async function seedWorld(prisma: PrismaService): Promise<World> {
@@ -274,8 +275,56 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     },
   });
 
+  const releasedBPdf = crypto.randomUUID();
+  await prisma.storedFile.create({
+    data: {
+      id: releasedBPdf,
+      purpose: 'STATEMENT_PDF',
+      propertyId: b.id,
+      objectKey: `properties/${b.id}/statement_pdf/${releasedBPdf}`,
+      contentType: 'application/pdf',
+      sizeBytes: 5000,
+      sha256: '9'.repeat(64),
+      status: 'VERIFIED',
+      verifiedAt: new Date(),
+      uploadedById: users.admin.id,
+      originalFilename: 'TruHost-statement-Property-B-2025-11.pdf',
+    },
+  });
+  const releasedB = await prisma.ownerStatement.create({
+    data: {
+      propertyId: b.id,
+      periodMonth: new Date('2025-11-01T00:00:00Z'),
+      status: 'RELEASED',
+      managementFeeBps: 2200,
+      planName: 'TruPlan',
+      nightsBooked: 2,
+      grossCents: 15_827,
+      managementFeeCents: 3_482,
+      expensesCents: 0,
+      ownerStayCleaningCents: 0,
+      adjustmentsCents: 0,
+      netCents: 12_345,
+      calcVersion: 1,
+      finalizedAt: new Date('2025-12-02T18:00:00Z'),
+      finalizedById: users.admin.id,
+      releasedOn: new Date('2025-12-05T00:00:00Z'),
+      releasedAt: new Date('2025-12-05T18:00:00Z'),
+      releasedById: users.admin.id,
+      paymentReference: 'ETF-1',
+      pdfFileId: releasedBPdf,
+      createdById: users.admin.id,
+    },
+  });
+
   return {
-    statements: { draftA: octoberA.id, adjustmentA: adjustmentA.id, finalizedB: finalizedB.id },
+    statements: {
+      draftA: octoberA.id,
+      adjustmentA: adjustmentA.id,
+      finalizedB: finalizedB.id,
+      releasedB: releasedB.id,
+      releasedBPdf,
+    },
     bookings,
     expenses: { a: ea.expense, b: eb.expense, truhostA: et.expense },
     receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },

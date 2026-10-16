@@ -223,7 +223,8 @@ afterEach(() => vi.clearAllMocks());
 describe('cleaners', () => {
   it('get their own property page: name, address and rooms, and nothing financial is rendered or fetched', async () => {
     const { paths } = renderAt(`/cleaner/properties/${CEDAR}`, cleaner);
-    expect(await screen.findByRole('heading', { name: 'Cedar Cabin' })).toBeInTheDocument();
+    // The first find waits for the whole portal (shell, then the lazy route): slower on CI runners than locally.
+    expect(await screen.findByRole('heading', { name: 'Cedar Cabin' }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByText(/45 Alpine Way/)).toBeInTheDocument();
     expect(await screen.findByText('Kitchen')).toBeInTheDocument();
     for (const title of ['Your month', 'Management fee', 'Stays', 'Expenses']) {

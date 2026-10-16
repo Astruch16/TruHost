@@ -53,7 +53,13 @@ export const POLICY = {
   'report:adminFields': { admin: true, roles: [] },
   'report:portfolio': { admin: true, roles: [] },
   'dashboard:read': { admin: true, roles: [] },
-  /** Owner statements and their PDFs. Admin-only until the owner portal's statement pages (they add OWNER here). */
+  /**
+   * The owner portal (/v1/owner/...): only properties where the caller holds an OWNER membership, admins included
+   * (an admin who owns a property sees exactly what any owner would). Released statements only (checked in
+   * OwnerService), no guest details, cleaner pay, TruHost's cleaning-fee revenue, notes or audit data.
+   */
+  'owner:portal': { admin: false, roles: ['OWNER'] },
+  /** Owner statements in every state (the admin pages). Owners read theirs through 'owner:portal'. */
   'statement:read': { admin: true, roles: [] },
   /** Create drafts, add and void adjustments, finalize, release. */
   'statement:manage': { admin: true, roles: [] },

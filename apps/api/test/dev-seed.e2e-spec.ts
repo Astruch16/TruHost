@@ -112,7 +112,7 @@ describe('dev seed: local test accounts', () => {
 
     const again = await seedTestAccounts(t.prisma, identity, now, services);
     expect(again.log.filter((l) => l.includes('already released'))).toHaveLength(2);
-    expect(await t.prisma.storedFile.count({ where: { purpose: 'STATEMENT_PDF' } })).toBe(2);
+    expect(await t.prisma.storedFile.count({ where: { ...seeded, purpose: 'STATEMENT_PDF' } })).toBe(2);
   });
 
   it('needs an admin to record who entered the data', async () => {

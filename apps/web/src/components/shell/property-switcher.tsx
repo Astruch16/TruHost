@@ -77,12 +77,15 @@ export function PropertySwitcher({
   selectedId,
   onSelect,
   allowAll = false,
+  manage = allowAll,
 }: {
   properties: SwitcherProperty[];
   selectedId: string | null;
   /** null = all properties (only when `allowAll`). */
   onSelect: (id: string | null) => void;
   allowAll?: boolean;
+  /** "Manage properties" at the foot (the admin Properties page). */
+  manage?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -258,7 +261,7 @@ export function PropertySwitcher({
             )}
           </ul>
 
-          {allowAll && (
+          {manage && (
             <div className="border-t border-line-soft p-2">
               <Link
                 to="/admin/properties"
