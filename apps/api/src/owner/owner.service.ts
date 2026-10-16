@@ -13,6 +13,8 @@ import { categoryName } from '../reporting/format.js';
 import { computeMonth, divideHalfUp, monthBounds } from '../reporting/monthly.js';
 import { ReportsService } from '../reporting/reports.service.js';
 import { monthName } from '../reporting/statement.js';
+import { restockUrgency } from '../supplies/alerts.js';
+import { SUPPLY_ORDER, toItem, WITH_LATEST } from '../supplies/supplies.service.js';
 
 const FILE = { select: { objectKey: true, contentType: true } } as const;
 const DAY = 86_400_000;
@@ -419,5 +421,41 @@ export class OwnerService {
     }
     items.sort((a, b) => (a.checkInDate < b.checkInDate ? -1 : a.checkInDate > b.checkInDate ? 1 : 0));
     return { month, items };
+  }
+
+  /** Every active supply at the owned properties, those to restock (now or soon) first. */
+  async supplies(actor: Actor, propertyId?: string) {
+    const properties = await this.scope(actor, propertyId);
+    const rows = await this.prisma.supplyItem.findMany({
+      where: { propertyId: { in: properties.map((p) => p.id) }, archivedAt: null },
+      orderBy: SUPPLY_ORDER,
+      include: WITH_LATEST,
+    });
+    const rank = { OUT: 0, LOW: 1, SOON: 2 } as const;
+    return {
+      properties: properties.map((p) => {
+        const items = rows
+          .filter((r) => r.propertyId === p.id)
+          .map((r) => {
+            const item = toItem(r);
+            return { ...item, urgency: restockUrgency(item.levelPct, item.thresholdPct) };
+          })
+          // Stable: within the same urgency, items keep their walkthrough order.
+          .sort((a, b) => (a.urgency ? rank[a.urgency] : 3) - (b.urgency ? rank[b.urgency] : 3));
+        const checked = items.flatMap((i) => (i.lastCheckedAt ? [i.lastCheckedAt.getTime()] : []));
+        return {
+          property: { id: p.id, name: p.name },
+          items,
+          counts: {
+            total: items.length,
+            out: items.filter((i) => i.urgency === 'OUT').length,
+            low: items.filter((i) => i.urgency === 'LOW').length,
+            soon: items.filter((i) => i.urgency === 'SOON').length,
+            unchecked: items.filter((i) => i.levelPct === null).length,
+          },
+          lastCheckedAt: checked.length ? new Date(Math.max(...checked)).toISOString() : null,
+        };
+      }),
+    };
   }
 }

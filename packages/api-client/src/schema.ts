@@ -948,6 +948,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/owner/supplies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Owner_supplies'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/owner/calendar': {
     parameters: {
       query?: never;
@@ -6287,6 +6303,64 @@ export interface operations {
             url: string;
             /** Format: date-time */
             expiresAt: string;
+          };
+        };
+      };
+    };
+  };
+  Owner_supplies: {
+    parameters: {
+      query?: {
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            properties: {
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+              items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                propertyId: string;
+                name: string;
+                /** @enum {string} */
+                category: 'BATHROOM' | 'KITCHEN' | 'LAUNDRY' | 'CLEANING' | 'OTHER';
+                thresholdPct: number;
+                position: number;
+                levelPct: number | null;
+                /** @enum {string} */
+                state: 'UNKNOWN' | 'OK' | 'LOW' | 'OUT';
+                /** Format: date-time */
+                lastCheckedAt: string | null;
+                /** Format: date-time */
+                archivedAt: string | null;
+                /** @enum {string|null} */
+                urgency: 'OUT' | 'LOW' | 'SOON' | null;
+              }[];
+              counts: {
+                total: number;
+                out: number;
+                low: number;
+                soon: number;
+                unchecked: number;
+              };
+              /** Format: date-time */
+              lastCheckedAt: string | null;
+            }[];
           };
         };
       };

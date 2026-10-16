@@ -19,6 +19,7 @@ import {
   NetByMonthChart,
   ThisMonthCard,
 } from './home-cards';
+import { OwnerSuppliesCard } from './supplies-card';
 
 /**
  * The owner's home: the latest released statement, this month so far (estimated), the year to date, net by month,
@@ -37,6 +38,7 @@ export function OwnerHomePage({
   const api = useApi();
   const home = useQuery(queries.ownerHome(api, propertyId));
   const config = useQuery(queries.config(api));
+  const supplies = useQuery(queries.ownerSupplies(api, propertyId));
   const [actionError, setActionError] = useState<unknown>(null);
   const h = home.data;
   const many = (h?.properties ?? 1) > 1;
@@ -111,6 +113,15 @@ export function OwnerHomePage({
                 </div>
               </section>
               <NetByMonthChart months={h.netByMonth} />
+              {supplies.error ? (
+                <Card title="Supplies">
+                  <LoadError what="supplies" onRetry={() => void supplies.refetch()} retrying={supplies.isFetching} />
+                </Card>
+              ) : supplies.data ? (
+                <OwnerSuppliesCard data={supplies.data} />
+              ) : (
+                <Skeleton className="h-64 rounded-card" />
+              )}
             </div>
             <div className="flex flex-col gap-6">
               <ComingUpCard items={h.comingUp} showProperty={many} />

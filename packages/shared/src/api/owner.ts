@@ -3,6 +3,7 @@ import { BookingChannel, BookingKind } from '../enums.js';
 import { cents, nonNegativeCents } from '../money.js';
 import { bps, id, isoDate, isoDateTime, month } from '../primitives.js';
 import { statementLine, statementTotals } from './statements.js';
+import { RestockUrgency, supplyItem } from './supplies.js';
 
 /**
  * The owner portal's own API (/v1/owner/...): scoped to the properties the caller owns, never another owner's, and
@@ -150,3 +151,27 @@ export const ownerCalendar = z.object({
   ),
 });
 export type OwnerCalendar = z.infer<typeof ownerCalendar>;
+
+/**
+ * Supplies at each owned property: every active item's level, those that need restocking (now or soon) first, and
+ * counts for a one-line summary. Levels are what the cleaners last reported.
+ */
+export const ownerSupplies = z.object({
+  properties: z.array(
+    z.object({
+      property: z.object({ id, name: z.string() }),
+      items: z.array(supplyItem.extend({ urgency: RestockUrgency.nullable() })),
+      counts: z.object({
+        total: z.number().int(),
+        out: z.number().int(),
+        low: z.number().int(),
+        soon: z.number().int(),
+        /** Never checked yet. */
+        unchecked: z.number().int(),
+      }),
+      /** The latest reading at the property, if any. */
+      lastCheckedAt: isoDateTime.nullable(),
+    }),
+  ),
+});
+export type OwnerSupplies = z.infer<typeof ownerSupplies>;

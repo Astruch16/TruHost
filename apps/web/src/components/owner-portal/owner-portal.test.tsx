@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -9,13 +10,14 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import type { ApiClient } from '@truhost/api-client';
-import type { OwnerHome, OwnerStatement } from '@truhost/shared';
+import type { OwnerHome, OwnerStatement, OwnerSupplies } from '@truhost/shared';
 import type { ReactNode } from 'react';
 import { ApiContext } from '../../lib/api-context';
 import { navItems } from '../../lib/nav';
 import { AppShell } from '../shell/app-shell';
 import { OwnerHomePage } from './owner-home';
 import { OwnerStatementPage, OwnerStatementsPage } from './owner-statements';
+import { OwnerSuppliesCard } from './supplies-card';
 
 const ok = (data: unknown) => Promise.resolve({ data, response: new Response(null, { status: 200 }) });
 
@@ -91,6 +93,43 @@ const HOME: OwnerHome = {
   goodToKnow: [],
 };
 
+const CONFIG = { taxFieldsEnabled: false, contactEmail: 'hello@truhost.example' };
+
+const supply = (id: string, name: string, levelPct: number | null, urgency: 'OUT' | 'LOW' | 'SOON' | null) => ({
+  id,
+  propertyId: 'p1',
+  name,
+  category: 'KITCHEN' as const,
+  thresholdPct: 25,
+  position: 0,
+  levelPct,
+  state: (levelPct === null ? 'UNKNOWN' : levelPct === 0 ? 'OUT' : levelPct <= 25 ? 'LOW' : 'OK') as
+    'UNKNOWN' | 'OUT' | 'LOW' | 'OK',
+  lastCheckedAt: '2026-10-14T18:00:00.000Z',
+  archivedAt: null,
+  urgency,
+});
+
+const SUPPLIES: OwnerSupplies = {
+  properties: [
+    {
+      property: { id: 'p1', name: 'Cedar Cabin' },
+      items: [
+        supply('s1', 'Coffee pods', 0, 'OUT'),
+        supply('s2', 'Toilet paper', 50, 'SOON'),
+        supply('s3', 'Dish soap', 100, null),
+        supply('s4', 'Shampoo', 75, null),
+        supply('s5', 'Paper towels', 100, null),
+        supply('s6', 'Body wash', 75, null),
+        supply('s7', 'Hand soap', 100, null),
+        supply('s8', 'Dryer sheets', 75, null),
+      ],
+      counts: { total: 8, out: 1, low: 0, soon: 1, unchecked: 0 },
+      lastCheckedAt: '2026-10-14T18:00:00.000Z',
+    },
+  ],
+};
+
 describe('owner navigation', () => {
   it('gives owners Home, Calendar, Statements and Care, all on the phone tab bar', () => {
     const items = navItems({ staffRole: null, memberships: [{ role: 'OWNER' }] });
@@ -130,7 +169,7 @@ describe('owner navigation', () => {
 describe('owner home', () => {
   it('leads with the released statement, then this month marked as estimated', async () => {
     renderWith(
-      (p) => (p === '/v1/owner/home' ? HOME : { taxFieldsEnabled: false, contactEmail: 'hello@truhost.example' }),
+      (p) => (p === '/v1/owner/home' ? HOME : p === '/v1/owner/supplies' ? SUPPLIES : CONFIG),
       <OwnerHomePage firstName="Test" propertyId="p1" propertyName="Cedar Cabin" />,
     );
     const hero = (await screen.findByRole('heading', { name: 'September 2026 statement' })).closest('section')!;
@@ -152,7 +191,7 @@ describe('owner home', () => {
 
   it('explains when the first statement arrives before there is one', async () => {
     renderWith(
-      (p) => (p === '/v1/owner/home' ? { ...HOME, latest: null } : {}),
+      (p) => (p === '/v1/owner/home' ? { ...HOME, latest: null } : p === '/v1/owner/supplies' ? SUPPLIES : CONFIG),
       <OwnerHomePage firstName="Test" propertyId={null} propertyName={null} />,
     );
     expect(await screen.findByText('Your first statement is on its way')).toBeInTheDocument();
@@ -228,5 +267,36 @@ describe('owner statements', () => {
     expect(screen.getByText('of $800.00 for the stay')).toBeInTheDocument();
     expect(screen.getAllByText('ETF-88412').length).toBeGreaterThan(0);
     await waitFor(() => expect(screen.getByRole('button', { name: /Download PDF/ })).toBeEnabled());
+  });
+});
+
+describe('owner supplies', () => {
+  it('lists what to restock first with each level, and the rest on request', async () => {
+    renderWith(() => ({}), <OwnerSuppliesCard data={SUPPLIES} />);
+    expect(await screen.findByText(/1 out · 1 low soon · 6 stocked/)).toBeInTheDocument();
+    expect(screen.getAllByRole('meter').map((m) => m.getAttribute('aria-label'))).toEqual([
+      'Coffee pods level',
+      'Toilet paper level',
+      'Dish soap level',
+      'Shampoo level',
+      'Paper towels level',
+      'Body wash level',
+    ]);
+    expect(screen.getByText('Out')).toBeInTheDocument();
+    expect(screen.getByText('Low soon')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Show all 8 items' }));
+    expect(screen.getAllByRole('meter')).toHaveLength(8);
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('says so when no supplies are tracked yet', async () => {
+    const empty = {
+      ...SUPPLIES.properties[0]!,
+      items: [],
+      counts: { total: 0, out: 0, low: 0, soon: 0, unchecked: 0 },
+      lastCheckedAt: null,
+    };
+    renderWith(() => ({}), <OwnerSuppliesCard data={{ properties: [empty] }} />);
+    expect(await screen.findByText('No supplies tracked yet')).toBeInTheDocument();
   });
 });

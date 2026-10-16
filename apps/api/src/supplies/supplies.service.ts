@@ -10,14 +10,14 @@ import { restockUrgency, supplyAlert, supplyState } from './alerts.js';
 
 /** Enough for any rental's consumables; also the most one setup call can add. */
 const MAX_ACTIVE_ITEMS = 60;
-const ORDER = [
+export const SUPPLY_ORDER = [
   { position: 'asc' },
   { createdAt: 'asc' },
   { id: 'asc' },
 ] satisfies Prisma.SupplyItemOrderByWithRelationInput[];
 /** Newest reading first; uuid7 ids break a tie in time. */
 const LATEST = [{ reportedAt: 'desc' }, { id: 'desc' }] satisfies Prisma.SupplyStatusOrderByWithRelationInput[];
-const WITH_LATEST = { readings: { orderBy: LATEST, take: 1 } } satisfies Prisma.SupplyItemInclude;
+export const WITH_LATEST = { readings: { orderBy: LATEST, take: 1 } } satisfies Prisma.SupplyItemInclude;
 
 type Tx = Prisma.TransactionClient;
 type ItemRow = Prisma.SupplyItemGetPayload<{ include: typeof WITH_LATEST }>;
@@ -41,7 +41,7 @@ export class SuppliesService {
     await this.assertPropertyExists(propertyId);
     const items = await this.prisma.supplyItem.findMany({
       where: { propertyId, archivedAt: null },
-      orderBy: ORDER,
+      orderBy: SUPPLY_ORDER,
       include: WITH_LATEST,
     });
     return { items: items.map(toItem) };
@@ -129,7 +129,7 @@ export class SuppliesService {
       }
       const items = await tx.supplyItem.findMany({
         where: { propertyId, archivedAt: null },
-        orderBy: ORDER,
+        orderBy: SUPPLY_ORDER,
         include: WITH_LATEST,
       });
       return { items: items.map(toItem) };
@@ -166,7 +166,7 @@ export class SuppliesService {
     this.access.assert(actor, 'supply:restock');
     const items = await this.prisma.supplyItem.findMany({
       where: { archivedAt: null, property: { archivedAt: null } },
-      orderBy: ORDER,
+      orderBy: SUPPLY_ORDER,
       include: { ...WITH_LATEST, property: { select: { id: true, name: true } } },
     });
     const rank = { OUT: 0, LOW: 1, SOON: 2 } as const;
@@ -212,7 +212,7 @@ export class SuppliesService {
       }
       const items = await tx.supplyItem.findMany({
         where: { propertyId, archivedAt: null },
-        orderBy: ORDER,
+        orderBy: SUPPLY_ORDER,
         include: WITH_LATEST,
       });
       return { items: items.map(toItem), created };
@@ -222,7 +222,11 @@ export class SuppliesService {
   /** Locks the property (so changes and readings queue) and returns its active items with their latest readings. */
   private async lockItems(tx: Tx, propertyId: string): Promise<ItemRow[]> {
     await tx.$queryRaw`SELECT 1 FROM "Property" WHERE id = ${propertyId}::uuid FOR UPDATE`;
-    return tx.supplyItem.findMany({ where: { propertyId, archivedAt: null }, orderBy: ORDER, include: WITH_LATEST });
+    return tx.supplyItem.findMany({
+      where: { propertyId, archivedAt: null },
+      orderBy: SUPPLY_ORDER,
+      include: WITH_LATEST,
+    });
   }
 
   private async findItem(actor: Actor, id: string, action: 'supply:write' | 'supply:history') {
@@ -237,7 +241,8 @@ export class SuppliesService {
   }
 }
 
-function toItem(i: ItemRow) {
+/** An item with its current level (the latest reading), as the API returns it. */
+export function toItem(i: ItemRow) {
   const latest = i.readings[0] ?? null;
   return {
     id: i.id,

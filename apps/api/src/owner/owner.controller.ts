@@ -9,6 +9,7 @@ import {
   ownerScopeQuery,
   ownerStatement,
   ownerStatementList,
+  ownerSupplies,
 } from '@truhost/shared';
 import type { z } from 'zod';
 import { CurrentActor, type Actor } from '../auth/actor.js';
@@ -54,6 +55,14 @@ export class OwnerController {
   @ZodResponse(fileUrl)
   pdf(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
     return this.owner.statementPdf(actor, id);
+  }
+
+  /** Supply levels at the owned properties, those to restock first. */
+  @Get('supplies')
+  @ZodQuery(ownerScopeQuery)
+  @ZodResponse(ownerSupplies)
+  supplies(@CurrentActor() actor: Actor, @Query(new ZodPipe(ownerScopeQuery)) q: z.output<typeof ownerScopeQuery>) {
+    return this.owner.supplies(actor, q.propertyId);
   }
 
   @Get('calendar')
