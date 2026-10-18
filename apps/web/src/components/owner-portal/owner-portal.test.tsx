@@ -18,6 +18,7 @@ import { AppShell } from '../shell/app-shell';
 import { OwnerHomePage } from './owner-home';
 import { OwnerStatementPage, OwnerStatementsPage } from './owner-statements';
 import { OwnerSuppliesCard } from './supplies-card';
+import { GoodToKnowCard } from './good-to-know';
 import { OwnerDamagePage } from './owner-damage';
 import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 
@@ -388,5 +389,58 @@ describe('owner damage', () => {
   it('says so when nothing has been reported', async () => {
     renderWith(() => ({ items: [] }), <OwnerDamagePage propertyId="p1" />);
     expect(await screen.findByText('No damage reported')).toBeInTheDocument();
+  });
+});
+
+describe('good to know', () => {
+  const items: OwnerHome['goodToKnow'] = [
+    {
+      id: 'e1',
+      kind: 'EXPENSE',
+      date: '2026-10-15',
+      property: { id: 'p2', name: 'Seaside Loft' },
+      title: 'Netflix Standard',
+      detail: 'Subscriptions from Netflix, paid from your earnings',
+      category: 'SUBSCRIPTIONS',
+      vendor: 'Netflix',
+      statementMonth: null,
+      amountCents: -1_899,
+      receiptFileId: 'f1',
+      statementId: null,
+    },
+    {
+      id: 'l1',
+      kind: 'ADJUSTMENT',
+      date: '2026-10-05',
+      property: { id: 'p1', name: 'Cedar Cabin' },
+      title: 'Late Vrbo payout',
+      detail: 'Added to your September statement',
+      category: null,
+      vendor: null,
+      statementMonth: '2026-09',
+      amountCents: 4_250,
+      receiptFileId: null,
+      statementId: 's1',
+    },
+  ];
+
+  it('labels each item by kind, with its date, place, amount and receipt or statement', async () => {
+    const onViewReceipt = vi.fn();
+    renderWith(() => ({}), <GoodToKnowCard items={items} showProperty onViewReceipt={onViewReceipt} />);
+    const [expense, adjustment] = await screen.findAllByRole('listitem');
+    expect(expense!.textContent).toContain('Subscriptions');
+    expect(expense!.textContent).toContain('Netflix · Seaside Loft');
+    expect(expense!.textContent).toContain('−$18.99');
+    expect(expense!.textContent).toContain('Oct 15');
+    await userEvent.click(within(expense!).getByRole('button', { name: /Receipt/ }));
+    expect(onViewReceipt).toHaveBeenCalledWith('f1');
+
+    expect(adjustment!.textContent).toContain('Credit');
+    expect(adjustment!.textContent).toContain('September statement · Cedar Cabin');
+    expect(adjustment!.textContent).toContain('+$42.50');
+    expect(within(adjustment!).getByRole('link', { name: /Statement/ })).toHaveAttribute(
+      'href',
+      '/owner/statements/s1',
+    );
   });
 });

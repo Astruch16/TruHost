@@ -13596,6 +13596,32 @@
                           "detail": {
                             "type": "string"
                           },
+                          "category": {
+                            "nullable": true,
+                            "type": "string",
+                            "enum": [
+                              "CLEANING",
+                              "SUPPLIES",
+                              "REPAIRS_MAINTENANCE",
+                              "FURNISHINGS",
+                              "UTILITIES",
+                              "INTERNET",
+                              "SUBSCRIPTIONS",
+                              "LICENSING_PERMITS",
+                              "INSURANCE",
+                              "STRATA",
+                              "OTHER"
+                            ]
+                          },
+                          "vendor": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "statementMonth": {
+                            "nullable": true,
+                            "type": "string",
+                            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+                          },
                           "amountCents": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -13621,6 +13647,9 @@
                           "property",
                           "title",
                           "detail",
+                          "category",
+                          "vendor",
+                          "statementMonth",
                           "amountCents",
                           "receiptFileId",
                           "statementId"

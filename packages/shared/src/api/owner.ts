@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BookingChannel, BookingKind } from '../enums.js';
+import { BookingChannel, BookingKind, ExpenseCategory } from '../enums.js';
 import { cents, nonNegativeCents } from '../money.js';
 import { bps, id, isoDate, isoDateTime, month } from '../primitives.js';
 import { statementLine, statementTotals } from './statements.js';
@@ -95,7 +95,13 @@ export const ownerHome = z.object({
       date: isoDate,
       property: z.object({ id, name: z.string() }),
       title: z.string(),
+      /** One line about it, in plain words. */
       detail: z.string(),
+      /** Expenses: what kind, and where it was bought. */
+      category: ExpenseCategory.nullable(),
+      vendor: z.string().nullable(),
+      /** Adjustments: the month of the statement it's on. */
+      statementMonth: month.nullable(),
       /** Signed, from the owner's point of view. */
       amountCents: cents,
       receiptFileId: id.nullable(),

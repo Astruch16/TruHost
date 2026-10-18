@@ -21,7 +21,6 @@ import { channelLabel } from '../../lib/format';
 import { formatCents, splitCents } from '../../lib/money';
 import { monthLabel, shortDate } from '../../lib/months';
 import { barHeights, changeAmount, monthOnly, monthShort, widthOf } from '../../lib/owner';
-import { formatSigned } from '../../lib/statements';
 import { useMyGuide } from '../../lib/guide-context';
 import { GUIDES } from '../../lib/guides';
 import { Guide } from '../guide/guide';
@@ -377,59 +376,6 @@ export function ComingUpCard({ items, showProperty }: { items: OwnerHome['coming
           ))}
         </ul>
       )}
-    </Card>
-  );
-}
-
-/** Recent owner-paid expenses and adjustments, in plain words. */
-export function GoodToKnowCard({
-  items,
-  showProperty,
-  onViewReceipt,
-}: {
-  items: OwnerHome['goodToKnow'];
-  showProperty: boolean;
-  onViewReceipt: (fileId: string) => void;
-}) {
-  return (
-    <Card title="Good to know" description="Recent expenses paid from your earnings, and statement adjustments">
-      <ul className="flex flex-col">
-        {items.map((g) => (
-          <li
-            key={g.id}
-            className="flex items-start justify-between gap-3 border-b border-line py-3 first:pt-0 last:border-b-0 last:pb-0"
-          >
-            <div className="min-w-0">
-              <p className="font-medium text-ink">{g.title}</p>
-              <p className="text-xs text-muted">
-                {shortDate(g.date)} · {g.detail}
-                {showProperty ? ` · ${g.property.name}` : ''}
-              </p>
-              {g.receiptFileId && (
-                <button
-                  type="button"
-                  onClick={() => onViewReceipt(g.receiptFileId!)}
-                  className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                >
-                  <FileText aria-hidden className="size-3.5" /> Receipt
-                </button>
-              )}
-              {g.statementId && (
-                <Link
-                  to="/owner/statements/$statementId"
-                  params={{ statementId: g.statementId }}
-                  className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                >
-                  <FileText aria-hidden className="size-3.5" /> Statement
-                </Link>
-              )}
-            </div>
-            <span className={cx('figure shrink-0 font-semibold', g.amountCents < 0 ? 'text-ink' : 'text-sage-deep')}>
-              {formatSigned(g.amountCents)}
-            </span>
-          </li>
-        ))}
-      </ul>
     </Card>
   );
 }
