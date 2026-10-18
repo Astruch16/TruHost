@@ -11,7 +11,8 @@ import { ErrorAlert, LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
 import { PageHeader } from '../ui/page-header';
 import { Skeleton } from '../ui/skeleton';
-import { ComingUpCard, GoodToKnowCard, MonthEarningsHero, NetByMonthChart, ThisMonthCard } from './home-cards';
+import { ComingUpCard, MonthEarningsHero, NetByMonthChart, ThisMonthCard } from './home-cards';
+import { GoodToKnowCard } from './good-to-know';
 import { OwnerSuppliesCard } from './supplies-card';
 
 /**

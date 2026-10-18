@@ -6186,6 +6186,22 @@ export interface operations {
               };
               title: string;
               detail: string;
+              /** @enum {string|null} */
+              category:
+                | 'CLEANING'
+                | 'SUPPLIES'
+                | 'REPAIRS_MAINTENANCE'
+                | 'FURNISHINGS'
+                | 'UTILITIES'
+                | 'INTERNET'
+                | 'SUBSCRIPTIONS'
+                | 'LICENSING_PERMITS'
+                | 'INSURANCE'
+                | 'STRATA'
+                | 'OTHER'
+                | null;
+              vendor: string | null;
+              statementMonth: string | null;
               amountCents: number;
               /** Format: uuid */
               receiptFileId: string | null;
