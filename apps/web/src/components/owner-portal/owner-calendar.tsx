@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { OwnerCalendar } from '@truhost/shared';
 import { useApi } from '../../lib/api-context';
-import type { CalendarStay } from '../../lib/calendar';
+import { stayStyle, type CalendarStay } from '../../lib/calendar';
+import { cx } from '../../lib/cx';
 import { channelLabel } from '../../lib/format';
 import { formatCents } from '../../lib/money';
 import { monthLabel, shortDate } from '../../lib/months';
-import { monthOnly } from '../../lib/owner';
+import { monthOnly, monthShort } from '../../lib/owner';
 import { queries } from '../../lib/queries';
 import { updatingStyles } from '../../lib/styles';
 import { CalendarLegend, MonthCalendar } from '../dashboard/month-calendar';
@@ -87,48 +88,34 @@ export function OwnerCalendarPage({
               roomy
               showCleans={false}
             />
-            <h2 className="mt-6 mb-2 text-base font-semibold text-ink">{monthLabel(month)} at a glance</h2>
-            {items.length === 0 ? (
-              <EmptyState size="compact" illustration={<BookingsIllustration />} title="Nothing booked this month">
-                Stays show up here as soon as they’re booked.
-              </EmptyState>
-            ) : (
-              <ul className="flex flex-col">
-                {items.map((i) => (
-                  <li key={i.bookingId} className="border-b border-line last:border-b-0">
-                    <button
-                      type="button"
-                      onClick={() => setOpen(i)}
-                      className="flex w-full items-center justify-between gap-3 py-3 text-left hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep"
-                    >
-                      <span className="min-w-0">
-                        <span className="block font-medium text-ink">
-                          {shortDate(i.checkInDate)} – {shortDate(i.checkOutDate)}
-                        </span>
-                        <span className="block text-xs text-muted">
-                          {kindLabel(i)} · {i.nights} night{i.nights === 1 ? '' : 's'}
-                          {many ? ` · ${i.property.name}` : ''}
-                        </span>
-                      </span>
-                      {i.kind === 'GUEST' ? (
-                        i.monthShareCents !== null ? (
-                          <span className="figure shrink-0 font-semibold text-ink">
-                            {formatCents(i.monthShareCents)}
-                          </span>
-                        ) : (
-                          <Pill tone="amber">Payout pending</Pill>
-                        )
-                      ) : (
-                        <Pill tone={i.kind === 'OWNER_STAY' ? 'lavender' : 'neutral'}>{kindLabel(i)}</Pill>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         )}
       </Card>
+      {cal.data && (
+        <Card
+          className={cx('mt-6', updatingStyles(cal.isPlaceholderData))}
+          title={`${monthLabel(month)} at a glance`}
+          description={
+            items.length > 0
+              ? `${items.length} ${items.length === 1 ? 'stay' : 'stays'} · tap one for its details`
+              : undefined
+          }
+        >
+          {items.length === 0 ? (
+            <EmptyState size="compact" illustration={<BookingsIllustration />} title="Nothing booked this month">
+              Stays show up here as soon as they’re booked.
+            </EmptyState>
+          ) : (
+            <ul className="grid grid-cols-1 gap-2.5 @4xl/content:grid-cols-2">
+              {items.map((i) => (
+                <li key={i.bookingId} className="min-w-0">
+                  <GlanceTile item={i} month={month} showProperty={many} onOpen={() => setOpen(i)} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
       {open && (
         <Dialog
           open
@@ -174,6 +161,69 @@ export function OwnerCalendarPage({
         </Dialog>
       )}
     </>
+  );
+}
+
+/** One stay: a date tile in the stay's calendar colour, what it is and when, and the owner's share this month. */
+function GlanceTile({
+  item: i,
+  month,
+  showProperty,
+  onOpen,
+}: {
+  item: Item;
+  month: string;
+  showProperty: boolean;
+  onOpen: () => void;
+}) {
+  const style = stayStyle({ kind: i.kind, channel: i.channel ?? 'OTHER' });
+  const [mon, day] = shortDate(i.checkInDate).split(' ');
+  const split = i.nightsInMonth !== i.nights;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex h-full w-full items-center gap-3.5 rounded-inner border border-line bg-surface p-3 text-left transition-colors hover:border-ink/20 hover:bg-ground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep"
+    >
+      <span
+        aria-hidden
+        className={cx('flex w-13 shrink-0 flex-col items-center rounded-inner py-2 text-center', style.bar)}
+      >
+        <span className="text-[11px] font-semibold tracking-[0.06em] uppercase opacity-80">{mon}</span>
+        <span className="figure text-xl leading-none font-bold">{day}</span>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-semibold text-ink">{kindLabel(i)}</span>
+        <span className="mt-0.5 block text-sm text-ink/80">
+          {shortDate(i.checkInDate)} → {shortDate(i.checkOutDate)}
+        </span>
+        <span className="mt-0.5 block truncate text-xs text-muted">
+          {i.nights} night{i.nights === 1 ? '' : 's'}
+          {split ? ` · ${i.nightsInMonth} in ${monthOnly(month)}` : ''}
+          {showProperty ? ` · ${i.property.name}` : ''}
+        </span>
+      </span>
+      <span className="shrink-0 text-right">
+        {i.kind === 'GUEST' ? (
+          i.monthShareCents !== null ? (
+            <>
+              <span className="figure block text-lg leading-tight font-semibold text-ink">
+                {formatCents(i.monthShareCents)}
+              </span>
+              <span className="block text-xs text-muted">
+                {split ? `Your share in ${monthShort(month)}` : 'Your share'}
+              </span>
+            </>
+          ) : (
+            <Pill tone="amber">Payout pending</Pill>
+          )
+        ) : (
+          <Pill tone={i.kind === 'OWNER_STAY' ? 'lavender' : 'neutral'}>
+            {i.kind === 'OWNER_STAY' ? 'Your stay' : 'No guests'}
+          </Pill>
+        )}
+      </span>
+    </button>
   );
 }
 
