@@ -215,7 +215,9 @@ const homeApi = (home: OwnerHome) => (path: string, init?: { params?: { query?: 
         : SEPTEMBER
       : path === '/v1/owner/supplies'
         ? SUPPLIES
-        : CONFIG;
+        : path === '/v1/owner/properties'
+          ? { items: [] }
+          : CONFIG;
 
 /** Home with the month held in state, as the route keeps it in the URL. */
 function HomeWithMonth() {
@@ -470,5 +472,74 @@ describe('year to date', () => {
     );
     expect(await screen.findByText('0 of 10 months released')).toBeInTheDocument();
     expect(screen.getByText(/fill in as your monthly statements are released/)).toBeInTheDocument();
+  });
+});
+
+describe('switching property', () => {
+  /** Home with a "switch" button standing in for the top-bar switcher. */
+  function Switchable() {
+    const [propertyId, setPropertyId] = useState<string | null>('p1');
+    return (
+      <>
+        <button type="button" onClick={() => setPropertyId('p2')}>
+          switch
+        </button>
+        <OwnerHomePage
+          firstName="Test"
+          propertyId={propertyId}
+          propertyName={null}
+          month={null}
+          onMonthChange={() => undefined}
+        />
+      </>
+    );
+  }
+
+  it('keeps the page on screen, dimmed, until the next property arrives, and loads the others ahead', async () => {
+    let releaseP2: (v: unknown) => void = () => undefined;
+    const p2 = new Promise((resolve) => (releaseP2 = resolve));
+    const owned = {
+      items: [{ id: 'p1' }, { id: 'p2' }].map((p) => ({ ...p, name: p.id, city: 'X', province: 'BC', photo: null })),
+    };
+    const get = vi.fn((path: string, init?: { params?: { query?: { propertyId?: string } } }) => {
+      if (path === '/v1/owner/properties') return ok(owned);
+      if (path === '/v1/owner/home' && init?.params?.query?.propertyId === 'p2') {
+        return p2.then(() => ({
+          data: { ...HOME, latest: { ...HOME.latest!, netCents: 111_111 } },
+          response: new Response(null),
+        }));
+      }
+      return ok(homeApi(HOME)(path, init as never));
+    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const root = createRootRoute();
+    const page = createRoute({ getParentRoute: () => root, path: '/', component: Switchable });
+    const router = createRouter({
+      routeTree: root.addChildren([page]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(
+      <ApiContext.Provider value={{ GET: get } as unknown as ApiClient}>
+        <QueryClientProvider client={client}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </ApiContext.Provider>,
+    );
+    await screen.findByRole('heading', { name: 'September 2026 statement' });
+
+    // The other choices ("All properties" and p2) are requested in the background once the page settles.
+    await waitFor(() =>
+      expect(get).toHaveBeenCalledWith('/v1/owner/home', { params: { query: { propertyId: 'p2' } } }),
+    );
+    expect(get).toHaveBeenCalledWith('/v1/owner/home', { params: { query: { propertyId: undefined } } });
+
+    await userEvent.click(screen.getByRole('button', { name: 'switch' }));
+    // While p2 is on its way: no skeletons, the current figures stay, marked busy.
+    expect(screen.queryByRole('status', { name: 'Loading your home page' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'September 2026 statement' })).toBeInTheDocument();
+    expect(document.querySelector('[aria-busy="true"]')).not.toBeNull();
+
+    releaseP2(null);
+    await waitFor(() => expect(document.querySelector('[aria-busy="true"]')).toBeNull());
   });
 });

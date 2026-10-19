@@ -7,6 +7,7 @@ import { useApi } from '../../lib/api-context';
 import { formatCents } from '../../lib/money';
 import { monthLabel, shortDate } from '../../lib/months';
 import { queries } from '../../lib/queries';
+import { switchingStyles } from '../../lib/styles';
 import { formatSigned } from '../../lib/statements';
 import { openFile } from '../../lib/upload';
 import { CareIllustration } from '../illustrations/care';
@@ -62,14 +63,14 @@ export function OwnerStatementsPage({ propertyId }: { propertyId: string | null 
           ))}
         </div>
       ) : items.length === 0 ? (
-        <Card>
+        <Card className={switchingStyles(list.isPlaceholderData)}>
           <EmptyState title="No statements yet">
             Your first statement arrives after the month ends, once TruHost has checked every payout and receipt. You’ll
             get an email when it’s ready.
           </EmptyState>
         </Card>
       ) : (
-        <Card>
+        <Card className={switchingStyles(list.isPlaceholderData)}>
           <ul className="flex flex-col">
             {items.map((s) => (
               <li

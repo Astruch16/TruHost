@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useApi } from '../../lib/api-context';
 import { todayIso } from '../../lib/dates';
 import { queries } from '../../lib/queries';
+import { switchingStyles } from '../../lib/styles';
 import { DamageList } from '../damage/damage-list';
 import { DamageReportDialog } from '../damage/damage-report-dialog';
 import { DamageIllustration } from '../illustrations/damage';
@@ -34,7 +35,7 @@ export function OwnerDamagePage({ propertyId }: { propertyId: string | null }) {
       ) : !reports.data ? (
         <Skeleton className="h-64 rounded-card" />
       ) : (
-        <Card>
+        <Card className={switchingStyles(reports.isPlaceholderData)}>
           {items.length === 0 ? (
             <EmptyState size="compact" illustration={<DamageIllustration />} title="No damage reported">
               If a cleaner or TruHost finds damage after a stay, it shows up here with photos, and you’ll get an email.

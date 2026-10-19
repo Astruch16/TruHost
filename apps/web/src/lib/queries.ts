@@ -11,6 +11,9 @@ function keepWhileSameScope(scopeOf: (key: QueryKey) => unknown) {
 }
 const rangeScope = (key: QueryKey) => (key[1] as { propertyId?: string | null }).propertyId ?? null;
 
+/** How long owner-portal reads count as fresh: long enough that a property loaded ahead of time shows at once. */
+const OWNER_FRESH_MS = 60_000;
+
 /**
  * Query definitions, one per API read. Keys are hierarchical so mutations can invalidate a whole
  * area (e.g. ['properties']).
@@ -181,12 +184,18 @@ export const queries = {
     queryOptions({
       queryKey: ['owner', 'home', { propertyId }],
       queryFn: () => unwrap(api.GET('/v1/owner/home', { params: { query: { propertyId: propertyId ?? undefined } } })),
+      // Switching property keeps this one on screen (dimmed) until the next arrives, instead of flashing skeletons.
+      placeholderData: (previous) => previous,
+      staleTime: OWNER_FRESH_MS,
     }),
   ownerStatements: (api: ApiClient, propertyId: string | null) =>
     queryOptions({
       queryKey: ['owner', 'statements', { propertyId }],
       queryFn: () =>
         unwrap(api.GET('/v1/owner/statements', { params: { query: { propertyId: propertyId ?? undefined } } })),
+      // Switching property keeps this one on screen (dimmed) until the next arrives, instead of flashing skeletons.
+      placeholderData: (previous) => previous,
+      staleTime: OWNER_FRESH_MS,
     }),
   ownerStatement: (api: ApiClient, id: string) =>
     queryOptions({
@@ -198,12 +207,18 @@ export const queries = {
       queryKey: ['owner', 'supplies', { propertyId }],
       queryFn: () =>
         unwrap(api.GET('/v1/owner/supplies', { params: { query: { propertyId: propertyId ?? undefined } } })),
+      // Switching property keeps this one on screen (dimmed) until the next arrives, instead of flashing skeletons.
+      placeholderData: (previous) => previous,
+      staleTime: OWNER_FRESH_MS,
     }),
   ownerDamage: (api: ApiClient, propertyId: string | null) =>
     queryOptions({
       queryKey: ['owner', 'damage', { propertyId }],
       queryFn: () =>
         unwrap(api.GET('/v1/owner/damage', { params: { query: { propertyId: propertyId ?? undefined } } })),
+      // Switching property keeps this one on screen (dimmed) until the next arrives, instead of flashing skeletons.
+      placeholderData: (previous) => previous,
+      staleTime: OWNER_FRESH_MS,
     }),
   ownerDamageReport: (api: ApiClient, id: string) =>
     queryOptions({
@@ -217,6 +232,7 @@ export const queries = {
         unwrap(api.GET('/v1/owner/month', { params: { query: { month, propertyId: propertyId ?? undefined } } })),
       // Keep the month on screen (dimmed) while the next one loads.
       placeholderData: (previous) => previous,
+      staleTime: OWNER_FRESH_MS,
     }),
   ownerCalendar: (api: ApiClient, month: string, propertyId: string | null) =>
     queryOptions({
@@ -224,6 +240,7 @@ export const queries = {
       queryFn: () =>
         unwrap(api.GET('/v1/owner/calendar', { params: { query: { month, propertyId: propertyId ?? undefined } } })),
       placeholderData: (previous) => previous,
+      staleTime: OWNER_FRESH_MS,
     }),
   /** The bell: checked every minute while the app is open. */
   notifications: (api: ApiClient) =>
