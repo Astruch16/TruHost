@@ -1,21 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import type { OwnerHome, OwnerMonth } from '@truhost/shared';
-import {
-  ArrowRight,
-  CalendarRange,
-  FileText,
-  Minus,
-  Moon,
-  Percent,
-  ReceiptText,
-  SlidersHorizontal,
-  Sparkles,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react';
+import { ArrowRight, CalendarRange, FileText, Moon, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { channelLabel } from '../../lib/format';
 import { formatCents, splitCents } from '../../lib/money';
@@ -105,34 +91,15 @@ export function MonthEarningsHero({
           )}
         </p>
         {m && (
-          <dl className="mt-6 flex flex-wrap gap-2.5">
-            <StatTile icon={Wallet} label="Gross revenue" value={<Money cents={m.grossCents} />} />
-            <StatTile icon={Percent} label="TruPlan fee" value={<Money cents={-m.managementFeeCents} />} />
-            <StatTile icon={ReceiptText} label="Expenses" value={<Money cents={-m.expensesCents} />} />
+          <dl className="@container/stats mt-6 flex flex-wrap gap-2.5">
+            <StatTile label="Gross revenue" value={<Money cents={m.grossCents} />} />
+            <StatTile label="TruPlan fee" value={<Money cents={-m.managementFeeCents} />} />
+            <StatTile label="Expenses" value={<Money cents={-m.expensesCents} />} />
             {m.adjustmentsCents !== 0 && (
-              <StatTile
-                icon={SlidersHorizontal}
-                label="Adjustments"
-                value={<Money cents={m.adjustmentsCents} signed />}
-              />
+              <StatTile label="Adjustments" value={<Money cents={m.adjustmentsCents} signed />} />
             )}
-            <StatTile icon={Moon} label="Nights booked" value={m.nightsBooked} />
-            <StatTile
-              icon={m.change.changeCents > 0 ? TrendingUp : m.change.changeCents < 0 ? TrendingDown : Minus}
-              label={`vs ${monthOnly(m.change.month)}`}
-              value={
-                <span
-                  className={cx(
-                    'inline-flex items-center rounded-full px-2 py-0.5 text-sm',
-                    m.change.changeCents > 0 && 'bg-sage-light/20 text-[#bfe6cb]',
-                    m.change.changeCents < 0 && 'bg-danger-light/20 text-[#f6c3bc]',
-                    m.change.changeCents === 0 && 'bg-white/10 text-primary-ink-muted',
-                  )}
-                >
-                  {changeAmount(m.change.changeCents)}
-                </span>
-              }
-            />
+            <StatTile label="Nights booked" value={m.nightsBooked} />
+            <StatTile label={`vs ${monthOnly(m.change.month)}`} value={<Change cents={m.change.changeCents} />} />
           </dl>
         )}
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -178,22 +145,24 @@ export function MonthEarningsHero({
 }
 
 /**
- * One figure on the earnings card: a translucent tile with its icon and label above the amount. Tiles share a
+ * One figure on the earnings card: a translucent tile with a plain header over the amount. Tiles share a
  * wrapping row, and any left over on the last row stretch to fill it.
  */
-function StatTile({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: ReactNode }) {
+function StatTile({ label, value }: { label: string; value: ReactNode }) {
+  // One tile to a row (phones): a compact line, label left and figure right. Wider: the header over the figure.
   return (
-    <div className="flex min-w-0 flex-1 basis-[8.5rem] flex-col gap-1.5 rounded-xl bg-white/[0.07] px-3.5 py-3 ring-1 ring-white/10 ring-inset">
-      <dt className="flex items-center gap-1.5 text-xs font-medium text-primary-ink-muted">
-        <Icon aria-hidden className="size-3.5 shrink-0" />
-        <span className="truncate">{label}</span>
+    <div className="flex min-w-0 flex-1 basis-[9rem] items-center justify-between gap-3 rounded-xl bg-white/[0.08] px-4 py-3 ring-1 ring-white/12 ring-inset @[19rem]/stats:flex-col @[19rem]/stats:items-stretch @[19rem]/stats:justify-start @[19rem]/stats:gap-0 @[19rem]/stats:pb-3.5">
+      <dt className="truncate text-xs font-semibold tracking-[0.08em] text-white uppercase @[19rem]/stats:border-b @[19rem]/stats:border-white/15 @[19rem]/stats:pb-2">
+        {label}
       </dt>
-      <dd className="figure text-lg leading-tight font-semibold whitespace-nowrap text-white">{value}</dd>
+      <dd className="figure shrink-0 text-[1.25rem] leading-none font-bold tracking-[-0.01em] whitespace-nowrap text-white @[19rem]/stats:mt-2.5 @[19rem]/stats:text-[1.5rem]">
+        {value}
+      </dd>
     </div>
   );
 }
 
-/** "$6,937" with ".50" smaller; deductions as "−$1,526.25"; `signed` adds "+" to credits. */
+/** An amount with its cents a touch smaller, in the same colour (so a tinted figure stays one colour). */
 function Money({ cents, signed = false }: { cents: number; signed?: boolean }) {
   const { whole, cents: fraction } = splitCents(Math.abs(cents));
   const sign = cents < 0 ? '−' : signed && cents > 0 ? '+' : '';
@@ -201,8 +170,22 @@ function Money({ cents, signed = false }: { cents: number; signed?: boolean }) {
     <>
       {sign}
       {whole}
-      <span className="text-[0.75em] text-primary-ink-muted">{fraction}</span>
+      <span className="text-[0.68em] opacity-80">{fraction}</span>
     </>
+  );
+}
+
+/** The change on the month before: green and rising, rose and falling, or a quiet "No change". */
+function Change({ cents }: { cents: number }) {
+  if (cents === 0) return <span className="text-lg font-semibold text-primary-ink-muted">{changeAmount(0)}</span>;
+  const Arrow = cents > 0 ? TrendingUp : TrendingDown;
+  return (
+    <span className={cx('inline-flex items-center gap-1.5', cents > 0 ? 'text-[#bfe6cb]' : 'text-[#f6c3bc]')}>
+      <Arrow aria-hidden className="size-5 shrink-0" strokeWidth={2.5} />
+      <span>
+        <Money cents={cents} signed />
+      </span>
+    </span>
   );
 }
 
