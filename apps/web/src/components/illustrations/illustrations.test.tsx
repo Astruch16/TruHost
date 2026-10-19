@@ -3,8 +3,10 @@ import { render, screen } from '@testing-library/react';
 import { AllClearIllustration } from './all-clear';
 import { BookingsIllustration } from './bookings';
 import { CareIllustration } from './care';
+import { ExpenseCategoryIcon } from './category-icons';
 import { ComingUpIllustration } from './coming-up';
 import { ExpensesIllustration } from './expenses';
+import { CompassIcon, InviteIcon, StatementDocIcon } from './list-icons';
 import { ReceiptsIllustration } from './receipts';
 import { RevenueIllustration } from './revenue';
 
@@ -40,6 +42,68 @@ describe('empty state illustrations', () => {
     );
     const ids = [...container.querySelectorAll('[id]')].map((el) => el.id);
     expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const svg of container.querySelectorAll('svg')) {
+      const own = new Set([...svg.querySelectorAll('[id]')].map((el) => el.id));
+      for (const el of svg.querySelectorAll('[fill^="url("]')) {
+        expect(own).toContain(/url\(#(.+)\)/.exec(el.getAttribute('fill')!)![1]);
+      }
+    }
+  });
+});
+
+describe('small icons', () => {
+  const CATEGORIES = [
+    'SUPPLIES',
+    'REPAIRS_MAINTENANCE',
+    'SUBSCRIPTIONS',
+    'UTILITIES',
+    'INTERNET',
+    'FURNISHINGS',
+    'CLEANING',
+    'LICENSING_PERMITS',
+    'INSURANCE',
+    'STRATA',
+    'OTHER',
+  ];
+
+  it('draws a distinct, decorative 40×40 icon for each expense category, and the receipt for anything else', () => {
+    const { container } = render(
+      <>
+        {CATEGORIES.map((c) => (
+          <ExpenseCategoryIcon key={c} category={c} />
+        ))}
+        <ExpenseCategoryIcon category={null} />
+      </>,
+    );
+    const svgs = [...container.querySelectorAll('svg')];
+    expect(svgs).toHaveLength(CATEGORIES.length + 1);
+    for (const svg of svgs) {
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(svg).toHaveAttribute('viewBox', '0 0 40 40');
+    }
+    // Shapes without the per-instance gradient ids: every category but OTHER looks different.
+    const shape = (svg: SVGSVGElement) => svg.innerHTML.replace(/ei[^"#)]*-/g, '');
+    expect(new Set(svgs.slice(0, -2).map(shape)).size).toBe(CATEGORIES.length - 1);
+    expect(shape(svgs.at(-1)!)).toBe(shape(svgs.at(-2)!));
+  });
+
+  it('gives each instance its own gradient ids', () => {
+    const { container } = render(
+      <>
+        {[0, 1].map((i) => (
+          <span key={i}>
+            {CATEGORIES.map((c) => (
+              <ExpenseCategoryIcon key={c} category={c} />
+            ))}
+            <StatementDocIcon />
+            <InviteIcon />
+            <CompassIcon />
+          </span>
+        ))}
+      </>,
+    );
+    const ids = [...container.querySelectorAll('[id]')].map((el) => el.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const svg of container.querySelectorAll('svg')) {
       const own = new Set([...svg.querySelectorAll('[id]')].map((el) => el.id));

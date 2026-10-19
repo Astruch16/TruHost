@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, FileText, Receipt } from 'lucide-react';
+import { ArrowRight, FileText } from 'lucide-react';
+import { ExpenseCategoryIcon } from '../illustrations/category-icons';
 import { useApi } from '../../lib/api-context';
 import { stayStyle } from '../../lib/calendar';
 import { cx } from '../../lib/cx';
@@ -109,9 +110,7 @@ export function OwnerExpenses({ propertyId, month }: { propertyId: string; month
         >
           {items.map((e) => (
             <li key={e.id} className="flex items-center gap-4 border-b border-line-soft py-3 last:border-b-0">
-              <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-amber-tint text-amber-deep">
-                <Receipt aria-hidden className="size-4" />
-              </span>
+              <ExpenseCategoryIcon category={e.category} className="shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 font-semibold text-ink">{e.description}</p>
                 <p className="truncate text-sm text-muted">

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Compass } from 'lucide-react';
+import { CompassIcon } from '../illustrations/list-icons';
 import { buttonStyles } from '../../lib/styles';
 
 /**
@@ -18,9 +18,7 @@ export function NotAvailable({
   return (
     <div className="flex justify-center py-10 @2xl/content:py-16">
       <div className="flex max-w-md flex-col items-center gap-4 rounded-card border border-line-soft bg-surface px-6 py-10 text-center @2xl/content:px-10">
-        <span className="grid size-14 place-items-center rounded-full bg-sage-tint text-sage-deep">
-          <Compass aria-hidden className="size-6" />
-        </span>
+        <CompassIcon size={64} />
         <div>
           <h1 className="text-xl font-bold tracking-tight text-ink">{title}</h1>
           <p className="mt-1.5 text-sm text-muted">{children}</p>
