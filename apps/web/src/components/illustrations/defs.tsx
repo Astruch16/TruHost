@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { useIllustrationIds } from '../../lib/illustration-ids';
 
 /** Only the gradients an illustration uses are rendered. */
@@ -42,4 +43,19 @@ export function IllustrationDefs({
 export interface IllustrationProps {
   size?: number;
   className?: string;
+}
+
+/** Props of the small 40×40 icons (statement lines, expense categories, list rows). Decorative. */
+export interface IconProps {
+  size?: number;
+  className?: string;
+}
+
+/** The 40×40 frame of a small icon: hidden from assistive tech, since the row's text says what it is. */
+export function IconFrame({ size = 40, className, children }: IconProps & { children: ReactNode }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden className={className}>
+      {children}
+    </svg>
+  );
 }

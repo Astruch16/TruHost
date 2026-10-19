@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
 import { OWN_PROPERTY_PLAN_ID } from '@truhost/shared';
-import { BadgePercent, House } from 'lucide-react';
+import { House } from 'lucide-react';
+import { FeeIcon, OwnPropertyIcon } from '../illustrations/statement-icons';
 import { useApi } from '../../lib/api-context';
 import { formatBps } from '../../lib/format';
 import { monthLabel } from '../../lib/months';
@@ -51,9 +52,7 @@ export function ManagementCard({ propertyId, canMarkOwn }: { propertyId: string;
         <Skeleton className="h-16" />
       ) : own ? (
         <div className="flex items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-sage-tint text-sage-deep">
-            <House aria-hidden className="size-4" />
-          </span>
+          <OwnPropertyIcon className="shrink-0" />
           <div>
             <p className="font-semibold text-ink">No management fee</p>
             <p className="text-sm text-muted">This is your own property, so TruHost doesn’t take a fee.</p>
@@ -62,9 +61,7 @@ export function ManagementCard({ propertyId, canMarkOwn }: { propertyId: string;
       ) : (
         <div className="flex flex-col gap-4">
           <div className="flex items-start gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-lavender-tint text-lavender-deep">
-              <BadgePercent aria-hidden className="size-4" />
-            </span>
+            <FeeIcon className="shrink-0" />
             {current ? (
               <div>
                 <p className="font-semibold text-ink">

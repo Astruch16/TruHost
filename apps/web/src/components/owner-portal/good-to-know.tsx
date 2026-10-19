@@ -1,45 +1,16 @@
 import { Link } from '@tanstack/react-router';
 import type { OwnerHome } from '@truhost/shared';
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  Building2,
-  FileBadge,
-  FileText,
-  Package,
-  Receipt,
-  ShieldCheck,
-  Sofa,
-  Sparkles,
-  Tv,
-  Wifi,
-  Wrench,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { categoryLabel } from '../../lib/format';
 import { shortDate } from '../../lib/months';
 import { monthOnly } from '../../lib/owner';
 import { formatSigned } from '../../lib/statements';
+import { ExpenseCategoryIcon } from '../illustrations/category-icons';
+import { AdjustmentIcon } from '../illustrations/statement-icons';
 import { Card } from '../ui/card';
 
 type Item = OwnerHome['goodToKnow'][number];
-
-/** Each expense category's icon and tint, so a glance tells a restock from a repair. */
-const CATEGORY: Record<string, { icon: LucideIcon; bg: string; fg: string }> = {
-  SUPPLIES: { icon: Package, bg: 'bg-amber-tint', fg: 'text-amber-deep' },
-  REPAIRS_MAINTENANCE: { icon: Wrench, bg: 'bg-blue-tint', fg: 'text-blue-deep' },
-  SUBSCRIPTIONS: { icon: Tv, bg: 'bg-lavender-tint', fg: 'text-lavender-deep' },
-  UTILITIES: { icon: Zap, bg: 'bg-amber-tint', fg: 'text-amber-deep' },
-  INTERNET: { icon: Wifi, bg: 'bg-blue-tint', fg: 'text-blue-deep' },
-  FURNISHINGS: { icon: Sofa, bg: 'bg-sage-tint', fg: 'text-sage-deep' },
-  CLEANING: { icon: Sparkles, bg: 'bg-sage-tint', fg: 'text-sage-deep' },
-  LICENSING_PERMITS: { icon: FileBadge, bg: 'bg-lavender-tint', fg: 'text-lavender-deep' },
-  INSURANCE: { icon: ShieldCheck, bg: 'bg-blue-tint', fg: 'text-blue-deep' },
-  STRATA: { icon: Building2, bg: 'bg-line-soft', fg: 'text-ink' },
-  OTHER: { icon: Receipt, bg: 'bg-line-soft', fg: 'text-ink' },
-};
 
 /** The receipt or statement link under an item, lined up with its title (past the 40px icon and 12px gap). */
 const action =
@@ -79,12 +50,7 @@ function GoodToKnowItem({
   onViewReceipt: (fileId: string) => void;
 }) {
   const expense = g.kind === 'EXPENSE';
-  const look = expense
-    ? (CATEGORY[g.category ?? 'OTHER'] ?? CATEGORY.OTHER!)
-    : g.amountCents > 0
-      ? { icon: ArrowDownLeft, bg: 'bg-sage-tint', fg: 'text-sage-deep' }
-      : { icon: ArrowUpRight, bg: 'bg-danger-tint', fg: 'text-danger-deep' };
-  const Icon = look.icon;
+  const tone = expense ? 'text-ink/75' : g.amountCents > 0 ? 'text-sage-deep' : 'text-danger-deep';
   const kind = expense ? categoryLabel(g.category ?? 'OTHER') : g.amountCents > 0 ? 'Credit' : 'Charge';
   const source = expense ? g.vendor : g.statementMonth && `${monthOnly(g.statementMonth)} statement`;
   return (
@@ -92,16 +58,15 @@ function GoodToKnowItem({
       {/* Top-aligned: the icon's top lines up with the top of the title's letters (the nudge allows for the
           title's line height), and the amount sits level with the title. */}
       <div className="flex items-start gap-3">
-        <span
-          aria-hidden
-          className={cx('mt-[5px] grid size-10 shrink-0 place-items-center rounded-xl', look.bg, look.fg)}
-        >
-          <Icon className="size-[18px]" />
-        </span>
+        {expense ? (
+          <ExpenseCategoryIcon category={g.category} className="mt-1 shrink-0" />
+        ) : (
+          <AdjustmentIcon className="mt-1 shrink-0" />
+        )}
         <div className="min-w-0 flex-1">
           <p className="leading-snug font-medium text-ink">{g.title}</p>
           <p className="mt-0.5 text-xs text-muted">
-            <span className={cx('font-semibold', look.fg)}>{kind}</span>
+            <span className={cx('font-semibold', tone)}>{kind}</span>
             {source && ` · ${source}`}
           </p>
           {/* With several properties, which one it was, on its own line (so names never break mid-line). */}

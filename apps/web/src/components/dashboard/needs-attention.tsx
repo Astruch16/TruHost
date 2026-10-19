@@ -1,5 +1,8 @@
 import { Link } from '@tanstack/react-router';
-import { Banknote, ChevronRight, MailWarning, ReceiptText, Shield, type LucideIcon } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import type { IconProps } from '../illustrations/defs';
+import { InviteIcon } from '../illustrations/list-icons';
+import { ExpensesIcon, FeeIcon, GrossIcon } from '../illustrations/statement-icons';
 import { AllClearIllustration } from '../illustrations/all-clear';
 import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
@@ -15,11 +18,11 @@ export interface AttentionItem {
   date: string | null;
 }
 
-const ICONS: Record<AttentionItem['kind'], LucideIcon> = {
-  PAYOUT_MISSING: Banknote,
-  RECEIPT_MISSING: ReceiptText,
-  NO_PLAN: Shield,
-  INVITE_PENDING: MailWarning,
+const ICONS: Record<AttentionItem['kind'], (props: IconProps) => React.ReactElement> = {
+  PAYOUT_MISSING: GrossIcon,
+  RECEIPT_MISSING: ExpensesIcon,
+  NO_PLAN: FeeIcon,
+  INVITE_PENDING: InviteIcon,
 };
 
 function Target({ item, children }: { item: AttentionItem; children: React.ReactNode }) {
@@ -76,9 +79,7 @@ export function NeedsAttention({
             return (
               <li key={`${item.kind}-${item.id}`}>
                 <Target item={item}>
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lavender-tint text-lavender-deep">
-                    <Icon aria-hidden className="size-[18px]" />
-                  </span>
+                  <Icon className="shrink-0" />
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold text-ink">{item.title}</span>

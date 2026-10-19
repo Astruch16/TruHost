@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { unwrap, type ApiClient } from '@truhost/api-client';
-import { ArrowLeft, Download, FileText } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
+import { StatementDocIcon } from '../illustrations/list-icons';
 import { useApi } from '../../lib/api-context';
 import { formatCents } from '../../lib/money';
 import { monthLabel, shortDate } from '../../lib/months';
@@ -77,9 +78,7 @@ export function OwnerStatementsPage({ propertyId }: { propertyId: string | null 
                 key={s.id}
                 className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line py-4 first:pt-0 last:border-b-0 last:pb-0"
               >
-                <span className="grid size-11 shrink-0 place-items-center rounded-inner bg-sage-tint text-sage-deep">
-                  <FileText aria-hidden className="size-5" />
-                </span>
+                <StatementDocIcon size={44} className="shrink-0" />
                 <div className="min-w-0 flex-1">
                   <Link
                     to="/owner/statements/$statementId"
