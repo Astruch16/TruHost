@@ -89,13 +89,17 @@ function GoodToKnowItem({
   const source = expense ? g.vendor : g.statementMonth && `${monthOnly(g.statementMonth)} statement`;
   return (
     <li className="px-2 py-3.5 first:pt-1 last:pb-1">
-      {/* The icon sits centred beside the title and its details line. */}
-      <div className="flex items-center gap-3">
-        <span aria-hidden className={cx('grid size-10 shrink-0 place-items-center rounded-xl', look.bg, look.fg)}>
+      {/* Top-aligned: the icon's top lines up with the top of the title's letters (the nudge allows for the
+          title's line height), and the amount sits level with the title. */}
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className={cx('mt-[5px] grid size-10 shrink-0 place-items-center rounded-xl', look.bg, look.fg)}
+        >
           <Icon className="size-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-ink">{g.title}</p>
+          <p className="leading-snug font-medium text-ink">{g.title}</p>
           <p className="mt-0.5 text-xs text-muted">
             <span className={cx('font-semibold', look.fg)}>{kind}</span>
             {source && ` · ${source}`}
@@ -103,8 +107,8 @@ function GoodToKnowItem({
           {/* With several properties, which one it was, on its own line (so names never break mid-line). */}
           {showProperty && <p className="text-xs text-muted">{g.property.name}</p>}
         </div>
-        <div className="shrink-0 self-center text-right">
-          <p className={cx('figure font-semibold', g.amountCents > 0 ? 'text-sage-deep' : 'text-ink')}>
+        <div className="shrink-0 text-right">
+          <p className={cx('figure leading-snug font-semibold', g.amountCents > 0 ? 'text-sage-deep' : 'text-ink')}>
             {formatSigned(g.amountCents)}
           </p>
           <p className="mt-0.5 text-xs text-muted">{shortDate(g.date)}</p>
