@@ -10,7 +10,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import type { ApiClient } from '@truhost/api-client';
-import type { OwnerHome, OwnerMonth, OwnerStatement, OwnerSupplies } from '@truhost/shared';
+import type { OwnerCalendar, OwnerHome, OwnerMonth, OwnerStatement, OwnerSupplies } from '@truhost/shared';
 import { useState, type ReactNode } from 'react';
 import { ApiContext } from '../../lib/api-context';
 import { navItems } from '../../lib/nav';
@@ -21,6 +21,7 @@ import { OwnerSuppliesCard } from './supplies-card';
 import { GoodToKnowCard } from './good-to-know';
 import { YearToDateCard } from './year-card';
 import { OwnerDamagePage } from './owner-damage';
+import { OwnerCalendarPage } from './owner-calendar';
 import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 
 const ok = (data: unknown) => Promise.resolve({ data, response: new Response(null, { status: 200 }) });
@@ -367,6 +368,80 @@ describe('owner supplies', () => {
     };
     renderWith(() => ({}), <OwnerSuppliesCard data={{ properties: [empty] }} />);
     expect(await screen.findByText('No supplies tracked yet')).toBeInTheDocument();
+  });
+});
+
+describe('owner calendar', () => {
+  const stay = (over: Partial<OwnerCalendar['items'][number]>): OwnerCalendar['items'][number] => ({
+    bookingId: 'b1',
+    property: { id: 'p1', name: 'Cedar Cabin' },
+    kind: 'GUEST',
+    channel: 'AIRBNB',
+    checkInDate: '2026-10-07',
+    checkOutDate: '2026-10-12',
+    nights: 5,
+    nightsInMonth: 5,
+    ownerGrossCents: 86_250,
+    monthShareCents: 86_250,
+    payoutPending: false,
+    ...over,
+  });
+  const CAL: OwnerCalendar = {
+    month: '2026-10',
+    items: [
+      stay({}),
+      stay({
+        bookingId: 'b2',
+        channel: 'VRBO',
+        checkInDate: '2026-10-29',
+        checkOutDate: '2026-11-02',
+        nights: 4,
+        nightsInMonth: 3,
+        ownerGrossCents: 80_000,
+        monthShareCents: 60_000,
+      }),
+      stay({
+        bookingId: 'b3',
+        kind: 'GUEST',
+        channel: 'DIRECT',
+        ownerGrossCents: null,
+        monthShareCents: null,
+        payoutPending: true,
+      }),
+      stay({ bookingId: 'b4', kind: 'OWNER_STAY', channel: null, ownerGrossCents: null, monthShareCents: null }),
+    ],
+  };
+
+  it('lists each stay as its own tile with the month share, and opens its details', async () => {
+    renderWith(
+      () => CAL,
+      <OwnerCalendarPage month="2026-10" onMonthChange={() => {}} propertyId="p1" today="2026-10-19" />,
+    );
+    const glance = (await screen.findByRole('heading', { name: 'October 2026 at a glance' })).closest('section')!;
+    expect(glance.textContent).toContain('4 stays');
+    const tiles = within(glance).getAllByRole('button');
+    expect(tiles).toHaveLength(4);
+    expect(tiles[0]!.textContent).toContain('Airbnb guest');
+    expect(tiles[0]!.textContent).toContain('$862.50');
+    expect(tiles[0]!.textContent).toContain('Your share');
+    expect(tiles[1]!.textContent).toContain('4 nights · 3 in October');
+    expect(tiles[1]!.textContent).toContain('$600.00');
+    expect(tiles[1]!.textContent).toContain('Your share in Oct');
+    expect(tiles[2]!.textContent).toContain('Payout pending');
+    expect(tiles[3]!.textContent).toContain('Owner stay');
+
+    await userEvent.click(tiles[1]!);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.textContent).toContain('$800.00');
+    expect(dialog.textContent).toContain('4 (3 in October)');
+  });
+
+  it('says when nothing is booked', async () => {
+    renderWith(
+      () => ({ month: '2026-10', items: [] }),
+      <OwnerCalendarPage month="2026-10" onMonthChange={() => {}} propertyId="p1" today="2026-10-19" />,
+    );
+    expect(await screen.findByText('Nothing booked this month')).toBeInTheDocument();
   });
 });
 
