@@ -10,16 +10,17 @@ export function StatementDocIcon(props: IconProps) {
     <IconFrame {...props}>
       <IllustrationDefs ids={id} use={['shadow', 'gold', 'paper']} />
       <circle cx="20" cy="20" r="19" fill="#DDEBDF" />
-      <ellipse cx="20" cy="33" rx="10.5" ry="2.1" fill={url.shadow} />
-      <rect x="11" y="8.5" width="18" height="23" rx="2" transform="translate(1 1.2)" fill="#C9CEC6" />
-      <rect x="11" y="8.5" width="18" height="23" rx="2" fill={url.paper} />
-      <rect x="11" y="8.5" width="18" height="23" rx="2" fill="none" stroke="#DADDD7" strokeWidth="0.7" />
-      <path d="M11 13.5 V10.5 Q11 8.5 13 8.5 H27 Q29 8.5 29 10.5 V13.5 Z" fill="#4F7A63" />
-      <path d="M14 16.6 H26 M14 19.4 H22" stroke="#C9CEC6" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M13.8 28.4 H26.2" stroke="#DADDD7" strokeWidth="0.8" strokeLinecap="round" />
-      <rect x="14.6" y="24.6" width="2.6" height="3.4" rx="0.5" fill="#93BFA0" />
-      <rect x="18.7" y="22.8" width="2.6" height="5.2" rx="0.5" fill="#4F7A63" />
-      <rect x="22.8" y="21.2" width="2.6" height="6.8" rx="0.5" fill={url.gold} />
+      {/* Centred on the disc: the page and its depth copy (straight below it) span 7.6–30.9, the shadow sits under. */}
+      <ellipse cx="20" cy="32.3" rx="10" ry="2" fill={url.shadow} />
+      <rect x="11.5" y="7.6" width="17" height="22" rx="2" transform="translate(0 1.3)" fill="#C9CEC6" />
+      <rect x="11.5" y="7.6" width="17" height="22" rx="2" fill={url.paper} />
+      <rect x="11.5" y="7.6" width="17" height="22" rx="2" fill="none" stroke="#DADDD7" strokeWidth="0.7" />
+      <path d="M11.5 12.4 V9.6 Q11.5 7.6 13.5 7.6 H26.5 Q28.5 7.6 28.5 9.6 V12.4 Z" fill="#4F7A63" />
+      <path d="M14.4 15.6 H25.6 M14.4 18.4 H22" stroke="#C9CEC6" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M14 26.6 H26" stroke="#DADDD7" strokeWidth="0.8" strokeLinecap="round" />
+      <rect x="14.4" y="23.4" width="2.8" height="2.8" rx="0.5" fill="#93BFA0" />
+      <rect x="18.6" y="21.8" width="2.8" height="4.4" rx="0.5" fill="#4F7A63" />
+      <rect x="22.8" y="20.2" width="2.8" height="6" rx="0.5" fill={url.gold} />
     </IconFrame>
   );
 }
