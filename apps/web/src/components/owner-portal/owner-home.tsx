@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Mail } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
+import { cx } from '../../lib/cx';
 import { greeting } from '../../lib/owner';
+import { usePrefetchOwnerScopes } from '../../lib/owner-prefetch';
 import { queries } from '../../lib/queries';
+import { switchingStyles } from '../../lib/styles';
 import { openFile } from '../../lib/upload';
 import { ErrorAlert, LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
@@ -37,6 +40,15 @@ export function OwnerHomePage({
   const home = useQuery(queries.ownerHome(api, propertyId));
   const config = useQuery(queries.config(api));
   const supplies = useQuery(queries.ownerSupplies(api, propertyId));
+  const owned = useQuery(queries.ownerProperties(api));
+  // Switching property: the page stays on screen, softly dimmed, until the next property's figures arrive.
+  const switching = home.isPlaceholderData || supplies.isPlaceholderData;
+  usePrefetchOwnerScopes(
+    api,
+    owned.data?.items.map((p) => p.id) ?? [],
+    propertyId,
+    home.isSuccess && !home.isPlaceholderData,
+  );
   const [actionError, setActionError] = useState<unknown>(null);
   const h = home.data;
   const shown = month ?? h?.latest?.month ?? h?.month ?? null;
@@ -71,7 +83,7 @@ export function OwnerHomePage({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className={cx('flex flex-col gap-6', switchingStyles(switching))} aria-busy={switching || undefined}>
           <ErrorAlert error={actionError} />
           <MonthEarningsHero
             month={shown ?? h.month}

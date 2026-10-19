@@ -65,6 +65,13 @@ export const pillStyles = (tone: PillTone) =>
 export const updatingStyles = (updating: boolean) =>
   cx('transition-opacity duration-200', updating && 'pointer-events-none opacity-55');
 
+/**
+ * A page while it switches to another property: the current figures stay, softly dimmed, and the next ones fade in
+ * (a gentler, slower change than `updatingStyles`, since the whole page changes).
+ */
+export const switchingStyles = (switching: boolean) =>
+  cx('transition-opacity duration-300 ease-out motion-reduce:transition-none', switching && 'opacity-60');
+
 export const menuSurfaceStyles = cx(
   'z-50 overflow-hidden rounded-inner border border-line bg-surface p-1.5',
   'shadow-[0_16px_40px_-16px_rgba(26,29,33,0.28)]',
