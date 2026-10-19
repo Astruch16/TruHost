@@ -19,6 +19,7 @@ import { OwnerHomePage } from './owner-home';
 import { OwnerStatementPage, OwnerStatementsPage } from './owner-statements';
 import { OwnerSuppliesCard } from './supplies-card';
 import { GoodToKnowCard } from './good-to-know';
+import { YearToDateCard } from './year-card';
 import { OwnerDamagePage } from './owner-damage';
 import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 
@@ -444,5 +445,30 @@ describe('good to know', () => {
       'href',
       '/owner/statements/s1',
     );
+  });
+});
+
+describe('year to date', () => {
+  it('says how much of the year is covered, with each figure labelled', async () => {
+    renderWith(() => ({}), <YearToDateCard ytd={HOME.yearToDate} month="2026-10" />);
+    expect(await screen.findByRole('heading', { name: '2026 so far' })).toBeInTheDocument();
+    expect(screen.getByText('2 of 10 months released')).toBeInTheDocument();
+    expect(screen.getByText(/so every figure is final/)).toBeInTheDocument();
+    const net = screen.getByText('Net to you').parentElement!;
+    expect(net.textContent).toContain('$5,262.15');
+    expect(screen.getByText('42%')).toBeInTheDocument();
+    expect(screen.getByText('Avg. nightly earnings').parentElement!.textContent).toContain('$239.22');
+  });
+
+  it('explains the figures fill in before the first release', async () => {
+    renderWith(
+      () => ({}),
+      <YearToDateCard
+        ytd={{ year: 2026, months: 0, netCents: 0, nightsBooked: 0, occupancyBps: null, avgNightlyEarningsCents: null }}
+        month="2026-10"
+      />,
+    );
+    expect(await screen.findByText('0 of 10 months released')).toBeInTheDocument();
+    expect(screen.getByText(/fill in as your monthly statements are released/)).toBeInTheDocument();
   });
 });
