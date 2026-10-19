@@ -429,16 +429,18 @@ describe('good to know', () => {
     renderWith(() => ({}), <GoodToKnowCard items={items} showProperty onViewReceipt={onViewReceipt} />);
     const [expense, adjustment] = await screen.findAllByRole('listitem');
     expect(expense!.textContent).toContain('Subscriptions');
-    expect(expense!.textContent).toContain('Netflix · Seaside Loft');
+    expect(expense!.textContent).toContain('Subscriptions · Netflix');
+    expect(within(expense!).getByText('Seaside Loft')).toBeInTheDocument();
     expect(expense!.textContent).toContain('−$18.99');
     expect(expense!.textContent).toContain('Oct 15');
-    await userEvent.click(within(expense!).getByRole('button', { name: /Receipt/ }));
+    await userEvent.click(within(expense!).getByRole('button', { name: /View receipt/ }));
     expect(onViewReceipt).toHaveBeenCalledWith('f1');
 
     expect(adjustment!.textContent).toContain('Credit');
-    expect(adjustment!.textContent).toContain('September statement · Cedar Cabin');
+    expect(adjustment!.textContent).toContain('Credit · September statement');
+    expect(within(adjustment!).getByText('Cedar Cabin')).toBeInTheDocument();
     expect(adjustment!.textContent).toContain('+$42.50');
-    expect(within(adjustment!).getByRole('link', { name: /Statement/ })).toHaveAttribute(
+    expect(within(adjustment!).getByRole('link', { name: /View statement/ })).toHaveAttribute(
       'href',
       '/owner/statements/s1',
     );

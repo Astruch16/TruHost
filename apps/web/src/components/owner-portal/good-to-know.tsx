@@ -27,22 +27,23 @@ import { Card } from '../ui/card';
 type Item = OwnerHome['goodToKnow'][number];
 
 /** Each expense category's icon and tint, so a glance tells a restock from a repair. */
-const CATEGORY: Record<string, { icon: LucideIcon; tint: string }> = {
-  SUPPLIES: { icon: Package, tint: 'bg-amber-tint text-amber-deep' },
-  REPAIRS_MAINTENANCE: { icon: Wrench, tint: 'bg-blue-tint text-blue-deep' },
-  SUBSCRIPTIONS: { icon: Tv, tint: 'bg-lavender-tint text-lavender-deep' },
-  UTILITIES: { icon: Zap, tint: 'bg-amber-tint text-amber-deep' },
-  INTERNET: { icon: Wifi, tint: 'bg-blue-tint text-blue-deep' },
-  FURNISHINGS: { icon: Sofa, tint: 'bg-sage-tint text-sage-deep' },
-  CLEANING: { icon: Sparkles, tint: 'bg-sage-tint text-sage-deep' },
-  LICENSING_PERMITS: { icon: FileBadge, tint: 'bg-lavender-tint text-lavender-deep' },
-  INSURANCE: { icon: ShieldCheck, tint: 'bg-blue-tint text-blue-deep' },
-  STRATA: { icon: Building2, tint: 'bg-line-soft text-ink' },
-  OTHER: { icon: Receipt, tint: 'bg-line-soft text-ink' },
+const CATEGORY: Record<string, { icon: LucideIcon; bg: string; fg: string }> = {
+  SUPPLIES: { icon: Package, bg: 'bg-amber-tint', fg: 'text-amber-deep' },
+  REPAIRS_MAINTENANCE: { icon: Wrench, bg: 'bg-blue-tint', fg: 'text-blue-deep' },
+  SUBSCRIPTIONS: { icon: Tv, bg: 'bg-lavender-tint', fg: 'text-lavender-deep' },
+  UTILITIES: { icon: Zap, bg: 'bg-amber-tint', fg: 'text-amber-deep' },
+  INTERNET: { icon: Wifi, bg: 'bg-blue-tint', fg: 'text-blue-deep' },
+  FURNISHINGS: { icon: Sofa, bg: 'bg-sage-tint', fg: 'text-sage-deep' },
+  CLEANING: { icon: Sparkles, bg: 'bg-sage-tint', fg: 'text-sage-deep' },
+  LICENSING_PERMITS: { icon: FileBadge, bg: 'bg-lavender-tint', fg: 'text-lavender-deep' },
+  INSURANCE: { icon: ShieldCheck, bg: 'bg-blue-tint', fg: 'text-blue-deep' },
+  STRATA: { icon: Building2, bg: 'bg-line-soft', fg: 'text-ink' },
+  OTHER: { icon: Receipt, bg: 'bg-line-soft', fg: 'text-ink' },
 };
 
-const chip =
-  'inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep';
+/** The receipt or statement link under an item, lined up with its title (past the 40px icon and 12px gap). */
+const action =
+  'inline-flex items-center gap-1 rounded-control-sm text-xs font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-blue-deep';
 
 /**
  * Recent owner-paid expenses and adjustments on released statements: each with an icon for what it was, the date
@@ -81,58 +82,48 @@ function GoodToKnowItem({
   const look = expense
     ? (CATEGORY[g.category ?? 'OTHER'] ?? CATEGORY.OTHER!)
     : g.amountCents > 0
-      ? { icon: ArrowDownLeft, tint: 'bg-sage-tint text-sage-deep' }
-      : { icon: ArrowUpRight, tint: 'bg-danger-tint text-danger-deep' };
+      ? { icon: ArrowDownLeft, bg: 'bg-sage-tint', fg: 'text-sage-deep' }
+      : { icon: ArrowUpRight, bg: 'bg-danger-tint', fg: 'text-danger-deep' };
   const Icon = look.icon;
-  const where = [
-    expense ? g.vendor : g.statementMonth && `${monthOnly(g.statementMonth)} statement`,
-    showProperty ? g.property.name : null,
-  ].filter(Boolean);
+  const kind = expense ? categoryLabel(g.category ?? 'OTHER') : g.amountCents > 0 ? 'Credit' : 'Charge';
+  const source = expense ? g.vendor : g.statementMonth && `${monthOnly(g.statementMonth)} statement`;
   return (
-    <li className="flex gap-3 px-2 py-3.5 first:pt-1 last:pb-1">
-      <span aria-hidden className={cx('grid size-10 shrink-0 place-items-center rounded-xl', look.tint)}>
-        <Icon className="size-[18px]" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 font-medium text-ink">{g.title}</p>
-          <p className="shrink-0 text-right">
-            <span className={cx('figure block font-semibold', g.amountCents > 0 ? 'text-sage-deep' : 'text-ink')}>
-              {formatSigned(g.amountCents)}
-            </span>
-            <span className="block text-xs text-muted">{shortDate(g.date)}</span>
+    <li className="px-2 py-3.5 first:pt-1 last:pb-1">
+      {/* The icon sits centred beside the title and its details line. */}
+      <div className="flex items-center gap-3">
+        <span aria-hidden className={cx('grid size-10 shrink-0 place-items-center rounded-xl', look.bg, look.fg)}>
+          <Icon className="size-[18px]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-ink">{g.title}</p>
+          <p className="mt-0.5 text-xs text-muted">
+            <span className={cx('font-semibold', look.fg)}>{kind}</span>
+            {source && ` · ${source}`}
           </p>
+          {/* With several properties, which one it was, on its own line (so names never break mid-line). */}
+          {showProperty && <p className="text-xs text-muted">{g.property.name}</p>}
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted">
-          <span
-            className={cx(
-              'rounded-full px-2 py-0.5 font-semibold',
-              expense
-                ? look.tint
-                : g.amountCents > 0
-                  ? 'bg-sage-tint text-sage-deep'
-                  : 'bg-danger-tint text-danger-deep',
-            )}
-          >
-            {expense ? categoryLabel(g.category ?? 'OTHER') : g.amountCents > 0 ? 'Credit' : 'Charge'}
-          </span>
-          {where.length > 0 && <span className="min-w-0 truncate">{where.join(' · ')}</span>}
+        <div className="shrink-0 self-center text-right">
+          <p className={cx('figure font-semibold', g.amountCents > 0 ? 'text-sage-deep' : 'text-ink')}>
+            {formatSigned(g.amountCents)}
+          </p>
+          <p className="mt-0.5 text-xs text-muted">{shortDate(g.date)}</p>
         </div>
-        {(g.receiptFileId || g.statementId) && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {g.receiptFileId && (
-              <button type="button" onClick={() => onViewReceipt(g.receiptFileId!)} className={chip}>
-                <FileText aria-hidden className="size-3.5 text-muted" /> Receipt
-              </button>
-            )}
-            {g.statementId && (
-              <Link to="/owner/statements/$statementId" params={{ statementId: g.statementId }} className={chip}>
-                <FileText aria-hidden className="size-3.5 text-muted" /> Statement
-              </Link>
-            )}
-          </div>
-        )}
       </div>
+      {(g.receiptFileId || g.statementId) && (
+        <div className="mt-1.5 flex flex-wrap gap-x-4 pl-[52px]">
+          {g.receiptFileId && (
+            <button type="button" onClick={() => onViewReceipt(g.receiptFileId!)} className={action}>
+              <FileText aria-hidden className="size-3.5" /> View receipt
+            </button>
+          )}
+          {g.statementId && (
+            <Link to="/owner/statements/$statementId" params={{ statementId: g.statementId }} className={action}>
+              <FileText aria-hidden className="size-3.5" /> View statement
+            </Link>
+          )}
+        </div>
+      )}
     </li>
   );
 }
