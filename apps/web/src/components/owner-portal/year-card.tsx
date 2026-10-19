@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 import type { OwnerHome } from '@truhost/shared';
-import { BedDouble, ChartPie, Coins, Wallet, type LucideIcon } from 'lucide-react';
-import { cx } from '../../lib/cx';
 import { formatOccupancy } from '../../lib/format';
 import { KpiMoney } from '../dashboard/kpi-card';
 
 /**
  * The year so far, from the owner's released statements: what they were paid, nights booked, occupancy and average
- * nightly earnings, each on a soft tile with its icon, under a header that says how much of the year it covers.
+ * nightly earnings, each on a soft tile under its own header, beneath a card header that says how much of the
+ * year it covers.
  */
 export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; month: string }) {
   const monthsSoFar = Number(month.slice(5, 7));
@@ -31,24 +30,10 @@ export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; m
         </span>
       </header>
       <dl className="grid grid-cols-2 gap-3 @3xl/content:grid-cols-4">
+        <YearStat label="Net to you" value={<KpiMoney cents={ytd.netCents} />} support="Paid out this year" />
+        <YearStat label="Nights booked" value={ytd.nightsBooked} support="By guests" />
+        <YearStat label="Occupancy" value={formatOccupancy(ytd.occupancyBps)} support="Of the nights you didn’t use" />
         <YearStat
-          icon={Wallet}
-          tone="sage"
-          label="Net to you"
-          value={<KpiMoney cents={ytd.netCents} />}
-          support="Paid out this year"
-        />
-        <YearStat icon={BedDouble} tone="blue" label="Nights booked" value={ytd.nightsBooked} support="By guests" />
-        <YearStat
-          icon={ChartPie}
-          tone="lavender"
-          label="Occupancy"
-          value={formatOccupancy(ytd.occupancyBps)}
-          support="Of the nights you didn’t use"
-        />
-        <YearStat
-          icon={Coins}
-          tone="amber"
           label="Avg. nightly earnings"
           value={ytd.avgNightlyEarningsCents === null ? '—' : <KpiMoney cents={ytd.avgNightlyEarningsCents} />}
           support="After the cleaning fee"
@@ -58,33 +43,16 @@ export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; m
   );
 }
 
-const TONE = {
-  sage: 'bg-sage-tint text-sage-deep',
-  blue: 'bg-blue-tint text-blue-deep',
-  lavender: 'bg-lavender-tint text-lavender-deep',
-  amber: 'bg-amber-tint text-amber-deep',
-} as const;
-
-function YearStat({
-  icon: Icon,
-  tone,
-  label,
-  value,
-  support,
-}: {
-  icon: LucideIcon;
-  tone: keyof typeof TONE;
-  label: string;
-  value: ReactNode;
-  support: string;
-}) {
+/** One figure: a small header ruled off from the figure below it, then a short note. */
+function YearStat({ label, value, support }: { label: string; value: ReactNode; support: string }) {
   return (
-    <div className="@container/stat flex min-w-0 flex-col rounded-inner bg-ground/70 p-4">
-      <span aria-hidden className={cx('mb-3 grid size-9 place-items-center rounded-xl', TONE[tone])}>
-        <Icon className="size-[18px]" />
-      </span>
-      <dt className="text-[13px] font-semibold text-muted">{label}</dt>
-      <dd className="figure mt-0.5 text-[1.625rem] leading-tight font-bold tracking-[-0.03em] whitespace-nowrap text-ink @[11rem]/stat:text-[1.875rem]">
+    <div className="@container/stat flex min-w-0 flex-col rounded-inner bg-ground/70 px-4 pt-3.5 pb-4">
+      {/* Room for two lines, label at the bottom: the rule and the figure line up across tiles even when a label
+          (e.g. "Avg. nightly earnings") wraps. */}
+      <dt className="flex min-h-[calc(2lh+0.5rem+1px)] items-end border-b border-line pb-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+        {label}
+      </dt>
+      <dd className="figure mt-3 text-[1.625rem] leading-tight font-bold tracking-[-0.03em] whitespace-nowrap text-ink @[11rem]/stat:text-[1.875rem]">
         {value}
       </dd>
       <dd className="mt-1 text-xs text-muted">{support}</dd>
