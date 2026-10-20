@@ -719,6 +719,25 @@
 .lg-firefly {
   animation: lg-firefly 4s ease-in-out infinite;
 }
+/* The sidebar scene's chimney smoke: a short curl, sized for its small cabin. */
+@keyframes sb-smoke {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(7px, -24px) scale(1.8);
+    opacity: 0;
+  }
+}
+.sb-smoke {
+  animation: sb-smoke 5s ease-out infinite backwards;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
 .lg-glow {
   animation: lg-glow 4s ease-in-out infinite;
 }
@@ -758,6 +777,7 @@
   .lg-flap,
   .lg-drift,
   .lg-smoke,
+  .sb-smoke,
   .lg-firefly,
   .lg-glow,
   .lg-shimmer,
