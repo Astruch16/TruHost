@@ -18,6 +18,7 @@ const UPLOAD_ACTION: Record<Exclude<UploadInput['purpose'], 'AVATAR'>, Action> =
   RECEIPT: 'receipt:write',
   PROPERTY_PHOTO: 'property:write',
   DAMAGE_PHOTO: 'damage:report',
+  CLEAN_PHOTO: 'clean:work',
 };
 
 type FileRef = { objectKey: string; contentType: string };
@@ -143,6 +144,8 @@ export class FilesService {
         damagePhoto: { select: { report: { select: { status: true, reportedById: true } } } },
         damagePhotoThumb: { select: { report: { select: { status: true, reportedById: true } } } },
         statementPdf: { select: { id: true } },
+        cleanPhoto: { select: { id: true } },
+        cleanPhotoThumb: { select: { id: true } },
       },
     });
     if (!file || !this.canView(actor, file)) throw notFound('File');
@@ -160,6 +163,8 @@ export class FilesService {
       damagePhoto: { report: DamageVisibility } | null;
       damagePhotoThumb: { report: DamageVisibility } | null;
       statementPdf: { id: string } | null;
+      cleanPhoto: { id: string } | null;
+      cleanPhotoThumb: { id: string } | null;
     },
   ): boolean {
     // Avatars: their owner and admins (who see everyone on the team page).
@@ -174,6 +179,8 @@ export class FilesService {
       if (!this.access.can(actor, 'damage:read', file.propertyId)) return false;
       return damage.status !== 'DRAFT' || damage.reportedById === actor.userId;
     }
+    // Clean photos: whoever can see the property's cleans.
+    if (file.cleanPhoto || file.cleanPhotoThumb) return this.access.can(actor, 'clean:read', file.propertyId);
     // Statement PDFs: whoever may read statements of the property.
     if (file.statementPdf) return this.access.can(actor, 'statement:read', file.propertyId);
     // Unattached uploads are visible only to whoever uploaded them.

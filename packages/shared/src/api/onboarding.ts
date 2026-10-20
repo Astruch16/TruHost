@@ -3,9 +3,10 @@ import { OnboardingRole, TourStatus } from '../enums.js';
 
 /**
  * Each welcome tour's version. Bump one when its tour changes materially: anyone who finished or skipped an older
- * version is offered it once more. OWNER 2 (2026-10-20): every section of the home page, and each page's content.
+ * version is offered it once more. OWNER 2 (2026-10-20): every section of the home page, and each page's content. CLEANER 2
+ * (2026-10-21): the schedule and the photo checklist.
  */
-export const TOUR_VERSIONS: Record<OnboardingRole, number> = { ADMIN: 1, OWNER: 2, CLEANER: 1 };
+export const TOUR_VERSIONS: Record<OnboardingRole, number> = { ADMIN: 1, OWNER: 2, CLEANER: 2 };
 
 export const onboardingTour = z.object({
   role: OnboardingRole,

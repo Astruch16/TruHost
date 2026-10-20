@@ -15,6 +15,7 @@ function Home() {
   if (!me.data) return <LoadingBlock />;
   if (me.data.staffRole === 'ADMIN') return <Navigate to="/admin" />;
   if (usesOwnerPortal(me.data)) return <Navigate to="/owner" />;
+  if (me.data.memberships.some((m) => m.role === 'CLEANER')) return <Navigate to="/cleaner" />;
   if (me.data.memberships.length > 0) return <Navigate to="/properties" />;
   return (
     <EmptyState title="No properties yet">

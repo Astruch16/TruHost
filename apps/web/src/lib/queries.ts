@@ -1,5 +1,6 @@
 import { queryOptions, type QueryKey } from '@tanstack/react-query';
 import { unwrap, type ApiClient } from '@truhost/api-client';
+import type { CleanQuery } from '@truhost/shared';
 
 /**
  * For reads by month: while another month loads, keep showing the one on screen (pages dim it) instead of falling
@@ -31,6 +32,16 @@ export const queries = {
       queryKey: ['me', 'onboarding'],
       queryFn: () => unwrap(api.GET('/v1/me/onboarding')),
       staleTime: Infinity,
+    }),
+  cleans: (api: ApiClient, query: CleanQuery) =>
+    queryOptions({
+      queryKey: ['cleans', 'list', query],
+      queryFn: () => unwrap(api.GET('/v1/cleans', { params: { query } })),
+    }),
+  clean: (api: ApiClient, id: string) =>
+    queryOptions({
+      queryKey: ['cleans', 'one', id],
+      queryFn: () => unwrap(api.GET('/v1/cleans/{id}', { params: { path: { id } } })),
     }),
   config: (api: ApiClient) =>
     queryOptions({ queryKey: ['config'], queryFn: () => unwrap(api.GET('/v1/config')), staleTime: Infinity }),

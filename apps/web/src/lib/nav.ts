@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Building2,
+  CalendarCheck,
   CalendarDays,
   Camera,
   FileText,
@@ -47,14 +48,18 @@ export function navItems(me: { staffRole: string | null; memberships: { role: st
       { to: '/owner/damage', label: 'Damage', icon: TriangleAlert, tab: true },
       { to: '/owner/care', label: 'Care', icon: Camera, tab: true },
     );
-    // Someone who also cleans a property keeps their cleaner pages.
+    // Someone who also cleans a property keeps their cleaning schedule.
     if (me.memberships.some((m) => m.role === 'CLEANER')) {
-      items.push({ to: '/properties', label: 'Cleaning', icon: Building2 });
+      items.push({ to: '/cleaner', label: 'Cleaning', icon: CalendarCheck });
     }
     items.push({ to: '/account', label: 'Settings', icon: Settings });
     return items;
   }
   if (me.staffRole === 'ADMIN') items.push({ to: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true });
+  // Cleaners: their schedule first (it's their home page).
+  if (me.memberships.some((m) => m.role === 'CLEANER')) {
+    items.push({ to: '/cleaner', label: 'Schedule', icon: CalendarCheck, exact: true });
+  }
   if (me.memberships.length > 0) items.push({ to: '/properties', label: 'My properties', icon: Home });
   if (me.staffRole === 'ADMIN') {
     items.push(

@@ -4,6 +4,7 @@ import type { createBooking } from '@truhost/shared';
 import type { z } from 'zod';
 import { AccessService } from '../access/access.service.js';
 import { AuditService } from '../audit/audit.service.js';
+import { syncTurnover } from '../cleans/turnover.js';
 import type { Actor } from '../auth/actor.js';
 import { fromIsoDate, toIsoDate } from '../common/dates.js';
 import { PG, pgErrorCode } from '../common/pg-errors.js';
@@ -97,6 +98,7 @@ export class BookingsService {
       const row = await tx.booking.create({
         data: { ...data, propertyId, source: 'MANUAL', enteredById: actor.userId },
       });
+      await syncTurnover(tx, row.id);
       await this.audit.record(tx, actor, {
         action: 'booking.create',
         entityType: 'Booking',
@@ -149,6 +151,7 @@ export class BookingsService {
       });
       if (count !== 1) throw staleVersion();
       const after = await tx.booking.findUniqueOrThrow({ where: { id } });
+      await syncTurnover(tx, id);
       await this.audit.recordUpdate(
         tx,
         actor,
@@ -182,6 +185,7 @@ export class BookingsService {
       });
       if (count !== 1) throw staleVersion();
       const after = await tx.booking.findUniqueOrThrow({ where: { id } });
+      await syncTurnover(tx, id);
       await this.audit.record(tx, actor, {
         action: 'booking.cancel',
         entityType: 'Booking',

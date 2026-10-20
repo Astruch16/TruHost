@@ -48,7 +48,9 @@ export async function unwrap<T>(call: Promise<{ data?: T; error?: unknown; respo
   const { data, error, response } = await call;
   if (response.ok) return data as T;
   const problem = (error ?? {}) as Partial<Problem>;
+  // Extra fields a problem carries (e.g. `missing` on CLEAN_MISSING_PHOTOS) are kept; the standard ones normalised.
   throw new ApiError(response.status, {
+    ...problem,
     type: problem.type ?? 'about:blank',
     title: problem.title ?? response.statusText,
     status: response.status,

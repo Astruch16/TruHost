@@ -45,6 +45,7 @@ import { Route as AppAdminExpensesRouteImport } from './routes/_app/admin/expens
 import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
 import { Route as AppAdminSuppliesRouteImport } from './routes/_app/admin/supplies'
 import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
+import { Route as AppCleanerIndexRouteImport } from './routes/_app/cleaner/index'
 import { Route as AppOwnerIndexRouteImport } from './routes/_app/owner/index'
 import { Route as AppOwnerCalendarRouteImport } from './routes/_app/owner/calendar'
 import { Route as AppOwnerCareRouteImport } from './routes/_app/owner/care'
@@ -55,6 +56,7 @@ import { Route as AppAdminPropertiesIndexRouteImport } from './routes/_app/admin
 import { Route as AppAdminPropertiesPropertyIdRouteImport } from './routes/_app/admin/properties/$propertyId'
 import { Route as AppAdminStatementsIndexRouteImport } from './routes/_app/admin/statements/index'
 import { Route as AppAdminStatementsStatementIdRouteImport } from './routes/_app/admin/statements/$statementId'
+import { Route as AppCleanerCleansCleanIdRouteImport } from './routes/_app/cleaner/cleans/$cleanId'
 import { Route as AppCleanerPropertiesPropertyIdRouteImport } from './routes/_app/cleaner/properties/$propertyId'
 import { Route as AppOwnerStatementsIndexRouteImport } from './routes/_app/owner/statements/index'
 import { Route as AppOwnerStatementsStatementIdRouteImport } from './routes/_app/owner/statements/$statementId'
@@ -238,6 +240,11 @@ const AppAdminTeamRoute = AppAdminTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppCleanerIndexRoute = AppCleanerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCleanerRoute,
+} as any)
 const AppOwnerIndexRoute = AppOwnerIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -290,6 +297,11 @@ const AppAdminStatementsStatementIdRoute =
     path: '/statements/$statementId',
     getParentRoute: () => AppAdminRoute,
   } as any)
+const AppCleanerCleansCleanIdRoute = AppCleanerCleansCleanIdRouteImport.update({
+  id: '/cleans/$cleanId',
+  path: '/cleans/$cleanId',
+  getParentRoute: () => AppCleanerRoute,
+} as any)
 const AppCleanerPropertiesPropertyIdRoute =
   AppCleanerPropertiesPropertyIdRouteImport.update({
     id: '/properties/$propertyId',
@@ -348,10 +360,12 @@ export interface FileRoutesByFullPath {
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/account/': typeof AppAccountIndexRoute
   '/admin/': typeof AppAdminIndexRoute
+  '/cleaner/': typeof AppCleanerIndexRoute
   '/owner/': typeof AppOwnerIndexRoute
   '/properties/': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
+  '/cleaner/cleans/$cleanId': typeof AppCleanerCleansCleanIdRoute
   '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/owner/statements/$statementId': typeof AppOwnerStatementsStatementIdRoute
   '/admin/properties/': typeof AppAdminPropertiesIndexRoute
@@ -360,7 +374,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
-  '/cleaner': typeof AppCleanerRouteWithChildren
   '/dev/bookings': typeof DevBookingsRoute
   '/dev/calendar': typeof DevCalendarRoute
   '/dev/damage': typeof DevDamageRoute
@@ -395,10 +408,12 @@ export interface FileRoutesByTo {
   '/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/account': typeof AppAccountIndexRoute
   '/admin': typeof AppAdminIndexRoute
+  '/cleaner': typeof AppCleanerIndexRoute
   '/owner': typeof AppOwnerIndexRoute
   '/properties': typeof AppPropertiesIndexRoute
   '/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
+  '/cleaner/cleans/$cleanId': typeof AppCleanerCleansCleanIdRoute
   '/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/owner/statements/$statementId': typeof AppOwnerStatementsStatementIdRoute
   '/admin/properties': typeof AppAdminPropertiesIndexRoute
@@ -447,10 +462,12 @@ export interface FileRoutesById {
   '/_app/properties/$propertyId': typeof AppPropertiesPropertyIdRoute
   '/_app/account/': typeof AppAccountIndexRoute
   '/_app/admin/': typeof AppAdminIndexRoute
+  '/_app/cleaner/': typeof AppCleanerIndexRoute
   '/_app/owner/': typeof AppOwnerIndexRoute
   '/_app/properties/': typeof AppPropertiesIndexRoute
   '/_app/admin/properties/$propertyId': typeof AppAdminPropertiesPropertyIdRoute
   '/_app/admin/statements/$statementId': typeof AppAdminStatementsStatementIdRoute
+  '/_app/cleaner/cleans/$cleanId': typeof AppCleanerCleansCleanIdRoute
   '/_app/cleaner/properties/$propertyId': typeof AppCleanerPropertiesPropertyIdRoute
   '/_app/owner/statements/$statementId': typeof AppOwnerStatementsStatementIdRoute
   '/_app/admin/properties/': typeof AppAdminPropertiesIndexRoute
@@ -499,10 +516,12 @@ export interface FileRouteTypes {
     | '/properties/$propertyId'
     | '/account/'
     | '/admin/'
+    | '/cleaner/'
     | '/owner/'
     | '/properties/'
     | '/admin/properties/$propertyId'
     | '/admin/statements/$statementId'
+    | '/cleaner/cleans/$cleanId'
     | '/cleaner/properties/$propertyId'
     | '/owner/statements/$statementId'
     | '/admin/properties/'
@@ -511,7 +530,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sso-callback'
-    | '/cleaner'
     | '/dev/bookings'
     | '/dev/calendar'
     | '/dev/damage'
@@ -546,10 +564,12 @@ export interface FileRouteTypes {
     | '/properties/$propertyId'
     | '/account'
     | '/admin'
+    | '/cleaner'
     | '/owner'
     | '/properties'
     | '/admin/properties/$propertyId'
     | '/admin/statements/$statementId'
+    | '/cleaner/cleans/$cleanId'
     | '/cleaner/properties/$propertyId'
     | '/owner/statements/$statementId'
     | '/admin/properties'
@@ -597,10 +617,12 @@ export interface FileRouteTypes {
     | '/_app/properties/$propertyId'
     | '/_app/account/'
     | '/_app/admin/'
+    | '/_app/cleaner/'
     | '/_app/owner/'
     | '/_app/properties/'
     | '/_app/admin/properties/$propertyId'
     | '/_app/admin/statements/$statementId'
+    | '/_app/cleaner/cleans/$cleanId'
     | '/_app/cleaner/properties/$propertyId'
     | '/_app/owner/statements/$statementId'
     | '/_app/admin/properties/'
@@ -884,6 +906,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminTeamRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/cleaner/': {
+      id: '/_app/cleaner/'
+      path: '/'
+      fullPath: '/cleaner/'
+      preLoaderRoute: typeof AppCleanerIndexRouteImport
+      parentRoute: typeof AppCleanerRoute
+    }
     '/_app/owner/': {
       id: '/_app/owner/'
       path: '/'
@@ -953,6 +982,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/statements/$statementId'
       preLoaderRoute: typeof AppAdminStatementsStatementIdRouteImport
       parentRoute: typeof AppAdminRoute
+    }
+    '/_app/cleaner/cleans/$cleanId': {
+      id: '/_app/cleaner/cleans/$cleanId'
+      path: '/cleans/$cleanId'
+      fullPath: '/cleaner/cleans/$cleanId'
+      preLoaderRoute: typeof AppCleanerCleansCleanIdRouteImport
+      parentRoute: typeof AppCleanerRoute
     }
     '/_app/cleaner/properties/$propertyId': {
       id: '/_app/cleaner/properties/$propertyId'
@@ -1031,10 +1067,14 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 )
 
 interface AppCleanerRouteChildren {
+  AppCleanerIndexRoute: typeof AppCleanerIndexRoute
+  AppCleanerCleansCleanIdRoute: typeof AppCleanerCleansCleanIdRoute
   AppCleanerPropertiesPropertyIdRoute: typeof AppCleanerPropertiesPropertyIdRoute
 }
 
 const AppCleanerRouteChildren: AppCleanerRouteChildren = {
+  AppCleanerIndexRoute: AppCleanerIndexRoute,
+  AppCleanerCleansCleanIdRoute: AppCleanerCleansCleanIdRoute,
   AppCleanerPropertiesPropertyIdRoute: AppCleanerPropertiesPropertyIdRoute,
 }
 

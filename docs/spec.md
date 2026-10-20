@@ -692,9 +692,8 @@ model Clean {
   /// The stay whose checkout triggers this clean. One turnover per booking.
   bookingId         String?     @unique @db.Uuid
   scheduledDate     DateTime    @db.Date
-  /// From checkout to the next check-in. Recomputed when bookings change. windowEnd is null if nothing follows.
-  windowStart       DateTime?   @db.Timestamptz
-  windowEnd         DateTime?   @db.Timestamptz
+  /// The window (check-out to the next check-in) is not stored: the API works it out from the bookings when read
+  /// (decision 2026-10-21), as property-local dates and times, so it can't go stale when bookings change.
   status            CleanStatus @default(SCHEDULED)
   /// Defaults to Property.defaultCleanerId at creation; an admin can override. Must hold an active CLEANER membership
   /// on the property. Required to start. Frozen once COMPLETE, because it identifies who is owed the pay.
@@ -711,7 +710,7 @@ model Clean {
   /// it until paid. Only COMPLETE cleans are payable.
   cleanerPayCents   Int         @default(0)
   /// The active (non-voided) payment covering this clean. Non-null means paid. Voiding the payment clears it, and
-  /// CleanerPaymentLine keeps the history.
+  /// CleanerPaymentLine keeps the history. Added with cleaner pay (Phase 3, part 3).
   cleanerPaymentId  String?     @db.Uuid
 
   version           Int         @default(0)
@@ -766,7 +765,9 @@ model CleanPhoto {
   propertyId   String     @db.Uuid
   roomId       String     @db.Uuid
   phase        PhotoPhase
+  /// Two JPEG renditions made in the browser, as damage photos: the evidence copy and a thumbnail.
   fileId       String     @unique @db.Uuid
+  thumbFileId  String     @unique @db.Uuid
   uploadedById String     @db.Uuid
   createdAt    DateTime   @default(now()) @db.Timestamptz
   // FK (propertyId, cleanId) → Clean(propertyId, id); FK (propertyId, roomId) → Room(propertyId, id)
@@ -1365,21 +1366,21 @@ only), cleaner pay, TruHost's cleaning-fee revenue, other owners, notes or audit
 
 ### Cleans & cleaner pay [3]
 
-| Method | Path                         | Roles           | Notes                                                                                                                                                |
-| ------ | ---------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/cleans`                    | A O C           | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans.                                                               |
-| GET    | `/cleans/:id`                | A O C           | Includes the room checklist.                                                                                                                         |
-| POST   | `/properties/:id/cleans`     | A               | ADHOC.                                                                                                                                               |
-| PATCH  | `/cleans/:id`                | A               | Override the assigned cleaner, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited.                                          |
-| POST   | `/cleans/:id/start`          | A, C (assignee) | SCHEDULED → IN_PROGRESS. A cleaner may start only on `scheduledDate` in the property's time zone (422 `CLEAN_NOT_TODAY`). Admins may start any time. |
-| POST   | `/cleans/:id/photos`         | A, C (assignee) | IN_PROGRESS only.                                                                                                                                    |
-| GET    | `/cleans/:id/photos`         | A O C           |                                                                                                                                                      |
-| POST   | `/cleans/:id/complete`       | A, C (assignee) | 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases.                                                                                        |
-| POST   | `/cleans/:id/cancel`         | A               | Audited.                                                                                                                                             |
-| GET    | `/cleaner-pay`               | A               | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner.                                                                                        |
-| POST   | `/cleaner-payments`          | A               | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited.                          |
-| GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                   |
-| POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                       |
+| Method | Path                         | Roles           | Notes                                                                                                                                                   |
+| ------ | ---------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/cleans`                    | A O C           | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans.                                                                  |
+| GET    | `/cleans/:id`                | A O C           | Includes the room checklist.                                                                                                                            |
+| POST   | `/properties/:id/cleans`     | A               | ADHOC.                                                                                                                                                  |
+| PATCH  | `/cleans/:id`                | A               | Override the assigned cleaner, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited.                                             |
+| POST   | `/cleans/:id/start`          | A, C (assignee) | SCHEDULED → IN_PROGRESS. A cleaner may start only on `scheduledDate` in the property's time zone (422 `CLEAN_NOT_TODAY`). Admins may start any time.    |
+| POST   | `/cleans/:id/photos`         | A, C (assignee) | IN_PROGRESS only. `{ roomId, phase, fileId, thumbFileId }` (CLEAN_PHOTO uploads). 422 `UNKNOWN_ROOM` / `TOO_MANY_CLEAN_PHOTOS` (12 per room and phase). |
+| GET    | `/cleans/:id/photos`         | A O C           |                                                                                                                                                         |
+| POST   | `/cleans/:id/complete`       | A, C (assignee) | 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases; 422 `CLEAN_NO_ROOMS` when the property has no rooms set up.                               |
+| POST   | `/cleans/:id/cancel`         | A               | Audited.                                                                                                                                                |
+| GET    | `/cleaner-pay`               | A               | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner.                                                                                           |
+| POST   | `/cleaner-payments`          | A               | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited.                             |
+| GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                      |
+| POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                          |
 
 ### Supplies (built early)
 
@@ -1737,10 +1738,24 @@ adds a supplies step to the clean walkthrough. Mobile-first cleaner screens:
 schedule, room checklist with camera upload, earnings. Admin schedule board,
 assignment and pay run. Completing a clean is a milestone: the
 cleaner sees the celebrating guide (`SuccessNotice`).
-**Run:** a booking creates a clean, a cleaner completes it on a phone
-(completion is refused while a photo is missing), and the admin records the
-payment. Marking an item OUT shows an alert to admins and owners and emails
-the admins.
+
+**Status (2026-10-21), built in parts:**
+
+1. **Built: cleans and the cleaner's day.**
+   - `Clean` and `CleanPhoto`, with `clean_guard` (allowed moves only, a COMPLETE clean frozen, completing needs
+     every photo) and `clean_photo_guard` (immutable, added only while IN_PROGRESS).
+   - Turnovers follow their stays in the booking's transaction (`cleans/turnover.ts`). The migration backfilled
+     turnovers for stays checking out on or after its day; past stays get none.
+   - `GET /cleans`, `GET /cleans/:id`, `GET /cleans/:id/photos`, start, photos and complete.
+   - Cleaner screens: the schedule (their landing page), the clean walkthrough (camera per room and phase, supplies
+     check, completing) and their next cleans on each property page. The cleaner tour covers them (version 2).
+2. Next: the admin schedule board (`PATCH`, `POST /properties/:id/cleans`, cancel).
+3. Then: cleaner pay (payments, void, the cleaner's earnings, the admin pay run, `cleanerPaymentId`).
+4. Then: the owner side (Care photos, the owner-stay cleaning charge from the completed clean).
+   **Run:** a booking creates a clean, a cleaner completes it on a phone
+   (completion is refused while a photo is missing), and the admin records the
+   payment. Marking an item OUT shows an alert to admins and owners and emails
+   the admins.
 
 ### Phase 4: Damage reports and audit viewer
 

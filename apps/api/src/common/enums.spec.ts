@@ -14,7 +14,10 @@ const checks: [
   Same<shared.Guide, db.Guide>,
   Same<shared.OnboardingRole, db.OnboardingRole>,
   Same<shared.TourStatus, db.TourStatus>,
-] = [true, true, true, true, true, true, true, true, true];
+  Same<shared.CleanKind, db.CleanKind>,
+  Same<shared.CleanStatus, db.CleanStatus>,
+  Same<shared.PhotoPhase, db.PhotoPhase>,
+] = [true, true, true, true, true, true, true, true, true, true, true, true];
 
 describe('shared enums', () => {
   it('match the database enums', () => {

@@ -70,6 +70,10 @@ model User {
   notifications          Notification[]
   damageReported         DamageReport[]        @relation("DamageReporter")
   damagePhotosUploaded   DamagePhoto[]
+  cleansAssigned         Clean[]               @relation("CleanAssignee")
+  cleansStarted          Clean[]               @relation("CleanStartedBy")
+  cleansCompleted        Clean[]               @relation("CleanCompletedBy")
+  cleanPhotosUploaded    CleanPhoto[]
   statementsCreated      OwnerStatement[]      @relation("StatementCreatedBy")
   statementsFinalized    OwnerStatement[]      @relation("StatementFinalizedBy")
   statementsReleased     OwnerStatement[]      @relation("StatementReleasedBy")
@@ -254,6 +258,7 @@ model Property {
   photos        PropertyPhoto[]  @relation("PropertyPhotos")
   supplies      SupplyItem[]
   damageReports DamageReport[]
+  cleans        Clean[]
   notifications Notification[]
   statements    OwnerStatement[]
 }
@@ -317,6 +322,7 @@ model Room {
   createdAt  DateTime  @default(now()) @db.Timestamptz
 
   damageReports DamageReport[]
+  cleanPhotos   CleanPhoto[]
 
   /// Target of CleanPhoto's composite FK (Phase 3), proving the room belongs to the clean's property.
   @@unique([propertyId, id])
@@ -437,6 +443,7 @@ model Booking {
   // + EXCLUDE booking_no_overlap and CHECKs (raw SQL in the migration)
 
   damageReports  DamageReport[]
+  cleans         Clean[]
   statementLines OwnerStatementLine[]
 
   /// Target of DamageReport's composite FK, proving a report's stay belongs to its property.
@@ -722,6 +729,8 @@ model StoredFile {
   avatarOf           User?           @relation("UserAvatar")
   damagePhoto        DamagePhoto?    @relation("DamagePhotoLarge")
   damagePhotoThumb   DamagePhoto?    @relation("DamagePhotoThumb")
+  cleanPhoto         CleanPhoto?     @relation("CleanPhotoLarge")
+  cleanPhotoThumb    CleanPhoto?     @relation("CleanPhotoThumb")
   propertyPhoto      PropertyPhoto?  @relation("PropertyPhotoLarge")
   propertyPhotoThumb PropertyPhoto?  @relation("PropertyPhotoThumb")
   statementPdf       OwnerStatement? @relation("StatementPdf")
@@ -889,6 +898,90 @@ model DamagePhoto {
   createdAt      DateTime     @default(now()) @db.Timestamptz
 
   @@index([damageReportId, createdAt])
+}
+
+// ───────────────────────── Cleaning (Phase 3) ─────────────────────────
+
+enum CleanKind {
+  /// Created from a booking's check-out (GUEST and OWNER_STAY stays; not blocks).
+  TURNOVER
+  /// Created by an admin (deep clean, inspection).
+  ADHOC
+}
+
+/// SCHEDULED → IN_PROGRESS → COMPLETE, or CANCELLED (and back to SCHEDULED if its stay is restored). clean_guard.
+enum CleanStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETE
+  CANCELLED
+}
+
+/// One clean of a property. A turnover follows its stay: moving the stay moves a SCHEDULED clean, cancelling it cancels
+/// one. Its window (check-out to the next check-in) is worked out from the bookings when read, so it never goes stale.
+/// Completing needs a BEFORE and an AFTER photo of every active room (the API checks; clean_guard backs it up).
+model Clean {
+  id                String      @id @default(uuid(7)) @db.Uuid
+  propertyId        String      @db.Uuid
+  property          Property    @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  kind              CleanKind
+  /// The stay whose check-out this clean follows. One turnover per stay (CHECK: turnovers only).
+  bookingId         String?     @unique @db.Uuid
+  booking           Booking?    @relation(fields: [propertyId, bookingId], references: [propertyId, id], onDelete: Restrict)
+  /// In the property's time zone. A cleaner may start only on this day.
+  scheduledDate     DateTime    @db.Date
+  status            CleanStatus @default(SCHEDULED)
+  /// The property's default cleaner when created; admins can reassign. Required to start; fixed once COMPLETE (pay).
+  assignedCleanerId String?     @db.Uuid
+  assignedCleaner   User?       @relation("CleanAssignee", fields: [assignedCleanerId], references: [id], onDelete: Restrict)
+  startedAt         DateTime?   @db.Timestamptz
+  startedById       String?     @db.Uuid
+  startedBy         User?       @relation("CleanStartedBy", fields: [startedById], references: [id], onDelete: Restrict)
+  completedAt       DateTime?   @db.Timestamptz
+  completedById     String?     @db.Uuid
+  completedBy       User?       @relation("CleanCompletedBy", fields: [completedById], references: [id], onDelete: Restrict)
+  cancelledAt       DateTime?   @db.Timestamptz
+  cancelReason      String?
+  notes             String?
+  /// Owed to the assigned cleaner: the property's defaultCleanerPayCents when created. Admins and its cleaner see it.
+  cleanerPayCents   Int         @default(0)
+  version           Int         @default(0)
+  createdAt         DateTime    @default(now()) @db.Timestamptz
+  updatedAt         DateTime    @updatedAt @db.Timestamptz
+  photos            CleanPhoto[]
+
+  @@unique([propertyId, id])
+  @@index([propertyId, scheduledDate])
+  @@index([assignedCleanerId, scheduledDate])
+}
+
+enum PhotoPhase {
+  BEFORE
+  AFTER
+}
+
+/// A room's BEFORE or AFTER photo on a clean: evidence, immutable (clean_photo_immutable), added only while the clean
+/// is IN_PROGRESS. A bad shot is fixed by adding another. Two JPEG renditions made in the browser, as damage photos.
+model CleanPhoto {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  cleanId      String     @db.Uuid
+  /// Denormalised so the composite keys prove the clean and the room are at the same property.
+  propertyId   String     @db.Uuid
+  clean        Clean      @relation(fields: [propertyId, cleanId], references: [propertyId, id], onDelete: Restrict)
+  roomId       String     @db.Uuid
+  room         Room       @relation(fields: [propertyId, roomId], references: [propertyId, id], onDelete: Restrict)
+  phase        PhotoPhase
+  /// Large JPEG (long edge up to 2400px): the evidence copy.
+  fileId       String     @unique @db.Uuid
+  file         StoredFile @relation("CleanPhotoLarge", fields: [fileId], references: [id], onDelete: Restrict)
+  /// Small JPEG for the checklist.
+  thumbFileId  String     @unique @db.Uuid
+  thumbFile    StoredFile @relation("CleanPhotoThumb", fields: [thumbFileId], references: [id], onDelete: Restrict)
+  uploadedById String     @db.Uuid
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+
+  @@index([cleanId, roomId, phase])
 }
 
 // ───────────────────────── Audit & infrastructure ─────────────────────────

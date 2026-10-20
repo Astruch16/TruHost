@@ -276,12 +276,19 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
   CLEANER: {
     portal: 'TruHost',
     chapters: [
+      { title: 'Your schedule', detail: 'Today’s cleans, and what’s coming up' },
+      { title: 'The photo checklist', detail: 'Every room, before and after' },
+      { title: 'Supplies and damage', detail: 'Marking levels, and reporting what you find' },
       { title: 'Your properties', detail: 'Where you clean, and each one’s details' },
-      { title: 'Supplies', detail: 'Marking how full everything is' },
-      { title: 'Damage', detail: 'Reporting what you find, with photos' },
-      { title: 'Rooms', detail: 'The order you’ll photograph them in' },
     ],
     steps: [
+      {
+        id: 'schedule',
+        page: at('/cleaner'),
+        anchor: 'cleaner-schedule',
+        title: 'Your schedule',
+        body: 'Today’s cleans, with when the place is free and when it must be ready for the next guests. Open one on its day to start it: you’ll photograph every room before you clean it and after, check the supplies, then complete it. What’s coming up is below.',
+      },
       {
         id: 'properties',
         page: at('/properties'),
@@ -314,8 +321,8 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
         id: 'cleans',
         page: cleanerPage,
         anchor: 'cleaner-cleans',
-        title: 'Your cleans',
-        body: 'Your cleaning schedule and room-by-room photo checklist will appear here.',
+        title: 'Your cleans here',
+        body: 'Your next cleans at this property. Each one opens its photo checklist.',
       },
       {
         id: 'rooms',
