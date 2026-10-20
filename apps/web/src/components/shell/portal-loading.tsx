@@ -31,13 +31,8 @@ export function PortalLoading({ onRetry }: { onRetry?: () => void }) {
         : 'This is taking longer than usual. Check your connection, or try again.';
 
   return (
-    <div
-      className={cx(
-        'min-h-dvh bg-ground lg:grid lg:grid-cols-[248px_minmax(0,1fr)]',
-        !session.instant && 'animate-fade-in',
-      )}
-    >
-      <aside aria-hidden className="sticky top-0 hidden h-dvh lg:block">
+    <div className={cx('min-h-dvh bg-ground lg:pl-[248px]', !session.instant && 'animate-fade-in')}>
+      <aside aria-hidden className="fixed inset-y-0 left-0 z-30 hidden w-[248px] lg:block">
         <SidebarPlaceholder />
       </aside>
 
