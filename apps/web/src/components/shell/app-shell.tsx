@@ -53,7 +53,7 @@ export function AppShell({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-dvh bg-ground lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+    <div className="min-h-dvh bg-ground lg:pl-[248px]">
       <a
         href="#main"
         className="sr-only z-50 rounded-control bg-surface px-4 py-2 font-semibold focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
@@ -61,7 +61,10 @@ export function AppShell({
         Skip to content
       </a>
 
-      <aside className="sticky top-0 hidden h-dvh lg:block">
+      {/* Fixed to the window (the content is padded to make room), not sticky: a sticky sidebar is held inside the
+          page's box, and when that box ends on a fraction of a pixel, scrolling to the very bottom nudged the logo
+          and icons up. */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] lg:block">
         <Sidebar items={nav} onSignOut={onSignOut} onHelp={onHelp} />
       </aside>
 
