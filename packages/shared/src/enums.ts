@@ -113,3 +113,12 @@ export type StatementStatus = z.infer<typeof StatementStatus>;
 
 export const StatementLineKind = z.enum(['STAY', 'EXPENSE', 'OWNER_STAY_CLEANING', 'ADJUSTMENT']);
 export type StatementLineKind = z.infer<typeof StatementLineKind>;
+
+export const CleanKind = z.enum(['TURNOVER', 'ADHOC']);
+export type CleanKind = z.infer<typeof CleanKind>;
+
+export const CleanStatus = z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETE', 'CANCELLED']);
+export type CleanStatus = z.infer<typeof CleanStatus>;
+
+export const PhotoPhase = z.enum(['BEFORE', 'AFTER']);
+export type PhotoPhase = z.infer<typeof PhotoPhase>;

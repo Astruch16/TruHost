@@ -1,13 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@truhost/api-client';
-import { Sparkles } from 'lucide-react';
+import { PropertyCleansCard } from '../../../../components/cleaner/property-cleans';
 import { PropertyAddressCard, PropertyRoomsCard } from '../../../../components/property-basics';
 import { DamageCard } from '../../../../components/damage/damage-card';
 import { NotAvailable } from '../../../../components/shell/not-available';
 import { SuppliesCard } from '../../../../components/supplies/supplies-card';
 import { ErrorAlert } from '../../../../components/ui/alert';
-import { Card } from '../../../../components/ui/card';
 import { PageHeader } from '../../../../components/ui/page-header';
 import { LoadingBlock } from '../../../../components/ui/skeleton';
 import { propertyRole } from '../../../../lib/access';
@@ -16,8 +15,7 @@ import { queries } from '../../../../lib/queries';
 
 /**
  * A cleaner's view of a property: supplies (mark how full each one is), damage reports (report guest damage with
- * photos), address, stay times and rooms. No financial
- * sections, ever. Cleans and photos arrive in Phase 3.
+ * photos), their next cleans here, address, stay times and rooms. No financial sections, ever.
  */
 export const Route = createFileRoute('/_app/cleaner/properties/$propertyId')({
   component: CleanerProperty,
@@ -54,12 +52,7 @@ function CleanerProperty() {
           <DamageCard propertyId={propertyId} canReport />
         </div>
         <PropertyAddressCard property={p} />
-        <Card title="Your cleans" tour="cleaner-cleans">
-          <p className="flex gap-2.5 text-sm text-muted">
-            <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0" />
-            Your cleaning schedule and photo checklist will appear here.
-          </p>
-        </Card>
+        <PropertyCleansCard propertyId={propertyId} />
         <div data-tour="cleaner-rooms" className="min-w-0 @4xl/content:col-span-2">
           <PropertyRoomsCard propertyId={propertyId} />
         </div>

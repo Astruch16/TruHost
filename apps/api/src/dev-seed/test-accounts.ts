@@ -13,6 +13,8 @@ import type { Actor } from '../auth/actor.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 import { currentMonthStart, fromIsoDate, toIsoDate } from '../common/dates.js';
 import { uuidv7 } from '../common/uuid.js';
+import { syncTurnover } from '../cleans/turnover.js';
+import type { Tx } from '../prisma/prisma.service.js';
 import type { FileStorage } from '../files/storage.js';
 import type { StatementsService } from '../statements/statements.service.js';
 import { sampleReceiptPdf } from './sample-receipt.js';
@@ -366,7 +368,7 @@ export async function seedTestAccounts(
           where: { propertyId_source_externalId: { propertyId: p.id, source: 'MANUAL', externalId: b.externalId } },
         });
         if (found) continue;
-        await prisma.booking.create({
+        const created = await prisma.booking.create({
           data: {
             ...b,
             propertyId: p.id,
@@ -376,6 +378,9 @@ export async function seedTestAccounts(
             enteredById: admin.id,
           },
         });
+        // Its turnover clean, as the bookings API makes one, for stays checking out today or later (past stays had
+        // no cleans in TruHost, as the migration's backfill decided).
+        if (b.checkOutDate >= today) await syncTurnover(prisma as unknown as Tx, created.id);
         bookings++;
       }
       if (month > thisMonth) continue;

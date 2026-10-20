@@ -20,6 +20,11 @@ export interface World {
   invitedUserId: string;
   /** A confirmed, complete guest stay on each property: 2026-11-10 → 2026-11-13. */
   bookings: { a: string; b: string };
+  /**
+   * Cleans: the turnovers after those stays (2026-11-13; A's assigned to cleanerA, B's to cleanerB), and an ad-hoc
+   * clean at A on the test clock's day (2026-11-20, cleanerA). All SCHEDULED.
+   */
+  cleans: { a: string; todayA: string; b: string };
   /** Owner-borne expense with one receipt on each property (2026-11-05), plus a TruHost-borne one on A. */
   expenses: { a: string; b: string; truhostA: string };
   receipts: { a: string; b: string; truhostA: string };
@@ -119,6 +124,25 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
       })
     ).id;
   const bookings = { a: await guestStay(a.id), b: await guestStay(b.id) };
+
+  // Cleans: at A, the turnover after booking A (2026-11-13, assigned to cleanerA) and an ad-hoc clean on the test
+  // clock's day (2026-11-20, cleanerA), so it can be started; at B, the turnover after booking B (cleanerB).
+  const cleanAt = (propertyId: string, assignee: string, day: string, bookingId: string | null) =>
+    prisma.clean.create({
+      data: {
+        propertyId,
+        kind: bookingId ? 'TURNOVER' : 'ADHOC',
+        bookingId,
+        scheduledDate: new Date(`${day}T00:00:00Z`),
+        assignedCleanerId: assignee,
+        cleanerPayCents: 9000,
+      },
+    });
+  const cleans = {
+    a: (await cleanAt(a.id, users.cleanerA.id, '2026-11-13', bookings.a)).id,
+    todayA: (await cleanAt(a.id, users.cleanerA.id, '2026-11-20', null)).id,
+    b: (await cleanAt(b.id, users.cleanerB.id, '2026-11-13', bookings.b)).id,
+  };
 
   const expenseWithReceipt = async (propertyId: string, bearer: 'OWNER' | 'TRUHOST') => {
     const expense = await prisma.expense.create({
@@ -326,6 +350,7 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
       releasedBPdf,
     },
     bookings,
+    cleans,
     expenses: { a: ea.expense, b: eb.expense, truhostA: et.expense },
     receipts: { a: ea.receipt, b: eb.receipt, truhostA: et.receipt },
     files: { a: ea.file, b: eb.file, truhostA: et.file },

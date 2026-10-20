@@ -33,6 +33,12 @@ export const POLICY = {
   'damage:report': { admin: true, roles: ['CLEANER'] },
   /** Move reports on (acknowledged, claim filed, resolved) and act on anyone's. */
   'damage:manage': { admin: true, roles: [] },
+  /** A property's cleans and their photos. Cleaner pay only for admins and the clean's own cleaner (service). */
+  'clean:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
+  /** Start a clean, add its photos and complete it: its assigned cleaner (checked in the service) or an admin. */
+  'clean:work': { admin: true, roles: ['CLEANER'] },
+  /** Act on any clean, and see every clean's pay. */
+  'clean:manage': { admin: true, roles: [] },
   'plan:manage': { admin: true, roles: [] },
   'propertyPlan:read': { admin: true, roles: ['OWNER'] },
   'propertyPlan:assign': { admin: true, roles: [] },

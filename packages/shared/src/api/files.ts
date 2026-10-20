@@ -17,6 +17,9 @@ export const MAX_PROPERTY_PHOTO_BYTES = 5 * 1024 * 1024;
 /** Damage photos are resized and re-encoded as JPEG in the browser (an evidence copy and a thumbnail). */
 export const DAMAGE_PHOTO_CONTENT_TYPES = ['image/jpeg'] as const;
 export const MAX_DAMAGE_PHOTO_BYTES = 10 * 1024 * 1024;
+/** Clean photos: the same renditions as damage photos (a large JPEG and a thumbnail, made in the browser). */
+export const CLEAN_PHOTO_CONTENT_TYPES = ['image/jpeg'] as const;
+export const MAX_CLEAN_PHOTO_BYTES = 10 * 1024 * 1024;
 
 /** Avatars are cropped to a small square and re-encoded as JPEG in the browser. */
 export const AVATAR_CONTENT_TYPES = ['image/jpeg'] as const;
@@ -29,7 +32,7 @@ const declared = {
 };
 
 /**
- * Ask for an upload URL. Type and size limits depend on the purpose; clean photos arrive in Phase 3.
+ * Ask for an upload URL. Type and size limits depend on the purpose.
  * Avatars belong to the uploading user, not a property.
  */
 export const createUpload = z.discriminatedUnion('purpose', [
@@ -52,6 +55,13 @@ export const createUpload = z.discriminatedUnion('purpose', [
     propertyId: id,
     contentType: z.enum(DAMAGE_PHOTO_CONTENT_TYPES),
     sizeBytes: z.number().int().min(1).max(MAX_DAMAGE_PHOTO_BYTES),
+    ...declared,
+  }),
+  z.object({
+    purpose: z.literal('CLEAN_PHOTO'),
+    propertyId: id,
+    contentType: z.enum(CLEAN_PHOTO_CONTENT_TYPES),
+    sizeBytes: z.number().int().min(1).max(MAX_CLEAN_PHOTO_BYTES),
     ...declared,
   }),
   z.object({

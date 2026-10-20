@@ -689,6 +689,41 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
 
+  // ── cleans ──
+  // Owners and cleaners see the property's cleans (pay rules are in cleans.e2e-spec.ts); only the assigned cleaner (or
+  // an admin) works one. The fixture's cleans are SCHEDULED, so photos and completing are refused (409) to those allowed.
+  { route: 'GET /v1/cleans', path: () => '/v1/cleans', allow: 'everyone' },
+  { route: 'GET /v1/cleans/:id', path: (w) => `/v1/cleans/${w.cleans.a}`, allow: A_READERS },
+  { route: 'GET /v1/cleans/:id', label: 'B', path: (w) => `/v1/cleans/${w.cleans.b}`, allow: B_READERS },
+  { route: 'GET /v1/cleans/:id/photos', path: (w) => `/v1/cleans/${w.cleans.a}/photos`, allow: A_READERS },
+  {
+    route: 'POST /v1/cleans/:id/start',
+    label: 'today',
+    path: (w) => `/v1/cleans/${w.cleans.todayA}/start`,
+    allow: ['admin', 'cleanerA'],
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/cleans/:id/photos',
+    path: (w) => `/v1/cleans/${w.cleans.a}/photos`,
+    body: (w) => ({
+      roomId: w.propertyA.roomIds[0],
+      phase: 'BEFORE',
+      fileId: '00000000-0000-7000-8000-000000000000',
+      thumbFileId: '00000000-0000-7000-8000-000000000001',
+    }),
+    allow: ['admin', 'cleanerA'],
+    allowedGets: 409,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/cleans/:id/complete',
+    path: (w) => `/v1/cleans/${w.cleans.a}/complete`,
+    allow: ['admin', 'cleanerA'],
+    allowedGets: 409,
+    mutates: true,
+  },
+
   // ── files ──
   {
     route: 'POST /v1/uploads',
@@ -715,6 +750,21 @@ export const CASES: AuthzCase[] = [
       sha256: 'b'.repeat(64),
     }),
     allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/uploads',
+    label: 'clean photo',
+    path: () => '/v1/uploads',
+    body: (w) => ({
+      purpose: 'CLEAN_PHOTO',
+      propertyId: w.propertyA.id,
+      contentType: 'image/jpeg',
+      sizeBytes: 10,
+      sha256: 'b'.repeat(64),
+    }),
+    // Issuing the upload needs the role; attaching it needs the clean's assignment (cleans.e2e-spec.ts).
+    allow: ['admin', 'cleanerA'],
     mutates: true,
   },
   {
