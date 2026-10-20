@@ -160,10 +160,7 @@ export function CalendarLegend({
   const cleans = showCleans && legend.cleans;
   if (styles.length === 0 && !cleans) return null;
   return (
-    <ul
-      aria-label="Calendar key"
-      className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold text-ink/75"
-    >
+    <ul aria-label="Calendar key" className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-ink">
       {styles.map((s) => (
         <li key={s.key} className="flex items-center gap-1.5">
           <span aria-hidden className={cx('h-2.5 w-5 rounded-sm', s.swatch)} /> {s.label}
