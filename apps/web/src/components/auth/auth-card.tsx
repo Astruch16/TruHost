@@ -1,6 +1,7 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../../lib/cx';
 import { Spinner } from '../ui/spinner';
+import { LogoMark } from '../shell/logo';
 
 /**
  * The sign-in card and its parts, styled as in docs/design/Login.dc.html: frosted panel, TruHost badge, title and
@@ -18,22 +19,7 @@ export function AuthCard({
   return (
     <div className="lg-rise flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] border border-white/70 bg-[rgba(251,251,248,0.95)] px-5 pt-6 pb-5 text-ink sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7 shadow-[0_30px_80px_rgba(4,14,12,0.5),inset_0_2px_0_rgba(255,255,255,0.8)] sm:px-[34px] sm:pt-[34px]">
       <div className="flex flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-2xl sm:size-14 bg-[linear-gradient(160deg,#24574F,#173F3A)] shadow-[0_8px_20px_rgba(23,63,58,0.35),inset_0_1px_0_rgba(255,255,255,0.25)]">
-          <svg
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#FFFFFF"
-            strokeWidth="1.9"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M3 11l9-8 9 8v10H3z" />
-            <path d="M10 13h4v4h-4z" stroke="#E2C15A" />
-          </svg>
-        </div>
+        <LogoMark size={56} className="size-12 drop-shadow-[0_8px_20px_rgba(23,63,58,0.35)] sm:size-14" />
         <div>
           <h1 className="text-[22px] font-bold tracking-[-0.02em] sm:text-2xl">{title}</h1>
           {subtitle && <div className="mt-0.5 text-[15px] text-muted">{subtitle}</div>}
