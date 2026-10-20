@@ -146,7 +146,7 @@ describe('onboarding', () => {
     expect(await screen.findByRole('dialog', { name: 'Your month at a glance' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(posts.at(-1)).toEqual({ role: 'OWNER', body: { action: 'SKIP', step: 0 } }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('offers to continue an interrupted tour where it stopped, and finishes it', async () => {
@@ -156,8 +156,10 @@ describe('onboarding', () => {
     await userEvent.click(within(welcome).getByRole('button', { name: 'Continue the tour' }));
     const last = await screen.findByRole('dialog', { name: 'Help is always here' });
     expect(within(last).getByText('Sage · Step 8 of 8')).toBeInTheDocument();
+    // Finishing fades the tour out, then records it and closes.
     await userEvent.click(within(last).getByRole('button', { name: 'Finish' }));
-    expect(posts.at(-1)).toEqual({ role: 'OWNER', body: { action: 'COMPLETE' } });
+    await waitFor(() => expect(posts.at(-1)).toEqual({ role: 'OWNER', body: { action: 'COMPLETE' } }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('shows no welcome once the tours are done', async () => {
