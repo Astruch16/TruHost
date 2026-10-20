@@ -39,6 +39,8 @@ export function WelcomeDialog({
   });
   const def = TOURS[tour.role];
   const resume = tour.status === 'IN_PROGRESS' && (tour.step ?? 0) > 0;
+  // Finished or skipped before, offered again because the tour has changed since.
+  const updated = tour.status === 'COMPLETED' || tour.status === 'SKIPPED';
 
   return (
     <RadixDialog.Root open onOpenChange={(open) => !open && onClose()}>
@@ -62,7 +64,9 @@ export function WelcomeDialog({
               message={
                 resume
                   ? 'Welcome back. Let’s pick up the tour where we left off.'
-                  : `I’ll show you around ${def.portal}. It takes a few minutes, and you can stop any time.`
+                  : updated
+                    ? `There’s more to see in ${def.portal} since your last tour. It takes a few minutes, and you can stop any time.`
+                    : `I’ll show you around ${def.portal}. It takes a few minutes, and you can stop any time.`
               }
             />
             {save.error && (

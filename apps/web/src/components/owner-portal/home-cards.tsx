@@ -196,6 +196,7 @@ export function ThisMonthCard({ m }: { m: OwnerHome['thisMonth'] }) {
   const free = Math.max(m.daysInMonth - m.nightsBooked, 0);
   return (
     <Card
+      tour="owner-this-month"
       title="This month so far"
       description={`${monthLabel(m.month)}, from the stays booked`}
       actions={<Pill tone="amber">Estimated</Pill>}
@@ -254,7 +255,7 @@ export function NetByMonthChart({ months }: { months: OwnerHome['netByMonth'] })
   const heights = barHeights(months.map((m) => m.netCents));
   if (!months.some((m) => m.state === 'RELEASED')) {
     return (
-      <Card title="Net to you by month">
+      <Card title="Net to you by month" tour="owner-net-by-month">
         <EmptyState size="compact" illustration={<RevenueIllustration />} title="No released months yet">
           Each month appears here once its statement is released.
         </EmptyState>
@@ -262,7 +263,11 @@ export function NetByMonthChart({ months }: { months: OwnerHome['netByMonth'] })
     );
   }
   return (
-    <Card title="Net to you by month" description="Released statements, and this month so far">
+    <Card
+      title="Net to you by month"
+      description="Released statements, and this month so far"
+      tour="owner-net-by-month"
+    >
       <ul className="flex h-48 items-end gap-1.5 @2xl/content:gap-3" aria-label="Net to you by month">
         {months.map((m, i) => {
           const h = heights[i];

@@ -116,7 +116,11 @@ export function OwnerHomePage({
                   onViewReceipt={(id) => void openFile(api, id).catch(setActionError)}
                 />
               )}
-              <Card title="Questions about your property?" description="TruHost reads every message.">
+              <Card
+                title="Questions about your property?"
+                description="TruHost reads every message."
+                tour="owner-contact"
+              >
                 <a
                   href={`mailto:${config.data?.contactEmail ?? ''}?subject=${encodeURIComponent(propertyName ? `About ${propertyName}` : 'About my properties')}`}
                   className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-semibold text-ink transition-colors hover:bg-ground"

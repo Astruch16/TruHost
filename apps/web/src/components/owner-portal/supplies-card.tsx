@@ -18,7 +18,11 @@ export function OwnerSuppliesCard({ data }: { data: OwnerSupplies }) {
   const many = data.properties.length > 1;
   const total = data.properties.reduce((n, p) => n + p.items.length, 0);
   return (
-    <Card title="Supplies" description="How stocked your property is, from the cleaners’ last check">
+    <Card
+      title="Supplies"
+      description="How stocked your property is, from the cleaners’ last check"
+      tour="owner-supplies"
+    >
       {total === 0 ? (
         <EmptyState size="compact" illustration={<SuppliesIllustration />} title="No supplies tracked yet">
           TruHost will list the supplies kept at your property here, with how full each one is.

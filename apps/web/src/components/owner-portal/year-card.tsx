@@ -11,7 +11,11 @@ import { KpiMoney } from '../dashboard/kpi-card';
 export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; month: string }) {
   const monthsSoFar = Number(month.slice(5, 7));
   return (
-    <section aria-labelledby="ytd" className="rounded-card border border-line-soft bg-surface p-5 @2xl/content:p-6">
+    <section
+      aria-labelledby="ytd"
+      data-tour="owner-ytd"
+      className="rounded-card border border-line-soft bg-surface p-5 @2xl/content:p-6"
+    >
       <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">Year to date</p>
