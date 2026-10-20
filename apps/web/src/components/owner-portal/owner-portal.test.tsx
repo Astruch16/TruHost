@@ -286,9 +286,54 @@ describe('owner statements', () => {
       }),
       <OwnerStatementsPage propertyId={null} />,
     );
-    expect(await screen.findByRole('link', { name: 'September 2026' })).toHaveAttribute('href', '/owner/statements/s1');
-    expect(screen.getByText('$2,762.15')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Download the September 2026 statement PDF' })).toBeInTheDocument();
+    const link = await screen.findByRole('link', { name: 'September 2026' });
+    expect(link).toHaveAttribute('href', '/owner/statements/s1');
+    const card = link.closest('li')!;
+    expect(card.textContent).toContain('$2,762.15');
+    expect(card.textContent).toContain('Released Oct 5');
+    expect(within(card).getByRole('button', { name: 'Download the September 2026 statement PDF' })).toBeInTheDocument();
+    // One statement: nothing to sort by year or month.
+    expect(screen.queryByRole('combobox', { name: 'Year' })).not.toBeInTheDocument();
+  });
+
+  it('sorts statements by month or by net to you, groups them by year, and narrows to a year or month', async () => {
+    const st = (id: string, month: string, netCents: number) => ({
+      id,
+      property: { id: 'p1', name: 'Cedar Cabin' },
+      month,
+      netCents,
+      grossCents: netCents + 50_000,
+      releasedOn: `${month}-28`,
+    });
+    renderWith(
+      () => ({ items: [st('a', '2026-09', 276_215), st('b', '2025-09', 310_000), st('c', '2026-08', 120_050)] }),
+      <OwnerStatementsPage propertyId={null} />,
+    );
+    const titles = () => screen.getAllByRole('link').map((l) => l.textContent);
+    await screen.findByRole('link', { name: 'September 2026' });
+    expect(titles()).toEqual(['September 2026', 'August 2026', 'September 2025']);
+    expect(screen.getByRole('region', { name: '2026' }).textContent).toContain('2 statements');
+    expect(screen.getByRole('button', { name: /Newest/ })).toHaveAttribute('aria-pressed', 'true');
+
+    await userEvent.click(screen.getByRole('button', { name: /Highest/ }));
+    expect(titles()).toEqual(['September 2025', 'September 2026', 'August 2026']);
+    expect(screen.queryByRole('region', { name: '2026' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Lowest/ }));
+    expect(titles()).toEqual(['August 2026', 'September 2026', 'September 2025']);
+    await userEvent.click(screen.getByRole('button', { name: /Oldest/ }));
+    expect(titles()).toEqual(['September 2025', 'August 2026', 'September 2026']);
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Month' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'September' }));
+    expect(titles()).toEqual(['September 2025', 'September 2026']);
+    await userEvent.click(screen.getByRole('combobox', { name: 'Year' }));
+    await userEvent.click(await screen.findByRole('option', { name: '2025' }));
+    expect(titles()).toEqual(['September 2025']);
+    await userEvent.click(screen.getByRole('combobox', { name: 'Month' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'August' }));
+    expect(screen.getByText('No statements match')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Show all statements' }));
+    expect(titles()).toHaveLength(3);
   });
 
   it('shows the summary with the plan rate, the stay split, and the payment', async () => {
