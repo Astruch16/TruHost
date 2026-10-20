@@ -30,7 +30,11 @@ export function GoodToKnowCard({
   onViewReceipt: (fileId: string) => void;
 }) {
   return (
-    <Card title="Good to know" description="Paid from your earnings lately, and corrections on your statements">
+    <Card
+      title="Good to know"
+      description="Paid from your earnings lately, and corrections on your statements"
+      tour="owner-good-to-know"
+    >
       <ul className="-mx-2 flex flex-col divide-y divide-line-soft">
         {items.map((g) => (
           <GoodToKnowItem key={g.id} item={g} showProperty={showProperty} onViewReceipt={onViewReceipt} />

@@ -63,11 +63,26 @@ function renderHost(onboarding: Onboarding) {
     createRoute({ getParentRoute: () => root, path, component: () => <>{body}</> });
   const router = createRouter({
     routeTree: root.addChildren([
-      page('/owner', <section data-tour="owner-month">Your month</section>),
-      page('/owner/calendar', <h1 data-tour="page-header">Calendar</h1>),
-      page('/owner/statements', <h1 data-tour="page-header">Statements</h1>),
-      page('/owner/damage', <h1 data-tour="page-header">Damage</h1>),
-      page('/owner/care', <h1 data-tour="page-header">Care</h1>),
+      // Home, without the cards that only show with data (the figures, Coming up, Good to know).
+      page(
+        '/owner',
+        <>
+          <section data-tour="owner-month">Your month</section>
+          {['owner-this-month', 'owner-ytd', 'owner-net-by-month', 'owner-supplies', 'owner-contact'].map((a) => (
+            <section key={a} data-tour={a} />
+          ))}
+        </>,
+      ),
+      page(
+        '/owner/calendar',
+        <>
+          <section data-tour="owner-calendar">Calendar</section>
+          <section data-tour="owner-glance" />
+        </>,
+      ),
+      page('/owner/statements', <section data-tour="owner-statements">Statements</section>),
+      page('/owner/damage', <section data-tour="owner-damage">Damage</section>),
+      page('/owner/care', <section data-tour="owner-care">Care</section>),
     ]),
     history: createMemoryHistory({ initialEntries: ['/owner'] }),
   });
@@ -107,7 +122,7 @@ describe('onboarding', () => {
   });
 
   it('welcomes a new owner with their guide and what the tour covers, then walks through it page by page', async () => {
-    const { posts, router } = renderHost(fresh);
+    const { posts } = renderHost(fresh);
     const welcome = await screen.findByRole('dialog', { name: 'Welcome to TruHost' });
     expect(within(welcome).getByText('Hi Jordan, I’m Sage.')).toBeInTheDocument();
     expect(within(welcome).getByText(/show you around your owner portal/)).toBeInTheDocument();
@@ -115,21 +130,16 @@ describe('onboarding', () => {
 
     await userEvent.click(within(welcome).getByRole('button', { name: 'Start the tour' }));
     const step = await screen.findByRole('dialog', { name: 'Your month at a glance' });
-    expect(within(step).getByText('Sage · Step 1 of 8')).toBeInTheDocument();
+    expect(within(step).getByText('Sage · Step 1 of 15')).toBeInTheDocument();
     expect(posts).toEqual([{ role: 'OWNER', body: { action: 'START', step: 0 } }]);
 
-    // Steps whose card isn't on the page (the figures, Coming up) are passed over; the calendar step opens its page.
+    // The figures card isn't on this page, so it is passed over: next is the section below.
     await userEvent.click(within(step).getByRole('button', { name: /Next/ }));
-    expect(await screen.findByRole('dialog', { name: 'Your calendar' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/owner/calendar');
-    expect(posts.at(-1)).toEqual({ role: 'OWNER', body: { action: 'STEP', step: 3 } });
+    expect(await screen.findByRole('dialog', { name: 'This month so far' })).toBeInTheDocument();
+    expect(posts.at(-1)).toEqual({ role: 'OWNER', body: { action: 'STEP', step: 2 } });
 
-    // Back passes over the same optional steps, giving the home page a moment to load first.
     await userEvent.click(screen.getByRole('button', { name: /Back/ }));
-    expect(
-      await screen.findByRole('dialog', { name: 'Your month at a glance' }, { timeout: 3000 }),
-    ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/owner');
+    expect(await screen.findByRole('dialog', { name: 'Your month at a glance' })).toBeInTheDocument();
   }, 20_000);
 
   it('records a skip from the welcome, and from the tour with Escape', async () => {
@@ -150,16 +160,32 @@ describe('onboarding', () => {
   });
 
   it('offers to continue an interrupted tour where it stopped, and finishes it', async () => {
-    const { posts } = renderHost({ tours: [{ role: 'OWNER', status: 'IN_PROGRESS', step: 7, offer: true }] });
+    const { posts } = renderHost({ tours: [{ role: 'OWNER', status: 'IN_PROGRESS', step: 14, offer: true }] });
     const welcome = await screen.findByRole('dialog', { name: 'Welcome to TruHost' });
     expect(within(welcome).getByText(/pick up the tour where we left off/)).toBeInTheDocument();
     await userEvent.click(within(welcome).getByRole('button', { name: 'Continue the tour' }));
     const last = await screen.findByRole('dialog', { name: 'Help is always here' });
-    expect(within(last).getByText('Sage · Step 8 of 8')).toBeInTheDocument();
+    expect(within(last).getByText('Sage · Step 15 of 15')).toBeInTheDocument();
     // Finishing fades the tour out, then records it and closes.
     await userEvent.click(within(last).getByRole('button', { name: 'Finish' }));
     await waitFor(() => expect(posts.at(-1)).toEqual({ role: 'OWNER', body: { action: 'COMPLETE' } }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('shows each page’s content, not its header: the calendar, then the month at a glance', async () => {
+    const { router } = renderHost({ tours: [{ role: 'OWNER', status: 'IN_PROGRESS', step: 8, offer: true }] });
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue the tour' }));
+    expect(await screen.findByRole('dialog', { name: 'Questions?' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Next/ }));
+    expect(await screen.findByRole('dialog', { name: 'Your calendar' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/owner/calendar');
+    await userEvent.click(screen.getByRole('button', { name: /Next/ }));
+    expect(await screen.findByRole('dialog', { name: 'The month at a glance' })).toBeInTheDocument();
+  });
+
+  it('says there’s more to see when a finished tour has changed since', async () => {
+    renderHost({ tours: [{ role: 'OWNER', status: 'COMPLETED', step: null, offer: true }] });
+    expect(await screen.findByText(/There’s more to see in your owner portal/)).toBeInTheDocument();
   });
 
   it('shows no welcome once the tours are done', async () => {

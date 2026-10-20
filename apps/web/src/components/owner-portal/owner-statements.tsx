@@ -64,14 +64,14 @@ export function OwnerStatementsPage({ propertyId }: { propertyId: string | null 
           ))}
         </div>
       ) : items.length === 0 ? (
-        <Card className={switchingStyles(list.isPlaceholderData)}>
+        <Card className={switchingStyles(list.isPlaceholderData)} tour="owner-statements">
           <EmptyState title="No statements yet">
             Your first statement arrives after the month ends, once TruHost has checked every payout and receipt. You’ll
             get an email when it’s ready.
           </EmptyState>
         </Card>
       ) : (
-        <Card className={switchingStyles(list.isPlaceholderData)}>
+        <Card className={switchingStyles(list.isPlaceholderData)} tour="owner-statements">
           <ul className="flex flex-col">
             {items.map((s) => (
               <li
@@ -227,7 +227,7 @@ export function OwnerCarePage() {
   return (
     <>
       <PageHeader title="Care" description="Before-and-after photos from every clean, room by room." />
-      <Card>
+      <Card tour="owner-care">
         <EmptyState size="compact" illustration={<CareIllustration />} title="Nothing here yet">
           Clean photos will appear here after each turnover.
         </EmptyState>

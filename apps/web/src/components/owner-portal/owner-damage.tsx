@@ -35,7 +35,7 @@ export function OwnerDamagePage({ propertyId }: { propertyId: string | null }) {
       ) : !reports.data ? (
         <Skeleton className="h-64 rounded-card" />
       ) : (
-        <Card className={switchingStyles(reports.isPlaceholderData)}>
+        <Card className={switchingStyles(reports.isPlaceholderData)} tour="owner-damage">
           {items.length === 0 ? (
             <EmptyState size="compact" illustration={<DamageIllustration />} title="No damage reported">
               If a cleaner or TruHost finds damage after a stay, it shows up here with photos, and you’ll get an email.

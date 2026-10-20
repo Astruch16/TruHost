@@ -67,7 +67,7 @@ export function OwnerCalendarPage({
         title="Calendar"
         description="Guest stays, your own stays and blocked dates. Tap a stay for its details."
       />
-      <Card>
+      <Card tour="owner-calendar">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <MonthStepper month={month} onChange={onMonthChange} />
           {stays.length > 0 && <CalendarLegend month={month} stays={stays} showCleans={false} />}
@@ -93,6 +93,7 @@ export function OwnerCalendarPage({
       </Card>
       {cal.data && (
         <Card
+          tour="owner-glance"
           className={cx('mt-6', updatingStyles(cal.isPlaceholderData))}
           title={`${monthLabel(month)} at a glance`}
           description={
