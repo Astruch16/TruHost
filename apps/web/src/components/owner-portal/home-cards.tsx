@@ -54,6 +54,7 @@ export function MonthEarningsHero({
   return (
     <section
       aria-labelledby="month-earnings"
+      data-tour="owner-month"
       className="relative overflow-hidden rounded-card bg-primary px-6 py-6 text-primary-ink @2xl/content:px-8 @2xl/content:py-7"
     >
       <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full bg-white/5" />
@@ -91,7 +92,7 @@ export function MonthEarningsHero({
           )}
         </p>
         {m && (
-          <dl className="@container/stats mt-6 flex flex-wrap gap-2.5">
+          <dl data-tour="owner-figures" className="@container/stats mt-6 flex flex-wrap gap-2.5">
             <StatTile label="Gross revenue" value={<Money cents={m.grossCents} />} />
             <StatTile label="TruPlan fee" value={<Money cents={-m.managementFeeCents} />} />
             <StatTile label="Expenses" value={<Money cents={-m.expensesCents} />} />
@@ -315,6 +316,7 @@ function formatCentsCompact(cents: number): string {
 export function ComingUpCard({ items, showProperty }: { items: OwnerHome['comingUp']; showProperty: boolean }) {
   return (
     <Card
+      tour="owner-coming-up"
       title="Coming up"
       actions={
         <Link

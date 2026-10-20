@@ -46,16 +46,23 @@ function CleanerProperty() {
     <>
       <PageHeader eyebrow="You clean here" title={p.name} description={`${p.city}, ${p.province}`} />
       <div className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2">
-        <SuppliesCard propertyId={propertyId} mode="report" className="@4xl/content:col-span-2" />
-        <DamageCard propertyId={propertyId} canReport className="@4xl/content:col-span-2" />
+        {/* Wrappers carry the welcome tour's anchors (data-tour) and the grid span. */}
+        <div data-tour="cleaner-supplies" className="min-w-0 @4xl/content:col-span-2">
+          <SuppliesCard propertyId={propertyId} mode="report" />
+        </div>
+        <div data-tour="cleaner-damage" className="min-w-0 @4xl/content:col-span-2">
+          <DamageCard propertyId={propertyId} canReport />
+        </div>
         <PropertyAddressCard property={p} />
-        <Card title="Your cleans">
+        <Card title="Your cleans" tour="cleaner-cleans">
           <p className="flex gap-2.5 text-sm text-muted">
             <Sparkles aria-hidden className="mt-0.5 size-4 shrink-0" />
             Your cleaning schedule and photo checklist will appear here.
           </p>
         </Card>
-        <PropertyRoomsCard propertyId={propertyId} className="@4xl/content:col-span-2" />
+        <div data-tour="cleaner-rooms" className="min-w-0 @4xl/content:col-span-2">
+          <PropertyRoomsCard propertyId={propertyId} />
+        </div>
       </div>
     </>
   );

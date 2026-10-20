@@ -122,7 +122,7 @@ export function DashboardView({
   return (
     <div className="grid gap-6 @[68.75rem]/content:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex min-w-0 flex-col gap-6">
-        <Card>
+        <Card tour="dashboard-month">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
@@ -279,7 +279,7 @@ export function DashboardView({
 
       {/* Rail: stacks under the main content (narrow), two columns below it (medium), right rail (wide). */}
       <aside className="grid min-w-0 content-start items-start gap-6 @2xl/content:grid-cols-2 @[68.75rem]/content:grid-cols-1">
-        <Card title="Quick actions">
+        <Card title="Quick actions" tour="quick-actions">
           <div className="flex flex-col gap-2">
             <Button block disabled={noProperties} onClick={() => onAction('booking')}>
               <CalendarPlus aria-hidden className="size-4" /> Add booking

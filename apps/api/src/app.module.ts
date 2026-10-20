@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module.js';
 import { InvitesModule } from './invites/invites.module.js';
 import { MeModule } from './me/me.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
+import { OnboardingModule } from './onboarding/onboarding.module.js';
 import { PlansModule } from './plans/plans.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { PropertiesModule } from './properties/properties.module.js';
@@ -45,6 +46,7 @@ import { UsersModule } from './users/users.module.js';
     HealthModule,
     MeModule,
     NotificationsModule,
+    OnboardingModule,
     UsersModule,
     InvitesModule,
     PropertiesModule,

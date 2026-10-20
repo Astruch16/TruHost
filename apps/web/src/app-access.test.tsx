@@ -155,11 +155,13 @@ function fakeApi(start: Me, meFailures: MeFailure[] = []) {
                 ? SUPPLIES
                 : path === '/v1/me/notifications'
                   ? NOTIFICATIONS
-                  : path === '/v1/properties/{id}/summary'
-                    ? SUMMARY
-                    : path === '/v1/properties/{id}/plan'
-                      ? { current: null, history: [] }
-                      : { items: [] };
+                  : path === '/v1/me/onboarding'
+                    ? { tours: [] } // tours done: no welcome over the pages under test (onboarding.test.tsx has it)
+                    : path === '/v1/properties/{id}/summary'
+                      ? SUMMARY
+                      : path === '/v1/properties/{id}/plan'
+                        ? { current: null, history: [] }
+                        : { items: [] };
     return { data, response: new Response(null, { status: 200 }) };
   });
   // Adding a property: answers like the API, and makes the caller its owner when asked to.

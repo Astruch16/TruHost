@@ -26,6 +26,12 @@ export const queries = {
       queryKey: ['me', 'notification-settings'],
       queryFn: () => unwrap(api.GET('/v1/me/notification-settings')),
     }),
+  onboarding: (api: ApiClient) =>
+    queryOptions({
+      queryKey: ['me', 'onboarding'],
+      queryFn: () => unwrap(api.GET('/v1/me/onboarding')),
+      staleTime: Infinity,
+    }),
   config: (api: ApiClient) =>
     queryOptions({ queryKey: ['config'], queryFn: () => unwrap(api.GET('/v1/config')), staleTime: Infinity }),
   properties: (api: ApiClient, includeArchived = false) =>

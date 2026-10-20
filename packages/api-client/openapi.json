@@ -1020,6 +1020,137 @@
         "tags": ["notifications"]
       }
     },
+    "/v1/me/onboarding": {
+      "get": {
+        "operationId": "Onboarding_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tours": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "role": {
+                            "type": "string",
+                            "enum": ["ADMIN", "OWNER", "CLEANER"]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "SKIPPED"]
+                          },
+                          "step": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "offer": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["role", "status", "step", "offer"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["tours"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["onboarding"]
+      }
+    },
+    "/v1/me/onboarding/tours/{role}": {
+      "post": {
+        "operationId": "Onboarding_update",
+        "parameters": [
+          {
+            "name": "role",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["START", "STEP", "COMPLETE", "SKIP", "RESET"]
+                  },
+                  "step": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 99
+                  }
+                },
+                "required": ["action"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tours": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "role": {
+                            "type": "string",
+                            "enum": ["ADMIN", "OWNER", "CLEANER"]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "SKIPPED"]
+                          },
+                          "step": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "offer": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["role", "status", "step", "offer"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["tours"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": ["onboarding"]
+      }
+    },
     "/v1/users": {
       "get": {
         "operationId": "Users_list",

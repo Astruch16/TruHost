@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cx } from '../../lib/cx';
 import { GUIDE_CHARACTERS, GUIDES, type GuideCharacter } from '../../lib/guides';
 import { Guide } from './guide';
@@ -11,11 +12,14 @@ export function GuidePicker({
   onChange,
   firstName,
   disabled,
+  message,
 }: {
   value: GuideCharacter;
   onChange: (character: GuideCharacter) => void;
   firstName: string;
   disabled?: boolean;
+  /** What the guide says under the greeting (the welcome screen); the character's description by default. */
+  message?: ReactNode;
 }) {
   const current = GUIDES[value];
   return (
@@ -31,7 +35,7 @@ export function GuidePicker({
           <p className="text-xl font-bold tracking-[-0.01em]">
             Hi {firstName}, I’m {current.name}.
           </p>
-          <p className="mt-1 text-muted">{current.description}</p>
+          <p className="mt-1 text-muted">{message ?? current.description}</p>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ export * from './rooms.js';
 export * from './primitives.js';
 export * from './problem.js';
 export * from './api/me.js';
+export * from './api/onboarding.js';
 export * from './api/users.js';
 export * from './api/properties.js';
 export * from './api/audit.js';

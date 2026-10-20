@@ -1,6 +1,6 @@
 import * as Menu from '@radix-ui/react-dropdown-menu';
 import { Link } from '@tanstack/react-router';
-import { UserRound, LogOut, Settings } from 'lucide-react';
+import { CircleHelp, UserRound, LogOut, Settings } from 'lucide-react';
 import { Avatar } from '../ui/avatar';
 import { cx } from '../../lib/cx';
 import { menuItemStyles, menuSurfaceStyles } from '../../lib/styles';
@@ -14,6 +14,7 @@ export function ProfileMenu({
   email,
   avatarUrl,
   onSignOut,
+  onHelp,
 }: {
   name: string;
   initials: string;
@@ -21,11 +22,13 @@ export function ProfileMenu({
   email: string;
   avatarUrl?: string | null;
   onSignOut: () => void;
+  onHelp?: () => void;
 }) {
   return (
     <Menu.Root>
       <Menu.Trigger
         aria-label={`Account menu for ${name}`}
+        data-tour="profile-menu"
         className="flex min-h-11 items-center gap-3 rounded-full py-1 pr-1 pl-1 transition-colors hover:bg-ink/5 data-[state=open]:bg-ink/5 sm:pr-3"
       >
         <Avatar url={avatarUrl} initials={initials} className="size-10 text-sm" />
@@ -54,6 +57,11 @@ export function ProfileMenu({
               <Settings aria-hidden className="size-4 text-muted" /> Settings
             </Link>
           </Menu.Item>
+          {onHelp && (
+            <Menu.Item className={itemClass} onSelect={onHelp}>
+              <CircleHelp aria-hidden className="size-4 text-muted" /> Help
+            </Menu.Item>
+          )}
           <Menu.Item className={itemClass} onSelect={onSignOut}>
             <LogOut aria-hidden className="size-4 text-muted" /> Log out
           </Menu.Item>

@@ -30,6 +30,7 @@ export function AppShell({
   allowAllProperties = false,
   notifications,
   onSignOut,
+  onHelp,
   tabs = false,
   children,
 }: {
@@ -43,6 +44,8 @@ export function AppShell({
   /** The bell, for people who get notifications (admins and owners). */
   notifications?: ReactNode;
   onSignOut: () => void;
+  /** Opens Help (the profile menu and the sidebar have it). */
+  onHelp?: () => void;
   /** Phones (below 768px) get a bottom tab bar of the nav items instead of the menu drawer (owners). */
   tabs?: boolean;
   children: ReactNode;
@@ -59,7 +62,7 @@ export function AppShell({
       </a>
 
       <aside className="sticky top-0 hidden h-dvh lg:block">
-        <Sidebar items={nav} onSignOut={onSignOut} />
+        <Sidebar items={nav} onSignOut={onSignOut} onHelp={onHelp} />
       </aside>
 
       <RadixDialog.Root open={menuOpen} onOpenChange={setMenuOpen}>
@@ -70,7 +73,18 @@ export function AppShell({
             className="fixed inset-y-0 left-0 z-50 w-[min(18rem,85vw)] animate-slide-in focus:outline-none lg:hidden"
           >
             <RadixDialog.Title className="sr-only">Menu</RadixDialog.Title>
-            <Sidebar items={nav} onSignOut={onSignOut} onNavigate={() => setMenuOpen(false)} />
+            <Sidebar
+              items={nav}
+              onSignOut={onSignOut}
+              onHelp={
+                onHelp &&
+                (() => {
+                  setMenuOpen(false);
+                  onHelp();
+                })
+              }
+              onNavigate={() => setMenuOpen(false)}
+            />
             <RadixDialog.Close
               aria-label="Close menu"
               className="absolute top-4 right-3 z-20 grid size-10 place-items-center rounded-full text-sidebar-ink hover:bg-sidebar-hover"
@@ -108,7 +122,7 @@ export function AppShell({
             )}
           </div>
           {notifications}
-          <ProfileMenu {...user} onSignOut={onSignOut} />
+          <ProfileMenu {...user} onSignOut={onSignOut} onHelp={onHelp} />
         </header>
         <main
           id="main"

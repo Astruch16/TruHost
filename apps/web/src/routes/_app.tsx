@@ -4,6 +4,7 @@ import { useAuth, useClerk, useUser } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
 import { AuthButton, AuthCard, AuthLink } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
+import { OnboardingHost } from '../components/onboarding/onboarding-host';
 import { NotAvailable } from '../components/shell/not-available';
 import { LiveNotificationsBell } from '../components/shell/notifications-bell';
 import { PortalLoading } from '../components/shell/portal-loading';
@@ -47,6 +48,7 @@ function SignedInShell() {
   const matchRoute = useMatchRoute();
   const { propertyId: routePropertyId } = useParams({ strict: false });
   const [scope, setScopeState] = useState(readStoredScope);
+  const [helpOpen, setHelpOpen] = useState(false);
   const setScope = (id: string | null) => {
     setScopeState(id);
     storeScope(id);
@@ -141,7 +143,9 @@ function SignedInShell() {
         isAdmin || user.memberships.some((m) => m.role === 'OWNER') ? <LiveNotificationsBell me={user} /> : null
       }
       onSignOut={handleSignOut}
+      onHelp={() => setHelpOpen(true)}
     >
+      <OnboardingHost me={user} helpOpen={helpOpen} onHelpOpenChange={setHelpOpen} />
       <ScopeContext.Provider value={{ propertyId: selectedId, setPropertyId: setScope }}>
         <GuideContext.Provider value={guideFromApi(user.guide)}>
           <PreferencesContext.Provider value={{ weekStartsOn: user.weekStartsOn, motion: user.motion }}>

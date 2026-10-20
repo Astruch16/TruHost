@@ -129,6 +129,7 @@ export function PropertySwitcher({
       }}
     >
       <Popover.Trigger
+        data-tour="property-switcher"
         className={cx(
           'group flex min-h-12 w-full max-w-xs items-center gap-3 rounded-full border border-line bg-surface py-1.5 pr-4 pl-1.5 text-left',
           'transition-[border-color,box-shadow] duration-150 hover:border-ink/25 hover:shadow-sm',

@@ -46,6 +46,7 @@ model User {
   weekStartsOn         Int                   @default(0)
   motion               MotionPreference      @default(SYSTEM)
   notificationSettings NotificationSetting[]
+  onboardingProgress   OnboardingProgress[]
   createdAt            DateTime              @default(now()) @db.Timestamptz
   updatedAt            DateTime              @updatedAt @db.Timestamptz
 
@@ -103,6 +104,35 @@ model NotificationSetting {
   updatedAt DateTime             @updatedAt @db.Timestamptz
 
   @@id([userId, category])
+}
+
+/// The welcome tours (docs/spec.md, Phase 4b): one per role a user holds.
+enum OnboardingRole {
+  ADMIN
+  OWNER
+  CLEANER
+}
+
+enum TourStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+/// A user's progress through one role's welcome tour. UI progress only, visible only to that user.
+model OnboardingProgress {
+  userId      String         @db.Uuid
+  user        User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role        OnboardingRole
+  tourStatus  TourStatus     @default(NOT_STARTED)
+  /// Last step seen, so an interrupted tour resumes where it stopped (CHECK: 0 or more).
+  tourStep    Int?
+  /// The tour's version when it was started, finished or skipped; a lower one than the current re-offers it once.
+  tourVersion Int            @default(1)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz
+
+  @@id([userId, role])
 }
 
 /// The three guide characters (docs/design/Mascots.dc.html).

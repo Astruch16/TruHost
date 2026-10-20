@@ -116,6 +116,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/me/onboarding': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Onboarding_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/onboarding/tours/{role}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Onboarding_update'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/users': {
     parameters: {
       query?: never;
@@ -1733,6 +1765,72 @@ export interface operations {
               createdAt: string;
             }[];
             unread: number;
+          };
+        };
+      };
+    };
+  };
+  Onboarding_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            tours: {
+              /** @enum {string} */
+              role: 'ADMIN' | 'OWNER' | 'CLEANER';
+              /** @enum {string} */
+              status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED';
+              step: number | null;
+              offer: boolean;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Onboarding_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        role: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          action: 'START' | 'STEP' | 'COMPLETE' | 'SKIP' | 'RESET';
+          step?: number;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            tours: {
+              /** @enum {string} */
+              role: 'ADMIN' | 'OWNER' | 'CLEANER';
+              /** @enum {string} */
+              status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED';
+              step: number | null;
+              offer: boolean;
+            }[];
           };
         };
       };
