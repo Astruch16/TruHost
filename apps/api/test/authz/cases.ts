@@ -63,6 +63,33 @@ export const CASES: AuthzCase[] = [
     allow: 'everyone',
     mutates: true,
   },
+  // Onboarding: self-scoped. Everyone reads their own tours; a tour moves only for a role the caller holds (the admin,
+  // who also owns property A, has no owner tour: admins use the admin pages).
+  { route: 'GET /v1/me/onboarding', path: () => '/v1/me/onboarding', allow: 'everyone' },
+  {
+    route: 'POST /v1/me/onboarding/tours/:role',
+    label: 'admin tour',
+    path: () => '/v1/me/onboarding/tours/ADMIN',
+    body: () => ({ action: 'START' }),
+    allow: ADMIN,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/me/onboarding/tours/:role',
+    label: 'owner tour',
+    path: () => '/v1/me/onboarding/tours/OWNER',
+    body: () => ({ action: 'START' }),
+    allow: ['ownerA', 'ownerB'],
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/me/onboarding/tours/:role',
+    label: 'cleaner tour',
+    path: () => '/v1/me/onboarding/tours/CLEANER',
+    body: () => ({ action: 'START' }),
+    allow: ['cleanerA', 'cleanerB'],
+    mutates: true,
+  },
   { route: 'GET /v1/config', path: () => '/v1/config', allow: 'everyone' },
 
   // ── users ──

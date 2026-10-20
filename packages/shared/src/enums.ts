@@ -31,6 +31,13 @@ export type InviteStatus = z.infer<typeof InviteStatus>;
 export const MembershipRole = z.enum(['OWNER', 'CLEANER']);
 export type MembershipRole = z.infer<typeof MembershipRole>;
 
+/** The welcome tours: one per role a user holds. */
+export const OnboardingRole = z.enum(['ADMIN', 'OWNER', 'CLEANER']);
+export type OnboardingRole = z.infer<typeof OnboardingRole>;
+
+export const TourStatus = z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED']);
+export type TourStatus = z.infer<typeof TourStatus>;
+
 export const RoomType = z.enum([
   'BEDROOM',
   'BATHROOM',

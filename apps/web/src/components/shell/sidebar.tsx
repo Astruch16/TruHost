@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { LogOut } from 'lucide-react';
+import { CircleHelp, LogOut } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import type { NavItem } from '../../lib/nav';
 import { APP_BUILD, APP_VERSION } from '../../lib/version';
@@ -16,10 +16,12 @@ const itemClass = cx(
 export function Sidebar({
   items,
   onSignOut,
+  onHelp,
   onNavigate,
 }: {
   items: NavItem[];
   onSignOut: () => void;
+  onHelp?: () => void;
   onNavigate?: () => void;
 }) {
   return (
@@ -63,9 +65,15 @@ export function Sidebar({
         </p>
       </div>
 
-      {/* Foot: Log out and the version, on the scene's darkest ground so the trees run into it. Always at the bottom;
+      {/* Foot: Help, Log out and the version, on the scene's darkest ground so the trees run into it. Always at the bottom;
           the scene above gives way first on short screens. */}
       <div className="relative z-10 flex-none bg-[#0e2421] px-3 pt-1 pb-4">
+        {onHelp && (
+          <button type="button" onClick={onHelp} className={cx(itemClass, 'w-full text-left')}>
+            <CircleHelp aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
+            <span className="flex-1">Help</span>
+          </button>
+        )}
         <button type="button" onClick={onSignOut} className={cx(itemClass, 'w-full text-left')}>
           <LogOut aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
           <span className="flex-1">Log out</span>

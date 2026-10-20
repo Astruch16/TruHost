@@ -1483,8 +1483,8 @@ Dashboard rules (approved 2026-10-06):
 
 | Method | Path                              | Roles | Notes                                                                                                                   |
 | ------ | --------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/me/onboarding`                  | A O C | The caller's tours and checklists. One per role they hold, with each step's done state derived from records.            |
-| POST   | `/me/onboarding/tours/:role`      | A O C | `{ action: START \| STEP \| COMPLETE \| SKIP \| RESET, step? }`. Own progress only. `RESET` replays the tour from Help. |
+| GET    | `/me/onboarding`                  | A O C | The caller's tours (built): one per role they hold, with `offer`. Checklists join it in the next step.                  |
+| POST   | `/me/onboarding/tours/:role`      | A O C | `{ action: START \| STEP \| COMPLETE \| SKIP \| RESET, step? }`. Own progress only; a role not held is 404 (built).     |
 | POST   | `/me/onboarding/checklists/:role` | A O C | `{ hidden: boolean }`. Hide or restore the checklist.                                                                   |
 | POST   | `/me/onboarding/events`           | A O C | `{ key }`. Records a step that leaves no record of its own (e.g. "opened a statement"). Keys are allow-listed per role. |
 
@@ -1791,20 +1791,30 @@ before this phase. Phase 4b adds the tours and checklists around them and reuses
 **This phase adds:** the welcome screen (waving guide, picker, "Start the tour"), the tour steps (pointing guide)
 and the checklist completion milestone.
 
-**Welcome tours, one per role.** Shown on first sign-in for each role a user holds. An admin who also owns a
-property gets the admin tour first; the owner tour is offered from the checklist afterwards.
+**Status (2026-10-19):** the welcome, the tours and Help are built: `OnboardingProgress`, `GET /me/onboarding` and
+`POST /me/onboarding/tours/:role` in the API (`onboarding` module), and in the web app the welcome, the tour and Help
+(`components/onboarding/`, content in `lib/tours.ts` and `lib/help.ts`). Next: the checklists (`OnboardingEvent`,
+`checklistHiddenAt`, `POST …/checklists/:role` and `…/events`, Help's "Show my checklist"). Until then the welcome
+lists what the tour covers where the design shows the checklist.
+
+**Welcome tours, one per role.** Shown on first sign-in for each role a user holds, one at a time (admin, then owner,
+then cleaner). An admin who also owns a property gets only the admin tour: admins use the admin pages, not the owner
+portal. Invited teammates are admins, so they get the admin tour on their first sign-in. Closing the welcome puts it
+off until the next visit; "Skip for now" records a skip, and Help replays any tour.
 
 - **Steps** are anchored to real UI through `data-tour="…"` attributes: a highlighted element and a popover with
   text, Back/Next, step count and Skip.
 - **Phones** (most cleaners) get a bottom sheet instead of an anchored popover.
 - **Keyboard:** fully usable. Focus moves into the step, Escape skips, and focus returns where it was.
 - **Missing anchors:** a step whose element isn't on screen (e.g. no bookings yet) shows centred, without a
-  highlight.
+  highlight. Steps marked optional (cards that only appear with data, such as Coming up) are passed over instead.
+- **Steps that open pages:** a step names its page; the tour opens it, waits for the element, and scrolls it into view.
 - **Content:**
   - **Owner:** month at a glance and what each figure means (gross, TruPlan fee, net), statements and when
     money is released, receipts, the calendar, before/after photos, damage reports, profile.
   - **Cleaner:** today's schedule, starting a clean on its day, the room photo checklist (before and after,
-    every room), supply levels, reporting damage with photos, earnings and pay status.
+    every room), supply levels, reporting damage with photos, earnings and pay status. Until Phase 3 builds cleans,
+    the tour covers what exists: their properties, supply levels, reporting damage, rooms, and where cleans will appear.
   - **Admin:** dashboard and the property switcher, properties and rooms, plans, inviting owners and cleaners,
     entering bookings and payouts, expenses with receipts, statements, needs attention.
 
@@ -1843,8 +1853,10 @@ model OnboardingProgress {
   tourStatus        TourStatus     @default(NOT_STARTED)
   /// Last step seen, so an interrupted tour resumes where it stopped.
   tourStep          Int?
-  /// Bumped in code when a tour changes materially; a lower stored version re-offers the tour once.
+  /// Bumped in code (`TOUR_VERSIONS`, packages/shared) when a tour changes materially; a lower stored version
+  /// re-offers the tour once.
   tourVersion       Int            @default(1)
+  /// Added with the checklists (not built yet).
   checklistHiddenAt DateTime?      @db.Timestamptz
   updatedAt         DateTime       @updatedAt @db.Timestamptz
 
@@ -1852,6 +1864,7 @@ model OnboardingProgress {
 }
 
 /// One-time facts that have no record elsewhere (e.g. "owner opened a statement"). Keys are allow-listed per role.
+/// Added with the checklists (not built yet).
 model OnboardingEvent {
   userId     String   @db.Uuid
   key        String

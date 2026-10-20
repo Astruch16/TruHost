@@ -8,6 +8,7 @@ export function Card({
   actions,
   inner = false,
   className,
+  tour,
   children,
 }: {
   title?: ReactNode;
@@ -15,11 +16,14 @@ export function Card({
   actions?: ReactNode;
   inner?: boolean;
   className?: string;
+  /** Anchor for a welcome tour step (`data-tour`). */
+  tour?: string;
   children?: ReactNode;
 }) {
   const hasHeader = title || description || actions;
   return (
     <section
+      data-tour={tour}
       className={cx(
         'border bg-surface',
         inner

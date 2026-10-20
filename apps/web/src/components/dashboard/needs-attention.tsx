@@ -67,7 +67,7 @@ export function NeedsAttention({
   showProperty: boolean;
 }) {
   return (
-    <Card title="Needs attention">
+    <Card title="Needs attention" tour="needs-attention">
       {items.length === 0 ? (
         <EmptyState size="compact" illustration={<AllClearIllustration />} title="All clear">
           No missing payouts, receipts or plans. Anything that needs you will show up here.
