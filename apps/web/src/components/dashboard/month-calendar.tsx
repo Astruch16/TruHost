@@ -113,8 +113,11 @@ export function MonthCalendar({
                   className={cx(
                     'absolute flex items-center overflow-hidden px-2 text-left text-xs font-semibold whitespace-nowrap',
                     style.bar,
-                    seg.continuesBefore ? 'rounded-l-none' : 'rounded-l-md',
-                    seg.continuesAfter ? 'rounded-r-none' : 'rounded-r-md',
+                    // Outlined in a darker shade; a bar carrying on into another week is left open at that end.
+                    'border-y',
+                    style.edge,
+                    seg.continuesBefore ? 'rounded-l-none border-l-0' : 'rounded-l-md border-l',
+                    seg.continuesAfter ? 'rounded-r-none border-r-0' : 'rounded-r-md border-r',
                     onSelect &&
                       'cursor-pointer transition-[filter,box-shadow] hover:shadow-[0_2px_6px_rgb(0_0_0/0.12)] hover:brightness-[0.97] focus-visible:z-10',
                   )}
