@@ -110,6 +110,8 @@ export interface StayStyle {
   label: string;
   /** Classes for the bar (background and text). */
   bar: string;
+  /** The calendar bar's outline colour (a border class), a darker shade of the bar. */
+  edge: string;
   /** Classes for the legend swatch. */
   swatch: string;
 }
@@ -122,29 +124,51 @@ export const STAY_STYLES: readonly StayStyle[] = [
     key: 'AIRBNB',
     label: 'Airbnb',
     bar: 'bg-rose-tint text-rose-deep',
+    edge: 'border-rose-deep/40',
     swatch: 'bg-rose-tint ring-1 ring-rose-deep/25',
   },
-  { key: 'VRBO', label: 'Vrbo', bar: 'bg-blue-tint text-blue-deep', swatch: 'bg-blue-tint ring-1 ring-blue-deep/25' },
+  {
+    key: 'VRBO',
+    label: 'Vrbo',
+    bar: 'bg-blue-tint text-blue-deep',
+    edge: 'border-blue-deep/40',
+    swatch: 'bg-blue-tint ring-1 ring-blue-deep/25',
+  },
   {
     key: 'BOOKING_COM',
     label: 'Booking.com',
     bar: 'bg-amber-tint text-amber-deep',
+    edge: 'border-amber-deep/40',
     swatch: 'bg-amber-tint ring-1 ring-amber-deep/25',
   },
   {
     key: 'DIRECT',
     label: 'Direct',
     bar: 'bg-sage-tint text-sage-deep',
+    edge: 'border-sage-deep/40',
     swatch: 'bg-sage-tint ring-1 ring-sage-deep/25',
   },
-  { key: 'OTHER', label: 'Other channel', bar: 'bg-line text-ink', swatch: 'bg-line ring-1 ring-ink/15' },
+  {
+    key: 'OTHER',
+    label: 'Other channel',
+    bar: 'bg-line text-ink',
+    edge: 'border-ink/25',
+    swatch: 'bg-line ring-1 ring-ink/15',
+  },
   {
     key: 'OWNER_STAY',
     label: 'Owner stay',
     bar: 'bg-lavender-tint text-lavender-deep',
+    edge: 'border-lavender-deep/40',
     swatch: 'bg-lavender-tint ring-1 ring-lavender-deep/25',
   },
-  { key: 'BLOCK', label: 'Blocked', bar: `${BLOCK_STRIPES} text-muted`, swatch: `${BLOCK_STRIPES} ring-1 ring-ink/15` },
+  {
+    key: 'BLOCK',
+    label: 'Blocked',
+    bar: `${BLOCK_STRIPES} text-muted`,
+    edge: 'border-ink/25',
+    swatch: `${BLOCK_STRIPES} ring-1 ring-ink/15`,
+  },
 ];
 
 const BY_KEY = new Map(STAY_STYLES.map((s) => [s.key, s]));
