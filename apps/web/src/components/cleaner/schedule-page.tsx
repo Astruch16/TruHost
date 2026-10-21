@@ -219,7 +219,7 @@ function ScheduleHero({
         aria-hidden
         className="pointer-events-none absolute -right-24 bottom-[-6rem] size-64 rounded-full bg-white/5"
       />
-      <div className="relative flex flex-col gap-6 @4xl/content:flex-row @4xl/content:items-end @4xl/content:justify-between">
+      <div className="relative flex flex-col gap-6 @4xl/content:flex-row @4xl/content:items-center @4xl/content:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
             {greeting()}
