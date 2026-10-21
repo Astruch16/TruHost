@@ -92,3 +92,23 @@ describe('schedule organising', () => {
     expect(weekGroups([{ scheduledDate: '2026-10-25' }], '2026-10-20', 1)[0]!.label).toBe('This week');
   });
 });
+
+describe('agenda and hero helpers', () => {
+  it('splits a list by day in its order, and counts what’s ahead', async () => {
+    const { byDay, scheduleCounts } = await import('./cleans');
+    const p = (id: string) => ({ id, name: id, city: '' });
+    const items = [
+      { scheduledDate: '2026-10-22', status: 'SCHEDULED' as const, property: p('a') },
+      { scheduledDate: '2026-10-22', status: 'SCHEDULED' as const, property: p('b') },
+      { scheduledDate: '2026-10-26', status: 'SCHEDULED' as const, property: p('a') },
+      { scheduledDate: '2026-11-25', status: 'SCHEDULED' as const, property: p('c') },
+      { scheduledDate: '2026-10-23', status: 'CANCELLED' as const, property: p('d') },
+    ];
+    expect(byDay(items.slice(0, 3)).map((d) => [d.day, d.items.length])).toEqual([
+      ['2026-10-22', 2],
+      ['2026-10-26', 1],
+    ]);
+    // Tue Oct 20; weeks from Sunday: this week ends Sat Oct 24.
+    expect(scheduleCounts(items, '2026-10-20', 0)).toEqual({ thisWeek: 2, next30: 3, properties: 3 });
+  });
+});
