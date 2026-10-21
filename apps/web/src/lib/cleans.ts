@@ -108,3 +108,32 @@ export function weekGroups<T extends Pick<CleanSummary, 'scheduledDate'>>(
   }
   return groups;
 }
+
+/** A list of cleans split by day, keeping their order: the agenda's date column beside each day's cleans. */
+export function byDay<T extends Pick<CleanSummary, 'scheduledDate'>>(
+  items: readonly T[],
+): { day: string; items: T[] }[] {
+  const days: { day: string; items: T[] }[] = [];
+  for (const c of items) {
+    const last = days.at(-1);
+    if (last?.day === c.scheduledDate) last.items.push(c);
+    else days.push({ day: c.scheduledDate, items: [c] });
+  }
+  return days;
+}
+
+/** The hero's counts: cleans the rest of this week and in the next 30 days (from today), and the properties ahead. */
+export function scheduleCounts(
+  items: readonly Pick<CleanSummary, 'scheduledDate' | 'status' | 'property'>[],
+  today: string,
+  weekStartsOn: 0 | 1,
+): { thisWeek: number; next30: number; properties: number } {
+  const live = items.filter((c) => c.status !== 'CANCELLED' && c.status !== 'COMPLETE' && c.scheduledDate >= today);
+  const weekEnd = addDays(today, 6 - weekColumn(today, weekStartsOn));
+  const in30 = addDays(today, 30);
+  return {
+    thisWeek: live.filter((c) => c.scheduledDate <= weekEnd).length,
+    next30: live.filter((c) => c.scheduledDate <= in30).length,
+    properties: new Set(live.map((c) => c.property.id)).size,
+  };
+}

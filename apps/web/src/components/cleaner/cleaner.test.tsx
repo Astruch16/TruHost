@@ -152,8 +152,13 @@ describe('cleaner schedule', () => {
   it('says when there’s nothing today, and when the next clean is', async () => {
     const items = [summary({ id: 'c2', scheduledDate: addDays(today, 2) })];
     renderWith({ GET: vi.fn(() => ok({ items })) } as unknown as ApiClient, <CleanerSchedulePage />);
-    expect(await screen.findByText('Nothing to clean today')).toBeInTheDocument();
-    expect(screen.getByText(/Your next clean is .* at Cedar Cabin/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Nothing to clean today' })).toBeInTheDocument();
+    const hero = screen.getByRole('region', { name: 'Nothing to clean today' });
+    expect(hero).toHaveTextContent(/Next up: Cedar Cabin/);
+    expect(within(hero).getByRole('link', { name: /Open the next clean/ })).toHaveAttribute(
+      'href',
+      '/cleaner/cleans/c2',
+    );
   });
 });
 
