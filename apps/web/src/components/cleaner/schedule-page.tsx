@@ -267,10 +267,10 @@ function HeroStat({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col rounded-xl bg-white/[0.08] px-3.5 py-3 ring-1 ring-white/12 ring-inset">
       {/* Labels may wrap on phones; the reserved two lines keep the three figures level. */}
-      <dt className="flex min-h-[calc(2lh+0.5rem)] items-end border-b border-white/15 pb-2 text-[11px] leading-tight font-semibold tracking-[0.08em] text-white uppercase @4xl/content:min-h-0">
+      <dt className="flex min-h-[calc(2lh+0.5rem)] items-end justify-center border-b border-white/15 pb-2 text-[11px] leading-tight font-semibold tracking-[0.08em] text-center text-white uppercase @4xl/content:min-h-0">
         {label}
       </dt>
-      <dd className="figure mt-2.5 text-2xl leading-none font-bold text-white">{value}</dd>
+      <dd className="figure mt-2.5 text-center text-2xl leading-none font-bold text-white">{value}</dd>
     </div>
   );
 }
