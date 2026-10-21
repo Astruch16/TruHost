@@ -13,6 +13,7 @@ import type { ApiClient } from '@truhost/api-client';
 import type { Clean, CleanSummary } from '@truhost/shared';
 import type { ReactNode } from 'react';
 import { ApiContext } from '../../lib/api-context';
+import { dayLabel } from '../../lib/dashboard-format';
 import { addDays, todayIso } from '../../lib/dates';
 import { CleanPage } from './clean-page';
 import { CleanerSchedulePage } from './schedule-page';
@@ -106,8 +107,46 @@ describe('cleaner schedule', () => {
       within(screen.getByRole('region', { name: 'Recently done' })).getByText(/2 rooms photographed/),
     ).toBeInTheDocument();
     expect(GET).toHaveBeenCalledWith('/v1/cleans', {
-      params: { query: { assignee: 'me', from: addDays(today, -14), to: addDays(today, 45) } },
+      params: { query: { assignee: 'me', from: addDays(today, -14), to: addDays(today, 90) } },
     });
+  });
+
+  it('groups what’s coming up by week, sorts it, narrows it to a property, and to a day picked on the calendar', async () => {
+    const cedar = { id: 'p1', name: 'Cedar Cabin', city: 'Whistler' };
+    const seaside = { id: 'p2', name: 'Seaside Loft', city: 'Tofino' };
+    const items = [
+      summary({ id: 'a', scheduledDate: addDays(today, 1), property: cedar }),
+      summary({ id: 'b', scheduledDate: addDays(today, 8), property: seaside }),
+      summary({ id: 'c', scheduledDate: addDays(today, 40), property: cedar }),
+    ];
+    renderWith({ GET: vi.fn(() => ok({ items })) } as unknown as ApiClient, <CleanerSchedulePage />);
+    const upcoming = await screen.findByRole('region', { name: 'Coming up' });
+    expect(within(upcoming).getAllByRole('region').length).toBeGreaterThanOrEqual(2); // week groups
+    const order = () =>
+      within(upcoming)
+        .getAllByRole('link')
+        .map((l) => l.getAttribute('href'));
+    expect(order()).toEqual(['/cleaner/cleans/a', '/cleaner/cleans/b', '/cleaner/cleans/c']);
+
+    await userEvent.click(within(upcoming).getByRole('button', { name: 'Latest first' }));
+    expect(order()).toEqual(['/cleaner/cleans/c', '/cleaner/cleans/b', '/cleaner/cleans/a']);
+
+    await userEvent.click(within(upcoming).getByRole('button', { name: /Seaside Loft/ }));
+    expect(order()).toEqual(['/cleaner/cleans/b']);
+
+    // Picking a day on the calendar shows just that day's cleans.
+    const tomorrow = addDays(today, 1);
+    if (tomorrow.slice(0, 7) === today.slice(0, 7)) {
+      await userEvent.click(screen.getByRole('button', { name: /1 clean \(Cedar Cabin\)/ }));
+      const day = screen.getByRole('region', { name: dayLabel(tomorrow) });
+      expect(
+        within(day)
+          .getAllByRole('link')
+          .map((l) => l.getAttribute('href')),
+      ).toEqual(['/cleaner/cleans/a']);
+      await userEvent.click(screen.getByRole('button', { name: 'Show everything coming up' }));
+      expect(screen.getByRole('region', { name: 'Coming up' })).toBeInTheDocument();
+    }
   });
 
   it('says when there’s nothing today, and when the next clean is', async () => {

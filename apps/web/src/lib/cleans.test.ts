@@ -54,3 +54,41 @@ describe('cleans', () => {
     expect(groups.recent.map((x) => x.id)).toEqual(['done2', 'done1']);
   });
 });
+
+describe('schedule organising', () => {
+  it('gives each property a lasting colour, in name order', async () => {
+    const { propertyColors } = await import('./cleans');
+    const colors = propertyColors([
+      { id: 'b', name: 'Seaside Loft' },
+      { id: 'a', name: 'Cedar Cabin' },
+      { id: 'b', name: 'Seaside Loft' },
+    ]);
+    expect([...colors]).toEqual([
+      ['a', 'bg-sage-mid'],
+      ['b', 'bg-blue-deep'],
+    ]);
+  });
+
+  it('groups coming-up cleans into this week, next week and later months, in either order', async () => {
+    const { weekGroups } = await import('./cleans');
+    // Tuesday, Oct 20 2026; weeks start on Sunday: this week runs to Sat Oct 24, next week to Sat Oct 31.
+    const items = ['2026-10-22', '2026-10-26', '2026-10-31', '2026-11-04', '2026-12-02'].map((d) => ({
+      scheduledDate: d,
+    }));
+    const soonest = weekGroups(items, '2026-10-20', 0);
+    expect(soonest.map((g) => [g.label, g.items.length])).toEqual([
+      ['This week', 1],
+      ['Next week', 2],
+      ['Later in November', 1],
+      ['December 2026', 1],
+    ]);
+    expect(weekGroups(items, '2026-10-20', 0, 'latest').map((g) => g.label)).toEqual([
+      'December 2026',
+      'Later in November',
+      'Next week',
+      'This week',
+    ]);
+    // Weeks starting on Monday: Sun Oct 25 is still this week.
+    expect(weekGroups([{ scheduledDate: '2026-10-25' }], '2026-10-20', 1)[0]!.label).toBe('This week');
+  });
+});
