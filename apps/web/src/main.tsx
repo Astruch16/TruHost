@@ -6,6 +6,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { ApiProvider } from './lib/api';
 import { queryClient, router } from './router';
 import './styles.css';
+import { ClearCacheOnUserChange } from './components/auth/clear-cache-on-user-change';
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!publishableKey) {
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')!).render(
     >
       <ApiProvider>
         <QueryClientProvider client={queryClient}>
+          <ClearCacheOnUserChange />
           <RouterProvider router={router} />
         </QueryClientProvider>
       </ApiProvider>
