@@ -157,9 +157,10 @@ describe('cleaner schedule', () => {
     ];
     const supplies = {
       p1: [
-        { id: 's1', name: 'Dish soap', state: 'OK' },
-        { id: 's2', name: 'Paper towels', state: 'LOW' },
-        { id: 's3', name: 'Coffee pods', state: 'OUT' },
+        { id: 's1', name: 'Dish soap', state: 'OK', levelPct: 100, thresholdPct: 25, lastCheckedAt: null },
+        { id: 's2', name: 'Paper towels', state: 'LOW', levelPct: 25, thresholdPct: 25, lastCheckedAt: null },
+        { id: 's3', name: 'Coffee pods', state: 'OUT', levelPct: 0, thresholdPct: 25, lastCheckedAt: null },
+        { id: 's4', name: 'Shampoo', state: 'UNKNOWN', levelPct: null, thresholdPct: 25, lastCheckedAt: null },
       ],
     };
     renderWith({ GET: cleansApi(items, supplies) } as unknown as ApiClient, <CleanerSchedulePage />);
@@ -170,11 +171,20 @@ describe('cleaner schedule', () => {
     );
     expect(properties).toHaveTextContent('2 ahead');
     const check = await screen.findByRole('region', { name: 'Check on your next visit' });
+    // A count of each, then the property's items worst first, each with its level.
+    const counts = within(check).getByRole('list', { name: 'Supplies to check' });
     expect(
-      within(check)
+      within(counts)
         .getAllByRole('listitem')
         .map((li) => li.textContent),
-    ).toEqual(['Coffee podsOut', 'Paper towelsLow']);
+    ).toEqual(['1 out', '1 low', '1 not checked']);
+    const list = within(check).getByRole('list', { name: 'Cedar Cabin supplies' });
+    expect(
+      within(list)
+        .getAllByRole('meter')
+        .map((m) => m.getAttribute('aria-label')),
+    ).toEqual(['Coffee pods level', 'Paper towels level', 'Shampoo level']);
+    expect(within(check).getByRole('link', { name: /Cedar Cabin/ })).toHaveAttribute('href', '/cleaner/properties/p1');
   });
 
   it('says when there’s nothing today, and when the next clean is', async () => {

@@ -172,7 +172,7 @@ export function CleanerSchedulePage() {
         <div className="@container/extras min-w-0">
           <div className="-mb-6 gap-6 @xl/extras:columns-2">
             <RailProperties rows={summaries} colors={colors} />
-            <RailSupplies properties={boardProperties} />
+            <RailSupplies rows={summaries} colors={colors} />
             <RailRecent cleans={groups.recent} colors={colors} />
           </div>
         </div>
