@@ -22,6 +22,7 @@ export function ScheduleCalendar({
   selected,
   onSelect,
   loading = false,
+  className,
 }: {
   month: string;
   onMonthChange: (month: string) => void;
@@ -31,6 +32,7 @@ export function ScheduleCalendar({
   selected: string | null;
   onSelect: (day: string | null) => void;
   loading?: boolean;
+  className?: string;
 }) {
   const weekStartsOn = useWeekStart();
   const days = calendarDays(month, weekStartsOn);
@@ -47,7 +49,7 @@ export function ScheduleCalendar({
   return (
     <section
       aria-labelledby="schedule-calendar"
-      className="rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5"
+      className={cx('flex flex-col rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5', className)}
       data-tour="cleaner-calendar"
     >
       <div className="flex items-center justify-between gap-2">
@@ -151,17 +153,20 @@ export function ScheduleCalendar({
         ))}
       </div>
 
-      {properties.length > 0 && (
-        <ul aria-label="Properties" className="mt-4 flex flex-col gap-1.5 border-t border-line-soft pt-3 text-sm">
-          {properties.map((p) => (
-            <li key={p.id} className="flex items-center gap-2 text-ink">
-              <span aria-hidden className={cx('size-2.5 shrink-0 rounded-full', colors.get(p.id))} />
-              <span className="truncate font-medium">{p.name}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="mt-3 text-xs text-muted">Pick a day to see its week.</p>
+      {/* Stretched beside taller cards, the legend stays at the foot. */}
+      <div className="mt-auto">
+        {properties.length > 0 && (
+          <ul aria-label="Properties" className="mt-4 flex flex-col gap-1.5 border-t border-line-soft pt-3 text-sm">
+            {properties.map((p) => (
+              <li key={p.id} className="flex items-center gap-2 text-ink">
+                <span aria-hidden className={cx('size-2.5 shrink-0 rounded-full', colors.get(p.id))} />
+                <span className="truncate font-medium">{p.name}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-xs text-muted">Pick a day to see its week.</p>
+      </div>
     </section>
   );
 }

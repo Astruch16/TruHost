@@ -8,10 +8,20 @@ import { dayLabel } from '../../lib/dashboard-format';
 import { queries } from '../../lib/queries';
 import { checkedAgo, levelText } from '../../lib/supplies';
 import { SupplyBar } from '../supplies/supply-bar';
+import { Skeleton } from '../ui/skeleton';
 import { CleanRow } from './clean-row';
 
-// Laid out in columns under the week, so each card keeps itself whole and spaces the next.
-const railCard = 'mb-6 break-inside-avoid rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5';
+// Each card fills its cell of the schedule's grid, so cards side by side end on the same line.
+const railCard = 'flex min-w-0 flex-col rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5';
+
+/** What a card says when it has nothing to list, so the card (and the grid) keeps its place. */
+function RailEmpty({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-4 flex flex-1 items-center justify-center rounded-inner border border-dashed border-line-soft px-4 py-6 text-center text-sm text-muted">
+      {children}
+    </p>
+  );
+}
 
 /** A side card's heading: an icon in a tinted tile, the title and a line under it. */
 function RailHeading({
@@ -46,13 +56,14 @@ function RailHeading({
 export function RailProperties({
   rows,
   colors,
+  className,
 }: {
   rows: { property: CleanSummary['property']; next: CleanSummary; upcoming: number }[];
   colors: Map<string, string>;
+  className?: string;
 }) {
-  if (rows.length === 0) return null;
   return (
-    <section aria-labelledby="rail-properties" className={railCard}>
+    <section aria-labelledby="rail-properties" className={cx(railCard, className)}>
       <RailHeading
         id="rail-properties"
         icon={House}
@@ -60,7 +71,8 @@ export function RailProperties({
         title="Your properties"
         detail="Where you’re cleaning next."
       />
-      <ul className="-mx-2 mt-3 flex flex-col">
+      {rows.length === 0 && <RailEmpty>No cleans booked ahead yet.</RailEmpty>}
+      <ul className="-mx-2 mt-3 flex flex-col empty:hidden">
         {rows.map(({ property: p, next, upcoming }) => (
           <li key={p.id}>
             <Link
@@ -100,14 +112,16 @@ const SHOWN = 4;
 /**
  * Supplies to look at on the next visit: items out, running low or never checked at the properties the cleaner has
  * cleans ahead at, worst first. A count of each up top; then each property (in its colour, with when the cleaner is
- * next there) and its items, each with its level bar and when it was last checked. Nothing to show, nothing rendered.
+ * next there) and its items, each with its level bar and when it was last checked. When nothing is low, it says so.
  */
 export function RailSupplies({
   rows,
   colors,
+  className,
 }: {
   rows: { property: CleanSummary['property']; next: CleanSummary }[];
   colors: Map<string, string>;
+  className?: string;
 }) {
   const api = useApi();
   const results = useQueries({ queries: rows.map((r) => queries.supplies(api, r.property.id)) });
@@ -119,12 +133,12 @@ export function RailSupplies({
         .sort((a, b) => ORDER[a.state] - ORDER[b.state]),
     }))
     .filter((g) => g.items.length > 0);
-  if (groups.length === 0) return null;
+  const loading = results.some((r) => r.isPending);
   const counts = (Object.keys(ORDER) as (keyof typeof ORDER)[])
     .map((state) => ({ state, n: groups.reduce((n, g) => n + g.items.filter((i) => i.state === state).length, 0) }))
     .filter((c) => c.n > 0);
   return (
-    <section aria-labelledby="rail-supplies" className={railCard}>
+    <section aria-labelledby="rail-supplies" className={cx(railCard, '@container/supplies', className)}>
       <RailHeading
         id="rail-supplies"
         icon={ShoppingBasket}
@@ -132,7 +146,18 @@ export function RailSupplies({
         title="Check on your next visit"
         detail="Top these up, or check them, when you’re there."
       />
-      <ul aria-label="Supplies to check" className="mt-3 flex flex-wrap gap-1.5">
+      {loading ? (
+        <Skeleton className="mt-4 h-32 rounded-inner" />
+      ) : (
+        groups.length === 0 && (
+          <RailEmpty>
+            {rows.length > 0
+              ? 'Everything’s stocked at the places you’re cleaning next.'
+              : 'Nothing to check until you have cleans booked.'}
+          </RailEmpty>
+        )
+      )}
+      <ul aria-label="Supplies to check" className="mt-3 flex flex-wrap gap-1.5 empty:hidden">
         {counts.map(({ state, n }) => (
           <li
             key={state}
@@ -147,7 +172,7 @@ export function RailSupplies({
         ))}
       </ul>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 grid items-start gap-3 empty:hidden @xl/supplies:grid-cols-2">
         {groups.map(({ property: p, next, items }) => (
           <div key={p.id} className="rounded-inner bg-ground/70 px-3 pt-2.5 pb-1 ring-1 ring-line-soft ring-inset">
             <div className="flex items-center justify-between gap-3">
@@ -206,10 +231,17 @@ export function RailSupplies({
 }
 
 /** The last few cleans done. */
-export function RailRecent({ cleans, colors }: { cleans: CleanSummary[]; colors: Map<string, string> }) {
-  if (cleans.length === 0) return null;
+export function RailRecent({
+  cleans,
+  colors,
+  className,
+}: {
+  cleans: CleanSummary[];
+  colors: Map<string, string>;
+  className?: string;
+}) {
   return (
-    <section aria-labelledby="rail-recent" className={railCard}>
+    <section aria-labelledby="rail-recent" className={cx(railCard, className)}>
       <RailHeading
         id="rail-recent"
         icon={CircleCheck}
@@ -217,7 +249,8 @@ export function RailRecent({ cleans, colors }: { cleans: CleanSummary[]; colors:
         title="Recently done"
         detail="Your last cleans."
       />
-      <ul className="-mx-2 mt-2 divide-y divide-line-soft">
+      {cleans.length === 0 && <RailEmpty>Cleans you complete will show here.</RailEmpty>}
+      <ul className="-mx-2 mt-2 divide-y divide-line-soft empty:hidden">
         {cleans.slice(0, 3).map((c) => (
           <CleanRow key={c.id} clean={c} color={colors.get(c.property.id)} />
         ))}

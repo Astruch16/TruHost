@@ -197,6 +197,16 @@ describe('cleaner schedule', () => {
       'href',
       '/cleaner/cleans/c2',
     );
+    // Every card keeps its place in the grid, saying when it has nothing.
+    expect(
+      await within(screen.getByRole('region', { name: 'Check on your next visit' })).findByText(
+        'Everything’s stocked at the places you’re cleaning next.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Recently done' })).toHaveTextContent(
+      'Cleans you complete will show here.',
+    );
+    expect(screen.getByRole('region', { name: 'Your properties' })).toHaveTextContent('Cedar Cabin');
   });
 });
 

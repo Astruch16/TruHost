@@ -84,9 +84,11 @@ export function CleanerSchedulePage() {
     return (
       <div role="status" aria-label="Loading your schedule" className="flex flex-col gap-6">
         <Skeleton className="h-56 rounded-card" />
-        <div className="grid gap-6 @4xl/content:grid-cols-[minmax(0,1fr)_19rem]">
-          <Skeleton className="h-80 rounded-card" />
-          <Skeleton className="h-80 rounded-card" />
+        <Skeleton className="h-80 rounded-card" />
+        <div className="grid gap-6 @2xl/content:grid-cols-2 @5xl/content:grid-cols-3">
+          <Skeleton className="h-96 rounded-card" />
+          <Skeleton className="h-96 rounded-card" />
+          <Skeleton className="h-96 rounded-card" />
         </div>
       </div>
     );
@@ -104,23 +106,25 @@ export function CleanerSchedulePage() {
       />
 
       {/*
-        Wide: the week (and today) beside the month, the rest below the week. Medium: the week across, then the month
-        beside the rest. Narrow: one after another.
+        The week across the top. Under it the cards sit in a grid whose cells line up: wide, three columns (the month,
+        supplies, then your properties over what you did last); medium, two (the month beside your properties and
+        what you did last, supplies across the foot); narrow, one after another. Every card always shows, saying when
+        it has nothing, so the grid never shifts.
       */}
-      <div className="grid items-start gap-6 @2xl/content:grid-cols-2 @4xl/content:grid-cols-[minmax(0,1fr)_19rem] @4xl/content:grid-rows-[auto_1fr] @[90rem]/content:grid-cols-[minmax(0,1fr)_21rem]">
-        <div className="flex min-w-0 flex-col gap-6 @2xl/content:col-span-2 @4xl/content:col-span-1">
-          {groups.today.length > 0 && (
-            <section aria-labelledby="today">
-              <h2 id="today" className="mb-3 text-lg font-bold text-ink">
-                Today
-              </h2>
-              <ul className="grid gap-4 @3xl/content:grid-cols-2">
-                {groups.today.map((c) => (
-                  <TodayCard key={c.id} clean={c} today={today} />
-                ))}
-              </ul>
-            </section>
-          )}
+      <div className="grid grid-flow-row-dense gap-6 @2xl/content:grid-cols-2 @5xl/content:grid-cols-3">
+        {groups.today.length > 0 && (
+          <section aria-labelledby="today" className="col-span-full">
+            <h2 id="today" className="mb-3 text-lg font-bold text-ink">
+              Today
+            </h2>
+            <ul className="grid gap-4 @3xl/content:grid-cols-2">
+              {groups.today.map((c) => (
+                <TodayCard key={c.id} clean={c} today={today} />
+              ))}
+            </ul>
+          </section>
+        )}
+        <div className="col-span-full min-w-0">
           <WeekBoard
             days={week.days}
             currentStart={current.start}
@@ -156,7 +160,7 @@ export function CleanerSchedulePage() {
           />
         </div>
 
-        <aside aria-label="Your month" className="min-w-0 @4xl/content:row-span-2">
+        <aside aria-label="Your month" className="min-w-0 @2xl/content:row-span-2">
           <ScheduleCalendar
             month={month}
             onMonthChange={setMonth}
@@ -166,16 +170,16 @@ export function CleanerSchedulePage() {
             selected={day}
             onSelect={pickDay}
             loading={calendar.isFetching}
+            className="h-full"
           />
         </aside>
-
-        <div className="@container/extras min-w-0">
-          <div className="-mb-6 gap-6 @xl/extras:columns-2">
-            <RailProperties rows={summaries} colors={colors} />
-            <RailSupplies rows={summaries} colors={colors} />
-            <RailRecent cleans={groups.recent} colors={colors} />
-          </div>
-        </div>
+        <RailProperties rows={summaries} colors={colors} className="@5xl/content:col-start-3" />
+        <RailSupplies
+          rows={summaries}
+          colors={colors}
+          className="@2xl/content:col-span-2 @5xl/content:col-span-1 @5xl/content:col-start-2 @5xl/content:row-span-2"
+        />
+        <RailRecent cleans={groups.recent} colors={colors} className="@5xl/content:col-start-3" />
       </div>
     </div>
   );
