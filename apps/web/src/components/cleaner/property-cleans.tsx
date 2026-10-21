@@ -6,7 +6,7 @@ import { queries } from '../../lib/queries';
 import { LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
-import { CleanRow } from './schedule-page';
+import { CleanRow } from './clean-row';
 
 /** On a cleaner's property page: their next cleans here (today and the next month), each opening its walkthrough. */
 export function PropertyCleansCard({ propertyId }: { propertyId: string }) {

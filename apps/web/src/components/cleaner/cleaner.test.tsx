@@ -13,7 +13,6 @@ import type { ApiClient } from '@truhost/api-client';
 import type { Clean, CleanSummary } from '@truhost/shared';
 import type { ReactNode } from 'react';
 import { ApiContext } from '../../lib/api-context';
-import { dayLabel } from '../../lib/dashboard-format';
 import { addDays, todayIso } from '../../lib/dates';
 import { CleanPage } from './clean-page';
 import { CleanerSchedulePage } from './schedule-page';
@@ -85,73 +84,102 @@ function renderWith(api: Partial<ApiClient>, ui: ReactNode) {
   );
 }
 
+/** GET /v1/cleans as the API answers it: only the cleans in the asked-for range; supplies empty. */
+const cleansApi = (items: CleanSummary[], supplies: Record<string, unknown[]> = {}) =>
+  vi.fn((path: string, init?: { params?: { path?: { id?: string }; query?: { from?: string; to?: string } } }) => {
+    if (path === '/v1/properties/{id}/supplies') return ok({ items: supplies[init?.params?.path?.id ?? ''] ?? [] });
+    if (path !== '/v1/cleans') return ok({ items: [] });
+    const { from = '0000', to = '9999' } = init?.params?.query ?? {};
+    return ok({ items: items.filter((c) => c.scheduledDate >= from && c.scheduledDate <= to) });
+  });
+
 describe('cleaner schedule', () => {
-  it('shows today’s cleans with the window, then what’s coming up and what was done', async () => {
+  it('shows today’s cleans with the window, the week on a board, and what was done in the rail', async () => {
     const items = [
       summary(),
-      summary({
-        id: 'c2',
-        scheduledDate: addDays(today, 3),
-        property: { id: 'p2', name: 'Seaside Loft', city: 'Tofino' },
-      }),
       summary({ id: 'c3', scheduledDate: addDays(today, -2), status: 'COMPLETE', completedAt: '2026-11-18T22:00:00Z' }),
     ];
-    const GET = vi.fn(() => ok({ items }));
-    renderWith({ GET } as unknown as ApiClient, <CleanerSchedulePage />);
+    renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
     const todayCard = (await screen.findByRole('link', { name: 'Cedar Cabin' })).closest('li')!;
     expect(todayCard).toHaveTextContent('Free from 11 AM');
     expect(todayCard).toHaveTextContent('Ready by 4 PM');
     expect(todayCard).toHaveTextContent('Start the clean');
-    expect(within(screen.getByRole('region', { name: 'Coming up' })).getByText('Seaside Loft')).toBeInTheDocument();
+    const board = screen.getByRole('region', { name: 'This week' });
+    expect(
+      within(board)
+        .getAllByRole('link')
+        .map((l) => l.getAttribute('href')),
+    ).toContain('/cleaner/cleans/c1');
     expect(
       within(screen.getByRole('region', { name: 'Recently done' })).getByText(/2 rooms photographed/),
     ).toBeInTheDocument();
-    expect(GET).toHaveBeenCalledWith('/v1/cleans', {
-      params: { query: { assignee: 'me', from: addDays(today, -14), to: addDays(today, 90) } },
-    });
   });
 
-  it('groups what’s coming up by week, sorts it, narrows it to a property, and to a day picked on the calendar', async () => {
+  it('moves through the weeks, narrows to a property, and jumps to a day picked on the calendar', async () => {
     const cedar = { id: 'p1', name: 'Cedar Cabin', city: 'Whistler' };
     const seaside = { id: 'p2', name: 'Seaside Loft', city: 'Tofino' };
     const items = [
-      summary({ id: 'a', scheduledDate: addDays(today, 1), property: cedar }),
-      summary({ id: 'b', scheduledDate: addDays(today, 8), property: seaside }),
-      summary({ id: 'c', scheduledDate: addDays(today, 40), property: cedar }),
+      summary({ id: 'a', scheduledDate: today, property: cedar }),
+      summary({ id: 'b', scheduledDate: today, property: seaside }),
+      summary({ id: 'c', scheduledDate: addDays(today, 7), property: seaside }),
     ];
-    renderWith({ GET: vi.fn(() => ok({ items })) } as unknown as ApiClient, <CleanerSchedulePage />);
-    const upcoming = await screen.findByRole('region', { name: 'Coming up' });
-    expect(within(upcoming).getAllByRole('region').length).toBeGreaterThanOrEqual(2); // week groups
-    const order = () =>
-      within(upcoming)
+    renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
+    const boardLinks = (name: string) =>
+      within(screen.getByRole('region', { name }))
         .getAllByRole('link')
         .map((l) => l.getAttribute('href'));
-    expect(order()).toEqual(['/cleaner/cleans/a', '/cleaner/cleans/b', '/cleaner/cleans/c']);
+    expect(await screen.findByRole('region', { name: 'This week' })).toBeInTheDocument();
+    expect(boardLinks('This week')).toEqual(['/cleaner/cleans/a', '/cleaner/cleans/b']);
 
-    await userEvent.click(within(upcoming).getByRole('button', { name: 'Latest first' }));
-    expect(order()).toEqual(['/cleaner/cleans/c', '/cleaner/cleans/b', '/cleaner/cleans/a']);
+    const chips = screen.getByRole('group', { name: 'Property' });
+    await userEvent.click(within(chips).getByRole('button', { name: 'Seaside Loft' }));
+    expect(boardLinks('This week')).toEqual(['/cleaner/cleans/b']);
+    await userEvent.click(within(chips).getByRole('button', { name: 'All properties' }));
 
-    await userEvent.click(within(upcoming).getByRole('button', { name: /Seaside Loft/ }));
-    expect(order()).toEqual(['/cleaner/cleans/b']);
+    await userEvent.click(screen.getByRole('button', { name: 'Week after' }));
+    expect(await screen.findByRole('region', { name: 'Next week' })).toBeInTheDocument();
+    expect(boardLinks('Next week')).toEqual(['/cleaner/cleans/c']);
+    await userEvent.click(screen.getByRole('button', { name: 'This week' }));
+    expect(await screen.findByRole('region', { name: 'This week' })).toBeInTheDocument();
 
-    // Picking a day on the calendar shows just that day's cleans.
-    const tomorrow = addDays(today, 1);
-    if (tomorrow.slice(0, 7) === today.slice(0, 7)) {
-      await userEvent.click(screen.getByRole('button', { name: /1 clean \(Cedar Cabin\)/ }));
-      const day = screen.getByRole('region', { name: dayLabel(tomorrow) });
-      expect(
-        within(day)
-          .getAllByRole('link')
-          .map((l) => l.getAttribute('href')),
-      ).toEqual(['/cleaner/cleans/a']);
-      await userEvent.click(screen.getByRole('button', { name: 'Show everything coming up' }));
-      expect(screen.getByRole('region', { name: 'Coming up' })).toBeInTheDocument();
+    // Picking next week's day on the calendar (when it's in this month) jumps the board to that week.
+    const day = addDays(today, 7);
+    if (day.slice(0, 7) === today.slice(0, 7)) {
+      await userEvent.click(screen.getByRole('button', { name: /1 clean \(Seaside Loft\)/ }));
+      expect(await screen.findByRole('region', { name: 'Next week' })).toBeInTheDocument();
     }
+  });
+
+  it('lists the properties ahead with their next clean, and supplies to check there', async () => {
+    const items = [
+      summary({ id: 'n1', scheduledDate: addDays(today, 1) }),
+      summary({ id: 'n2', scheduledDate: addDays(today, 3) }),
+    ];
+    const supplies = {
+      p1: [
+        { id: 's1', name: 'Dish soap', state: 'OK' },
+        { id: 's2', name: 'Paper towels', state: 'LOW' },
+        { id: 's3', name: 'Coffee pods', state: 'OUT' },
+      ],
+    };
+    renderWith({ GET: cleansApi(items, supplies) } as unknown as ApiClient, <CleanerSchedulePage />);
+    const properties = await screen.findByRole('region', { name: 'Your properties' });
+    expect(within(properties).getByRole('link', { name: /Cedar Cabin/ })).toHaveAttribute(
+      'href',
+      '/cleaner/properties/p1',
+    );
+    expect(properties).toHaveTextContent('2 ahead');
+    const check = await screen.findByRole('region', { name: 'Check on your next visit' });
+    expect(
+      within(check)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['Coffee podsOut', 'Paper towelsLow']);
   });
 
   it('says when there’s nothing today, and when the next clean is', async () => {
     const items = [summary({ id: 'c2', scheduledDate: addDays(today, 2) })];
-    renderWith({ GET: vi.fn(() => ok({ items })) } as unknown as ApiClient, <CleanerSchedulePage />);
+    renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
     expect(await screen.findByRole('heading', { name: 'Nothing to clean today' })).toBeInTheDocument();
     const hero = screen.getByRole('region', { name: 'Nothing to clean today' });
     expect(hero).toHaveTextContent(/Next up: Cedar Cabin/);
