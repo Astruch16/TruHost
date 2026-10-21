@@ -1,13 +1,24 @@
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { CLEAN_STATUS_LABELS, type CleanSummary } from '@truhost/shared';
 import { ArrowRight, ChevronRight, Clock, DoorOpen } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
-import { CLEAN_STATUS_TONE, cleanOccasion, freeFrom, readyBy, scheduleGroups } from '../../lib/cleans';
+import {
+  CLEAN_STATUS_TONE,
+  cleanOccasion,
+  freeFrom,
+  propertyColors,
+  readyBy,
+  scheduleGroups,
+  weekGroups,
+  type ScheduleSort,
+} from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
-import { addDays, todayIso } from '../../lib/dates';
+import { addDays, calendarDays, todayIso } from '../../lib/dates';
 import { shortDate } from '../../lib/months';
+import { useWeekStart } from '../../lib/preferences';
 import { queries } from '../../lib/queries';
 import { AllClearIllustration } from '../illustrations/all-clear';
 import { LoadError } from '../ui/alert';
@@ -16,17 +27,37 @@ import { EmptyState } from '../ui/empty-state';
 import { PageHeader } from '../ui/page-header';
 import { Pill } from '../ui/pill';
 import { Skeleton } from '../ui/skeleton';
+import { ScheduleCalendar } from './schedule-calendar';
 
 /**
- * A cleaner's schedule (mobile-first): today's cleans as big cards (start, carry on, or see what's done), then what's
- * coming up and the last few done. Only cleans assigned to them; each opens its walkthrough.
+ * A cleaner's schedule (mobile-first): today's cleans as big cards (start, carry on, or see what's done); a month
+ * calendar of the days they clean, each property in its colour; then what's coming up, grouped by week, which they
+ * can sort, narrow to a property, or narrow to a day picked on the calendar; and the last few done. On wide screens
+ * the calendar sits beside the lists. Only cleans assigned to them; each opens its walkthrough.
  */
 export function CleanerSchedulePage() {
   const api = useApi();
   const today = todayIso();
-  const list = useQuery(queries.cleans(api, { assignee: 'me', from: addDays(today, -14), to: addDays(today, 45) }));
-  const groups = list.data ? scheduleGroups(list.data.items, today) : null;
+  const weekStartsOn = useWeekStart();
+  const [sort, setSort] = useState<ScheduleSort>('soonest');
+  const [property, setProperty] = useState<string | null>(null);
+  const [day, setDay] = useState<string | null>(null);
+  const [month, setMonth] = useState(() => today.slice(0, 7));
+  const list = useQuery(queries.cleans(api, { assignee: 'me', from: addDays(today, -14), to: addDays(today, 90) }));
+  const visible = calendarDays(month, weekStartsOn);
+  const calendar = useQuery({
+    ...queries.cleans(api, { assignee: 'me', from: visible[0]!, to: visible.at(-1)! }),
+    placeholderData: (previous) => previous,
+  });
+  const all = list.data?.items ?? [];
+  const groups = list.data ? scheduleGroups(all, today) : null;
   const next = groups?.upcoming.find((c) => c.status !== 'CANCELLED');
+  const colors = propertyColors([...all, ...(calendar.data?.items ?? [])].map((c) => c.property));
+  const upcomingProperties = [
+    ...new Map((groups?.upcoming ?? []).map((c) => [c.property.id, c.property])).values(),
+  ].sort((a, b) => a.name.localeCompare(b.name));
+  const upcoming = (groups?.upcoming ?? []).filter((c) => !property || c.property.id === property);
+  const dayCleans = day ? (calendar.data?.items ?? []).filter((c) => c.scheduledDate === day) : null;
 
   return (
     <>
@@ -39,13 +70,13 @@ export function CleanerSchedulePage() {
           <Skeleton className="h-40 rounded-card" />
         </div>
       ) : (
-        <div className="flex flex-col gap-8">
-          <section aria-labelledby="today" data-tour="cleaner-schedule">
+        <div className="grid items-start gap-8 @3xl/content:grid-cols-[minmax(0,1fr)_17rem] @5xl/content:grid-cols-[minmax(0,1fr)_20rem] @[90rem]/content:grid-cols-[minmax(0,1fr)_22rem]">
+          <section aria-labelledby="today" data-tour="cleaner-schedule" className="min-w-0 @3xl/content:col-start-1">
             <h2 id="today" className="mb-3 text-sm font-semibold tracking-[0.08em] text-muted uppercase">
               Today · {dayLabel(today)}
             </h2>
             {groups.today.length > 0 ? (
-              <ul className="grid gap-4 @3xl/content:grid-cols-2">
+              <ul className="grid gap-4 @[80rem]/content:grid-cols-2">
                 {groups.today.map((c) => (
                   <TodayCard key={c.id} clean={c} today={today} />
                 ))}
@@ -61,30 +92,128 @@ export function CleanerSchedulePage() {
             )}
           </section>
 
-          {groups.upcoming.length > 0 && (
-            <section aria-labelledby="upcoming">
-              <h2 id="upcoming" className="mb-3 text-sm font-semibold tracking-[0.08em] text-muted uppercase">
-                Coming up
-              </h2>
-              <Card className="p-2! @2xl/content:p-3!">
-                <ul className="divide-y divide-line-soft">
-                  {groups.upcoming.map((c) => (
-                    <CleanRow key={c.id} clean={c} />
-                  ))}
-                </ul>
-              </Card>
-            </section>
-          )}
+          {/* Beside the lists on wide screens (and stays in view while they scroll); between them on phones. */}
+          <div className="min-w-0 @3xl/content:sticky @3xl/content:top-6 @3xl/content:col-start-2 @3xl/content:row-span-3 @3xl/content:row-start-1">
+            <ScheduleCalendar
+              month={month}
+              onMonthChange={setMonth}
+              cleans={calendar.data?.items ?? []}
+              colors={colors}
+              today={today}
+              selected={day}
+              onSelect={setDay}
+              loading={calendar.isFetching}
+            />
+          </div>
 
-          {groups.recent.length > 0 && (
-            <section aria-labelledby="recent">
+          <section aria-labelledby="upcoming" className="min-w-0 @3xl/content:col-start-1">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h2 id="upcoming" className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">
+                {day ? dayLabel(day) : 'Coming up'}
+              </h2>
+              {day ? (
+                <button
+                  type="button"
+                  onClick={() => setDay(null)}
+                  className="rounded-control text-sm font-semibold text-primary hover:underline"
+                >
+                  Show everything coming up
+                </button>
+              ) : (
+                <div role="group" aria-label="Order" className="flex rounded-full border border-line bg-surface p-0.5">
+                  {(
+                    [
+                      ['soonest', 'Soonest first'],
+                      ['latest', 'Latest first'],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={sort === key}
+                      onClick={() => setSort(key)}
+                      className={cx(
+                        'min-h-8 rounded-full px-3 text-xs font-semibold transition-colors',
+                        sort === key ? 'bg-primary text-primary-ink' : 'text-ink hover:bg-ground',
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!day && upcomingProperties.length > 1 && (
+              <div role="group" aria-label="Property" className="mb-4 flex flex-wrap gap-2">
+                {[{ id: null, name: 'All properties' }, ...upcomingProperties].map((p) => (
+                  <button
+                    key={p.id ?? 'all'}
+                    type="button"
+                    aria-pressed={property === p.id}
+                    onClick={() => setProperty(p.id)}
+                    className={cx(
+                      'inline-flex min-h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors',
+                      property === p.id
+                        ? 'border-primary bg-primary text-primary-ink'
+                        : 'border-line bg-surface text-ink hover:bg-ground',
+                    )}
+                  >
+                    {p.id && <span aria-hidden className={cx('size-2 rounded-full', colors.get(p.id))} />}
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {dayCleans ? (
+              <Card className="p-2! @2xl/content:p-3!">
+                {dayCleans.length > 0 ? (
+                  <ul className="divide-y divide-line-soft">
+                    {dayCleans.map((c) => (
+                      <CleanRow key={c.id} clean={c} color={colors.get(c.property.id)} />
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="p-3 text-sm text-muted">No cleans that day.</p>
+                )}
+              </Card>
+            ) : upcoming.length === 0 ? (
+              <Card>
+                <p className="text-sm text-muted">Nothing else is scheduled for you yet.</p>
+              </Card>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {weekGroups(upcoming, today, weekStartsOn, sort).map((g) => (
+                  <section key={g.label} aria-label={g.label}>
+                    <h3 className="mb-2 flex items-baseline gap-2 text-sm font-semibold text-ink">
+                      {g.label}
+                      <span className="text-xs font-medium text-muted">
+                        {g.items.length} {g.items.length === 1 ? 'clean' : 'cleans'}
+                      </span>
+                    </h3>
+                    <Card className="p-2! @2xl/content:p-3!">
+                      <ul className="divide-y divide-line-soft">
+                        {g.items.map((c) => (
+                          <CleanRow key={c.id} clean={c} color={colors.get(c.property.id)} />
+                        ))}
+                      </ul>
+                    </Card>
+                  </section>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {groups.recent.length > 0 && !day && (
+            <section aria-labelledby="recent" className="min-w-0 @3xl/content:col-start-1">
               <h2 id="recent" className="mb-3 text-sm font-semibold tracking-[0.08em] text-muted uppercase">
                 Recently done
               </h2>
               <Card className="p-2! @2xl/content:p-3!">
                 <ul className="divide-y divide-line-soft">
                   {groups.recent.map((c) => (
-                    <CleanRow key={c.id} clean={c} />
+                    <CleanRow key={c.id} clean={c} color={colors.get(c.property.id)} />
                   ))}
                 </ul>
               </Card>
@@ -168,8 +297,8 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
   );
 }
 
-/** A compact line for coming up and recently done: the day, where, and the window or how it went. */
-export function CleanRow({ clean: c }: { clean: CleanSummary }) {
+/** A compact line for coming up and recently done: the day, where (with its colour), and the window or how it went. */
+export function CleanRow({ clean: c, color }: { clean: CleanSummary; color?: string }) {
   const [mon, day] = shortDate(c.scheduledDate).split(' ');
   const weekday = dayLabel(c.scheduledDate).split(',')[0];
   const cancelled = c.status === 'CANCELLED';
@@ -191,15 +320,23 @@ export function CleanRow({ clean: c }: { clean: CleanSummary }) {
           <span className="text-[10px] font-semibold text-muted uppercase">{mon}</span>
         </span>
         <span className="min-w-0 flex-1">
-          <span className={cx('block truncate font-semibold text-ink', cancelled && 'line-through decoration-muted')}>
-            {c.property.name}
+          <span
+            className={cx(
+              'flex items-center gap-2 truncate font-semibold text-ink',
+              cancelled && 'line-through decoration-muted',
+            )}
+          >
+            {color && <span aria-hidden className={cx('size-2 shrink-0 rounded-full', color)} />}
+            <span className="truncate">{c.property.name}</span>
           </span>
           <span className="line-clamp-2 block text-xs text-muted">
             {cancelled
               ? (c.cancelReason ?? 'Cancelled')
               : c.status === 'COMPLETE'
                 ? `Done${c.completedAt ? ` at ${new Date(c.completedAt).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })}` : ''} · ${c.progress.rooms} rooms photographed`
-                : [cleanOccasion(c), freeFrom(c), readyBy(c)].filter(Boolean).join(' · ')}
+                : [c.kind === 'TURNOVER' && c.stay?.kind === 'GUEST' ? null : cleanOccasion(c), freeFrom(c), readyBy(c)]
+                    .filter(Boolean)
+                    .join(' · ')}
           </span>
         </span>
         {c.status !== 'SCHEDULED' && <Pill tone={CLEAN_STATUS_TONE[c.status]}>{CLEAN_STATUS_LABELS[c.status]}</Pill>}

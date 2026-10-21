@@ -1,5 +1,7 @@
 import type { CleanStatus, CleanSummary } from '@truhost/shared';
 import { dayLabel } from './dashboard-format';
+import { addDays, weekColumn } from './dates';
+import { monthLabel } from './months';
 import { formatTime } from './my-properties';
 import type { PillTone } from './styles';
 
@@ -54,4 +56,55 @@ export function scheduleGroups<T extends Pick<CleanSummary, 'id' | 'status' | 's
     upcoming: upcoming.sort(byDay),
     recent: recent.sort((a, b) => b.scheduledDate.localeCompare(a.scheduledDate)).slice(0, 5),
   };
+}
+
+/** Dot colours for properties on the schedule's calendar, in a fixed order. */
+export const PROPERTY_DOTS = [
+  'bg-sage-mid',
+  'bg-blue-deep',
+  'bg-amber-mid',
+  'bg-lavender-deep',
+  'bg-rose-deep',
+] as const;
+
+/** Each property's dot colour, assigned in name order so a property keeps its colour from visit to visit. */
+export function propertyColors(properties: readonly { id: string; name: string }[]): Map<string, string> {
+  const unique = [...new Map(properties.map((p) => [p.id, p])).values()].sort((a, b) => a.name.localeCompare(b.name));
+  return new Map(unique.map((p, i) => [p.id, PROPERTY_DOTS[i % PROPERTY_DOTS.length]!]));
+}
+
+export type ScheduleSort = 'soonest' | 'latest';
+
+/**
+ * Coming-up cleans in groups a cleaner plans by: this week, next week, then by month ("Later in November",
+ * "December"), in the chosen order. Weeks start on the user's first day of the week.
+ */
+export function weekGroups<T extends Pick<CleanSummary, 'scheduledDate'>>(
+  items: readonly T[],
+  today: string,
+  weekStartsOn: 0 | 1,
+  sort: ScheduleSort = 'soonest',
+): { label: string; items: T[] }[] {
+  const startOfWeek = addDays(today, -weekColumn(today, weekStartsOn));
+  const nextWeek = addDays(startOfWeek, 7);
+  const after = addDays(startOfWeek, 14);
+  const label = (d: string) => {
+    if (d < nextWeek) return 'This week';
+    if (d < after) return 'Next week';
+    const month = monthLabel(d.slice(0, 7)).split(' ')[0];
+    return d.slice(0, 7) === after.slice(0, 7) ? `Later in ${month}` : monthLabel(d.slice(0, 7));
+  };
+  const sorted = [...items].sort((a, b) =>
+    sort === 'soonest'
+      ? a.scheduledDate.localeCompare(b.scheduledDate)
+      : b.scheduledDate.localeCompare(a.scheduledDate),
+  );
+  const groups: { label: string; items: T[] }[] = [];
+  for (const c of sorted) {
+    const l = label(c.scheduledDate);
+    const last = groups.at(-1);
+    if (last?.label === l) last.items.push(c);
+    else groups.push({ label: l, items: [c] });
+  }
+  return groups;
 }

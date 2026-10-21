@@ -290,6 +290,14 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
         body: 'Today’s cleans, with when the place is free and when it must be ready for the next guests. Open one on its day to start it: you’ll photograph every room before you clean it and after, check the supplies, then complete it. What’s coming up is below.',
       },
       {
+        id: 'calendar',
+        page: at('/cleaner'),
+        anchor: 'cleaner-calendar',
+        optional: true,
+        title: 'Your month',
+        body: 'Each day you clean is marked, in each property’s colour. Pick a day to see just its cleans, and sort or narrow what’s coming up below.',
+      },
+      {
         id: 'properties',
         page: at('/properties'),
         anchor: 'page-header',
