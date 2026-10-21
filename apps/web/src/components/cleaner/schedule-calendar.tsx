@@ -161,7 +161,7 @@ export function ScheduleCalendar({
           ))}
         </ul>
       )}
-      <p className="mt-3 text-xs text-muted">Pick a day to see just its cleans.</p>
+      <p className="mt-3 text-xs text-muted">Pick a day to see its week.</p>
     </section>
   );
 }

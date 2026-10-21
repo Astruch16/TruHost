@@ -1,7 +1,6 @@
 import type { CleanStatus, CleanSummary } from '@truhost/shared';
 import { dayLabel } from './dashboard-format';
 import { addDays, weekColumn } from './dates';
-import { monthLabel } from './months';
 import { formatTime } from './my-properties';
 import type { PillTone } from './styles';
 
@@ -73,42 +72,6 @@ export function propertyColors(properties: readonly { id: string; name: string }
   return new Map(unique.map((p, i) => [p.id, PROPERTY_DOTS[i % PROPERTY_DOTS.length]!]));
 }
 
-export type ScheduleSort = 'soonest' | 'latest';
-
-/**
- * Coming-up cleans in groups a cleaner plans by: this week, next week, then by month ("Later in November",
- * "December"), in the chosen order. Weeks start on the user's first day of the week.
- */
-export function weekGroups<T extends Pick<CleanSummary, 'scheduledDate'>>(
-  items: readonly T[],
-  today: string,
-  weekStartsOn: 0 | 1,
-  sort: ScheduleSort = 'soonest',
-): { label: string; items: T[] }[] {
-  const startOfWeek = addDays(today, -weekColumn(today, weekStartsOn));
-  const nextWeek = addDays(startOfWeek, 7);
-  const after = addDays(startOfWeek, 14);
-  const label = (d: string) => {
-    if (d < nextWeek) return 'This week';
-    if (d < after) return 'Next week';
-    const month = monthLabel(d.slice(0, 7)).split(' ')[0];
-    return d.slice(0, 7) === after.slice(0, 7) ? `Later in ${month}` : monthLabel(d.slice(0, 7));
-  };
-  const sorted = [...items].sort((a, b) =>
-    sort === 'soonest'
-      ? a.scheduledDate.localeCompare(b.scheduledDate)
-      : b.scheduledDate.localeCompare(a.scheduledDate),
-  );
-  const groups: { label: string; items: T[] }[] = [];
-  for (const c of sorted) {
-    const l = label(c.scheduledDate);
-    const last = groups.at(-1);
-    if (last?.label === l) last.items.push(c);
-    else groups.push({ label: l, items: [c] });
-  }
-  return groups;
-}
-
 /** A list of cleans split by day, keeping their order: the agenda's date column beside each day's cleans. */
 export function byDay<T extends Pick<CleanSummary, 'scheduledDate'>>(
   items: readonly T[],
@@ -136,4 +99,30 @@ export function scheduleCounts(
     next30: live.filter((c) => c.scheduledDate <= in30).length,
     properties: new Set(live.map((c) => c.property.id)).size,
   };
+}
+
+/** The first day of the week `day` falls in (the user's first day of the week), and that week's seven days. */
+export function weekOf(day: string, weekStartsOn: 0 | 1): { start: string; days: string[] } {
+  const start = addDays(day, -weekColumn(day, weekStartsOn));
+  return { start, days: Array.from({ length: 7 }, (_, i) => addDays(start, i)) };
+}
+
+/**
+ * For the side rail: each property with cleans ahead, its next clean and how many are coming (cancelled and done ones
+ * left out), soonest first.
+ */
+export function propertySummaries<T extends Pick<CleanSummary, 'id' | 'scheduledDate' | 'status' | 'property'>>(
+  items: readonly T[],
+  today: string,
+): { property: T['property']; next: T; upcoming: number }[] {
+  const ahead = items
+    .filter((c) => c.scheduledDate >= today && (c.status === 'SCHEDULED' || c.status === 'IN_PROGRESS'))
+    .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+  const out = new Map<string, { property: T['property']; next: T; upcoming: number }>();
+  for (const c of ahead) {
+    const found = out.get(c.property.id);
+    if (found) found.upcoming++;
+    else out.set(c.property.id, { property: c.property, next: c, upcoming: 1 });
+  }
+  return [...out.values()];
 }

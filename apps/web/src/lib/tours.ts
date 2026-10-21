@@ -276,7 +276,7 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
   CLEANER: {
     portal: 'TruHost',
     chapters: [
-      { title: 'Your schedule', detail: 'Today’s cleans, and what’s coming up' },
+      { title: 'Your schedule', detail: 'Today’s cleans, and your week' },
       { title: 'The photo checklist', detail: 'Every room, before and after' },
       { title: 'Supplies and damage', detail: 'Marking levels, and reporting what you find' },
       { title: 'Your properties', detail: 'Where you clean, and each one’s details' },
@@ -287,7 +287,7 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
         page: at('/cleaner'),
         anchor: 'cleaner-schedule',
         title: 'Your schedule',
-        body: 'Today’s cleans, with when the place is free and when it must be ready for the next guests. Open one on its day to start it: you’ll photograph every room before you clean it and after, check the supplies, then complete it. What’s coming up is below.',
+        body: 'Today’s cleans, with when the place is free and when it must be ready for the next guests. Open one on its day to start it: you’ll photograph every room before you clean it and after, check the supplies, then complete it. Below is your week, a day to a column: step through the weeks, or narrow it to one property.',
       },
       {
         id: 'calendar',
@@ -295,7 +295,7 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
         anchor: 'cleaner-calendar',
         optional: true,
         title: 'Your month',
-        body: 'Each day you clean is marked, in each property’s colour. Pick a day to see just its cleans, and sort or narrow what’s coming up below.',
+        body: 'Each day you clean is marked, in each property’s colour. Pick a day to jump your week to it.',
       },
       {
         id: 'properties',

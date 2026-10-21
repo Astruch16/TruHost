@@ -68,29 +68,6 @@ describe('schedule organising', () => {
       ['b', 'bg-blue-deep'],
     ]);
   });
-
-  it('groups coming-up cleans into this week, next week and later months, in either order', async () => {
-    const { weekGroups } = await import('./cleans');
-    // Tuesday, Oct 20 2026; weeks start on Sunday: this week runs to Sat Oct 24, next week to Sat Oct 31.
-    const items = ['2026-10-22', '2026-10-26', '2026-10-31', '2026-11-04', '2026-12-02'].map((d) => ({
-      scheduledDate: d,
-    }));
-    const soonest = weekGroups(items, '2026-10-20', 0);
-    expect(soonest.map((g) => [g.label, g.items.length])).toEqual([
-      ['This week', 1],
-      ['Next week', 2],
-      ['Later in November', 1],
-      ['December 2026', 1],
-    ]);
-    expect(weekGroups(items, '2026-10-20', 0, 'latest').map((g) => g.label)).toEqual([
-      'December 2026',
-      'Later in November',
-      'Next week',
-      'This week',
-    ]);
-    // Weeks starting on Monday: Sun Oct 25 is still this week.
-    expect(weekGroups([{ scheduledDate: '2026-10-25' }], '2026-10-20', 1)[0]!.label).toBe('This week');
-  });
 });
 
 describe('agenda and hero helpers', () => {
@@ -110,5 +87,42 @@ describe('agenda and hero helpers', () => {
     ]);
     // Tue Oct 20; weeks from Sunday: this week ends Sat Oct 24.
     expect(scheduleCounts(items, '2026-10-20', 0)).toEqual({ thisWeek: 2, next30: 3, properties: 3 });
+  });
+});
+
+describe('week board and rail helpers', () => {
+  it('finds the week a day falls in, from the user’s first day of the week', async () => {
+    const { weekOf } = await import('./cleans');
+    expect(weekOf('2026-10-28', 0)).toEqual({
+      start: '2026-10-25',
+      days: ['2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-10-30', '2026-10-31'],
+    });
+    expect(weekOf('2026-10-25', 1).start).toBe('2026-10-19');
+  });
+
+  it('sums up each property ahead: its next clean and how many are coming', async () => {
+    const { propertySummaries } = await import('./cleans');
+    const a = { id: 'a', name: 'Cedar', city: '' };
+    const b = { id: 'b', name: 'Seaside', city: '' };
+    const c = (id: string, scheduledDate: string, property: typeof a, status = 'SCHEDULED' as const) => ({
+      id,
+      scheduledDate,
+      status,
+      property,
+    });
+    const rows = propertySummaries(
+      [
+        c('1', '2026-10-27', a),
+        c('2', '2026-10-26', b),
+        c('3', '2026-11-04', a),
+        c('4', '2026-10-19', a), // past
+        { ...c('5', '2026-10-30', b), status: 'CANCELLED' as const },
+      ],
+      '2026-10-20',
+    );
+    expect(rows.map((r) => [r.property.id, r.next.id, r.upcoming])).toEqual([
+      ['b', '2', 1],
+      ['a', '1', 2],
+    ]);
   });
 });
