@@ -219,8 +219,13 @@ function ScheduleHero({
         aria-hidden
         className="pointer-events-none absolute -right-24 bottom-[-6rem] size-64 rounded-full bg-white/5"
       />
-      <div className="relative flex flex-col gap-6 @4xl/content:flex-row @4xl/content:items-end @4xl/content:justify-between">
-        <div className="min-w-0">
+      {/*
+        Wide: three columns, the outer two sharing what's left, so the counts sit in the middle of the hero, level with
+        the button. The text's column never gets narrower than the text (up to 28rem), so where the middle would run
+        into it, the counts sit just after it instead.
+      */}
+      <div className="relative flex flex-col gap-6 @4xl/content:grid @4xl/content:grid-cols-[minmax(max-content,1fr)_auto_minmax(0,1fr)] @4xl/content:items-end @4xl/content:gap-x-12">
+        <div className="min-w-0 @4xl/content:max-w-[28rem]">
           <p className="text-sm font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
             {greeting()}
             {firstName ? `, ${firstName}` : ''}
@@ -253,8 +258,7 @@ function ScheduleHero({
             </Link>
           )}
         </div>
-        {/* Wide: level with the button, centred in the space beside the text. */}
-        <dl className="grid shrink-0 grid-cols-3 gap-2.5 @4xl/content:mx-auto @4xl/content:w-[26rem]">
+        <dl className="grid shrink-0 grid-cols-3 gap-2.5 @4xl/content:w-[26rem]">
           <HeroStat label="This week" value={counts.thisWeek} />
           <HeroStat label="Next 30 days" value={counts.next30} />
           <HeroStat label={counts.properties === 1 ? 'Property' : 'Properties'} value={counts.properties} />
