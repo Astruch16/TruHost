@@ -73,3 +73,34 @@ export function CompassIcon(props: IconProps) {
     </IconFrame>
   );
 }
+
+/** Cleans done: a clipboard with a gold clip and a green tick, on blue. */
+export function CleanDoneIcon(props: IconProps) {
+  const { id, url } = useIllustrationIds();
+  return (
+    <IconFrame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'sheen', 'gold', 'paper']} />
+      <circle cx="20" cy="20" r="19" fill="#DCE9F6" />
+      <ellipse cx="20" cy="32.8" rx="11" ry="2.1" fill={url.shadow} />
+      <rect x="11" y="9.5" width="17" height="21.5" rx="2" transform="translate(0.8 1.2)" fill="#9DB7D3" />
+      <rect x="11" y="9.5" width="17" height="21.5" rx="2" fill={url.paper} />
+      <rect x="11" y="9.5" width="17" height="21.5" rx="2" fill="none" stroke="#C9D6E4" strokeWidth="0.8" />
+      {/* The clip */}
+      <rect x="16" y="7.6" width="7" height="4" rx="1.2" transform="translate(0 0.8)" fill="#8A6A1C" />
+      <rect x="16" y="7.6" width="7" height="4" rx="1.2" fill={url.gold} />
+      <path d="M14 16 H25 M14 19.5 H22.5 M14 23 H19.5" stroke="#B8C8DA" strokeWidth="1.3" strokeLinecap="round" />
+      {/* The tick */}
+      <circle cx="26.5" cy="26" r="6" fill="#2F5548" />
+      <circle cx="26" cy="24.9" r="6" fill="#4F7A63" />
+      <circle cx="26" cy="24.9" r="6" fill={url.sheen} />
+      <path
+        d="M23.3 25 L25.2 26.9 L28.8 23.2"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </IconFrame>
+  );
+}

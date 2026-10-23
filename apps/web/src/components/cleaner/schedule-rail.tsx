@@ -1,12 +1,16 @@
 import { Link } from '@tanstack/react-router';
 import { useQueries } from '@tanstack/react-query';
 import type { CleanSummary, SupplyItem, SupplyState } from '@truhost/shared';
-import { CalendarDays, ChevronRight, CircleCheck, House, type LucideIcon, ShoppingBasket } from 'lucide-react';
+import { CalendarDays, ChevronRight } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
 import { queries } from '../../lib/queries';
 import { checkedAgo, levelText } from '../../lib/supplies';
+import { SuppliesIcon } from '../illustrations/category-icons';
+import type { IconProps } from '../illustrations/defs';
+import { CleanDoneIcon } from '../illustrations/list-icons';
+import { OwnPropertyIcon } from '../illustrations/statement-icons';
 import { SupplyBar } from '../supplies/supply-bar';
 import { Skeleton } from '../ui/skeleton';
 import { CleanRow } from './clean-row';
@@ -23,25 +27,21 @@ function RailEmpty({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** A side card's heading: an icon in a tinted tile, the title and a line under it. */
+/** A side card's heading: its illustrated icon (as in the owner's portal), the title and a line under it. */
 function RailHeading({
   id,
   icon: Icon,
-  tint,
   title,
   detail,
 }: {
   id: string;
-  icon: LucideIcon;
-  tint: string;
+  icon: (props: IconProps) => React.ReactNode;
   title: string;
   detail: string;
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span aria-hidden className={cx('grid size-10 shrink-0 place-items-center rounded-inner', tint)}>
-        <Icon className="size-5" />
-      </span>
+      <Icon className="shrink-0" />
       <div className="min-w-0">
         <h2 id={id} className="text-base font-bold text-ink">
           {title}
@@ -66,8 +66,7 @@ export function RailProperties({
     <section aria-labelledby="rail-properties" className={cx(railCard, className)}>
       <RailHeading
         id="rail-properties"
-        icon={House}
-        tint="bg-sage-tint text-sage-deep"
+        icon={OwnPropertyIcon}
         title="Your properties"
         detail="Where you’re cleaning next."
       />
@@ -141,8 +140,7 @@ export function RailSupplies({
     <section aria-labelledby="rail-supplies" className={cx(railCard, '@container/supplies', className)}>
       <RailHeading
         id="rail-supplies"
-        icon={ShoppingBasket}
-        tint="bg-amber-tint text-amber-deep"
+        icon={SuppliesIcon}
         title="Check on your next visit"
         detail="Top these up, or check them, when you’re there."
       />
@@ -242,13 +240,7 @@ export function RailRecent({
 }) {
   return (
     <section aria-labelledby="rail-recent" className={cx(railCard, className)}>
-      <RailHeading
-        id="rail-recent"
-        icon={CircleCheck}
-        tint="bg-blue-tint text-blue-deep"
-        title="Recently done"
-        detail="Your last cleans."
-      />
+      <RailHeading id="rail-recent" icon={CleanDoneIcon} title="Recently done" detail="Your last cleans." />
       {cleans.length === 0 && <RailEmpty>Cleans you complete will show here.</RailEmpty>}
       <ul className="-mx-2 mt-2 divide-y divide-line-soft empty:hidden">
         {cleans.slice(0, 3).map((c) => (
