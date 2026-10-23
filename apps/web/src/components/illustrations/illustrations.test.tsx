@@ -6,7 +6,7 @@ import { CareIllustration } from './care';
 import { ExpenseCategoryIcon } from './category-icons';
 import { ComingUpIllustration } from './coming-up';
 import { ExpensesIllustration } from './expenses';
-import { CompassIcon, InviteIcon, StatementDocIcon } from './list-icons';
+import { CleanDoneIcon, CompassIcon, InviteIcon, StatementDocIcon } from './list-icons';
 import { ReceiptsIllustration } from './receipts';
 import { RevenueIllustration } from './revenue';
 
@@ -99,6 +99,7 @@ describe('small icons', () => {
             <StatementDocIcon />
             <InviteIcon />
             <CompassIcon />
+            <CleanDoneIcon />
           </span>
         ))}
       </>,
