@@ -36,6 +36,7 @@ export function ReportDamageDialog({
   onOpenChange,
   properties,
   initialPropertyId,
+  cleanId,
   onSent,
 }: {
   open: boolean;
@@ -43,6 +44,8 @@ export function ReportDamageDialog({
   /** Where the caller can report. With one, there's no property question. */
   properties: { id: string; name: string }[];
   initialPropertyId?: string;
+  /** Reported from a clean's checklist: the report is linked to it (and answers its damage question yes). */
+  cleanId?: string;
   onSent?: (report: DamageReportDetail) => void;
 }) {
   const api = useApi();
@@ -97,6 +100,7 @@ export function ReportDamageDialog({
               bookingId: stayChoice || null,
               roomId: roomId || null,
               estimatedCostCents: costCents,
+              cleanId: cleanId ?? null,
             },
           }),
         );

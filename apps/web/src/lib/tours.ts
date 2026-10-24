@@ -287,7 +287,7 @@ export const TOURS: Record<OnboardingRole, TourDefinition> = {
         page: at('/cleaner'),
         anchor: 'cleaner-schedule',
         title: 'Your schedule',
-        body: 'Today’s cleans, with when the place is free and when it must be ready for the next guests. Open one on its day to start it: you’ll photograph every room before you clean it and after, check the supplies, then complete it. Below is your week, a day to a column: step through the weeks, or narrow it to one property.',
+        body: 'Today’s cleans, with when the place is free and when it must be ready for the next guests. Open one on its day to start it: a checklist takes you through photos of every room as you find it, any damage, a stock count, photos once it’s clean, then finishing, which tells TruHost and the owner. Below is your week, a day to a column: step through the weeks, or narrow it to one property.',
       },
       {
         id: 'calendar',

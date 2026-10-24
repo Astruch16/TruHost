@@ -92,12 +92,27 @@ export class SuppliesService {
   async record(actor: Actor, propertyId: string, input: RecordSupplyLevels) {
     this.access.assert(actor, 'supply:record', propertyId, 'Property');
     await this.assertPropertyExists(propertyId);
-    const ids = input.readings.map((r) => r.supplyItemId);
+    return this.recordReadings(actor, propertyId, input.readings);
+  }
+
+  /**
+   * Records one reading per item in one transaction, alerting where one crosses a line. A clean's stock count passes
+   * `count`: its readings carry the clean, every active item must be in it (422 STOCK_COUNT_INCOMPLETE), and `before`
+   * runs first inside the transaction (the clean's own checks). Callers check access.
+   */
+  async recordReadings(
+    actor: Actor,
+    propertyId: string,
+    readings: RecordSupplyLevels['readings'],
+    count?: { cleanId: string; before: (tx: Tx) => Promise<void> },
+  ) {
+    const ids = readings.map((r) => r.supplyItemId);
     if (new Set(ids).size !== ids.length) {
       throw unprocessable('DUPLICATE_SUPPLY_ITEM', 'Report each item once.');
     }
     let emails: PendingEmail[] = [];
     const result = await this.prisma.$transaction(async (tx) => {
+      await count?.before(tx);
       const active = await this.lockItems(tx, propertyId);
       const byId = new Map(active.map((i) => [i.id, i]));
       const unknown = ids.find((id) => !byId.has(id));
@@ -106,14 +121,27 @@ export class SuppliesService {
           supplyItemId: unknown,
         });
       }
+      if (count) {
+        const given = new Set(ids);
+        const missing = active.filter((i) => !given.has(i.id)).map((i) => i.id);
+        if (missing.length) {
+          throw unprocessable('STOCK_COUNT_INCOMPLETE', 'Give a level for every item.', { missing });
+        }
+      }
       const property = await tx.property.findUniqueOrThrow({
         where: { id: propertyId },
         select: { id: true, name: true },
       });
-      for (const r of input.readings) {
+      for (const r of readings) {
         const item = byId.get(r.supplyItemId)!;
         const reading = await tx.supplyStatus.create({
-          data: { supplyItemId: item.id, levelPct: r.levelPct, note: r.note, reportedById: actor.userId },
+          data: {
+            supplyItemId: item.id,
+            levelPct: r.levelPct,
+            note: r.note ?? null,
+            reportedById: actor.userId,
+            cleanId: count?.cleanId ?? null,
+          },
         });
         const kind = supplyAlert(item.readings[0]?.levelPct ?? null, r.levelPct, item.thresholdPct);
         if (kind) {

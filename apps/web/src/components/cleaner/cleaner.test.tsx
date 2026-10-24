@@ -10,7 +10,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import type { ApiClient } from '@truhost/api-client';
-import type { Clean, CleanSummary } from '@truhost/shared';
+import type { Clean, CleanChecklist, CleanSummary } from '@truhost/shared';
 import type { ReactNode } from 'react';
 import { ApiContext } from '../../lib/api-context';
 import { addDays, todayIso } from '../../lib/dates';
@@ -49,21 +49,80 @@ const photo = (roomId: string, phase: 'BEFORE' | 'AFTER') => ({
   createdAt: '2026-11-20T19:00:00Z',
 });
 
+const checklist = (over: Partial<CleanChecklist> = {}): CleanChecklist => ({
+  beforePhotos: { done: false },
+  damage: { found: null, reports: [], done: false },
+  stockCount: { items: 2, counted: 0, done: false, restock: [] },
+  afterPhotos: { done: false },
+  current: null,
+  ...over,
+});
+const CAN_NONE = {
+  start: false,
+  addPhotos: false,
+  addAfterPhotos: false,
+  checkDamage: false,
+  countStock: false,
+  complete: false,
+};
+
 const detail = (over: Partial<Clean> = {}): Clean => ({
   ...summary(),
   rooms: [
     { id: 'r1', displayName: 'Bedroom', before: [], after: [] },
     { id: 'r2', displayName: 'Bathroom', before: [], after: [] },
   ],
+  checklist: checklist(),
   today,
-  can: { start: true, addPhotos: false, complete: false },
+  can: { ...CAN_NONE, start: true },
   ...over,
 });
 
+/** A clean under way at `current`, every step before it done. */
+const working = (current: CleanChecklist['current'], over: Partial<Clean> = {}): Clean => {
+  const at = ['BEFORE_PHOTOS', 'DAMAGE', 'STOCK_COUNT', 'AFTER_PHOTOS', 'FINISH'].indexOf(current ?? 'FINISH');
+  const shot = (r: string, phase: 'BEFORE' | 'AFTER', step: number) => (at > step ? [photo(r, phase)] : []);
+  return detail({
+    status: 'IN_PROGRESS',
+    rooms: [
+      { id: 'r1', displayName: 'Bedroom', before: shot('r1', 'BEFORE', 0), after: shot('r1', 'AFTER', 3) },
+      { id: 'r2', displayName: 'Bathroom', before: shot('r2', 'BEFORE', 0), after: shot('r2', 'AFTER', 3) },
+    ],
+    checklist: checklist({
+      current,
+      beforePhotos: { done: at > 0 },
+      damage: { found: at > 1 ? false : null, reports: [], done: at > 1 },
+      stockCount: { items: 2, counted: at > 2 ? 2 : 0, done: at > 2, restock: [] },
+      afterPhotos: { done: at > 3 },
+    }),
+    can: {
+      ...CAN_NONE,
+      addPhotos: true,
+      checkDamage: at >= 1,
+      countStock: at >= 2,
+      addAfterPhotos: at >= 3,
+      complete: at >= 4,
+    },
+    ...over,
+  });
+};
+
+const supply = (id: string, name: string, levelPct: number | null = null) => ({
+  id,
+  propertyId: 'p1',
+  name,
+  category: 'OTHER',
+  thresholdPct: 25,
+  position: 0,
+  levelPct,
+  state: levelPct === null ? 'UNKNOWN' : 'OK',
+  lastCheckedAt: null,
+  archivedAt: null,
+});
+
 const ok = (data: unknown, status = 200) => Promise.resolve({ data, response: new Response(null, { status }) });
-/** GET for the walkthrough: the clean, and an empty supplies list for its supplies check. */
-const getFor = (clean: Clean) =>
-  vi.fn((path: string) => (path === '/v1/properties/{id}/supplies' ? ok({ items: [] }) : ok(clean)));
+/** GET for the walkthrough: the clean; every list it opens (supplies, rooms, stays) empty. */
+const getFor = (clean: Clean) => vi.fn((path: string) => (path === '/v1/cleans/{id}' ? ok(clean) : ok({ items: [] })));
 const fail = (status: number, error: object) => Promise.resolve({ error, response: new Response(null, { status }) });
 
 function renderWith(api: Partial<ApiClient>, ui: ReactNode) {
@@ -211,67 +270,136 @@ describe('cleaner schedule', () => {
 });
 
 describe('a clean’s walkthrough', () => {
-  it('starts on its day, then shows each room’s before and after camera buttons', async () => {
-    const started = detail({ status: 'IN_PROGRESS', can: { start: false, addPhotos: true, complete: true } });
-    const POST = vi.fn(() => ok(started));
+  const step = (n: number, title: string) => screen.getByRole('listitem', { name: new RegExp(`^Step ${n}: ${title}`) });
+
+  it('starts on its day, then opens the checklist at the before photos, the rest locked', async () => {
+    const POST = vi.fn(() => ok(working('BEFORE_PHOTOS')));
     renderWith({ GET: getFor(detail()), POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
     expect(await screen.findByText('You earn')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Start the clean/ }));
     expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/start', { params: { path: { id: 'c1' } } });
-    const bedroom = (await screen.findByRole('heading', { name: 'Bedroom' })).closest('li')!;
-    expect(within(bedroom).getByText('Take before photo')).toBeInTheDocument();
-    expect(within(bedroom).getByText('Take after photo')).toBeInTheDocument();
-    expect(within(bedroom).getByLabelText('Take before photo')).toHaveAttribute('capture', 'environment');
-    expect(screen.getByText('0 of 2 done')).toBeInTheDocument();
+
+    expect(await screen.findByText('Step 1 of 5')).toBeInTheDocument();
+    const before = step(1, 'Before photos');
+    expect(before).toHaveAttribute('aria-current', 'step');
+    expect(within(before).getAllByText('Take photo')).toHaveLength(2);
+    expect(within(before).getByLabelText('Take photo (before, Bedroom)')).toHaveAttribute('capture', 'environment');
+    expect(within(before).getByText(/TruHost and the owner can see these/)).toBeInTheDocument();
+    expect(step(4, 'After photos')).toHaveTextContent('Opens after “Stock count”');
+    expect(screen.queryByLabelText(/Take photo \(after/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clean finished/ })).not.toBeInTheDocument();
   });
 
   it('says on which day a future clean can start', async () => {
     const later = addDays(today, 2);
     renderWith(
-      {
-        GET: vi.fn(() =>
-          ok(detail({ scheduledDate: later, can: { start: false, addPhotos: false, complete: false } })),
-        ),
-      } as unknown as ApiClient,
+      { GET: vi.fn(() => ok(detail({ scheduledDate: later, can: CAN_NONE }))) } as unknown as ApiClient,
       <CleanPage cleanId="c1" />,
     );
     expect(await screen.findByText(/You can start this clean on/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Start the clean/ })).not.toBeInTheDocument();
   });
 
-  it('lists the rooms still missing photos, and celebrates once it’s complete', async () => {
-    const inProgress = detail({
-      status: 'IN_PROGRESS',
-      can: { start: false, addPhotos: true, complete: true },
-      progress: { rooms: 2, done: 1 },
-      rooms: [
-        { id: 'r1', displayName: 'Bedroom', before: [photo('r1', 'BEFORE')], after: [photo('r1', 'AFTER')] },
-        { id: 'r2', displayName: 'Bathroom', before: [photo('r2', 'BEFORE')], after: [] },
-      ],
+  it('asks about damage: no moves on, yes asks for a report linked to the clean', async () => {
+    const POST = vi
+      .fn()
+      .mockImplementationOnce(() => ok(working('STOCK_COUNT')))
+      .mockImplementationOnce(() =>
+        ok(
+          working('DAMAGE', {
+            checklist: checklist({ current: 'DAMAGE', damage: { found: true, reports: [], done: false } }),
+          }),
+        ),
+      );
+    renderWith({ GET: getFor(working('DAMAGE')), POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
+    const damage = await screen.findByRole('radiogroup', { name: 'Any damage?' });
+    await userEvent.click(within(damage).getByRole('radio', { name: 'No damage' }));
+    expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/damage-check', {
+      params: { path: { id: 'c1' } },
+      body: { found: false },
     });
+    expect(await screen.findByText('Step 3 of 5')).toBeInTheDocument();
+    // Reopen the done step and change the answer.
+    await userEvent.click(within(step(2, 'Any damage\\?')).getByRole('button'));
+    await userEvent.click(screen.getByRole('radio', { name: 'Yes, there’s damage' }));
+    expect(POST).toHaveBeenLastCalledWith('/v1/cleans/{id}/damage-check', {
+      params: { path: { id: 'c1' } },
+      body: { found: true },
+    });
+    expect(await screen.findByRole('dialog', { name: 'Report damage' })).toBeInTheDocument();
+  });
+
+  it('takes a level for every supply, then lists what needs restocking', async () => {
+    const GET = vi.fn((path: string) =>
+      path === '/v1/properties/{id}/supplies'
+        ? ok({ items: [supply('s1', 'Toilet paper'), supply('s2', 'Coffee pods')] })
+        : path === '/v1/cleans/{id}'
+          ? ok(working('STOCK_COUNT'))
+          : ok({ items: [] }),
+    );
+    const counted = working('AFTER_PHOTOS', {
+      checklist: checklist({
+        current: 'AFTER_PHOTOS',
+        beforePhotos: { done: true },
+        damage: { found: false, reports: [], done: true },
+        stockCount: {
+          items: 2,
+          counted: 2,
+          done: true,
+          restock: [{ id: 's2', name: 'Coffee pods', levelPct: 0, state: 'OUT' }],
+        },
+      }),
+    });
+    const POST = vi.fn(() => ok(counted));
+    renderWith({ GET, POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
+    const save = await screen.findByRole('button', { name: 'Save the stock count' });
+    await userEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Toilet paper level' })).getByRole('radio', { name: 'Half' }),
+    );
+    expect(save).toBeDisabled();
+    await userEvent.click(
+      within(screen.getByRole('radiogroup', { name: 'Coffee pods level' })).getByRole('radio', { name: 'Empty' }),
+    );
+    await userEvent.click(save);
+    expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/stock-count', {
+      params: { path: { id: 'c1' } },
+      body: {
+        readings: [
+          { supplyItemId: 's1', levelPct: 50 },
+          { supplyItemId: 's2', levelPct: 0 },
+        ],
+      },
+    });
+    expect(await screen.findByText('Step 4 of 5')).toBeInTheDocument();
+    expect(step(3, 'Stock count')).toHaveTextContent('Counted · 1 to restock');
+    expect(within(step(4, 'After photos')).getByLabelText('Take photo (after, Bathroom)')).toBeInTheDocument();
+  });
+
+  it('finishes once every step is done, then shows what was done', async () => {
+    const ready = working('FINISH');
     const POST = vi
       .fn()
       .mockImplementationOnce(() =>
         fail(422, {
-          code: 'CLEAN_MISSING_PHOTOS',
+          code: 'CLEAN_CHECKLIST_INCOMPLETE',
           title: 'Unprocessable',
-          detail: 'Every room needs a before and an after photo.',
-          missing: [{ roomId: 'r2', displayName: 'Bathroom', phases: ['AFTER'] }],
+          detail: 'Finish “Stock count” first.',
+          step: 'FINISH',
+          waitingOn: 'STOCK_COUNT',
         }),
       )
       .mockImplementationOnce(() =>
-        ok({
-          ...inProgress,
-          status: 'COMPLETE',
-          progress: { rooms: 2, done: 2 },
-          can: { start: false, addPhotos: false, complete: false },
-        }),
+        ok({ ...ready, status: 'COMPLETE', checklist: { ...ready.checklist, current: null }, can: CAN_NONE }),
       );
-    renderWith({ GET: getFor(inProgress), POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
-    await userEvent.click(await screen.findByRole('button', { name: /Complete the clean/ }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Bathroom: after');
-    await userEvent.click(screen.getByRole('button', { name: /Complete the clean/ }));
-    expect(await screen.findByText('Clean complete. Nice work.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Complete the clean/ })).not.toBeInTheDocument();
+    renderWith({ GET: getFor(ready), POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
+    await userEvent.click(await screen.findByRole('button', { name: /Clean finished/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Finish “Stock count” first.');
+    await userEvent.click(screen.getByRole('button', { name: /Clean finished/ }));
+    expect(await screen.findByText('Clean finished. Nice work.')).toBeInTheDocument();
+    expect(screen.getByText(/have been told Cedar Cabin is ready for guests/)).toBeInTheDocument();
+    const done = screen.getByRole('region', { name: 'What was done' });
+    expect(within(done).getByRole('link', { name: 'Bedroom, before photo (opens full size)' })).toBeInTheDocument();
+    expect(within(done).getByRole('link', { name: 'Bedroom, after photo (opens full size)' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clean finished/ })).not.toBeInTheDocument();
   });
 });

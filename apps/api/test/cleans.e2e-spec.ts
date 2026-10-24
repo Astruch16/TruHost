@@ -24,14 +24,14 @@ describe('cleans', () => {
     await t.prisma.property.update({ where: { id: w.propertyA.id }, data: { defaultCleanerId: w.users.cleanerA.id } });
   });
 
-  /** Uploads a clean photo (both renditions) as `who`; returns the ids to attach. */
-  async function upload(who: string, propertyId = w.propertyA.id) {
+  /** Uploads a clean (or damage) photo, both renditions, as `who`; returns the ids to attach. */
+  async function upload(who: string, propertyId = w.propertyA.id, purpose = 'CLEAN_PHOTO') {
     const one = async (body: Buffer) => {
       const target = (
         await t
           .as(who)
           .post('/v1/uploads', {
-            purpose: 'CLEAN_PHOTO',
+            purpose,
             propertyId,
             contentType: 'image/jpeg',
             sizeBytes: body.length,
@@ -56,6 +56,17 @@ describe('cleans', () => {
         .post(`/v1/cleans/${cleanId}/photos`, { roomId, phase, ...(await upload(who)) })
         .expect(status)
     ).body;
+
+  const levels = (pcts: number[] = []) => ({
+    readings: w.propertyA.supplyIds.map((supplyItemId, i) => ({ supplyItemId, levelPct: pcts[i] ?? 100 })),
+  });
+
+  /** The checklist up to the after photos, as `who`: every before photo, no damage, every supply counted. */
+  async function prep(who: string, id: string, pcts: number[] = []) {
+    for (const room of w.propertyA.roomIds) await photo(who, id, room, 'BEFORE');
+    await t.as(who).post(`/v1/cleans/${id}/damage-check`, { found: false }).expect(200);
+    return (await t.as(who).post(`/v1/cleans/${id}/stock-count`, levels(pcts)).expect(200)).body;
+  }
 
   const stay = (body: object = {}) =>
     t.as('admin').post(`/v1/properties/${w.propertyA.id}/bookings`, {
@@ -161,7 +172,15 @@ describe('cleans', () => {
       expect(c.rooms.map((r: { displayName: string }) => r.displayName)).toEqual(['Bedroom', 'Bathroom']);
       expect(c.progress).toEqual({ rooms: 2, done: 0 });
       expect(c.today).toBe('2026-11-20');
-      expect(c.can).toEqual({ start: false, addPhotos: false, complete: false }); // not its day
+      expect(c.can).toEqual({
+        start: false,
+        addPhotos: false,
+        addAfterPhotos: false,
+        checkDamage: false,
+        countStock: false,
+        complete: false,
+      }); // not its day
+      expect(c.checklist).toMatchObject({ current: null, stockCount: { items: 2, counted: 0 } });
     });
   });
 
@@ -176,7 +195,11 @@ describe('cleans', () => {
       // 2026-11-14 06:00 UTC is still the 13th in Vancouver.
       t.clock.set('2026-11-14T06:00:00Z');
       const started = (await t.as('cleanerA').post(`/v1/cleans/${w.cleans.a}/start`).expect(200)).body;
-      expect(started).toMatchObject({ status: 'IN_PROGRESS', can: { addPhotos: true, complete: true } });
+      expect(started).toMatchObject({
+        status: 'IN_PROGRESS',
+        can: { addPhotos: true, checkDamage: false, complete: false },
+        checklist: { current: 'BEFORE_PHOTOS' },
+      });
       expect((await t.as('cleanerA').post(`/v1/cleans/${w.cleans.a}/start`).expect(409)).body.code).toBe(
         'CLEAN_IN_PROGRESS',
       );
@@ -196,7 +219,7 @@ describe('cleans', () => {
   });
 
   describe('photos and completing', () => {
-    it('completes only once every room has a before and an after photo, and lists what’s missing', async () => {
+    it('works the checklist in order: before photos, damage, stock count, after photos, then finished', async () => {
       const [bedroom, bathroom] = w.propertyA.roomIds as [string, string];
       const id = w.cleans.todayA;
       await t.as('cleanerA').post(`/v1/cleans/${id}/start`).expect(200);
@@ -206,26 +229,173 @@ describe('cleans', () => {
         { roomId: bedroom, displayName: 'Bedroom', phases: ['BEFORE', 'AFTER'] },
         { roomId: bathroom, displayName: 'Bathroom', phases: ['BEFORE', 'AFTER'] },
       ]);
+      const waiting = async (path: string, body: object, waitingOn: string) =>
+        expect((await t.as('cleanerA').post(`/v1/cleans/${id}/${path}`, body).expect(422)).body).toMatchObject({
+          code: 'CLEAN_CHECKLIST_INCOMPLETE',
+          waitingOn,
+        });
 
-      await photo('cleanerA', id, bedroom, 'BEFORE', 201);
-      await photo('cleanerA', id, bedroom, 'AFTER', 201);
-      const partway = await photo('cleanerA', id, bathroom, 'BEFORE', 201);
-      expect(partway.progress).toEqual({ rooms: 2, done: 1 });
-      expect(partway.rooms[0].before[0]).toMatchObject({ phase: 'BEFORE', roomId: bedroom });
+      // 1. Before photos: nothing after them opens until every room has one.
+      await waiting('damage-check', { found: false }, 'BEFORE_PHOTOS');
+      await photo('cleanerA', id, bedroom, 'BEFORE');
+      expect((await photo('cleanerA', id, bedroom, 'AFTER', 422)).waitingOn).toBe('BEFORE_PHOTOS');
+      const before = await photo('cleanerA', id, bathroom, 'BEFORE');
+      expect(before.checklist).toMatchObject({ beforePhotos: { done: true }, current: 'DAMAGE' });
+      expect(before.can).toMatchObject({ checkDamage: true, countStock: false, addAfterPhotos: false });
+
+      // 2. Damage: the stock count and after photos wait on it.
+      await waiting('stock-count', levels(), 'DAMAGE');
+      expect((await photo('cleanerA', id, bedroom, 'AFTER', 422)).waitingOn).toBe('DAMAGE');
+      const noDamage = (await t.as('cleanerA').post(`/v1/cleans/${id}/damage-check`, { found: false }).expect(200))
+        .body;
+      expect(noDamage.checklist).toMatchObject({ damage: { found: false, done: true }, current: 'STOCK_COUNT' });
+
+      // 3. Stock count: every item, once; what's at or below its restock point is listed to restock.
+      expect((await photo('cleanerA', id, bedroom, 'AFTER', 422)).waitingOn).toBe('STOCK_COUNT');
+      const partial = await t
+        .as('cleanerA')
+        .post(`/v1/cleans/${id}/stock-count`, { readings: [{ supplyItemId: w.propertyA.supplyIds[0], levelPct: 50 }] })
+        .expect(422);
+      expect(partial.body).toMatchObject({ code: 'STOCK_COUNT_INCOMPLETE', missing: [w.propertyA.supplyIds[1]] });
+      const counted = (
+        await t
+          .as('cleanerA')
+          .post(`/v1/cleans/${id}/stock-count`, levels([25, 0]))
+          .expect(200)
+      ).body;
+      expect(counted.checklist.stockCount).toEqual({
+        items: 2,
+        counted: 2,
+        done: true,
+        restock: [
+          { id: w.propertyA.supplyIds[1], name: 'Coffee pods', levelPct: 0, state: 'OUT' },
+          { id: w.propertyA.supplyIds[0], name: 'Toilet paper', levelPct: 25, state: 'LOW' },
+        ],
+      });
+      expect(counted.checklist.current).toBe('AFTER_PHOTOS');
+      // Recounting replaces this clean's levels (the latest counts).
+      const recounted = (
+        await t
+          .as('cleanerA')
+          .post(`/v1/cleans/${id}/stock-count`, levels([100, 0]))
+          .expect(200)
+      ).body;
+      expect(recounted.checklist.stockCount.restock.map((r: { name: string }) => r.name)).toEqual(['Coffee pods']);
+
+      // 4. After photos, then 5. finished.
+      await photo('cleanerA', id, bedroom, 'AFTER');
       expect((await t.as('cleanerA').post(`/v1/cleans/${id}/complete`).expect(422)).body.missing).toEqual([
         { roomId: bathroom, displayName: 'Bathroom', phases: ['AFTER'] },
       ]);
-
-      await photo('cleanerA', id, bathroom, 'AFTER', 201);
+      const ready = await photo('cleanerA', id, bathroom, 'AFTER');
+      expect(ready.checklist.current).toBe('FINISH');
+      expect(ready.can.complete).toBe(true);
+      t.email.reset();
       const done = (await t.as('cleanerA').post(`/v1/cleans/${id}/complete`).expect(200)).body;
-      expect(done).toMatchObject({ status: 'COMPLETE', progress: { rooms: 2, done: 2 } });
+      expect(done).toMatchObject({ status: 'COMPLETE', progress: { rooms: 2, done: 2 }, checklist: { current: null } });
       expect(done.completedAt).not.toBeNull();
       expect((await photo('cleanerA', id, bedroom, 'AFTER', 409)).code).toBe('CLEAN_COMPLETE');
+      expect(
+        (await t.as('cleanerA').post(`/v1/cleans/${id}/damage-check`, { found: true }).expect(409)).body.code,
+      ).toBe('CLEAN_COMPLETE');
+
+      // The admins and the property's owners hear it's ready, in the app and by email; the cleaner doesn't.
+      const told = await t.prisma.notification.findMany({ where: { kind: 'CLEAN_COMPLETED' } });
+      expect(told.map((n) => n.userId).sort()).toEqual([w.users.admin.id, w.users.ownerA.id].sort());
+      expect(told[0]).toMatchObject({
+        entityType: 'Clean',
+        entityId: id,
+        title: 'Property A is ready for guests',
+        body: expect.stringContaining('2 rooms photographed before and after · no damage · 1 item to restock'),
+      });
+      expect(t.email.sent.map((m) => m.to).sort()).toEqual(['admin@example.test', 'ownera@example.test']);
+      expect(t.email.sent[0]!.subject).toBe('Property A is ready for guests');
 
       // The photos are evidence the property's owner can see; another property's cleaner can't.
       const fileId = (await t.prisma.cleanPhoto.findFirstOrThrow({ where: { cleanId: id } })).fileId;
       await t.as('ownerA').get(`/v1/files/${fileId}/url`).expect(200);
       await t.as('cleanerB').get(`/v1/files/${fileId}/url`).expect(404);
+    });
+
+    it('takes a damage report from the clean when there is damage, and opens the next step once it’s sent', async () => {
+      const id = w.cleans.todayA;
+      await t.as('cleanerA').post(`/v1/cleans/${id}/start`).expect(200);
+      const report = (body: object = {}, who = 'cleanerA') =>
+        t.as(who).post(`/v1/properties/${w.propertyA.id}/damage-reports`, {
+          title: 'Cracked mirror',
+          description: 'The bathroom mirror has a crack across it.',
+          severity: 'MODERATE',
+          discoveredOn: '2026-10-01',
+          cleanId: id,
+          ...body,
+        });
+      expect((await report().expect(422)).body).toMatchObject({
+        code: 'CLEAN_CHECKLIST_INCOMPLETE',
+        waitingOn: 'BEFORE_PHOTOS',
+      });
+      for (const room of w.propertyA.roomIds) await photo('cleanerA', id, room, 'BEFORE');
+
+      const yes = (await t.as('cleanerA').post(`/v1/cleans/${id}/damage-check`, { found: true }).expect(200)).body;
+      expect(yes.checklist.damage).toEqual({ found: true, reports: [], done: false });
+      const draft = (await report().expect(201)).body;
+      const withDraft = (await t.as('cleanerA').get(`/v1/cleans/${id}`).expect(200)).body;
+      expect(withDraft.checklist.damage).toMatchObject({ done: false, reports: [{ id: draft.id, status: 'DRAFT' }] });
+      // Others don't see the cleaner's draft.
+      expect((await t.as('ownerA').get(`/v1/cleans/${id}`).expect(200)).body.checklist.damage.reports).toEqual([]);
+
+      await t
+        .as('cleanerA')
+        .post(`/v1/damage-reports/${draft.id}/photos`, await upload('cleanerA', w.propertyA.id, 'DAMAGE_PHOTO'))
+        .expect(201);
+      await t.as('cleanerA').post(`/v1/damage-reports/${draft.id}/submit`).expect(200);
+      const sent = (await t.as('cleanerA').get(`/v1/cleans/${id}`).expect(200)).body;
+      expect(sent.checklist).toMatchObject({
+        damage: { found: true, done: true, reports: [{ id: draft.id, status: 'SUBMITTED', photoCount: 1 }] },
+        current: 'STOCK_COUNT',
+      });
+      // A sent report can't be taken back by answering no.
+      expect(
+        (await t.as('cleanerA').post(`/v1/cleans/${id}/damage-check`, { found: false }).expect(422)).body.code,
+      ).toBe('CLEAN_DAMAGE_REPORTED');
+      // Only from a clean you're working, at that property.
+      await report({}, 'cleanerB').expect(404);
+      expect(
+        (await report({ cleanId: w.cleans.a }).expect(409)).body.code, // cleanerA's, but not under way
+      ).toBe('CLEAN_SCHEDULED');
+      expect(
+        (
+          await t
+            .as('admin')
+            .post(`/v1/properties/${w.propertyB.id}/damage-reports`, {
+              title: 'Scuff',
+              description: 'A scuff on the wall.',
+              severity: 'MINOR',
+              discoveredOn: '2026-10-01',
+              cleanId: id,
+            })
+            .expect(422)
+        ).body.code,
+      ).toBe('UNKNOWN_CLEAN');
+    });
+
+    it('answers yes when a report is made from the clean straight away', async () => {
+      const id = w.cleans.todayA;
+      await t.as('cleanerA').post(`/v1/cleans/${id}/start`).expect(200);
+      for (const room of w.propertyA.roomIds) await photo('cleanerA', id, room, 'BEFORE');
+      await t
+        .as('cleanerA')
+        .post(`/v1/properties/${w.propertyA.id}/damage-reports`, {
+          title: 'Broken chair',
+          description: 'A dining chair leg is snapped.',
+          severity: 'MINOR',
+          discoveredOn: '2026-10-01',
+          cleanId: id,
+        })
+        .expect(201);
+      expect((await t.as('cleanerA').get(`/v1/cleans/${id}`).expect(200)).body.checklist.damage).toMatchObject({
+        found: true,
+        done: false,
+      });
     });
 
     it('refuses a room of another property, someone else’s upload, and photos before the clean has started', async () => {
@@ -298,9 +468,8 @@ describe('cleans', () => {
       ).rejects.toThrow(/only while the clean is in progress/);
 
       await t.as('cleanerA').post(`/v1/cleans/${id}/start`).expect(200);
-      for (const room of w.propertyA.roomIds) {
-        for (const phase of ['BEFORE', 'AFTER'] as const) await photo('cleanerA', id, room, phase, 201);
-      }
+      await prep('cleanerA', id);
+      for (const room of w.propertyA.roomIds) await photo('cleanerA', id, room, 'AFTER');
       await t.as('cleanerA').post(`/v1/cleans/${id}/complete`).expect(200);
       const p = await t.prisma.cleanPhoto.findFirstOrThrow({ where: { cleanId: id } });
       await expect(sql(`UPDATE "CleanPhoto" SET phase = 'AFTER' WHERE id = $1::uuid`, p.id)).rejects.toThrow(
@@ -312,6 +481,63 @@ describe('cleans', () => {
       await expect(
         sql(`UPDATE "Clean" SET "assignedCleanerId" = $2::uuid WHERE id = $1::uuid`, id, w.users.cleanerB.id),
       ).rejects.toThrow(/is complete/);
+    });
+
+    it('backs the checklist: after photos and completing wait on it, and a count belongs to a clean under way', async () => {
+      const id = w.cleans.todayA;
+      const insertPhoto = async (phase: 'BEFORE' | 'AFTER', roomId: string) => {
+        const files = await upload('cleanerA');
+        return sql(
+          `INSERT INTO "CleanPhoto" (id, "cleanId", "propertyId", "roomId", phase, "fileId", "thumbFileId", "uploadedById")
+           VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3::uuid, $4::"PhotoPhase", $5::uuid, $6::uuid, $7::uuid)`,
+          id,
+          w.propertyA.id,
+          roomId,
+          phase,
+          files.fileId,
+          files.thumbFileId,
+          w.users.cleanerA.id,
+        );
+      };
+      const count = (cleanId: string, supplyItemId: string) =>
+        sql(
+          `INSERT INTO "SupplyStatus" (id, "supplyItemId", "levelPct", "reportedById", "cleanId")
+           VALUES (gen_random_uuid(), $1::uuid, 50, $2::uuid, $3::uuid)`,
+          supplyItemId,
+          w.users.cleanerA.id,
+          cleanId,
+        );
+      // A count can't be pinned on a clean that isn't under way.
+      await expect(count(id, w.propertyA.supplyIds[0]!)).rejects.toThrow(/clean in progress/);
+
+      await t.as('cleanerA').post(`/v1/cleans/${id}/start`).expect(200);
+      for (const room of w.propertyA.roomIds) await insertPhoto('BEFORE', room);
+      await expect(insertPhoto('AFTER', w.propertyA.roomIds[0]!)).rejects.toThrow(/checklist before them/);
+      // ...nor on another property's item.
+      await expect(count(id, w.propertyB.supplyIds[0]!)).rejects.toThrow(/at the item's property/);
+      await sql(`UPDATE "Clean" SET "damageFound" = false WHERE id = $1::uuid`, id);
+      for (const item of w.propertyA.supplyIds) await count(id, item);
+      for (const room of w.propertyA.roomIds) await insertPhoto('AFTER', room);
+
+      // With every photo but damage answered yes and no report sent, it can't complete.
+      await sql(`UPDATE "Clean" SET "damageFound" = true WHERE id = $1::uuid`, id);
+      const complete = () =>
+        sql(
+          `UPDATE "Clean" SET status = 'COMPLETE', "completedAt" = now(), "completedById" = $2::uuid WHERE id = $1::uuid`,
+          id,
+          w.users.cleanerA.id,
+        );
+      await expect(complete()).rejects.toThrow(/checklist is not done/);
+      await sql(`UPDATE "Clean" SET "damageFound" = false WHERE id = $1::uuid`, id);
+      await complete();
+      await expect(sql(`UPDATE "Clean" SET "damageFound" = true WHERE id = $1::uuid`, id)).rejects.toThrow(
+        /is complete/,
+      );
+
+      // A damage report's clean is fixed.
+      await expect(
+        sql(`UPDATE "DamageReport" SET "cleanId" = $2::uuid WHERE id = $1::uuid`, w.damage.draftA, id),
+      ).rejects.toThrow(/clean are fixed/);
     });
 
     it('checks pay, turnovers and each state’s time', async () => {

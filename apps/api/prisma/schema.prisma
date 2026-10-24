@@ -96,6 +96,7 @@ enum NotificationCategory {
   STATEMENT_RELEASED
   CLEAN_ASSIGNED
   PAYMENT_RECORDED
+  CLEAN_COMPLETED
 }
 
 /// A user's choice for one category. A missing row means the category's default.
@@ -783,8 +784,12 @@ model SupplyStatus {
   reportedById String     @db.Uuid
   reportedBy   User       @relation(fields: [reportedById], references: [id], onDelete: Restrict)
   reportedAt   DateTime   @default(now()) @db.Timestamptz
+  /// The clean whose stock count this reading is part of (supply_status_clean_guard: in progress, same property).
+  cleanId      String?    @db.Uuid
+  clean        Clean?     @relation(fields: [cleanId], references: [id], onDelete: Restrict)
 
   @@index([supplyItemId, reportedAt(sort: Desc)])
+  @@index([cleanId])
 }
 
 // ───────────────────────── Notifications ─────────────────────────
@@ -793,6 +798,7 @@ enum NotificationKind {
   SUPPLY_LOW
   SUPPLY_OUT
   DAMAGE_REPORTED
+  CLEAN_COMPLETED
 }
 
 /// In-app notification for one user, created in the same transaction as the event that causes it. Email, when the
@@ -873,6 +879,9 @@ model DamageReport {
   acknowledgedAt     DateTime?      @db.Timestamptz
   claimFiledAt       DateTime?      @db.Timestamptz
   resolvedAt         DateTime?      @db.Timestamptz
+  /// The clean it was found on, when reported from a clean's checklist: at the same property (composite FK), fixed.
+  cleanId            String?        @db.Uuid
+  clean              Clean?         @relation(fields: [propertyId, cleanId], references: [propertyId, id], onDelete: Restrict)
   createdAt          DateTime       @default(now()) @db.Timestamptz
   updatedAt          DateTime       @updatedAt @db.Timestamptz
   photos             DamagePhoto[]
@@ -880,6 +889,7 @@ model DamageReport {
 
   @@index([propertyId, status])
   @@index([status, submittedAt])
+  @@index([cleanId])
 }
 
 /// Evidence: immutable (trigger). Photos can be added after a report is submitted, never changed or removed.
@@ -945,10 +955,14 @@ model Clean {
   notes             String?
   /// Owed to the assigned cleaner: the property's defaultCleanerPayCents when created. Admins and its cleaner see it.
   cleanerPayCents   Int         @default(0)
+  /// The checklist's damage question: null until answered. Yes needs a sent damage report from this clean.
+  damageFound       Boolean?
   version           Int         @default(0)
   createdAt         DateTime    @default(now()) @db.Timestamptz
   updatedAt         DateTime    @updatedAt @db.Timestamptz
   photos            CleanPhoto[]
+  damageReports     DamageReport[]
+  stockCount        SupplyStatus[]
 
   @@unique([propertyId, id])
   @@index([propertyId, scheduledDate])

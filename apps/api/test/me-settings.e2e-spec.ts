@@ -147,6 +147,7 @@ describe('settings: preferences, avatar and notifications', () => {
       expect(await categories('ownerB')).toEqual([
         'SUPPLY_ALERTS',
         'DAMAGE_REPORTS',
+        'CLEAN_COMPLETED',
         'WEEKLY_SUMMARY',
         'STATEMENT_RELEASED',
       ]);
@@ -155,6 +156,7 @@ describe('settings: preferences, avatar and notifications', () => {
       expect(await categories('admin')).toEqual([
         'SUPPLY_ALERTS',
         'DAMAGE_REPORTS',
+        'CLEAN_COMPLETED',
         'INVITE_ACCEPTED',
         'WEEKLY_SUMMARY',
         'STATEMENT_RELEASED',

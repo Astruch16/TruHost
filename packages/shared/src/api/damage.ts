@@ -98,6 +98,8 @@ export const createDamageReport = z.object({
   bookingId: id.nullable().default(null),
   roomId: id.nullable().default(null),
   estimatedCostCents: nonNegativeCents.nullable().default(null),
+  /** Reported from a clean's checklist: the clean, in progress, at the same property. Fixed once made. */
+  cleanId: id.nullable().default(null),
 });
 export type CreateDamageReport = z.input<typeof createDamageReport>;
 

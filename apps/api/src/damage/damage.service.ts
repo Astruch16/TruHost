@@ -16,6 +16,7 @@ import { addIsoDays, fromIsoDate, toIsoDate, todayIn } from '../common/dates.js'
 import { conflict, notFound, unprocessable } from '../common/problem.js';
 import { FilesService } from '../files/files.service.js';
 import type { DamageStatus, Prisma } from '../generated/prisma/client.js';
+import { CleansService } from '../cleans/cleans.service.js';
 import { NotificationsService, type PendingEmail } from '../notifications/notifications.service.js';
 import { PrismaService, type Tx } from '../prisma/prisma.service.js';
 
@@ -66,6 +67,7 @@ export class DamageService {
     private readonly audit: AuditService,
     private readonly files: FilesService,
     private readonly notifications: NotificationsService,
+    private readonly cleans: CleansService,
   ) {}
 
   /** Admins: reports across properties (or one), open ones first. */
@@ -132,19 +134,24 @@ export class DamageService {
     const property = await this.prisma.property.findUnique({ where: { id: propertyId } });
     if (!property) throw notFound('Property');
     await this.checkDetails(this.prisma, property, input);
-    const row = await this.prisma.damageReport.create({
-      data: {
-        propertyId,
-        reportedById: actor.userId,
-        title: input.title,
-        description: input.description,
-        severity: input.severity,
-        discoveredOn: fromIsoDate(input.discoveredOn),
-        bookingId: input.bookingId,
-        roomId: input.roomId,
-        estimatedCostCents: input.estimatedCostCents,
-      },
-      include: DETAIL,
+    const row = await this.prisma.$transaction(async (tx) => {
+      // From a clean's checklist: that clean is the caller's, under way here (and its damage answer becomes yes).
+      if (input.cleanId) await this.cleans.reportDamageFrom(tx, actor, input.cleanId, propertyId);
+      return tx.damageReport.create({
+        data: {
+          propertyId,
+          reportedById: actor.userId,
+          title: input.title,
+          description: input.description,
+          severity: input.severity,
+          discoveredOn: fromIsoDate(input.discoveredOn),
+          bookingId: input.bookingId,
+          roomId: input.roomId,
+          estimatedCostCents: input.estimatedCostCents,
+          cleanId: input.cleanId,
+        },
+        include: DETAIL,
+      });
     });
     return this.toDetail(actor, row);
   }

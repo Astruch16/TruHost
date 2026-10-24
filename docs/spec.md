@@ -1366,21 +1366,23 @@ only), cleaner pay, TruHost's cleaning-fee revenue, other owners, notes or audit
 
 ### Cleans & cleaner pay [3]
 
-| Method | Path                         | Roles           | Notes                                                                                                                                                   |
-| ------ | ---------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/cleans`                    | A O C           | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans.                                                                  |
-| GET    | `/cleans/:id`                | A O C           | Includes the room checklist.                                                                                                                            |
-| POST   | `/properties/:id/cleans`     | A               | ADHOC.                                                                                                                                                  |
-| PATCH  | `/cleans/:id`                | A               | Override the assigned cleaner, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited.                                             |
-| POST   | `/cleans/:id/start`          | A, C (assignee) | SCHEDULED → IN_PROGRESS. A cleaner may start only on `scheduledDate` in the property's time zone (422 `CLEAN_NOT_TODAY`). Admins may start any time.    |
-| POST   | `/cleans/:id/photos`         | A, C (assignee) | IN_PROGRESS only. `{ roomId, phase, fileId, thumbFileId }` (CLEAN_PHOTO uploads). 422 `UNKNOWN_ROOM` / `TOO_MANY_CLEAN_PHOTOS` (12 per room and phase). |
-| GET    | `/cleans/:id/photos`         | A O C           |                                                                                                                                                         |
-| POST   | `/cleans/:id/complete`       | A, C (assignee) | 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases; 422 `CLEAN_NO_ROOMS` when the property has no rooms set up.                               |
-| POST   | `/cleans/:id/cancel`         | A               | Audited.                                                                                                                                                |
-| GET    | `/cleaner-pay`               | A               | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner.                                                                                           |
-| POST   | `/cleaner-payments`          | A               | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited.                             |
-| GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                      |
-| POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                          |
+| Method | Path                         | Roles           | Notes                                                                                                                                                                                                                                                                  |
+| ------ | ---------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/cleans`                    | A O C           | `?propertyId&from&to&status&assignee=me`. O: no pay fields. C: pay only on own cleans.                                                                                                                                                                                 |
+| GET    | `/cleans/:id`                | A O C           | Includes the room checklist.                                                                                                                                                                                                                                           |
+| POST   | `/properties/:id/cleans`     | A               | ADHOC.                                                                                                                                                                                                                                                                 |
+| PATCH  | `/cleans/:id`                | A               | Override the assigned cleaner, reschedule, notes (SCHEDULED only). `cleanerPayCents` (until paid). Audited.                                                                                                                                                            |
+| POST   | `/cleans/:id/start`          | A, C (assignee) | SCHEDULED → IN_PROGRESS. A cleaner may start only on `scheduledDate` in the property's time zone (422 `CLEAN_NOT_TODAY`). Admins may start any time.                                                                                                                   |
+| POST   | `/cleans/:id/photos`         | A, C (assignee) | IN_PROGRESS only. `{ roomId, phase, fileId, thumbFileId }` (CLEAN_PHOTO uploads). 422 `UNKNOWN_ROOM` / `TOO_MANY_CLEAN_PHOTOS` (12 per room and phase). AFTER photos once the checklist before them is done (422 `CLEAN_CHECKLIST_INCOMPLETE`).                        |
+| GET    | `/cleans/:id/photos`         | A O C           |                                                                                                                                                                                                                                                                        |
+| POST   | `/cleans/:id/damage-check`   | A, C (assignee) | `{ found }`: the checklist's damage question, once every room has a BEFORE photo. Yes is done once a damage report sent from the clean (`cleanId`) exists; no after one is sent is 422 `CLEAN_DAMAGE_REPORTED`.                                                        |
+| POST   | `/cleans/:id/stock-count`    | A, C (assignee) | `{ readings[] }` as `supply-statuses`, but one for every active item (422 `STOCK_COUNT_INCOMPLETE`), recorded with the clean's id (alerts as usual). Once the damage step is done; can be counted again.                                                               |
+| POST   | `/cleans/:id/complete`       | A, C (assignee) | "Clean finished": every step done. 422 `CLEAN_MISSING_PHOTOS` with the missing rooms and phases; 422 `CLEAN_CHECKLIST_INCOMPLETE` with the step waited on; 422 `CLEAN_NO_ROOMS` when the property has no rooms set up. Notifies admins and owners (`CLEAN_COMPLETED`). |
+| POST   | `/cleans/:id/cancel`         | A               | Audited.                                                                                                                                                                                                                                                               |
+| GET    | `/cleaner-pay`               | A               | `?cleanerId&status=unpaid\|paid&from&to`. Totals per cleaner.                                                                                                                                                                                                          |
+| POST   | `/cleaner-payments`          | A               | `{ cleanerId, cleanIds[], paidOn, reference? }`. All cleans must be COMPLETE, unpaid and assigned to that cleaner. Audited.                                                                                                                                            |
+| GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                                                                                                                                     |
+| POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                                                                                                                                         |
 
 ### Supplies (built early)
 
@@ -1747,8 +1749,18 @@ cleaner sees the celebrating guide (`SuccessNotice`).
    - Turnovers follow their stays in the booking's transaction (`cleans/turnover.ts`). The migration backfilled
      turnovers for stays checking out on or after its day; past stays get none.
    - `GET /cleans`, `GET /cleans/:id`, `GET /cleans/:id/photos`, start, photos and complete.
-   - Cleaner screens: the schedule (their landing page), the clean walkthrough (camera per room and phase, supplies
-     check, completing) and their next cleans on each property page. The cleaner tour covers them (version 2).
+   - Cleaner screens: the schedule (their landing page), the clean walkthrough and their next cleans on each property
+     page. The cleaner tour covers them (version 2).
+   - **The clean's checklist (2026-10-23),** worked in order, each step opening once the ones before it are done:
+     (1) a BEFORE photo of every active room; (2) "Any damage?" (`Clean.damageFound`): no moves on, yes needs a
+     damage report sent from the clean (`DamageReport.cleanId`, at the same property, fixed); (3) a stock count of
+     every active supply (`SupplyStatus.cleanId`), which lists what's at or below its restock point; (4) an AFTER
+     photo of every room; (5) "Clean finished" (COMPLETE), which notifies the active admins and the property's owners
+     (`CLEAN_COMPLETED`, in-app and email, a "Cleans finished" setting). `GET /cleans/:id` returns the checklist
+     (`checklist.current` is the step to do) and what the caller may do (`can`). The database backs the order:
+     `clean_prep_done()` is checked by `clean_photo_guard` (AFTER photos) and `clean_guard` (completing, and
+     `damageFound` frozen once complete); `supply_status_clean_guard` keeps a count on a clean in progress at the
+     item's property.
 2. Next: the admin schedule board (`PATCH`, `POST /properties/:id/cleans`, cancel).
 3. Then: cleaner pay (payments, void, the cleaner's earnings, the admin pay run, `cleanerPaymentId`).
 4. Then: the owner side (Care photos, the owner-stay cleaning charge from the completed clean).
