@@ -72,6 +72,13 @@ export const POLICY = {
   'user:manage': { admin: true, roles: [] },
   'invite:manage': { admin: true, roles: [] },
   'audit:read': { admin: true, roles: [] },
+  /**
+   * Ask for time off: anyone who cleans a property (checked with canAnywhere: time off is the cleaner's, not a
+   * property's). They see and cancel only their own.
+   */
+  'timeOff:request': { admin: false, roles: ['CLEANER'] },
+  /** Every cleaner's time off: see it, approve or decline it. */
+  'timeOff:manage': { admin: true, roles: [] },
 } as const satisfies Record<string, { admin: boolean; roles: readonly MembershipRole[] }>;
 
 export type Action = keyof typeof POLICY;

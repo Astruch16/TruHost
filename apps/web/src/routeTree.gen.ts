@@ -30,6 +30,7 @@ import { Route as DevRoomsRouteImport } from './routes/dev/rooms'
 import { Route as DevSettingsRouteImport } from './routes/dev/settings'
 import { Route as DevStatementsRouteImport } from './routes/dev/statements'
 import { Route as DevSuppliesRouteImport } from './routes/dev/supplies'
+import { Route as DevTimeOffRouteImport } from './routes/dev/time-off'
 import { Route as DevUiRouteImport } from './routes/dev/ui'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
 import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
@@ -45,7 +46,9 @@ import { Route as AppAdminExpensesRouteImport } from './routes/_app/admin/expens
 import { Route as AppAdminPlansRouteImport } from './routes/_app/admin/plans'
 import { Route as AppAdminSuppliesRouteImport } from './routes/_app/admin/supplies'
 import { Route as AppAdminTeamRouteImport } from './routes/_app/admin/team'
+import { Route as AppAdminTimeOffRouteImport } from './routes/_app/admin/time-off'
 import { Route as AppCleanerIndexRouteImport } from './routes/_app/cleaner/index'
+import { Route as AppCleanerTimeOffRouteImport } from './routes/_app/cleaner/time-off'
 import { Route as AppOwnerIndexRouteImport } from './routes/_app/owner/index'
 import { Route as AppOwnerCalendarRouteImport } from './routes/_app/owner/calendar'
 import { Route as AppOwnerCareRouteImport } from './routes/_app/owner/care'
@@ -165,6 +168,11 @@ const DevSuppliesRoute = DevSuppliesRouteImport.update({
   path: '/dev/supplies',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevTimeOffRoute = DevTimeOffRouteImport.update({
+  id: '/dev/time-off',
+  path: '/dev/time-off',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevUiRoute = DevUiRouteImport.update({
   id: '/dev/ui',
   path: '/dev/ui',
@@ -240,9 +248,19 @@ const AppAdminTeamRoute = AppAdminTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminTimeOffRoute = AppAdminTimeOffRouteImport.update({
+  id: '/time-off',
+  path: '/time-off',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppCleanerIndexRoute = AppCleanerIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppCleanerRoute,
+} as any)
+const AppCleanerTimeOffRoute = AppCleanerTimeOffRouteImport.update({
+  id: '/time-off',
+  path: '/time-off',
   getParentRoute: () => AppCleanerRoute,
 } as any)
 const AppOwnerIndexRoute = AppOwnerIndexRouteImport.update({
@@ -341,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/dev/settings': typeof DevSettingsRoute
   '/dev/statements': typeof DevStatementsRoute
   '/dev/supplies': typeof DevSuppliesRoute
+  '/dev/time-off': typeof DevTimeOffRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
@@ -354,6 +373,8 @@ export interface FileRoutesByFullPath {
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/supplies': typeof AppAdminSuppliesRoute
   '/admin/team': typeof AppAdminTeamRoute
+  '/admin/time-off': typeof AppAdminTimeOffRoute
+  '/cleaner/time-off': typeof AppCleanerTimeOffRoute
   '/owner/calendar': typeof AppOwnerCalendarRoute
   '/owner/care': typeof AppOwnerCareRoute
   '/owner/damage': typeof AppOwnerDamageRoute
@@ -388,6 +409,7 @@ export interface FileRoutesByTo {
   '/dev/settings': typeof DevSettingsRoute
   '/dev/statements': typeof DevStatementsRoute
   '/dev/supplies': typeof DevSuppliesRoute
+  '/dev/time-off': typeof DevTimeOffRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
@@ -402,6 +424,8 @@ export interface FileRoutesByTo {
   '/admin/plans': typeof AppAdminPlansRoute
   '/admin/supplies': typeof AppAdminSuppliesRoute
   '/admin/team': typeof AppAdminTeamRoute
+  '/admin/time-off': typeof AppAdminTimeOffRoute
+  '/cleaner/time-off': typeof AppCleanerTimeOffRoute
   '/owner/calendar': typeof AppOwnerCalendarRoute
   '/owner/care': typeof AppOwnerCareRoute
   '/owner/damage': typeof AppOwnerDamageRoute
@@ -442,6 +466,7 @@ export interface FileRoutesById {
   '/dev/settings': typeof DevSettingsRoute
   '/dev/statements': typeof DevStatementsRoute
   '/dev/supplies': typeof DevSuppliesRoute
+  '/dev/time-off': typeof DevTimeOffRoute
   '/dev/ui': typeof DevUiRoute
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
@@ -456,6 +481,8 @@ export interface FileRoutesById {
   '/_app/admin/plans': typeof AppAdminPlansRoute
   '/_app/admin/supplies': typeof AppAdminSuppliesRoute
   '/_app/admin/team': typeof AppAdminTeamRoute
+  '/_app/admin/time-off': typeof AppAdminTimeOffRoute
+  '/_app/cleaner/time-off': typeof AppCleanerTimeOffRoute
   '/_app/owner/calendar': typeof AppOwnerCalendarRoute
   '/_app/owner/care': typeof AppOwnerCareRoute
   '/_app/owner/damage': typeof AppOwnerDamageRoute
@@ -497,6 +524,7 @@ export interface FileRouteTypes {
     | '/dev/settings'
     | '/dev/statements'
     | '/dev/supplies'
+    | '/dev/time-off'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -510,6 +538,8 @@ export interface FileRouteTypes {
     | '/admin/plans'
     | '/admin/supplies'
     | '/admin/team'
+    | '/admin/time-off'
+    | '/cleaner/time-off'
     | '/owner/calendar'
     | '/owner/care'
     | '/owner/damage'
@@ -544,6 +574,7 @@ export interface FileRouteTypes {
     | '/dev/settings'
     | '/dev/statements'
     | '/dev/supplies'
+    | '/dev/time-off'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -558,6 +589,8 @@ export interface FileRouteTypes {
     | '/admin/plans'
     | '/admin/supplies'
     | '/admin/team'
+    | '/admin/time-off'
+    | '/cleaner/time-off'
     | '/owner/calendar'
     | '/owner/care'
     | '/owner/damage'
@@ -597,6 +630,7 @@ export interface FileRouteTypes {
     | '/dev/settings'
     | '/dev/statements'
     | '/dev/supplies'
+    | '/dev/time-off'
     | '/dev/ui'
     | '/sign-in/$'
     | '/sign-up/$'
@@ -611,6 +645,8 @@ export interface FileRouteTypes {
     | '/_app/admin/plans'
     | '/_app/admin/supplies'
     | '/_app/admin/team'
+    | '/_app/admin/time-off'
+    | '/_app/cleaner/time-off'
     | '/_app/owner/calendar'
     | '/_app/owner/care'
     | '/_app/owner/damage'
@@ -647,6 +683,7 @@ export interface RootRouteChildren {
   DevSettingsRoute: typeof DevSettingsRoute
   DevStatementsRoute: typeof DevStatementsRoute
   DevSuppliesRoute: typeof DevSuppliesRoute
+  DevTimeOffRoute: typeof DevTimeOffRoute
   DevUiRoute: typeof DevUiRoute
   SignInSplatRoute: typeof SignInSplatRoute
   SignUpSplatRoute: typeof SignUpSplatRoute
@@ -801,6 +838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevSuppliesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/time-off': {
+      id: '/dev/time-off'
+      path: '/dev/time-off'
+      fullPath: '/dev/time-off'
+      preLoaderRoute: typeof DevTimeOffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/ui': {
       id: '/dev/ui'
       path: '/dev/ui'
@@ -906,11 +950,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminTeamRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/time-off': {
+      id: '/_app/admin/time-off'
+      path: '/time-off'
+      fullPath: '/admin/time-off'
+      preLoaderRoute: typeof AppAdminTimeOffRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/cleaner/': {
       id: '/_app/cleaner/'
       path: '/'
       fullPath: '/cleaner/'
       preLoaderRoute: typeof AppCleanerIndexRouteImport
+      parentRoute: typeof AppCleanerRoute
+    }
+    '/_app/cleaner/time-off': {
+      id: '/_app/cleaner/time-off'
+      path: '/time-off'
+      fullPath: '/cleaner/time-off'
+      preLoaderRoute: typeof AppCleanerTimeOffRouteImport
       parentRoute: typeof AppCleanerRoute
     }
     '/_app/owner/': {
@@ -1040,6 +1098,7 @@ interface AppAdminRouteChildren {
   AppAdminPlansRoute: typeof AppAdminPlansRoute
   AppAdminSuppliesRoute: typeof AppAdminSuppliesRoute
   AppAdminTeamRoute: typeof AppAdminTeamRoute
+  AppAdminTimeOffRoute: typeof AppAdminTimeOffRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAdminPropertiesPropertyIdRoute: typeof AppAdminPropertiesPropertyIdRoute
   AppAdminStatementsStatementIdRoute: typeof AppAdminStatementsStatementIdRoute
@@ -1055,6 +1114,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminPlansRoute: AppAdminPlansRoute,
   AppAdminSuppliesRoute: AppAdminSuppliesRoute,
   AppAdminTeamRoute: AppAdminTeamRoute,
+  AppAdminTimeOffRoute: AppAdminTimeOffRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAdminPropertiesPropertyIdRoute: AppAdminPropertiesPropertyIdRoute,
   AppAdminStatementsStatementIdRoute: AppAdminStatementsStatementIdRoute,
@@ -1067,12 +1127,14 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 )
 
 interface AppCleanerRouteChildren {
+  AppCleanerTimeOffRoute: typeof AppCleanerTimeOffRoute
   AppCleanerIndexRoute: typeof AppCleanerIndexRoute
   AppCleanerCleansCleanIdRoute: typeof AppCleanerCleansCleanIdRoute
   AppCleanerPropertiesPropertyIdRoute: typeof AppCleanerPropertiesPropertyIdRoute
 }
 
 const AppCleanerRouteChildren: AppCleanerRouteChildren = {
+  AppCleanerTimeOffRoute: AppCleanerTimeOffRoute,
   AppCleanerIndexRoute: AppCleanerIndexRoute,
   AppCleanerCleansCleanIdRoute: AppCleanerCleansCleanIdRoute,
   AppCleanerPropertiesPropertyIdRoute: AppCleanerPropertiesPropertyIdRoute,
@@ -1143,6 +1205,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevSettingsRoute: DevSettingsRoute,
   DevStatementsRoute: DevStatementsRoute,
   DevSuppliesRoute: DevSuppliesRoute,
+  DevTimeOffRoute: DevTimeOffRoute,
   DevUiRoute: DevUiRoute,
   SignInSplatRoute: SignInSplatRoute,
   SignUpSplatRoute: SignUpSplatRoute,

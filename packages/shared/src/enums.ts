@@ -23,6 +23,7 @@ export const NotificationCategory = z.enum([
   'CLEAN_ASSIGNED',
   'PAYMENT_RECORDED',
   'CLEAN_COMPLETED',
+  'TIME_OFF_REQUESTS',
 ]);
 export type NotificationCategory = z.infer<typeof NotificationCategory>;
 
@@ -98,7 +99,13 @@ export type FileStatus = z.infer<typeof FileStatus>;
 export const SupplyCategory = z.enum(['BATHROOM', 'KITCHEN', 'LAUNDRY', 'CLEANING', 'OTHER']);
 export type SupplyCategory = z.infer<typeof SupplyCategory>;
 
-export const NotificationKind = z.enum(['SUPPLY_LOW', 'SUPPLY_OUT', 'DAMAGE_REPORTED', 'CLEAN_COMPLETED']);
+export const NotificationKind = z.enum([
+  'SUPPLY_LOW',
+  'SUPPLY_OUT',
+  'DAMAGE_REPORTED',
+  'CLEAN_COMPLETED',
+  'TIME_OFF_REQUESTED',
+]);
 export type NotificationKind = z.infer<typeof NotificationKind>;
 
 export const DamageSeverity = z.enum(['MINOR', 'MODERATE', 'SEVERE']);
@@ -123,3 +130,10 @@ export type CleanStatus = z.infer<typeof CleanStatus>;
 
 export const PhotoPhase = z.enum(['BEFORE', 'AFTER']);
 export type PhotoPhase = z.infer<typeof PhotoPhase>;
+
+export const TimeOffReason = z.enum(['HOLIDAY', 'TIME_OFF', 'OTHER_WORK', 'OTHER']);
+export type TimeOffReason = z.infer<typeof TimeOffReason>;
+
+/** PENDING → APPROVED | DECLINED | CANCELLED; APPROVED → CANCELLED. */
+export const TimeOffStatus = z.enum(['PENDING', 'APPROVED', 'DECLINED', 'CANCELLED']);
+export type TimeOffStatus = z.infer<typeof TimeOffStatus>;

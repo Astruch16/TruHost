@@ -104,3 +104,36 @@ export function CleanDoneIcon(props: IconProps) {
     </IconFrame>
   );
 }
+
+/** Time off: a calendar page with a gold sun rising over it, on lavender. */
+export function TimeOffIcon(props: IconProps) {
+  const { id, url } = useIllustrationIds();
+  return (
+    <IconFrame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'sheen', 'gold', 'paper']} />
+      <circle cx="20" cy="20" r="19" fill="#E6E0F5" />
+      <ellipse cx="19" cy="32.6" rx="11.5" ry="2.1" fill={url.shadow} />
+      <rect x="8.5" y="10.5" width="20" height="19.5" rx="2.5" transform="translate(0.8 1.2)" fill="#CFC8E0" />
+      <rect x="8.5" y="10.5" width="20" height="19.5" rx="2.5" fill={url.paper} />
+      <path d="M8.5 16 V13 Q8.5 10.5 11 10.5 H26 Q28.5 10.5 28.5 13 V16 Z" fill="#6E5DB0" />
+      <rect x="12.4" y="8.4" width="2.2" height="4.6" rx="1.1" fill="#3F3470" />
+      <rect x="22.4" y="8.4" width="2.2" height="4.6" rx="1.1" fill="#3F3470" />
+      <g fill="#DDD6EC">
+        <rect x="11.5" y="19" width="3" height="2.6" rx="0.6" />
+        <rect x="16.5" y="19" width="3" height="2.6" rx="0.6" />
+        <rect x="21.5" y="19" width="3" height="2.6" rx="0.6" />
+        <rect x="11.5" y="23.6" width="3" height="2.6" rx="0.6" />
+      </g>
+      {/* The sun */}
+      <path
+        d="M28 18.6 V17 M33.4 21 L34.6 19.8 M35.4 26 H37 M22.6 21 L21.4 19.8"
+        stroke="#D9AE3C"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+      <circle cx="28.5" cy="26.4" r="6" fill="#C99A2E" />
+      <circle cx="28" cy="25.4" r="6" fill={url.gold} />
+      <circle cx="28" cy="25.4" r="6" fill={url.sheen} />
+    </IconFrame>
+  );
+}

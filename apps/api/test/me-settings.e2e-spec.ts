@@ -157,6 +157,7 @@ describe('settings: preferences, avatar and notifications', () => {
         'SUPPLY_ALERTS',
         'DAMAGE_REPORTS',
         'CLEAN_COMPLETED',
+        'TIME_OFF_REQUESTS',
         'INVITE_ACCEPTED',
         'WEEKLY_SUMMARY',
         'STATEMENT_RELEASED',
