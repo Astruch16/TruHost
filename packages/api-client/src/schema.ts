@@ -1172,6 +1172,118 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/cleans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Cleans_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cleans/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Cleans_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cleans/{id}/photos': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Cleans_photos'];
+    put?: never;
+    post: operations['Cleans_addPhoto'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cleans/{id}/start': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Cleans_start'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cleans/{id}/damage-check': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Cleans_checkDamage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cleans/{id}/stock-count': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Cleans_countStock'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cleans/{id}/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Cleans_complete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/properties/{id}/supplies': {
     parameters: {
       query?: never;
@@ -1278,86 +1390,6 @@ export interface paths {
     get: operations['Supplies_restock'];
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/cleans': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['Cleans_list'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/cleans/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['Cleans_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/cleans/{id}/photos': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['Cleans_photos'];
-    put?: never;
-    post: operations['Cleans_addPhoto'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/cleans/{id}/start': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['Cleans_start'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/cleans/{id}/complete': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['Cleans_complete'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1673,7 +1705,8 @@ export interface operations {
                 | 'WEEKLY_SUMMARY'
                 | 'STATEMENT_RELEASED'
                 | 'CLEAN_ASSIGNED'
-                | 'PAYMENT_RECORDED';
+                | 'PAYMENT_RECORDED'
+                | 'CLEAN_COMPLETED';
               email: boolean;
               inApp: boolean;
             }[];
@@ -1701,7 +1734,8 @@ export interface operations {
               | 'WEEKLY_SUMMARY'
               | 'STATEMENT_RELEASED'
               | 'CLEAN_ASSIGNED'
-              | 'PAYMENT_RECORDED';
+              | 'PAYMENT_RECORDED'
+              | 'CLEAN_COMPLETED';
             email: boolean;
             inApp: boolean;
           }[];
@@ -1724,7 +1758,8 @@ export interface operations {
                 | 'WEEKLY_SUMMARY'
                 | 'STATEMENT_RELEASED'
                 | 'CLEAN_ASSIGNED'
-                | 'PAYMENT_RECORDED';
+                | 'PAYMENT_RECORDED'
+                | 'CLEAN_COMPLETED';
               email: boolean;
               inApp: boolean;
             }[];
@@ -1776,7 +1811,7 @@ export interface operations {
               /** Format: uuid */
               id: string;
               /** @enum {string} */
-              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED';
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED' | 'CLEAN_COMPLETED';
               title: string;
               body: string | null;
               property: {
@@ -1828,7 +1863,7 @@ export interface operations {
               /** Format: uuid */
               id: string;
               /** @enum {string} */
-              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED';
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED' | 'CLEAN_COMPLETED';
               title: string;
               body: string | null;
               property: {
@@ -7090,6 +7125,11 @@ export interface operations {
           roomId?: string | null;
           /** @default null */
           estimatedCostCents?: number | null;
+          /**
+           * Format: uuid
+           * @default null
+           */
+          cleanId?: string | null;
         };
       };
     };
@@ -7741,6 +7781,1150 @@ export interface operations {
       };
     };
   };
+  Cleans_list: {
+    parameters: {
+      query?: {
+        propertyId?: string;
+        from?: string;
+        to?: string;
+        status?: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+        assignee?: 'me';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                city: string;
+              };
+              /** @enum {string} */
+              kind: 'TURNOVER' | 'ADHOC';
+              /** @enum {string} */
+              status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+              /** Format: date */
+              scheduledDate: string;
+              stay: {
+                /** @enum {string} */
+                kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+                /** Format: date */
+                checkInDate: string;
+                /** Format: date */
+                checkOutDate: string;
+              } | null;
+              window: {
+                from: {
+                  /** Format: date */
+                  date: string;
+                  time: string | null;
+                };
+                until: {
+                  /** Format: date */
+                  date: string;
+                  time: string | null;
+                } | null;
+              };
+              assignedCleaner: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              } | null;
+              cleanerPayCents: number | null;
+              notes: string | null;
+              /** Format: date-time */
+              startedAt: string | null;
+              /** Format: date-time */
+              completedAt: string | null;
+              /** Format: date-time */
+              cancelledAt: string | null;
+              cancelReason: string | null;
+              progress: {
+                rooms: number;
+                done: number;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Cleans_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+            };
+            /** @enum {string} */
+            kind: 'TURNOVER' | 'ADHOC';
+            /** @enum {string} */
+            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+            /** Format: date */
+            scheduledDate: string;
+            stay: {
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+            } | null;
+            window: {
+              from: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              };
+              until: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              } | null;
+            };
+            assignedCleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            cleanerPayCents: number | null;
+            notes: string | null;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            progress: {
+              rooms: number;
+              done: number;
+            };
+            rooms: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+              before: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              after: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            }[];
+            checklist: {
+              beforePhotos: {
+                done: boolean;
+              };
+              damage: {
+                found: boolean | null;
+                reports: {
+                  /** Format: uuid */
+                  id: string;
+                  title: string;
+                  /** @enum {string} */
+                  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+                  photoCount: number;
+                }[];
+                done: boolean;
+              };
+              stockCount: {
+                items: number;
+                counted: number;
+                done: boolean;
+                restock: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                  levelPct: number;
+                  /** @enum {string} */
+                  state: 'LOW' | 'OUT';
+                }[];
+              };
+              afterPhotos: {
+                done: boolean;
+              };
+              /** @enum {string|null} */
+              current: 'BEFORE_PHOTOS' | 'DAMAGE' | 'STOCK_COUNT' | 'AFTER_PHOTOS' | 'FINISH' | null;
+            };
+            /** Format: date */
+            today: string;
+            can: {
+              start: boolean;
+              addPhotos: boolean;
+              addAfterPhotos: boolean;
+              checkDamage: boolean;
+              countStock: boolean;
+              complete: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Cleans_photos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              /** Format: uuid */
+              roomId: string;
+              /** @enum {string} */
+              phase: 'BEFORE' | 'AFTER';
+              url: string;
+              thumbUrl: string;
+              /** Format: date-time */
+              expiresAt: string;
+              uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date-time */
+              createdAt: string;
+            }[];
+          };
+        };
+      };
+    };
+  };
+  Cleans_addPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: uuid */
+          roomId: string;
+          /** @enum {string} */
+          phase: 'BEFORE' | 'AFTER';
+          /** Format: uuid */
+          fileId: string;
+          /** Format: uuid */
+          thumbFileId: string;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+            };
+            /** @enum {string} */
+            kind: 'TURNOVER' | 'ADHOC';
+            /** @enum {string} */
+            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+            /** Format: date */
+            scheduledDate: string;
+            stay: {
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+            } | null;
+            window: {
+              from: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              };
+              until: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              } | null;
+            };
+            assignedCleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            cleanerPayCents: number | null;
+            notes: string | null;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            progress: {
+              rooms: number;
+              done: number;
+            };
+            rooms: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+              before: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              after: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            }[];
+            checklist: {
+              beforePhotos: {
+                done: boolean;
+              };
+              damage: {
+                found: boolean | null;
+                reports: {
+                  /** Format: uuid */
+                  id: string;
+                  title: string;
+                  /** @enum {string} */
+                  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+                  photoCount: number;
+                }[];
+                done: boolean;
+              };
+              stockCount: {
+                items: number;
+                counted: number;
+                done: boolean;
+                restock: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                  levelPct: number;
+                  /** @enum {string} */
+                  state: 'LOW' | 'OUT';
+                }[];
+              };
+              afterPhotos: {
+                done: boolean;
+              };
+              /** @enum {string|null} */
+              current: 'BEFORE_PHOTOS' | 'DAMAGE' | 'STOCK_COUNT' | 'AFTER_PHOTOS' | 'FINISH' | null;
+            };
+            /** Format: date */
+            today: string;
+            can: {
+              start: boolean;
+              addPhotos: boolean;
+              addAfterPhotos: boolean;
+              checkDamage: boolean;
+              countStock: boolean;
+              complete: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Cleans_start: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+            };
+            /** @enum {string} */
+            kind: 'TURNOVER' | 'ADHOC';
+            /** @enum {string} */
+            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+            /** Format: date */
+            scheduledDate: string;
+            stay: {
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+            } | null;
+            window: {
+              from: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              };
+              until: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              } | null;
+            };
+            assignedCleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            cleanerPayCents: number | null;
+            notes: string | null;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            progress: {
+              rooms: number;
+              done: number;
+            };
+            rooms: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+              before: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              after: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            }[];
+            checklist: {
+              beforePhotos: {
+                done: boolean;
+              };
+              damage: {
+                found: boolean | null;
+                reports: {
+                  /** Format: uuid */
+                  id: string;
+                  title: string;
+                  /** @enum {string} */
+                  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+                  photoCount: number;
+                }[];
+                done: boolean;
+              };
+              stockCount: {
+                items: number;
+                counted: number;
+                done: boolean;
+                restock: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                  levelPct: number;
+                  /** @enum {string} */
+                  state: 'LOW' | 'OUT';
+                }[];
+              };
+              afterPhotos: {
+                done: boolean;
+              };
+              /** @enum {string|null} */
+              current: 'BEFORE_PHOTOS' | 'DAMAGE' | 'STOCK_COUNT' | 'AFTER_PHOTOS' | 'FINISH' | null;
+            };
+            /** Format: date */
+            today: string;
+            can: {
+              start: boolean;
+              addPhotos: boolean;
+              addAfterPhotos: boolean;
+              checkDamage: boolean;
+              countStock: boolean;
+              complete: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Cleans_checkDamage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          found: boolean;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+            };
+            /** @enum {string} */
+            kind: 'TURNOVER' | 'ADHOC';
+            /** @enum {string} */
+            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+            /** Format: date */
+            scheduledDate: string;
+            stay: {
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+            } | null;
+            window: {
+              from: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              };
+              until: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              } | null;
+            };
+            assignedCleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            cleanerPayCents: number | null;
+            notes: string | null;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            progress: {
+              rooms: number;
+              done: number;
+            };
+            rooms: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+              before: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              after: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            }[];
+            checklist: {
+              beforePhotos: {
+                done: boolean;
+              };
+              damage: {
+                found: boolean | null;
+                reports: {
+                  /** Format: uuid */
+                  id: string;
+                  title: string;
+                  /** @enum {string} */
+                  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+                  photoCount: number;
+                }[];
+                done: boolean;
+              };
+              stockCount: {
+                items: number;
+                counted: number;
+                done: boolean;
+                restock: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                  levelPct: number;
+                  /** @enum {string} */
+                  state: 'LOW' | 'OUT';
+                }[];
+              };
+              afterPhotos: {
+                done: boolean;
+              };
+              /** @enum {string|null} */
+              current: 'BEFORE_PHOTOS' | 'DAMAGE' | 'STOCK_COUNT' | 'AFTER_PHOTOS' | 'FINISH' | null;
+            };
+            /** Format: date */
+            today: string;
+            can: {
+              start: boolean;
+              addPhotos: boolean;
+              addAfterPhotos: boolean;
+              checkDamage: boolean;
+              countStock: boolean;
+              complete: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Cleans_countStock: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          readings: {
+            /** Format: uuid */
+            supplyItemId: string;
+            levelPct: number;
+            /** @default null */
+            note?: string | null;
+          }[];
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+            };
+            /** @enum {string} */
+            kind: 'TURNOVER' | 'ADHOC';
+            /** @enum {string} */
+            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+            /** Format: date */
+            scheduledDate: string;
+            stay: {
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+            } | null;
+            window: {
+              from: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              };
+              until: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              } | null;
+            };
+            assignedCleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            cleanerPayCents: number | null;
+            notes: string | null;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            progress: {
+              rooms: number;
+              done: number;
+            };
+            rooms: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+              before: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              after: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            }[];
+            checklist: {
+              beforePhotos: {
+                done: boolean;
+              };
+              damage: {
+                found: boolean | null;
+                reports: {
+                  /** Format: uuid */
+                  id: string;
+                  title: string;
+                  /** @enum {string} */
+                  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+                  photoCount: number;
+                }[];
+                done: boolean;
+              };
+              stockCount: {
+                items: number;
+                counted: number;
+                done: boolean;
+                restock: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                  levelPct: number;
+                  /** @enum {string} */
+                  state: 'LOW' | 'OUT';
+                }[];
+              };
+              afterPhotos: {
+                done: boolean;
+              };
+              /** @enum {string|null} */
+              current: 'BEFORE_PHOTOS' | 'DAMAGE' | 'STOCK_COUNT' | 'AFTER_PHOTOS' | 'FINISH' | null;
+            };
+            /** Format: date */
+            today: string;
+            can: {
+              start: boolean;
+              addPhotos: boolean;
+              addAfterPhotos: boolean;
+              checkDamage: boolean;
+              countStock: boolean;
+              complete: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  Cleans_complete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            property: {
+              /** Format: uuid */
+              id: string;
+              name: string;
+              city: string;
+            };
+            /** @enum {string} */
+            kind: 'TURNOVER' | 'ADHOC';
+            /** @enum {string} */
+            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
+            /** Format: date */
+            scheduledDate: string;
+            stay: {
+              /** @enum {string} */
+              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
+              /** Format: date */
+              checkInDate: string;
+              /** Format: date */
+              checkOutDate: string;
+            } | null;
+            window: {
+              from: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              };
+              until: {
+                /** Format: date */
+                date: string;
+                time: string | null;
+              } | null;
+            };
+            assignedCleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            cleanerPayCents: number | null;
+            notes: string | null;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            progress: {
+              rooms: number;
+              done: number;
+            };
+            rooms: {
+              /** Format: uuid */
+              id: string;
+              displayName: string;
+              before: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+              after: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                roomId: string;
+                /** @enum {string} */
+                phase: 'BEFORE' | 'AFTER';
+                url: string;
+                thumbUrl: string;
+                /** Format: date-time */
+                expiresAt: string;
+                uploadedBy: {
+                  /** Format: uuid */
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            }[];
+            checklist: {
+              beforePhotos: {
+                done: boolean;
+              };
+              damage: {
+                found: boolean | null;
+                reports: {
+                  /** Format: uuid */
+                  id: string;
+                  title: string;
+                  /** @enum {string} */
+                  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'CLAIM_FILED' | 'RESOLVED';
+                  photoCount: number;
+                }[];
+                done: boolean;
+              };
+              stockCount: {
+                items: number;
+                counted: number;
+                done: boolean;
+                restock: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                  levelPct: number;
+                  /** @enum {string} */
+                  state: 'LOW' | 'OUT';
+                }[];
+              };
+              afterPhotos: {
+                done: boolean;
+              };
+              /** @enum {string|null} */
+              current: 'BEFORE_PHOTOS' | 'DAMAGE' | 'STOCK_COUNT' | 'AFTER_PHOTOS' | 'FINISH' | null;
+            };
+            /** Format: date */
+            today: string;
+            can: {
+              start: boolean;
+              addPhotos: boolean;
+              addAfterPhotos: boolean;
+              checkDamage: boolean;
+              countStock: boolean;
+              complete: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
   Supplies_list: {
     parameters: {
       query?: never;
@@ -8098,650 +9282,6 @@ export interface operations {
               /** @enum {string} */
               urgency: 'OUT' | 'LOW' | 'SOON';
             }[];
-          };
-        };
-      };
-    };
-  };
-  Cleans_list: {
-    parameters: {
-      query?: {
-        propertyId?: string;
-        from?: string;
-        to?: string;
-        status?: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
-        assignee?: 'me';
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              property: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                city: string;
-              };
-              /** @enum {string} */
-              kind: 'TURNOVER' | 'ADHOC';
-              /** @enum {string} */
-              status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
-              /** Format: date */
-              scheduledDate: string;
-              stay: {
-                /** @enum {string} */
-                kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
-                /** Format: date */
-                checkInDate: string;
-                /** Format: date */
-                checkOutDate: string;
-              } | null;
-              window: {
-                from: {
-                  /** Format: date */
-                  date: string;
-                  time: string | null;
-                };
-                until: {
-                  /** Format: date */
-                  date: string;
-                  time: string | null;
-                } | null;
-              };
-              assignedCleaner: {
-                /** Format: uuid */
-                id: string;
-                firstName: string;
-                lastName: string;
-              } | null;
-              cleanerPayCents: number | null;
-              notes: string | null;
-              /** Format: date-time */
-              startedAt: string | null;
-              /** Format: date-time */
-              completedAt: string | null;
-              /** Format: date-time */
-              cancelledAt: string | null;
-              cancelReason: string | null;
-              progress: {
-                rooms: number;
-                done: number;
-              };
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Cleans_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            property: {
-              /** Format: uuid */
-              id: string;
-              name: string;
-              city: string;
-            };
-            /** @enum {string} */
-            kind: 'TURNOVER' | 'ADHOC';
-            /** @enum {string} */
-            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
-            /** Format: date */
-            scheduledDate: string;
-            stay: {
-              /** @enum {string} */
-              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
-              /** Format: date */
-              checkInDate: string;
-              /** Format: date */
-              checkOutDate: string;
-            } | null;
-            window: {
-              from: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              };
-              until: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              } | null;
-            };
-            assignedCleaner: {
-              /** Format: uuid */
-              id: string;
-              firstName: string;
-              lastName: string;
-            } | null;
-            cleanerPayCents: number | null;
-            notes: string | null;
-            /** Format: date-time */
-            startedAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            cancelledAt: string | null;
-            cancelReason: string | null;
-            progress: {
-              rooms: number;
-              done: number;
-            };
-            rooms: {
-              /** Format: uuid */
-              id: string;
-              displayName: string;
-              before: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-              after: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            }[];
-            /** Format: date */
-            today: string;
-            can: {
-              start: boolean;
-              addPhotos: boolean;
-              complete: boolean;
-            };
-          };
-        };
-      };
-    };
-  };
-  Cleans_photos: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              roomId: string;
-              /** @enum {string} */
-              phase: 'BEFORE' | 'AFTER';
-              url: string;
-              thumbUrl: string;
-              /** Format: date-time */
-              expiresAt: string;
-              uploadedBy: {
-                /** Format: uuid */
-                id: string;
-                firstName: string;
-                lastName: string;
-              };
-              /** Format: date-time */
-              createdAt: string;
-            }[];
-          };
-        };
-      };
-    };
-  };
-  Cleans_addPhoto: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          /** Format: uuid */
-          roomId: string;
-          /** @enum {string} */
-          phase: 'BEFORE' | 'AFTER';
-          /** Format: uuid */
-          fileId: string;
-          /** Format: uuid */
-          thumbFileId: string;
-        };
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            property: {
-              /** Format: uuid */
-              id: string;
-              name: string;
-              city: string;
-            };
-            /** @enum {string} */
-            kind: 'TURNOVER' | 'ADHOC';
-            /** @enum {string} */
-            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
-            /** Format: date */
-            scheduledDate: string;
-            stay: {
-              /** @enum {string} */
-              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
-              /** Format: date */
-              checkInDate: string;
-              /** Format: date */
-              checkOutDate: string;
-            } | null;
-            window: {
-              from: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              };
-              until: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              } | null;
-            };
-            assignedCleaner: {
-              /** Format: uuid */
-              id: string;
-              firstName: string;
-              lastName: string;
-            } | null;
-            cleanerPayCents: number | null;
-            notes: string | null;
-            /** Format: date-time */
-            startedAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            cancelledAt: string | null;
-            cancelReason: string | null;
-            progress: {
-              rooms: number;
-              done: number;
-            };
-            rooms: {
-              /** Format: uuid */
-              id: string;
-              displayName: string;
-              before: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-              after: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            }[];
-            /** Format: date */
-            today: string;
-            can: {
-              start: boolean;
-              addPhotos: boolean;
-              complete: boolean;
-            };
-          };
-        };
-      };
-    };
-  };
-  Cleans_start: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            property: {
-              /** Format: uuid */
-              id: string;
-              name: string;
-              city: string;
-            };
-            /** @enum {string} */
-            kind: 'TURNOVER' | 'ADHOC';
-            /** @enum {string} */
-            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
-            /** Format: date */
-            scheduledDate: string;
-            stay: {
-              /** @enum {string} */
-              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
-              /** Format: date */
-              checkInDate: string;
-              /** Format: date */
-              checkOutDate: string;
-            } | null;
-            window: {
-              from: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              };
-              until: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              } | null;
-            };
-            assignedCleaner: {
-              /** Format: uuid */
-              id: string;
-              firstName: string;
-              lastName: string;
-            } | null;
-            cleanerPayCents: number | null;
-            notes: string | null;
-            /** Format: date-time */
-            startedAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            cancelledAt: string | null;
-            cancelReason: string | null;
-            progress: {
-              rooms: number;
-              done: number;
-            };
-            rooms: {
-              /** Format: uuid */
-              id: string;
-              displayName: string;
-              before: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-              after: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            }[];
-            /** Format: date */
-            today: string;
-            can: {
-              start: boolean;
-              addPhotos: boolean;
-              complete: boolean;
-            };
-          };
-        };
-      };
-    };
-  };
-  Cleans_complete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            property: {
-              /** Format: uuid */
-              id: string;
-              name: string;
-              city: string;
-            };
-            /** @enum {string} */
-            kind: 'TURNOVER' | 'ADHOC';
-            /** @enum {string} */
-            status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETE' | 'CANCELLED';
-            /** Format: date */
-            scheduledDate: string;
-            stay: {
-              /** @enum {string} */
-              kind: 'GUEST' | 'OWNER_STAY' | 'BLOCK';
-              /** Format: date */
-              checkInDate: string;
-              /** Format: date */
-              checkOutDate: string;
-            } | null;
-            window: {
-              from: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              };
-              until: {
-                /** Format: date */
-                date: string;
-                time: string | null;
-              } | null;
-            };
-            assignedCleaner: {
-              /** Format: uuid */
-              id: string;
-              firstName: string;
-              lastName: string;
-            } | null;
-            cleanerPayCents: number | null;
-            notes: string | null;
-            /** Format: date-time */
-            startedAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            cancelledAt: string | null;
-            cancelReason: string | null;
-            progress: {
-              rooms: number;
-              done: number;
-            };
-            rooms: {
-              /** Format: uuid */
-              id: string;
-              displayName: string;
-              before: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-              after: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                roomId: string;
-                /** @enum {string} */
-                phase: 'BEFORE' | 'AFTER';
-                url: string;
-                thumbUrl: string;
-                /** Format: date-time */
-                expiresAt: string;
-                uploadedBy: {
-                  /** Format: uuid */
-                  id: string;
-                  firstName: string;
-                  lastName: string;
-                };
-                /** Format: date-time */
-                createdAt: string;
-              }[];
-            }[];
-            /** Format: date */
-            today: string;
-            can: {
-              start: boolean;
-              addPhotos: boolean;
-              complete: boolean;
-            };
           };
         };
       };

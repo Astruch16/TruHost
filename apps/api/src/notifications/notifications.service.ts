@@ -3,7 +3,7 @@ import { NOTIFICATION_CATALOGUE, type MarkNotificationsRead, type NotificationKi
 import type { Actor } from '../auth/actor.js';
 import { ENV, type Env } from '../config/env.js';
 import { EMAIL_SENDER, type EmailMessage, type EmailSender } from '../email/email-sender.js';
-import { damageReportEmail, supplyAlertEmail } from '../email/templates.js';
+import { cleanCompletedEmail, damageReportEmail, supplyAlertEmail } from '../email/templates.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -120,6 +120,45 @@ export class NotificationsService {
           discoveredOn: event.report.discoveredOn,
           photoCount: event.report.photoCount,
           url: to.admin ? `${this.env.WEB_URL}/admin/damage` : `${this.env.WEB_URL}/owner/damage`,
+        }),
+    });
+  }
+
+  /**
+   * A cleaner finished a clean (every step of its checklist done): the place is ready. Tell the active admins and the
+   * property's active owners, except whoever finished it. Returns the emails to send after commit.
+   */
+  cleanCompleted(
+    tx: Tx,
+    event: {
+      property: { id: string; name: string };
+      clean: { id: string; rooms: number; damageReports: number; restock: number };
+      cleaner: { id: string; firstName: string; lastName: string };
+    },
+  ): Promise<PendingEmail[]> {
+    const cleaner = `${event.cleaner.firstName} ${event.cleaner.lastName}`.trim();
+    const { rooms, damageReports, restock } = event.clean;
+    const notes = [
+      `${rooms} room${rooms === 1 ? '' : 's'} photographed before and after`,
+      damageReports ? `${damageReports} damage report${damageReports === 1 ? '' : 's'}` : 'no damage',
+      restock ? `${restock} item${restock === 1 ? '' : 's'} to restock` : 'supplies counted',
+    ];
+    return this.notify(tx, {
+      category: 'CLEAN_COMPLETED',
+      kind: 'CLEAN_COMPLETED',
+      property: event.property,
+      entityType: 'Clean',
+      entityId: event.clean.id,
+      sourceId: event.clean.id,
+      actorId: event.cleaner.id,
+      title: `${event.property.name} is ready for guests`,
+      body: `Cleaned by ${cleaner} · ${notes.join(' · ')}`,
+      email: (to) =>
+        cleanCompletedEmail(to, {
+          property: event.property.name,
+          cleaner,
+          notes,
+          url: to.admin ? `${this.env.WEB_URL}/admin/properties/${event.property.id}` : `${this.env.WEB_URL}/owner`,
         }),
     });
   }

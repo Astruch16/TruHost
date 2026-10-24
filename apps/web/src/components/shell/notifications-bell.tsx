@@ -13,6 +13,7 @@ import { queries } from '../../lib/queries';
 import { menuSurfaceStyles } from '../../lib/styles';
 import { since } from '../../lib/supplies';
 import { DamageAlertIcon } from '../illustrations/damage';
+import { CleanDoneIcon } from '../illustrations/list-icons';
 import { SupplyAlertIcon } from '../illustrations/supplies';
 import { ErrorAlert } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
@@ -38,7 +39,7 @@ export function LiveNotificationsBell({ me }: { me: Pick<Me, 'staffRole' | 'memb
       error={list.error ?? markRead.error}
       onOpenItem={(n) => {
         if (!n.readAt) markRead.mutate({ ids: [n.id] });
-        // Owners open their portal: damage on its Damage page, supplies on Home.
+        // Owners open their portal: damage on its Damage page, supplies and finished cleans on Home.
         if (usesOwnerPortal(me)) {
           void navigate({ to: n.kind === 'DAMAGE_REPORTED' ? '/owner/damage' : '/owner' });
           return;
@@ -139,6 +140,8 @@ export function NotificationsBell({
                   >
                     {n.kind === 'DAMAGE_REPORTED' ? (
                       <DamageAlertIcon size={36} className="shrink-0" />
+                    ) : n.kind === 'CLEAN_COMPLETED' ? (
+                      <CleanDoneIcon size={36} className="shrink-0" />
                     ) : (
                       <SupplyAlertIcon out={n.kind === 'SUPPLY_OUT'} size={36} className="shrink-0" />
                     )}

@@ -132,10 +132,32 @@ describe('report damage', () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     expect(posts[0]).toMatchObject({
       path: '/v1/properties/{id}/damage-reports',
-      body: { title: 'Burn mark on the counter', severity: 'SEVERE', bookingId: 'b1', estimatedCostCents: 40_000 },
+      body: {
+        title: 'Burn mark on the counter',
+        severity: 'SEVERE',
+        bookingId: 'b1',
+        estimatedCostCents: 40_000,
+        cleanId: null,
+      },
     });
     expect(addDamagePhoto).toHaveBeenCalledTimes(2);
     expect(posts.at(-1)?.path).toBe('/v1/damage-reports/{id}/submit');
+  });
+
+  it('links a report made from a clean’s checklist to that clean', async () => {
+    const { api, posts } = fakeApi();
+    addDamagePhoto.mockResolvedValue(REPORT);
+    renderWith(
+      api,
+      <ReportDamageDialog open onOpenChange={() => undefined} properties={[{ id: 'p1', name: 'A' }]} cleanId="c1" />,
+    );
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText(/What’s damaged/), 'Cracked mirror');
+    await user.type(screen.getByLabelText(/What happened/), 'A crack across the bathroom mirror.');
+    await user.upload(screen.getByLabelText('Add photos'), [photo()]);
+    await user.click(screen.getByRole('button', { name: 'Send report' }));
+    await waitFor(() => expect(posts.at(-1)?.path).toBe('/v1/damage-reports/{id}/submit'));
+    expect(posts[0]).toMatchObject({ path: '/v1/properties/{id}/damage-reports', body: { cleanId: 'c1' } });
   });
 
   it('carries on from where it stopped when a photo fails, without a second draft', async () => {

@@ -22,6 +22,7 @@ export const NotificationCategory = z.enum([
   'STATEMENT_RELEASED',
   'CLEAN_ASSIGNED',
   'PAYMENT_RECORDED',
+  'CLEAN_COMPLETED',
 ]);
 export type NotificationCategory = z.infer<typeof NotificationCategory>;
 
@@ -97,7 +98,7 @@ export type FileStatus = z.infer<typeof FileStatus>;
 export const SupplyCategory = z.enum(['BATHROOM', 'KITCHEN', 'LAUNDRY', 'CLEANING', 'OTHER']);
 export type SupplyCategory = z.infer<typeof SupplyCategory>;
 
-export const NotificationKind = z.enum(['SUPPLY_LOW', 'SUPPLY_OUT', 'DAMAGE_REPORTED']);
+export const NotificationKind = z.enum(['SUPPLY_LOW', 'SUPPLY_OUT', 'DAMAGE_REPORTED', 'CLEAN_COMPLETED']);
 export type NotificationKind = z.infer<typeof NotificationKind>;
 
 export const DamageSeverity = z.enum(['MINOR', 'MODERATE', 'SEVERE']);

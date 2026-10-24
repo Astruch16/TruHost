@@ -691,7 +691,8 @@ export const CASES: AuthzCase[] = [
 
   // ── cleans ──
   // Owners and cleaners see the property's cleans (pay rules are in cleans.e2e-spec.ts); only the assigned cleaner (or
-  // an admin) works one. The fixture's cleans are SCHEDULED, so photos and completing are refused (409) to those allowed.
+  // an admin) works one. The fixture's cleans are SCHEDULED, so photos, the checklist and completing are refused (409)
+  // to those allowed.
   { route: 'GET /v1/cleans', path: () => '/v1/cleans', allow: 'everyone' },
   { route: 'GET /v1/cleans/:id', path: (w) => `/v1/cleans/${w.cleans.a}`, allow: A_READERS },
   { route: 'GET /v1/cleans/:id', label: 'B', path: (w) => `/v1/cleans/${w.cleans.b}`, allow: B_READERS },
@@ -712,6 +713,22 @@ export const CASES: AuthzCase[] = [
       fileId: '00000000-0000-7000-8000-000000000000',
       thumbFileId: '00000000-0000-7000-8000-000000000001',
     }),
+    allow: ['admin', 'cleanerA'],
+    allowedGets: 409,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/cleans/:id/damage-check',
+    path: (w) => `/v1/cleans/${w.cleans.a}/damage-check`,
+    body: () => ({ found: false }),
+    allow: ['admin', 'cleanerA'],
+    allowedGets: 409,
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/cleans/:id/stock-count',
+    path: (w) => `/v1/cleans/${w.cleans.a}/stock-count`,
+    body: (w) => ({ readings: w.propertyA.supplyIds.map((supplyItemId) => ({ supplyItemId, levelPct: 50 })) }),
     allow: ['admin', 'cleanerA'],
     allowedGets: 409,
     mutates: true,

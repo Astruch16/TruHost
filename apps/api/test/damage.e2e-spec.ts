@@ -300,7 +300,7 @@ describe('damage reports', () => {
       await expect(
         t.prisma
           .$executeRaw`UPDATE "DamageReport" SET "reportedById" = ${w.users.admin.id}::uuid WHERE id = ${w.damage.draftA}::uuid`,
-      ).rejects.toThrow(/property and reporter are fixed/);
+      ).rejects.toThrow(/property, reporter and clean are fixed/);
       // A draft's details can change.
       await t.prisma.$executeRaw`UPDATE "DamageReport" SET title = 'Chipped mugs' WHERE id = ${w.damage.draftA}::uuid`;
     });

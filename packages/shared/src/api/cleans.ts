@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { BookingKind, CleanKind, CleanStatus, PhotoPhase } from '../enums.js';
+import { BookingKind, CleanKind, CleanStatus, DamageStatus, PhotoPhase } from '../enums.js';
 import { nonNegativeCents } from '../money.js';
 import { id, isoDate, isoDateTime, timeOfDay } from '../primitives.js';
+import { recordSupplyLevels } from './supplies.js';
 
 export const CLEAN_STATUS_LABELS: Record<CleanStatus, string> = {
   SCHEDULED: 'Scheduled',
@@ -80,12 +81,63 @@ export const cleanRoom = z.object({
 });
 export type CleanRoom = z.infer<typeof cleanRoom>;
 
+/**
+ * A clean's checklist, in the order it's worked: a before photo of every room, the damage question (yes needs a damage
+ * report sent from the clean), a count of every supply, an after photo of every room, then finishing. Each step opens
+ * once the ones before it are done (the API and the database enforce the order).
+ */
+export const CleanStep = z.enum(['BEFORE_PHOTOS', 'DAMAGE', 'STOCK_COUNT', 'AFTER_PHOTOS', 'FINISH']);
+export type CleanStep = z.infer<typeof CleanStep>;
+
+export const CLEAN_STEP_LABELS: Record<CleanStep, string> = {
+  BEFORE_PHOTOS: 'Before photos',
+  DAMAGE: 'Any damage?',
+  STOCK_COUNT: 'Stock count',
+  AFTER_PHOTOS: 'After photos',
+  FINISH: 'Clean finished',
+};
+
+export const cleanChecklist = z.object({
+  beforePhotos: z.object({ done: z.boolean() }),
+  damage: z.object({
+    /** The cleaner's answer: null until answered. */
+    found: z.boolean().nullable(),
+    /** Reports made from this clean (drafts only to their reporter and admins). */
+    reports: z.array(z.object({ id, title: z.string(), status: DamageStatus, photoCount: z.number().int() })),
+    /** Answered no, or yes with a report sent. */
+    done: z.boolean(),
+  }),
+  stockCount: z.object({
+    /** The property's active supplies, and how many have a level from this clean. */
+    items: z.number().int(),
+    counted: z.number().int(),
+    done: z.boolean(),
+    /** What this clean's count put at or below its restock point, emptiest first. */
+    restock: z.array(z.object({ id, name: z.string(), levelPct: z.number().int(), state: z.enum(['LOW', 'OUT']) })),
+  }),
+  afterPhotos: z.object({ done: z.boolean() }),
+  /** The first step not yet done (FINISH once everything else is); null unless the clean is in progress. */
+  current: CleanStep.nullable(),
+});
+export type CleanChecklist = z.infer<typeof cleanChecklist>;
+
 /** One clean with its room checklist, and what the caller may do now. */
 export const clean = cleanSummary.extend({
   rooms: z.array(cleanRoom),
+  checklist: cleanChecklist,
   /** Today in the property's time zone (a cleaner starts on the scheduled day). */
   today: isoDate,
-  can: z.object({ start: z.boolean(), addPhotos: z.boolean(), complete: z.boolean() }),
+  can: z.object({
+    start: z.boolean(),
+    /** Before photos: while in progress. */
+    addPhotos: z.boolean(),
+    /** Once the steps before them are done. */
+    addAfterPhotos: z.boolean(),
+    checkDamage: z.boolean(),
+    countStock: z.boolean(),
+    /** Every step is done: "Clean finished". */
+    complete: z.boolean(),
+  }),
 });
 export type Clean = z.infer<typeof clean>;
 
@@ -94,6 +146,14 @@ export const cleanPhotoList = z.object({ items: z.array(cleanPhoto) });
 /** Attach an uploaded CLEAN_PHOTO (both renditions) to a room, before or after. */
 export const addCleanPhoto = z.object({ roomId: id, phase: PhotoPhase, fileId: id, thumbFileId: id });
 export type AddCleanPhoto = z.infer<typeof addCleanPhoto>;
+
+/** `POST /cleans/:id/damage-check`: the checklist's damage question. */
+export const cleanDamageCheck = z.object({ found: z.boolean() });
+export type CleanDamageCheck = z.infer<typeof cleanDamageCheck>;
+
+/** `POST /cleans/:id/stock-count`: a level for every active supply at the property (it can be counted again). */
+export const cleanStockCount = recordSupplyLevels;
+export type CleanStockCount = z.input<typeof cleanStockCount>;
 
 /** The rooms (and phases) still without a photo, in 422 CLEAN_MISSING_PHOTOS. */
 export const missingCleanPhotos = z.array(

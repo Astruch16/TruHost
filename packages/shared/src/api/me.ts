@@ -87,6 +87,15 @@ export const NOTIFICATION_CATALOGUE: readonly {
     live: true,
   },
   {
+    category: 'CLEAN_COMPLETED',
+    label: 'Cleans finished',
+    description: 'When a cleaner finishes a clean at one of your properties and it’s ready for guests.',
+    roles: ['ADMIN', 'OWNER'],
+    channels: ['email', 'inApp'],
+    defaults: { email: true, inApp: true },
+    live: true,
+  },
+  {
     category: 'INVITE_ACCEPTED',
     label: 'Invites accepted',
     description: 'When someone you invited signs in for the first time.',
