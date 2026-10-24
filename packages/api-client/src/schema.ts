@@ -1396,6 +1396,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/time-off': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['TimeOff_list'];
+    put?: never;
+    post: operations['TimeOff_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/time-off/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TimeOff_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/time-off/{id}/decision': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['TimeOff_decide'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/dashboard': {
     parameters: {
       query?: never;
@@ -1706,7 +1754,8 @@ export interface operations {
                 | 'STATEMENT_RELEASED'
                 | 'CLEAN_ASSIGNED'
                 | 'PAYMENT_RECORDED'
-                | 'CLEAN_COMPLETED';
+                | 'CLEAN_COMPLETED'
+                | 'TIME_OFF_REQUESTS';
               email: boolean;
               inApp: boolean;
             }[];
@@ -1735,7 +1784,8 @@ export interface operations {
               | 'STATEMENT_RELEASED'
               | 'CLEAN_ASSIGNED'
               | 'PAYMENT_RECORDED'
-              | 'CLEAN_COMPLETED';
+              | 'CLEAN_COMPLETED'
+              | 'TIME_OFF_REQUESTS';
             email: boolean;
             inApp: boolean;
           }[];
@@ -1759,7 +1809,8 @@ export interface operations {
                 | 'STATEMENT_RELEASED'
                 | 'CLEAN_ASSIGNED'
                 | 'PAYMENT_RECORDED'
-                | 'CLEAN_COMPLETED';
+                | 'CLEAN_COMPLETED'
+                | 'TIME_OFF_REQUESTS';
               email: boolean;
               inApp: boolean;
             }[];
@@ -1811,14 +1862,14 @@ export interface operations {
               /** Format: uuid */
               id: string;
               /** @enum {string} */
-              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED' | 'CLEAN_COMPLETED';
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED' | 'CLEAN_COMPLETED' | 'TIME_OFF_REQUESTED';
               title: string;
               body: string | null;
               property: {
                 /** Format: uuid */
                 id: string;
                 name: string;
-              };
+              } | null;
               entityType: string;
               /** Format: uuid */
               entityId: string;
@@ -1863,14 +1914,14 @@ export interface operations {
               /** Format: uuid */
               id: string;
               /** @enum {string} */
-              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED' | 'CLEAN_COMPLETED';
+              kind: 'SUPPLY_LOW' | 'SUPPLY_OUT' | 'DAMAGE_REPORTED' | 'CLEAN_COMPLETED' | 'TIME_OFF_REQUESTED';
               title: string;
               body: string | null;
               property: {
                 /** Format: uuid */
                 id: string;
                 name: string;
-              };
+              } | null;
               entityType: string;
               /** Format: uuid */
               entityId: string;
@@ -9282,6 +9333,299 @@ export interface operations {
               /** @enum {string} */
               urgency: 'OUT' | 'LOW' | 'SOON';
             }[];
+          };
+        };
+      };
+    };
+  };
+  TimeOff_list: {
+    parameters: {
+      query?: {
+        status?: 'PENDING' | 'APPROVED' | 'DECLINED' | 'CANCELLED';
+        from?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            items: {
+              /** Format: uuid */
+              id: string;
+              cleaner: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              };
+              /** Format: date */
+              startDate: string;
+              /** Format: date */
+              endDate: string;
+              days: number;
+              /** @enum {string} */
+              reason: 'HOLIDAY' | 'TIME_OFF' | 'OTHER_WORK' | 'OTHER';
+              note: string | null;
+              /** @enum {string} */
+              status: 'PENDING' | 'APPROVED' | 'DECLINED' | 'CANCELLED';
+              decidedBy: {
+                /** Format: uuid */
+                id: string;
+                firstName: string;
+                lastName: string;
+              } | null;
+              /** Format: date-time */
+              decidedAt: string | null;
+              decisionNote: string | null;
+              /** Format: date-time */
+              cancelledAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              conflicts: {
+                /** Format: uuid */
+                cleanId: string;
+                /** Format: date */
+                date: string;
+                property: {
+                  /** Format: uuid */
+                  id: string;
+                  name: string;
+                };
+              }[];
+              can: {
+                cancel: boolean;
+                decide: boolean;
+              };
+            }[];
+          };
+        };
+      };
+    };
+  };
+  TimeOff_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** Format: date */
+          startDate: string;
+          /** Format: date */
+          endDate: string;
+          /** @enum {string} */
+          reason: 'HOLIDAY' | 'TIME_OFF' | 'OTHER_WORK' | 'OTHER';
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            cleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date */
+            startDate: string;
+            /** Format: date */
+            endDate: string;
+            days: number;
+            /** @enum {string} */
+            reason: 'HOLIDAY' | 'TIME_OFF' | 'OTHER_WORK' | 'OTHER';
+            note: string | null;
+            /** @enum {string} */
+            status: 'PENDING' | 'APPROVED' | 'DECLINED' | 'CANCELLED';
+            decidedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            /** Format: date-time */
+            decidedAt: string | null;
+            decisionNote: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            conflicts: {
+              /** Format: uuid */
+              cleanId: string;
+              /** Format: date */
+              date: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+            }[];
+            can: {
+              cancel: boolean;
+              decide: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  TimeOff_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            cleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date */
+            startDate: string;
+            /** Format: date */
+            endDate: string;
+            days: number;
+            /** @enum {string} */
+            reason: 'HOLIDAY' | 'TIME_OFF' | 'OTHER_WORK' | 'OTHER';
+            note: string | null;
+            /** @enum {string} */
+            status: 'PENDING' | 'APPROVED' | 'DECLINED' | 'CANCELLED';
+            decidedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            /** Format: date-time */
+            decidedAt: string | null;
+            decisionNote: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            conflicts: {
+              /** Format: uuid */
+              cleanId: string;
+              /** Format: date */
+              date: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+            }[];
+            can: {
+              cancel: boolean;
+              decide: boolean;
+            };
+          };
+        };
+      };
+    };
+  };
+  TimeOff_decide: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          status: 'APPROVED' | 'DECLINED';
+          note: string | null;
+        };
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            id: string;
+            cleaner: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            };
+            /** Format: date */
+            startDate: string;
+            /** Format: date */
+            endDate: string;
+            days: number;
+            /** @enum {string} */
+            reason: 'HOLIDAY' | 'TIME_OFF' | 'OTHER_WORK' | 'OTHER';
+            note: string | null;
+            /** @enum {string} */
+            status: 'PENDING' | 'APPROVED' | 'DECLINED' | 'CANCELLED';
+            decidedBy: {
+              /** Format: uuid */
+              id: string;
+              firstName: string;
+              lastName: string;
+            } | null;
+            /** Format: date-time */
+            decidedAt: string | null;
+            decisionNote: string | null;
+            /** Format: date-time */
+            cancelledAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            conflicts: {
+              /** Format: uuid */
+              cleanId: string;
+              /** Format: date */
+              date: string;
+              property: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+              };
+            }[];
+            can: {
+              cancel: boolean;
+              decide: boolean;
+            };
           };
         };
       };

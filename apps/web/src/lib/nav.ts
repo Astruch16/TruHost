@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarCheck,
   CalendarDays,
+  CalendarOff,
   Camera,
   FileText,
   CalendarRange,
@@ -50,7 +51,10 @@ export function navItems(me: { staffRole: string | null; memberships: { role: st
     );
     // Someone who also cleans a property keeps their cleaning schedule.
     if (me.memberships.some((m) => m.role === 'CLEANER')) {
-      items.push({ to: '/cleaner', label: 'Cleaning', icon: CalendarCheck });
+      items.push(
+        { to: '/cleaner', label: 'Cleaning', icon: CalendarCheck, exact: true },
+        { to: '/cleaner/time-off', label: 'Time off', icon: CalendarOff },
+      );
     }
     items.push({ to: '/account', label: 'Settings', icon: Settings });
     return items;
@@ -58,7 +62,10 @@ export function navItems(me: { staffRole: string | null; memberships: { role: st
   if (me.staffRole === 'ADMIN') items.push({ to: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true });
   // Cleaners: their schedule first (it's their home page).
   if (me.memberships.some((m) => m.role === 'CLEANER')) {
-    items.push({ to: '/cleaner', label: 'Schedule', icon: CalendarCheck, exact: true });
+    items.push(
+      { to: '/cleaner', label: 'Schedule', icon: CalendarCheck, exact: true },
+      { to: '/cleaner/time-off', label: 'Time off', icon: CalendarOff },
+    );
   }
   if (me.memberships.length > 0) items.push({ to: '/properties', label: 'My properties', icon: Home });
   if (me.staffRole === 'ADMIN') {
@@ -71,6 +78,7 @@ export function navItems(me: { staffRole: string | null; memberships: { role: st
       { to: '/admin/supplies', label: 'Supplies', icon: Package },
       { to: '/admin/damage', label: 'Damage', icon: TriangleAlert },
       { to: '/admin/team', label: 'Team', icon: Users },
+      { to: '/admin/time-off', label: 'Time off', icon: CalendarOff },
       { to: '/admin/plans', label: 'Plans', icon: Shield },
     );
   }

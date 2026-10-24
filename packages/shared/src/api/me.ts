@@ -96,6 +96,15 @@ export const NOTIFICATION_CATALOGUE: readonly {
     live: true,
   },
   {
+    category: 'TIME_OFF_REQUESTS',
+    label: 'Time off requests',
+    description: 'When a cleaner asks for days off.',
+    roles: ['ADMIN'],
+    channels: ['email', 'inApp'],
+    defaults: { email: true, inApp: true },
+    live: true,
+  },
+  {
     category: 'INVITE_ACCEPTED',
     label: 'Invites accepted',
     description: 'When someone you invited signs in for the first time.',

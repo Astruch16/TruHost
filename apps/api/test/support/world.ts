@@ -25,6 +25,8 @@ export interface World {
    * clean at A on the test clock's day (2026-11-20, cleanerA). All SCHEDULED.
    */
   cleans: { a: string; todayA: string; b: string };
+  /** A pending time off request of cleanerA's: 2026-12-14 → 2026-12-18 (a holiday). */
+  timeOff: { pendingA: string };
   /** Owner-borne expense with one receipt on each property (2026-11-05), plus a TruHost-borne one on A. */
   expenses: { a: string; b: string; truhostA: string };
   receipts: { a: string; b: string; truhostA: string };
@@ -341,7 +343,17 @@ export async function seedWorld(prisma: PrismaService): Promise<World> {
     },
   });
 
+  const timeOffA = await prisma.timeOffRequest.create({
+    data: {
+      cleanerId: users.cleanerA.id,
+      startDate: new Date('2026-12-14T00:00:00Z'),
+      endDate: new Date('2026-12-18T00:00:00Z'),
+      reason: 'HOLIDAY',
+    },
+  });
+
   return {
+    timeOff: { pendingA: timeOffA.id },
     statements: {
       draftA: octoberA.id,
       adjustmentA: adjustmentA.id,

@@ -13,7 +13,7 @@ import { queries } from '../../lib/queries';
 import { menuSurfaceStyles } from '../../lib/styles';
 import { since } from '../../lib/supplies';
 import { DamageAlertIcon } from '../illustrations/damage';
-import { CleanDoneIcon } from '../illustrations/list-icons';
+import { CleanDoneIcon, TimeOffIcon } from '../illustrations/list-icons';
 import { SupplyAlertIcon } from '../illustrations/supplies';
 import { ErrorAlert } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
@@ -39,11 +39,17 @@ export function LiveNotificationsBell({ me }: { me: Pick<Me, 'staffRole' | 'memb
       error={list.error ?? markRead.error}
       onOpenItem={(n) => {
         if (!n.readAt) markRead.mutate({ ids: [n.id] });
+        // Time off is about a cleaner, not a property: its page lists every request.
+        if (n.kind === 'TIME_OFF_REQUESTED') {
+          void navigate({ to: '/admin/time-off' });
+          return;
+        }
         // Owners open their portal: damage on its Damage page, supplies and finished cleans on Home.
         if (usesOwnerPortal(me)) {
           void navigate({ to: n.kind === 'DAMAGE_REPORTED' ? '/owner/damage' : '/owner' });
           return;
         }
+        if (!n.property) return;
         const to = propertyPath(me, n.property.id);
         if (to) void navigate({ to, params: { propertyId: n.property.id } });
       }}
@@ -142,6 +148,8 @@ export function NotificationsBell({
                       <DamageAlertIcon size={36} className="shrink-0" />
                     ) : n.kind === 'CLEAN_COMPLETED' ? (
                       <CleanDoneIcon size={36} className="shrink-0" />
+                    ) : n.kind === 'TIME_OFF_REQUESTED' ? (
+                      <TimeOffIcon size={36} className="shrink-0" />
                     ) : (
                       <SupplyAlertIcon out={n.kind === 'SUPPLY_OUT'} size={36} className="shrink-0" />
                     )}

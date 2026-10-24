@@ -1384,6 +1384,15 @@ only), cleaner pay, TruHost's cleaning-fee revenue, other owners, notes or audit
 | GET    | `/cleaner-payments`          | A               | Includes voided payments, flagged.                                                                                                                                                                                                                                     |
 | POST   | `/cleaner-payments/:id/void` | A               | `{ reason }` (required). Returns its cleans to unpaid. Never deletes. Audited.                                                                                                                                                                                         |
 
+### Cleaner time off
+
+| Method | Path                     | Roles       | Notes                                                                                                                                                                                                                       |
+| ------ | ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/time-off`              | A, C (self) | `?status&from` (ending on or after). Admins: every cleaner's; a cleaner: their own. Each request lists the cleaner's cleans in its dates (`conflicts`) and `can`.                                                           |
+| POST   | `/time-off`              | C           | `{ startDate, endDate, reason, note? }`, inclusive, BC time. 422 `TIME_OFF_IN_PAST` / `TIME_OFF_TOO_LONG` (90 days) / `TIME_OFF_OVERLAPS` (their own pending or approved). Notifies the admins only (`TIME_OFF_REQUESTED`). |
+| POST   | `/time-off/:id/cancel`   | C (self)    | While PENDING, or APPROVED until its last day (422 `TIME_OFF_OVER`).                                                                                                                                                        |
+| POST   | `/time-off/:id/decision` | A           | `{ status: APPROVED \| DECLINED, note? }`, PENDING only (409 otherwise). Audited.                                                                                                                                           |
+
 ### Supplies (built early)
 
 | Method | Path                              | Roles | Notes                                                                                                                  |
@@ -1510,6 +1519,9 @@ cleans with `assignedCleanerId = caller` · — = denied (404).
 | Me                                                                          | read / update                   | self  | self                                | self                          |
 | Profile photo, preferences, notification settings                           | read / update                   | self  | self                                | self                          |
 | Cleaner earnings                                                            | read                            | —     | —                                   | self                          |
+| Cleaner time off                                                            | list / read                     | all   | —                                   | self                          |
+| Cleaner time off                                                            | request / cancel                | —     | —                                   | self                          |
+| Cleaner time off                                                            | approve / decline               | all   | —                                   | —                             |
 | Notification                                                                | list / mark read                | self  | self                                | self                          |
 | Config                                                                      | read                            | ✓     | ✓                                   | ✓                             |
 | User, Invite                                                                | any                             | all   | —                                   | —                             |
@@ -1761,6 +1773,13 @@ cleaner sees the celebrating guide (`SuccessNotice`).
      `clean_prep_done()` is checked by `clean_photo_guard` (AFTER photos) and `clean_guard` (completing, and
      `damageFound` frozen once complete); `supply_status_clean_guard` keeps a count on a clean in progress at the
      item's property.
+   - **Cleaner time off (2026-10-24).** `TimeOffRequest`: a cleaner asks for days to be kept free (holiday, time off,
+     other work, something else; inclusive dates from today, at most 90). The admins are told (in-app and email, a
+     "Time off requests" setting for admins; `Notification.propertyId` is null for it) and approve or decline it
+     with an optional note; owners never see time off. Each request lists the cleaner's cleans in its dates, to
+     reassign. The cleaner sees its status, can cancel it, and their approved days are shaded on their calendar.
+     The database keeps a cleaner's pending and approved requests from overlapping (exclusion constraint), and
+     `time_off_guard` stops deletes, keeps what was asked for fixed and moves the status forward only.
 2. Next: the admin schedule board (`PATCH`, `POST /properties/:id/cleans`, cancel).
 3. Then: cleaner pay (payments, void, the cleaner's earnings, the admin pay run, `cleanerPaymentId`).
 4. Then: the owner side (Care photos, the owner-stay cleaning charge from the completed clean).

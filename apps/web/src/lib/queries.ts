@@ -1,6 +1,6 @@
 import { queryOptions, type QueryKey } from '@tanstack/react-query';
 import { unwrap, type ApiClient } from '@truhost/api-client';
-import type { CleanQuery } from '@truhost/shared';
+import type { CleanQuery, TimeOffQuery } from '@truhost/shared';
 
 /**
  * For reads by month: while another month loads, keep showing the one on screen (pages dim it) instead of falling
@@ -37,6 +37,11 @@ export const queries = {
     queryOptions({
       queryKey: ['cleans', 'list', query],
       queryFn: () => unwrap(api.GET('/v1/cleans', { params: { query } })),
+    }),
+  timeOff: (api: ApiClient, query: TimeOffQuery = {}) =>
+    queryOptions({
+      queryKey: ['time-off', query],
+      queryFn: () => unwrap(api.GET('/v1/time-off', { params: { query } })),
     }),
   clean: (api: ApiClient, id: string) =>
     queryOptions({

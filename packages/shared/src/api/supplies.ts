@@ -120,7 +120,8 @@ export const notification = z.object({
   kind: NotificationKind,
   title: z.string(),
   body: z.string().nullable(),
-  property: z.object({ id, name: z.string() }),
+  /** Null for events about no one property (a cleaner's time off). */
+  property: z.object({ id, name: z.string() }).nullable(),
   entityType: z.string(),
   entityId: id,
   readAt: isoDateTime.nullable(),

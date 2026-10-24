@@ -79,6 +79,8 @@ model User {
   statementsReleased     OwnerStatement[]      @relation("StatementReleasedBy")
   adjustmentsCreated     StatementAdjustment[] @relation("AdjustmentCreatedBy")
   adjustmentsVoided      StatementAdjustment[] @relation("AdjustmentVoidedBy")
+  timeOffRequested       TimeOffRequest[]      @relation("TimeOffCleaner")
+  timeOffDecided         TimeOffRequest[]      @relation("TimeOffDecidedBy")
 }
 
 /// SYSTEM follows the device's reduced-motion setting; REDUCED turns animations off in the app regardless.
@@ -97,6 +99,7 @@ enum NotificationCategory {
   CLEAN_ASSIGNED
   PAYMENT_RECORDED
   CLEAN_COMPLETED
+  TIME_OFF_REQUESTS
 }
 
 /// A user's choice for one category. A missing row means the category's default.
@@ -799,6 +802,7 @@ enum NotificationKind {
   SUPPLY_OUT
   DAMAGE_REPORTED
   CLEAN_COMPLETED
+  TIME_OFF_REQUESTED
 }
 
 /// In-app notification for one user, created in the same transaction as the event that causes it. Email, when the
@@ -808,8 +812,9 @@ model Notification {
   userId      String           @db.Uuid
   user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
   kind        NotificationKind
-  propertyId  String           @db.Uuid
-  property    Property         @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  /// The property it's about; null for events about no one property (a cleaner's time off, admins only).
+  propertyId  String?          @db.Uuid
+  property    Property?        @relation(fields: [propertyId], references: [id], onDelete: Restrict)
   /// What it is about, for linking from the UI (e.g. SupplyItem + id).
   entityType  String
   entityId    String           @db.Uuid
@@ -1044,4 +1049,49 @@ model IdempotencyKey {
   @@id([userId, key])
   /// Purged after 24h.
   @@index([createdAt])
+}
+
+// ───────────────────────── Cleaner time off ─────────────────────────
+
+enum TimeOffReason {
+  HOLIDAY
+  TIME_OFF
+  OTHER_WORK
+  OTHER
+}
+
+/// PENDING → APPROVED | DECLINED | CANCELLED; APPROVED → CANCELLED (time_off_guard).
+enum TimeOffStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  CANCELLED
+}
+
+/// Days a cleaner asks to be kept free (holidays, time off, other work). Admins approve or decline, and are told when
+/// one is asked for; owners never see them. No overlap among a cleaner's pending and approved requests (exclusion
+/// constraint). Never deleted (time_off_guard): a request is cancelled or declined instead.
+model TimeOffRequest {
+  id           String        @id @default(uuid(7)) @db.Uuid
+  cleanerId    String        @db.Uuid
+  cleaner      User          @relation("TimeOffCleaner", fields: [cleanerId], references: [id], onDelete: Restrict)
+  /// Inclusive, in BC time. At most 90 days (CHECK).
+  startDate    DateTime      @db.Date
+  endDate      DateTime      @db.Date
+  reason       TimeOffReason
+  /// Optional, at most 500 characters (CHECK).
+  note         String?
+  status       TimeOffStatus @default(PENDING)
+  /// Set exactly when APPROVED or DECLINED (CHECK).
+  decidedById  String?       @db.Uuid
+  decidedBy    User?         @relation("TimeOffDecidedBy", fields: [decidedById], references: [id], onDelete: Restrict)
+  decidedAt    DateTime?     @db.Timestamptz
+  decisionNote String?
+  /// Set exactly when CANCELLED (CHECK).
+  cancelledAt  DateTime?     @db.Timestamptz
+  createdAt    DateTime      @default(now()) @db.Timestamptz
+  updatedAt    DateTime      @updatedAt @db.Timestamptz
+
+  @@index([cleanerId, startDate])
+  @@index([status, startDate])
 }

@@ -741,6 +741,30 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
 
+  // ── cleaner time off ──
+  // A cleaner's own; admins decide. Owners (and the admin, who cleans nothing) can't ask for any.
+  { route: 'GET /v1/time-off', path: () => '/v1/time-off', allow: ['admin', 'cleanerA', 'cleanerB'] },
+  {
+    route: 'POST /v1/time-off',
+    path: () => '/v1/time-off',
+    body: () => ({ startDate: '2026-12-01', endDate: '2026-12-03', reason: 'TIME_OFF' }),
+    allow: ['cleanerA', 'cleanerB'],
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/time-off/:id/cancel',
+    path: (w) => `/v1/time-off/${w.timeOff.pendingA}/cancel`,
+    allow: ['cleanerA'],
+    mutates: true,
+  },
+  {
+    route: 'POST /v1/time-off/:id/decision',
+    path: (w) => `/v1/time-off/${w.timeOff.pendingA}/decision`,
+    body: () => ({ status: 'APPROVED', note: null }),
+    allow: ['admin'],
+    mutates: true,
+  },
+
   // ── files ──
   {
     route: 'POST /v1/uploads',

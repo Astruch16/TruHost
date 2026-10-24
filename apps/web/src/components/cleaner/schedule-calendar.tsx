@@ -22,6 +22,7 @@ export function ScheduleCalendar({
   selected,
   onSelect,
   loading = false,
+  daysOff,
   className,
 }: {
   month: string;
@@ -32,6 +33,8 @@ export function ScheduleCalendar({
   selected: string | null;
   onSelect: (day: string | null) => void;
   loading?: boolean;
+  /** Approved time off: those days are shaded. */
+  daysOff?: ReadonlySet<string>;
   className?: string;
 }) {
   const weekStartsOn = useWeekStart();
@@ -99,7 +102,8 @@ export function ScheduleCalendar({
               const here = byDay.get(day) ?? [];
               const isToday = day === today;
               const isSelected = day === selected;
-              const label = `${dayLabel(day)}${here.length ? `: ${here.length} clean${here.length === 1 ? '' : 's'} (${here.map((c) => c.property.name).join(', ')})` : ''}`;
+              const off = daysOff?.has(day) ?? false;
+              const label = `${dayLabel(day)}${off ? ', time off' : ''}${here.length ? `: ${here.length} clean${here.length === 1 ? '' : 's'} (${here.map((c) => c.property.name).join(', ')})` : ''}`;
               const body = (
                 <>
                   <span
@@ -125,7 +129,7 @@ export function ScheduleCalendar({
                   key={day}
                   role="gridcell"
                   aria-selected={isSelected || undefined}
-                  className="flex justify-center py-0.5"
+                  className={cx('flex justify-center py-0.5', off && 'bg-lavender-tint/70')}
                 >
                   {here.length > 0 ? (
                     <button
@@ -164,6 +168,12 @@ export function ScheduleCalendar({
               </li>
             ))}
           </ul>
+        )}
+        {daysOff && daysOff.size > 0 && (
+          <p className="mt-2 flex items-center gap-2 text-sm text-ink">
+            <span aria-hidden className="h-2.5 w-4 shrink-0 rounded-[3px] bg-lavender-tint" />
+            <span className="font-medium">Your time off</span>
+          </p>
         )}
         <p className="mt-3 text-xs text-muted">Pick a day to see its week.</p>
       </div>

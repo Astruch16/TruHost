@@ -143,6 +143,41 @@ export function cleanCompletedEmail(
   return { to: to.email, subject: headline, text, html };
 }
 
+/** A cleaner asked for time off (admins only). `url` opens the time off page. */
+export function timeOffRequestedEmail(
+  to: { email: string; firstName: string },
+  r: { cleaner: string; dates: string; days: string; reason: string; note: string | null; url: string },
+): EmailMessage {
+  const name = to.firstName.trim() || 'there';
+  const headline = `${r.cleaner} asked for time off`;
+  const detail = `${r.dates} (${r.days}) · ${r.reason}.`;
+  const text = [
+    `Hi ${name},`,
+    '',
+    headline + ':',
+    detail,
+    ...(r.note ? ['', `“${r.note}”`] : []),
+    '',
+    'Approve or decline it, and see any cleans in those dates:',
+    r.url,
+    '',
+    '— TruHost',
+  ].join('\n');
+  const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
+<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="padding:28px">
+<p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
+<p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
+<p style="margin:0 0 ${r.note ? '12' : '20'}px;font-size:16px;line-height:1.5">${escape(detail)}</p>
+${r.note ? `<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#5b6068">“${escape(r.note)}”</p>` : ''}
+<p style="margin:0 0 8px"><a href="${escape(r.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Review the request</a></p>
+<p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because time off alerts are on in your TruHost settings.</p>
+</td></tr></table></td></tr></table></body></html>`;
+  return { to: to.email, subject: `${headline}: ${r.dates}`, text, html };
+}
+
 /** An owner's monthly statement was released (the money is on its way). `url` opens the statement in TruHost. */
 export function statementReleasedEmail(
   to: { email: string; firstName: string },
