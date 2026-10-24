@@ -11,6 +11,7 @@ import { ProblemFilter } from './common/problem.filter.js';
 import { ZodResponseInterceptor } from './common/zod.js';
 import { ConfigModule } from './config/config.module.js';
 import { CleansModule } from './cleans/cleans.module.js';
+import { TimeOffModule } from './time-off/time-off.module.js';
 import { DamageModule } from './damage/damage.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
 import { ENV, type Env } from './config/env.js';
@@ -61,6 +62,7 @@ import { UsersModule } from './users/users.module.js';
     SuppliesModule,
     DamageModule,
     CleansModule,
+    TimeOffModule,
     DashboardModule,
     AuditLogsModule,
   ],

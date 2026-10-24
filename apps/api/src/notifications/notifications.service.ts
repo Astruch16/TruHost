@@ -3,7 +3,7 @@ import { NOTIFICATION_CATALOGUE, type MarkNotificationsRead, type NotificationKi
 import type { Actor } from '../auth/actor.js';
 import { ENV, type Env } from '../config/env.js';
 import { EMAIL_SENDER, type EmailMessage, type EmailSender } from '../email/email-sender.js';
-import { cleanCompletedEmail, damageReportEmail, supplyAlertEmail } from '../email/templates.js';
+import { cleanCompletedEmail, damageReportEmail, supplyAlertEmail, timeOffRequestedEmail } from '../email/templates.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -18,11 +18,12 @@ export interface PendingEmail {
 type Category = (typeof NOTIFICATION_CATALOGUE)[number]['category'];
 const defaultsFor = (category: Category) => NOTIFICATION_CATALOGUE.find((c) => c.category === category)!.defaults;
 
-/** One event to tell people about, at a property. */
+/** One event to tell people about: at a property (its owners and the admins), or for the admins alone. */
 interface Event {
   category: Category;
   kind: NotificationKind;
-  property: { id: string; name: string };
+  /** Null: the admins alone hear about it (nothing goes to owners). */
+  property: { id: string; name: string } | null;
   /** What the notification links to (e.g. SupplyItem + id), and the row that caused it (one per person). */
   entityType: string;
   entityId: string;
@@ -163,6 +164,41 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * A cleaner asked for time off: tell the active admins (never owners). Returns the emails to send after commit.
+   */
+  timeOffRequested(
+    tx: Tx,
+    event: {
+      request: { id: string; startDate: string; endDate: string; days: number; reason: string; note: string | null };
+      cleaner: { id: string; firstName: string; lastName: string };
+      dates: string;
+    },
+  ): Promise<PendingEmail[]> {
+    const cleaner = `${event.cleaner.firstName} ${event.cleaner.lastName}`.trim();
+    const days = `${event.request.days} day${event.request.days === 1 ? '' : 's'}`;
+    return this.notify(tx, {
+      category: 'TIME_OFF_REQUESTS',
+      kind: 'TIME_OFF_REQUESTED',
+      property: null,
+      entityType: 'TimeOffRequest',
+      entityId: event.request.id,
+      sourceId: event.request.id,
+      actorId: event.cleaner.id,
+      title: `${cleaner} asked for time off`,
+      body: `${event.dates} · ${days} · ${event.request.reason}`,
+      email: (to) =>
+        timeOffRequestedEmail(to, {
+          cleaner,
+          dates: event.dates,
+          days,
+          reason: event.request.reason,
+          note: event.request.note,
+          url: `${this.env.WEB_URL}/admin/time-off`,
+        }),
+    });
+  }
+
   /** Sends emails decided in a committed transaction. A failure is logged and never undoes the event. */
   async sendAfterCommit(pending: PendingEmail[]): Promise<void> {
     for (const p of pending) {
@@ -177,7 +213,10 @@ export class NotificationsService {
     }
   }
 
-  /** The active admins and the property's active owners (each once), per their choices for the category. */
+  /**
+   * The active admins and (for an event at a property) its active owners, each once, per their choices for the
+   * category.
+   */
   private async notify(tx: Tx, event: Event): Promise<PendingEmail[]> {
     const recipients = await tx.user.findMany({
       where: {
@@ -185,7 +224,9 @@ export class NotificationsService {
         ...(event.actorId ? { id: { not: event.actorId } } : {}),
         OR: [
           { staffRole: 'ADMIN' },
-          { memberships: { some: { propertyId: event.property.id, role: 'OWNER', revokedAt: null } } },
+          ...(event.property
+            ? [{ memberships: { some: { propertyId: event.property.id, role: 'OWNER' as const, revokedAt: null } } }]
+            : []),
         ],
       },
       select: {
@@ -206,7 +247,7 @@ export class NotificationsService {
           data: {
             userId: user.id,
             kind: event.kind,
-            propertyId: event.property.id,
+            propertyId: event.property?.id ?? null,
             entityType: event.entityType,
             entityId: event.entityId,
             sourceId: event.sourceId,

@@ -27,6 +27,17 @@ export class AccessService {
   }
 
   /**
+   * For actions about the person rather than a property (a cleaner's time off): true for admins where the action
+   * allows them, or anyone holding one of its roles on any property.
+   */
+  canAnywhere(actor: Actor, action: Action): boolean {
+    const rule = POLICY[action];
+    if (rule.admin && this.isAdmin(actor)) return true;
+    const roles: readonly string[] = rule.roles;
+    return actor.memberships.some((m) => roles.includes(m.role));
+  }
+
+  /**
    * Property ids the actor may perform `action` on, or `'all'` for admins. Use it to scope list
    * queries: `where: { propertyId: { in: ids } }`.
    */

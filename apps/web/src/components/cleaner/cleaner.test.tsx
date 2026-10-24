@@ -246,6 +246,19 @@ describe('cleaner schedule', () => {
     expect(within(check).getByRole('link', { name: /Cedar Cabin/ })).toHaveAttribute('href', '/cleaner/properties/p1');
   });
 
+  it('shades approved time off on the calendar', async () => {
+    const day = today.slice(8) === '28' || today.slice(8) > '28' ? today : addDays(today, 1);
+    const cleans = cleansApi([summary({ id: 'n1', scheduledDate: addDays(today, 3) })]);
+    const GET = vi.fn((path: string, init?: object) =>
+      path === '/v1/time-off'
+        ? ok({ items: [{ startDate: day, endDate: day, status: 'APPROVED' }] })
+        : cleans(path, init as never),
+    );
+    renderWith({ GET } as unknown as ApiClient, <CleanerSchedulePage />);
+    expect(await screen.findByText('Your time off')).toBeInTheDocument();
+    expect(screen.getByLabelText(/, time off$/)).toBeInTheDocument();
+  });
+
   it('says when there’s nothing today, and when the next clean is', async () => {
     const items = [summary({ id: 'c2', scheduledDate: addDays(today, 2) })];
     renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);

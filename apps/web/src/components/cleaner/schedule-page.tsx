@@ -22,6 +22,7 @@ import { shortDate } from '../../lib/months';
 import { greeting } from '../../lib/owner';
 import { useWeekStart } from '../../lib/preferences';
 import { queries } from '../../lib/queries';
+import { daysOff } from '../../lib/time-off';
 import { LoadError } from '../ui/alert';
 import { Pill } from '../ui/pill';
 import { Skeleton } from '../ui/skeleton';
@@ -54,6 +55,7 @@ export function CleanerSchedulePage() {
     ...queries.cleans(api, { assignee: 'me', from: visible[0]!, to: visible.at(-1)! }),
     placeholderData: (previous) => previous,
   });
+  const approvedOff = useQuery(queries.timeOff(api, { status: 'APPROVED' }));
   const board = useQuery({
     ...queries.cleans(api, { assignee: 'me', from: week.days[0]!, to: week.days[6]! }),
     placeholderData: (previous) => previous,
@@ -170,6 +172,7 @@ export function CleanerSchedulePage() {
             selected={day}
             onSelect={pickDay}
             loading={calendar.isFetching}
+            daysOff={daysOff(approvedOff.data?.items ?? [])}
             className="h-full"
           />
         </aside>
