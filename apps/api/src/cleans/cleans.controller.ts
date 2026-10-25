@@ -51,6 +51,17 @@ export class CleansController {
     return this.cleans.start(actor, id);
   }
 
+  /**
+   * A cleaner books an open clean for themselves (409 CLEAN_TAKEN if another cleaner got it first; 422 CLEAN_PAST /
+   * CLEAN_ON_TIME_OFF). Tells the admins.
+   */
+  @Post(':id/book')
+  @HttpCode(200)
+  @ZodResponse(clean)
+  book(@CurrentActor() actor: Actor, @Param('id', uuidParam) id: string) {
+    return this.cleans.book(actor, id);
+  }
+
   /** A room's BEFORE or AFTER photo (a CLEAN_PHOTO upload, both renditions), while in progress. */
   @Post(':id/photos')
   @ZodBody(addCleanPhoto)

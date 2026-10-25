@@ -3,7 +3,13 @@ import { NOTIFICATION_CATALOGUE, type MarkNotificationsRead, type NotificationKi
 import type { Actor } from '../auth/actor.js';
 import { ENV, type Env } from '../config/env.js';
 import { EMAIL_SENDER, type EmailMessage, type EmailSender } from '../email/email-sender.js';
-import { cleanCompletedEmail, damageReportEmail, supplyAlertEmail, timeOffRequestedEmail } from '../email/templates.js';
+import {
+  cleanBookedEmail,
+  cleanCompletedEmail,
+  damageReportEmail,
+  supplyAlertEmail,
+  timeOffRequestedEmail,
+} from '../email/templates.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -24,6 +30,8 @@ interface Event {
   kind: NotificationKind;
   /** Null: the admins alone hear about it (nothing goes to owners). */
   property: { id: string; name: string } | null;
+  /** False: about a property, but for the admins alone (its owners aren't told). */
+  owners?: boolean;
   /** What the notification links to (e.g. SupplyItem + id), and the row that caused it (one per person). */
   entityType: string;
   entityId: string;
@@ -199,6 +207,40 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * A cleaner booked an open clean: tell the active admins (not the property's owners). Returns the emails to send
+   * after commit.
+   */
+  cleanBooked(
+    tx: Tx,
+    event: {
+      property: { id: string; name: string };
+      clean: { id: string; day: string };
+      cleaner: { id: string; firstName: string; lastName: string };
+    },
+  ): Promise<PendingEmail[]> {
+    const cleaner = `${event.cleaner.firstName} ${event.cleaner.lastName}`.trim();
+    return this.notify(tx, {
+      category: 'CLEAN_BOOKED',
+      kind: 'CLEAN_BOOKED',
+      property: event.property,
+      owners: false,
+      entityType: 'Clean',
+      entityId: event.clean.id,
+      sourceId: event.clean.id,
+      actorId: event.cleaner.id,
+      title: `${cleaner} booked a clean`,
+      body: `${event.property.name} · ${event.clean.day}`,
+      email: (to) =>
+        cleanBookedEmail(to, {
+          cleaner,
+          property: event.property.name,
+          day: event.clean.day,
+          url: `${this.env.WEB_URL}/admin/properties/${event.property.id}`,
+        }),
+    });
+  }
+
   /** Sends emails decided in a committed transaction. A failure is logged and never undoes the event. */
   async sendAfterCommit(pending: PendingEmail[]): Promise<void> {
     for (const p of pending) {
@@ -224,7 +266,7 @@ export class NotificationsService {
         ...(event.actorId ? { id: { not: event.actorId } } : {}),
         OR: [
           { staffRole: 'ADMIN' },
-          ...(event.property
+          ...(event.property && event.owners !== false
             ? [{ memberships: { some: { propertyId: event.property.id, role: 'OWNER' as const, revokedAt: null } } }]
             : []),
         ],

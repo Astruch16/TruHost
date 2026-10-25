@@ -24,6 +24,7 @@ export const NotificationCategory = z.enum([
   'PAYMENT_RECORDED',
   'CLEAN_COMPLETED',
   'TIME_OFF_REQUESTS',
+  'CLEAN_BOOKED',
 ]);
 export type NotificationCategory = z.infer<typeof NotificationCategory>;
 
@@ -105,6 +106,7 @@ export const NotificationKind = z.enum([
   'DAMAGE_REPORTED',
   'CLEAN_COMPLETED',
   'TIME_OFF_REQUESTED',
+  'CLEAN_BOOKED',
 ]);
 export type NotificationKind = z.infer<typeof NotificationKind>;
 

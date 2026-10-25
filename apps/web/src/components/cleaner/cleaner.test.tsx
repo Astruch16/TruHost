@@ -64,6 +64,7 @@ const CAN_NONE = {
   checkDamage: false,
   countStock: false,
   complete: false,
+  book: false,
 };
 
 const detail = (over: Partial<Clean> = {}): Clean => ({
@@ -145,12 +146,22 @@ function renderWith(api: Partial<ApiClient>, ui: ReactNode) {
 
 /** GET /v1/cleans as the API answers it: only the cleans in the asked-for range; supplies empty. */
 const cleansApi = (items: CleanSummary[], supplies: Record<string, unknown[]> = {}) =>
-  vi.fn((path: string, init?: { params?: { path?: { id?: string }; query?: { from?: string; to?: string } } }) => {
-    if (path === '/v1/properties/{id}/supplies') return ok({ items: supplies[init?.params?.path?.id ?? ''] ?? [] });
-    if (path !== '/v1/cleans') return ok({ items: [] });
-    const { from = '0000', to = '9999' } = init?.params?.query ?? {};
-    return ok({ items: items.filter((c) => c.scheduledDate >= from && c.scheduledDate <= to) });
-  });
+  vi.fn(
+    (
+      path: string,
+      init?: { params?: { path?: { id?: string }; query?: { from?: string; to?: string; assignee?: string } } },
+    ) => {
+      if (path === '/v1/properties/{id}/supplies') return ok({ items: supplies[init?.params?.path?.id ?? ''] ?? [] });
+      if (path !== '/v1/cleans') return ok({ items: [] });
+      const { from = '0000', to = '9999', assignee } = init?.params?.query ?? {};
+      return ok({
+        items: items.filter(
+          (c) =>
+            c.scheduledDate >= from && c.scheduledDate <= to && (assignee !== 'none' || c.assignedCleaner === null),
+        ),
+      });
+    },
+  );
 
 describe('cleaner schedule', () => {
   it('shows today’s cleans with the window, the week on a board, and what was done in the rail', async () => {
@@ -259,6 +270,46 @@ describe('cleaner schedule', () => {
     expect(screen.getByLabelText(/, time off$/)).toBeInTheDocument();
   });
 
+  it('lists open cleans with what they pay, and books one (or says someone else got it)', async () => {
+    const openOne = summary({
+      id: 'o1',
+      scheduledDate: addDays(today, 2),
+      assignedCleaner: null,
+      cleanerPayCents: 8500,
+      property: { id: 'p2', name: 'Seaside Loft', city: 'Tofino' },
+    });
+    const openTwo = summary({
+      id: 'o2',
+      scheduledDate: addDays(today, 4),
+      assignedCleaner: null,
+      cleanerPayCents: 7000,
+    });
+    const GET = vi.fn((path: string, init?: { params?: { query?: { assignee?: string } } }) =>
+      path === '/v1/cleans' && init?.params?.query?.assignee === 'none'
+        ? ok({ items: [openOne, openTwo] })
+        : ok({ items: [] }),
+    );
+    const POST = vi
+      .fn()
+      .mockImplementationOnce(() =>
+        ok({ ...openOne, assignedCleaner: { id: 'u1', firstName: 'Casey', lastName: 'Clean' } }),
+      )
+      .mockImplementationOnce(() =>
+        fail(409, { code: 'CLEAN_TAKEN', title: 'Conflict', detail: 'Another cleaner has just booked this clean.' }),
+      );
+    renderWith({ GET, POST } as unknown as ApiClient, <CleanerSchedulePage />);
+    const open = await screen.findByRole('region', { name: 'Open cleans' });
+    const first = within(open).getByRole('listitem', { name: /^Seaside Loft/ });
+    expect(first).toHaveTextContent('$85.00');
+    expect(first).toHaveTextContent('Free from 11 AM');
+    await userEvent.click(within(first).getByRole('button', { name: 'Book this clean' }));
+    expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/book', { params: { path: { id: 'o1' } } });
+    expect(await within(open).findByRole('status')).toHaveTextContent('Booked: Seaside Loft');
+    const second = within(open).getByRole('listitem', { name: /^Cedar Cabin/ });
+    await userEvent.click(within(second).getByRole('button', { name: 'Book this clean' }));
+    expect(await within(second).findByRole('alert')).toHaveTextContent('Another cleaner has just booked this one.');
+  });
+
   it('says when there’s nothing today, and when the next clean is', async () => {
     const items = [summary({ id: 'c2', scheduledDate: addDays(today, 2) })];
     renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
@@ -301,6 +352,16 @@ describe('a clean’s walkthrough', () => {
     expect(step(4, 'After photos')).toHaveTextContent('Opens after “Stock count”');
     expect(screen.queryByLabelText(/Take photo \(after/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Clean finished/ })).not.toBeInTheDocument();
+  });
+
+  it('offers an open clean to book from its page', async () => {
+    const open = detail({ assignedCleaner: null, can: { ...CAN_NONE, book: true } });
+    const POST = vi.fn(() => ok(detail({ can: CAN_NONE })));
+    renderWith({ GET: getFor(open), POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
+    expect(await screen.findByText('This clean is open.')).toBeInTheDocument();
+    expect(screen.queryByText('No one is assigned to this clean yet.')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Book this clean' }));
+    expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/book', { params: { path: { id: 'c1' } } });
   });
 
   it('says on which day a future clean can start', async () => {

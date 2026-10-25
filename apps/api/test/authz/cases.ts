@@ -705,6 +705,14 @@ export const CASES: AuthzCase[] = [
     mutates: true,
   },
   {
+    // The fixture's cleans all have a cleaner, so booking is refused (409) to those allowed: the property's cleaners.
+    route: 'POST /v1/cleans/:id/book',
+    path: (w) => `/v1/cleans/${w.cleans.a}/book`,
+    allow: ['cleanerA'],
+    allowedGets: 409,
+    mutates: true,
+  },
+  {
     route: 'POST /v1/cleans/:id/photos',
     path: (w) => `/v1/cleans/${w.cleans.a}/photos`,
     body: (w) => ({

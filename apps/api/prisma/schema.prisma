@@ -100,6 +100,7 @@ enum NotificationCategory {
   PAYMENT_RECORDED
   CLEAN_COMPLETED
   TIME_OFF_REQUESTS
+  CLEAN_BOOKED
 }
 
 /// A user's choice for one category. A missing row means the category's default.
@@ -803,6 +804,7 @@ enum NotificationKind {
   DAMAGE_REPORTED
   CLEAN_COMPLETED
   TIME_OFF_REQUESTED
+  CLEAN_BOOKED
 }
 
 /// In-app notification for one user, created in the same transaction as the event that causes it. Email, when the

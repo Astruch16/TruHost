@@ -91,7 +91,11 @@ export class CleansService {
             }
           : {}),
         ...(q.status ? { status: q.status } : {}),
-        ...(q.assignee === 'me' ? { assignedCleanerId: actor.userId } : {}),
+        ...(q.assignee === 'me'
+          ? { assignedCleanerId: actor.userId }
+          : q.assignee === 'none'
+            ? { assignedCleanerId: null }
+            : {}),
       },
       orderBy: [{ scheduledDate: 'asc' }, { createdAt: 'asc' }],
       take: LIST_LIMIT,
@@ -139,6 +143,69 @@ export class CleansService {
       },
     });
     if (count !== 1) throw this.wrongState('IN_PROGRESS', 'start');
+    return this.get(actor, id);
+  }
+
+  /**
+   * A cleaner books an open clean for themselves: one at a property they clean, scheduled, from today on, with no
+   * cleaner yet, and not on their approved time off. A conditional update gives it to exactly one cleaner: anyone
+   * else gets 409 CLEAN_TAKEN. Tells the admins (not the owners).
+   */
+  async book(actor: Actor, id: string) {
+    const clean = await this.prisma.clean.findUnique({
+      where: { id },
+      include: { property: { select: { id: true, name: true, timeZone: true } } },
+    });
+    if (!clean || !this.access.can(actor, 'clean:book', clean.propertyId)) throw notFound('Clean');
+    if (clean.status !== 'SCHEDULED') throw this.wrongState(clean.status, 'book');
+    if (clean.assignedCleanerId) throw this.taken(clean.assignedCleanerId === actor.userId);
+    const day = toIsoDate(clean.scheduledDate);
+    if (day < localDate(clean.property.timeZone, this.clock.now())) {
+      throw unprocessable('CLEAN_PAST', 'This clean’s day has passed.');
+    }
+    const off = await this.prisma.timeOffRequest.findFirst({
+      where: {
+        cleanerId: actor.userId,
+        status: 'APPROVED',
+        startDate: { lte: clean.scheduledDate },
+        endDate: { gte: clean.scheduledDate },
+      },
+    });
+    if (off)
+      throw unprocessable('CLEAN_ON_TIME_OFF', 'You have time off that day. Cancel it first to book this clean.');
+    let emails: PendingEmail[] = [];
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.clean.updateMany({
+        where: { id, status: 'SCHEDULED', assignedCleanerId: null },
+        data: { assignedCleanerId: actor.userId, version: { increment: 1 } },
+      });
+      if (count !== 1) {
+        const now = await tx.clean.findUniqueOrThrow({
+          where: { id },
+          select: { status: true, assignedCleanerId: true },
+        });
+        if (now.status !== 'SCHEDULED') throw this.wrongState(now.status, 'book');
+        throw this.taken(now.assignedCleanerId === actor.userId);
+      }
+      const cleaner = await tx.user.findUniqueOrThrow({
+        where: { id: actor.userId },
+        select: { id: true, firstName: true, lastName: true },
+      });
+      emails = await this.notifications.cleanBooked(tx, {
+        property: { id: clean.property.id, name: clean.property.name },
+        clean: {
+          id,
+          day: clean.scheduledDate.toLocaleDateString('en-CA', {
+            timeZone: 'UTC',
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+          }),
+        },
+        cleaner,
+      });
+    });
+    await this.notifications.sendAfterCommit(emails);
     return this.get(actor, id);
   }
 
@@ -316,8 +383,15 @@ export class CleansService {
     await tx.$queryRaw`SELECT 1 FROM "Clean" WHERE id = ${id}::uuid FOR UPDATE`;
   }
 
-  private wrongState(status: string, verb: 'start' | 'photograph' | 'check' | 'complete') {
+  private taken(yours: boolean) {
+    return yours
+      ? conflict('CLEAN_ALREADY_YOURS', 'You’ve already booked this clean.')
+      : conflict('CLEAN_TAKEN', 'Another cleaner has just booked this clean.');
+  }
+
+  private wrongState(status: string, verb: 'start' | 'photograph' | 'check' | 'complete' | 'book') {
     const what = {
+      book: 'Only a scheduled clean can be booked.',
       start: 'This clean has already been started, or it isn’t scheduled.',
       photograph: 'Photos can only be added while the clean is in progress.',
       check: 'The checklist can only be worked while the clean is in progress.',
@@ -423,9 +497,13 @@ export class CleansService {
     });
   }
 
-  /** Pay is for admins, and for the clean's own cleaner. */
+  /** Pay is for admins, the clean's own cleaner, and the property's cleaners while it's open (to decide on it). */
   private seesPay(actor: Actor, c: Workable): boolean {
-    return this.access.can(actor, 'clean:manage', c.propertyId) || c.assignedCleanerId === actor.userId;
+    return (
+      this.access.can(actor, 'clean:manage', c.propertyId) ||
+      c.assignedCleanerId === actor.userId ||
+      (c.assignedCleanerId === null && this.access.can(actor, 'clean:book', c.propertyId))
+    );
   }
 
   /**
@@ -551,6 +629,11 @@ export class CleansService {
         countStock: working && done.BEFORE_PHOTOS && done.DAMAGE,
         addAfterPhotos: working && done.BEFORE_PHOTOS && done.DAMAGE && done.STOCK_COUNT,
         complete: working && STEPS.every((st) => done[st]),
+        book:
+          row.status === 'SCHEDULED' &&
+          row.assignedCleanerId === null &&
+          today <= toIsoDate(row.scheduledDate) &&
+          this.access.can(actor, 'clean:book', row.propertyId),
       },
     };
   }

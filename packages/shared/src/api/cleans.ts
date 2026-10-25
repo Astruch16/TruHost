@@ -14,13 +14,16 @@ export const CLEAN_STATUS_LABELS: Record<CleanStatus, string> = {
 /** The most photos one room can hold in one phase of a clean (extra shots replace nothing; they add). */
 export const MAX_CLEAN_PHOTOS_PER_ROOM_PHASE = 12;
 
-/** `GET /cleans`: by property, date range (scheduled day), status, and the caller's own. */
+/**
+ * `GET /cleans`: by property, date range (scheduled day), status, and assignee: the caller's own (`me`), or open ones
+ * no cleaner has yet (`none`), which a property's cleaners can book.
+ */
 export const cleanQuery = z.object({
   propertyId: id.optional(),
   from: isoDate.optional(),
   to: isoDate.optional(),
   status: CleanStatus.optional(),
-  assignee: z.literal('me').optional(),
+  assignee: z.enum(['me', 'none']).optional(),
 });
 export type CleanQuery = z.infer<typeof cleanQuery>;
 
@@ -44,7 +47,10 @@ export const cleanSummary = z.object({
    */
   window: z.object({ from: localMoment, until: localMoment.nullable() }),
   assignedCleaner: person.nullable(),
-  /** What the clean pays its cleaner: shown to admins, and to the cleaner on their own cleans; otherwise null. */
+  /**
+   * What the clean pays its cleaner: shown to admins, to the cleaner on their own cleans, and to a property's cleaners
+   * on its open cleans (to decide whether to book one); otherwise null.
+   */
   cleanerPayCents: nonNegativeCents.nullable(),
   notes: z.string().nullable(),
   startedAt: isoDateTime.nullable(),
@@ -137,6 +143,8 @@ export const clean = cleanSummary.extend({
     countStock: z.boolean(),
     /** Every step is done: "Clean finished". */
     complete: z.boolean(),
+    /** An open clean (no cleaner yet, scheduled today or later) the caller cleans this property for: book it. */
+    book: z.boolean(),
   }),
 });
 export type Clean = z.infer<typeof clean>;

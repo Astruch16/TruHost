@@ -179,6 +179,7 @@ describe('cleans', () => {
         checkDamage: false,
         countStock: false,
         complete: false,
+        book: false,
       }); // not its day
       expect(c.checklist).toMatchObject({ current: null, stockCount: { items: 2, counted: 0 } });
     });
@@ -417,6 +418,92 @@ describe('cleans', () => {
       expect((await t.as('cleanerA').post(`/v1/cleans/${w.cleans.todayA}/complete`).expect(422)).body.code).toBe(
         'CLEAN_NO_ROOMS',
       );
+    });
+  });
+
+  describe('booking open cleans', () => {
+    /** An open clean at A (no cleaner yet) on `day`, and cleanerB made a cleaner at A too. */
+    async function open(day = '2026-11-22') {
+      const c = await t.prisma.clean.create({
+        data: {
+          propertyId: w.propertyA.id,
+          kind: 'ADHOC',
+          scheduledDate: new Date(`${day}T00:00:00Z`),
+          cleanerPayCents: 8500,
+        },
+      });
+      await t.prisma.membership.create({
+        data: { userId: w.users.cleanerB.id, propertyId: w.propertyA.id, role: 'CLEANER' },
+      });
+      return c.id;
+    }
+
+    it('shows the property’s cleaners its open cleans, with pay, and lets one book it', async () => {
+      const id = await open();
+      const list = (await t.as('cleanerA').get('/v1/cleans?assignee=none').expect(200)).body.items;
+      expect(list.map((c: { id: string }) => c.id)).toEqual([id]);
+      expect(list[0]).toMatchObject({ assignedCleaner: null, cleanerPayCents: 8500 });
+      // Owners see it (no pay); a cleaner elsewhere doesn't.
+      expect(
+        (await t.as('ownerA').get('/v1/cleans?assignee=none').expect(200)).body.items[0].cleanerPayCents,
+      ).toBeNull();
+      expect((await t.as('cleanerB').get(`/v1/cleans/${id}`).expect(200)).body.can.book).toBe(true);
+      expect((await t.as('ownerA').get(`/v1/cleans/${id}`).expect(200)).body.can.book).toBe(false);
+      expect((await t.as('admin').get(`/v1/cleans/${id}`).expect(200)).body.can.book).toBe(false);
+
+      t.email.reset();
+      const booked = (await t.as('cleanerA').post(`/v1/cleans/${id}/book`).expect(200)).body;
+      expect(booked).toMatchObject({
+        assignedCleaner: { id: w.users.cleanerA.id },
+        cleanerPayCents: 8500,
+        can: { book: false },
+      });
+      expect((await t.as('cleanerA').get('/v1/cleans?assignee=none').expect(200)).body.items).toEqual([]);
+      expect((await t.as('cleanerA').post(`/v1/cleans/${id}/book`).expect(409)).body.code).toBe('CLEAN_ALREADY_YOURS');
+      expect((await t.as('cleanerB').post(`/v1/cleans/${id}/book`).expect(409)).body.code).toBe('CLEAN_TAKEN');
+
+      // The admins hear of it; the owners don't.
+      const told = await t.prisma.notification.findMany({ where: { kind: 'CLEAN_BOOKED' } });
+      expect(told.map((n) => n.userId)).toEqual([w.users.admin.id]);
+      expect(told[0]).toMatchObject({
+        propertyId: w.propertyA.id,
+        entityId: id,
+        title: 'cleanerA Test booked a clean',
+        body: 'Property A · Sun, Nov 22',
+      });
+      expect(t.email.sent.map((m) => m.to)).toEqual(['admin@example.test']);
+    });
+
+    it('gives a clean to exactly one cleaner when two book it at once', async () => {
+      const id = await open();
+      const results = await Promise.all(['cleanerA', 'cleanerB'].map((who) => t.as(who).post(`/v1/cleans/${id}/book`)));
+      expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+      const winner = results.find((r) => r.status === 200)!.body.assignedCleaner.id;
+      expect((await t.prisma.clean.findUniqueOrThrow({ where: { id } })).assignedCleanerId).toBe(winner);
+      expect(await t.prisma.notification.count({ where: { kind: 'CLEAN_BOOKED' } })).toBe(1);
+    });
+
+    it('refuses a day that’s passed, the cleaner’s time off, admins, owners and other properties’ cleaners', async () => {
+      const past = await open('2026-11-19');
+      expect((await t.as('cleanerA').post(`/v1/cleans/${past}/book`).expect(422)).body.code).toBe('CLEAN_PAST');
+      const id = (
+        await t.prisma.clean.create({
+          data: { propertyId: w.propertyA.id, kind: 'ADHOC', scheduledDate: new Date('2026-12-15T00:00:00Z') },
+        })
+      ).id;
+      // The fixture's Dec 14–18 time off, once approved, rules the 15th out.
+      await t.as('admin').post(`/v1/time-off/${w.timeOff.pendingA}/decision`, { status: 'APPROVED', note: null });
+      expect((await t.as('cleanerA').post(`/v1/cleans/${id}/book`).expect(422)).body.code).toBe('CLEAN_ON_TIME_OFF');
+      await t.as('admin').post(`/v1/cleans/${id}/book`).expect(404);
+      await t.as('ownerA').post(`/v1/cleans/${id}/book`).expect(404);
+      await t.prisma.membership.deleteMany({ where: { userId: w.users.cleanerB.id, propertyId: w.propertyA.id } });
+      await t.as('cleanerB').post(`/v1/cleans/${id}/book`).expect(404);
+      // A clean that isn't scheduled can't be booked.
+      await t.prisma.clean.update({
+        where: { id },
+        data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: 'x' },
+      });
+      expect((await t.as('cleanerA').post(`/v1/cleans/${id}/book`).expect(409)).body.code).toBe('CLEAN_CANCELLED');
     });
   });
 
