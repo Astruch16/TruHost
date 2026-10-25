@@ -117,7 +117,9 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
         {c.notes && <p className="mt-4 rounded-inner bg-ground px-3.5 py-3 text-sm text-ink">{c.notes}</p>}
       </Card>
 
-      {c.status === 'SCHEDULED' && (
+      {c.can.book && <BookClean clean={c} onBooked={store} />}
+
+      {c.status === 'SCHEDULED' && !c.can.book && (
         <Card>
           {c.can.start ? (
             <div className="flex flex-col gap-3">
@@ -185,5 +187,31 @@ function Fact({
       </dt>
       <dd className={cx('mt-1 text-lg text-ink', (strong || figure) && 'font-bold', figure && 'figure')}>{value}</dd>
     </div>
+  );
+}
+
+/** An open clean (no cleaner yet) the caller cleans this property for: book it. The first cleaner to book gets it. */
+function BookClean({ clean: c, onBooked }: { clean: Clean; onBooked: (c: Clean) => void }) {
+  const api = useApi();
+  const qc = useQueryClient();
+  const book = useMutation({
+    mutationFn: () => unwrap(api.POST('/v1/cleans/{id}/book', { params: { path: { id: c.id } } })),
+    onSuccess: onBooked,
+    onError: (e) => {
+      if (e instanceof ApiError && e.status === 409) void qc.invalidateQueries({ queryKey: ['cleans'] });
+    },
+  });
+  return (
+    <Card>
+      <div className="flex flex-col gap-3">
+        <p className="text-ink">
+          <strong>This clean is open.</strong> No one has it yet: book it and it’s yours. TruHost will be told.
+        </p>
+        <ErrorAlert error={book.error} />
+        <Button onClick={() => book.mutate()} loading={book.isPending} className="min-h-12 w-full sm:w-auto">
+          Book this clean
+        </Button>
+      </div>
+    </Card>
   );
 }

@@ -28,6 +28,7 @@ import { Pill } from '../ui/pill';
 import { Skeleton } from '../ui/skeleton';
 import { ScheduleCalendar } from './schedule-calendar';
 import { RailProperties, RailRecent, RailSupplies } from './schedule-rail';
+import { OpenCleans } from './open-cleans';
 import { WeekBoard } from './week-board';
 
 /**
@@ -60,11 +61,17 @@ export function CleanerSchedulePage() {
     ...queries.cleans(api, { assignee: 'me', from: week.days[0]!, to: week.days[6]! }),
     placeholderData: (previous) => previous,
   });
+  // Open cleans (no cleaner yet) at the properties they clean, from today for two months, to book.
+  const open = useQuery(
+    queries.cleans(api, { assignee: 'none', status: 'SCHEDULED', from: today, to: addDays(today, 60) }),
+  );
   const all = list.data?.items ?? [];
   const groups = list.data ? scheduleGroups(all, today) : null;
   const next = groups?.upcoming.find((c) => c.status !== 'CANCELLED');
   const colors = propertyColors(
-    [...all, ...(calendar.data?.items ?? []), ...(board.data?.items ?? [])].map((c) => c.property),
+    [...all, ...(calendar.data?.items ?? []), ...(board.data?.items ?? []), ...(open.data?.items ?? [])].map(
+      (c) => c.property,
+    ),
   );
   const summaries = propertySummaries(all, today);
   const boardCleans = (board.data?.items ?? []).filter((c) => !property || c.property.id === property);
@@ -126,6 +133,7 @@ export function CleanerSchedulePage() {
             </ul>
           </section>
         )}
+        <OpenCleans cleans={open.data?.items ?? []} colors={colors} />
         <div className="col-span-full min-w-0">
           <WeekBoard
             days={week.days}

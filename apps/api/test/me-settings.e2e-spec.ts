@@ -158,6 +158,7 @@ describe('settings: preferences, avatar and notifications', () => {
         'DAMAGE_REPORTS',
         'CLEAN_COMPLETED',
         'TIME_OFF_REQUESTS',
+        'CLEAN_BOOKED',
         'INVITE_ACCEPTED',
         'WEEKLY_SUMMARY',
         'STATEMENT_RELEASED',

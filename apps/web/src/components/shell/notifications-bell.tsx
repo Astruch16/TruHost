@@ -146,7 +146,7 @@ export function NotificationsBell({
                   >
                     {n.kind === 'DAMAGE_REPORTED' ? (
                       <DamageAlertIcon size={36} className="shrink-0" />
-                    ) : n.kind === 'CLEAN_COMPLETED' ? (
+                    ) : n.kind === 'CLEAN_COMPLETED' || n.kind === 'CLEAN_BOOKED' ? (
                       <CleanDoneIcon size={36} className="shrink-0" />
                     ) : n.kind === 'TIME_OFF_REQUESTED' ? (
                       <TimeOffIcon size={36} className="shrink-0" />

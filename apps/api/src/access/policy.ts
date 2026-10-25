@@ -37,6 +37,11 @@ export const POLICY = {
   'clean:read': { admin: true, roles: ['OWNER', 'CLEANER'] },
   /** Start a clean, add its photos and complete it: its assigned cleaner (checked in the service) or an admin. */
   'clean:work': { admin: true, roles: ['CLEANER'] },
+  /**
+   * Book an open clean (one with no cleaner yet) for oneself: the property's cleaners. Admins assign instead, so they
+   * don't book.
+   */
+  'clean:book': { admin: false, roles: ['CLEANER'] },
   /** Act on any clean, and see every clean's pay. */
   'clean:manage': { admin: true, roles: [] },
   'plan:manage': { admin: true, roles: [] },
