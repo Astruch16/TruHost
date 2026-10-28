@@ -14,17 +14,19 @@ import {
 import { Camera, Check, ChevronDown, Lock } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { addCleanPhoto, CLEAN_PHOTO_ACCEPT } from '../../lib/clean-photo';
+import { CLEAN_STEPS } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { STATUS_TONE } from '../../lib/damage';
 import { queries } from '../../lib/queries';
 import { LEVEL_OPTIONS } from '../../lib/supplies';
 import { DamageReportDialog } from '../damage/damage-report-dialog';
+import { CleanStepIcon } from '../illustrations/clean-step-icons';
+import { DamageAlertIcon } from '../illustrations/damage';
+import { SuppliesIcon } from '../illustrations/category-icons';
 import { ReportDamageDialog } from '../damage/report-damage-dialog';
 import { ErrorAlert } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Pill } from '../ui/pill';
-
-const ORDER: CleanStep[] = ['BEFORE_PHOTOS', 'DAMAGE', 'STOCK_COUNT', 'AFTER_PHOTOS', 'FINISH'];
 
 /**
  * A clean in progress, as a checklist worked in order: before photos of every room, the damage question (with a
@@ -48,8 +50,8 @@ export function CleanChecklist({
 }) {
   const current = c.checklist.current ?? 'FINISH';
   const [reopened, setReopened] = useState<CleanStep | null>(null);
-  const at = ORDER.indexOf(current);
-  const done = (step: CleanStep) => ORDER.indexOf(step) < at;
+  const at = CLEAN_STEPS.indexOf(current);
+  const done = (step: CleanStep) => CLEAN_STEPS.indexOf(step) < at;
 
   const steps: { step: CleanStep; summary: string; body: ReactNode }[] = [
     {
@@ -82,28 +84,22 @@ export function CleanChecklist({
           Checklist
         </h2>
         <p className="figure text-sm font-semibold text-muted">
-          Step {at + 1} of {ORDER.length}
+          Step {at + 1} of {CLEAN_STEPS.length}
         </p>
       </div>
-      <div aria-hidden className="grid grid-cols-5 gap-1.5">
-        {ORDER.map((s, i) => (
-          <span
-            key={s}
-            className={cx('h-2 rounded-full', i < at ? 'bg-sage-mid' : i === at ? 'bg-amber-mid' : 'bg-line')}
-          />
-        ))}
-      </div>
-      <ol className="flex flex-col gap-3">
+      <ol className="flex flex-col">
         {steps.map(({ step, summary, body }, i) => {
           const state = done(step) ? 'done' : step === current ? 'current' : 'locked';
           const open = state === 'current' || (state === 'done' && reopened === step);
           return (
             <StepCard
               key={step}
+              step={step}
               n={i + 1}
+              last={i === steps.length - 1}
               title={CLEAN_STEP_LABELS[step]}
               state={state}
-              summary={state === 'locked' ? `Opens after “${CLEAN_STEP_LABELS[ORDER[i - 1]!]}”` : summary}
+              summary={state === 'locked' ? `Opens after “${CLEAN_STEP_LABELS[CLEAN_STEPS[i - 1]!]}”` : summary}
               open={open}
               onToggle={state === 'done' ? () => setReopened(reopened === step ? null : step) : undefined}
             >
@@ -134,9 +130,14 @@ function stockSummary(c: Clean) {
   return n ? `Counted · ${n} to restock` : 'Counted · nothing to restock';
 }
 
-/** One step: its number (a tick once done), title and summary; the current step (or a reopened one) shows its body. */
+/**
+ * One step, on a timeline: its icon (ticked once done, greyed while locked) on a line down to the next, beside a card
+ * with its number, title and summary; the current step (or a reopened one) shows its body.
+ */
 function StepCard({
+  step,
   n,
+  last,
   title,
   state,
   summary,
@@ -144,7 +145,9 @@ function StepCard({
   onToggle,
   children,
 }: {
+  step: CleanStep;
   n: number;
+  last: boolean;
   title: string;
   state: 'done' | 'current' | 'locked';
   summary: string;
@@ -154,19 +157,25 @@ function StepCard({
 }) {
   const head = (
     <>
-      <span
-        aria-hidden
-        className={cx(
-          'figure grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold',
-          state === 'done' && 'bg-sage-deep text-white',
-          state === 'current' && 'bg-primary text-primary-ink',
-          state === 'locked' && 'bg-ground text-muted',
-        )}
-      >
-        {state === 'done' ? <Check className="size-4" /> : state === 'locked' ? <Lock className="size-3.5" /> : n}
-      </span>
       <span className="min-w-0 flex-1 text-left">
-        <span className={cx('block font-semibold', state === 'locked' ? 'text-muted' : 'text-ink')}>{title}</span>
+        <span className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+          <span className="figure">Step {n}</span>
+          {state === 'current' && (
+            <span className="rounded-full bg-amber-tint px-2 py-px tracking-[0.06em] text-amber-deep">Now</span>
+          )}
+          {state === 'done' && (
+            <span className="rounded-full bg-sage-tint px-2 py-px tracking-[0.06em] text-sage-deep">Done</span>
+          )}
+        </span>
+        <span
+          className={cx(
+            'mt-0.5 block font-semibold',
+            state === 'locked' ? 'text-muted' : 'text-ink',
+            state === 'current' && 'text-lg',
+          )}
+        >
+          {title}
+        </span>
         <span className="block text-sm text-muted">{summary}</span>
       </span>
     </>
@@ -175,29 +184,68 @@ function StepCard({
     <li
       aria-current={state === 'current' ? 'step' : undefined}
       aria-label={`Step ${n}: ${title}, ${state === 'done' ? 'done' : state === 'current' ? 'to do now' : 'locked'}`}
-      className={cx(
-        'rounded-card border bg-surface',
-        state === 'current' ? 'border-primary/40 shadow-[0_6px_20px_rgb(16_20_18/0.06)]' : 'border-line-soft',
-        state === 'locked' && 'bg-surface/60',
-      )}
+      className="flex gap-3 @2xl/content:gap-4"
     >
-      {onToggle ? (
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={open}
-          className="flex w-full items-center gap-3 rounded-card p-4 focus-visible:outline-2 focus-visible:outline-blue-deep @2xl/content:px-5"
+      <div aria-hidden className="flex flex-col items-center pt-3">
+        <span
+          className={cx(
+            'relative shrink-0 rounded-full',
+            state === 'current' && 'ring-4 ring-amber-light/45',
+            state === 'locked' && 'opacity-45 grayscale',
+          )}
         >
-          {head}
-          <ChevronDown
-            aria-hidden
-            className={cx('size-4 shrink-0 text-muted transition-transform', open && 'rotate-180')}
-          />
-        </button>
-      ) : (
-        <div className="flex items-center gap-3 p-4 @2xl/content:px-5">{head}</div>
-      )}
-      {open && <div className="border-t border-line-soft p-4 @2xl/content:p-5">{children}</div>}
+          <CleanStepIcon step={step} size={44} />
+          {state === 'done' && (
+            <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-sage-deep text-white ring-2 ring-ground">
+              <Check className="size-3" />
+            </span>
+          )}
+          {state === 'locked' && (
+            <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-muted text-white ring-2 ring-ground">
+              <Lock className="size-2.5" />
+            </span>
+          )}
+        </span>
+        {!last && (
+          <span className={cx('my-1.5 w-0.5 flex-1 rounded-full', state === 'done' ? 'bg-sage-mid/60' : 'bg-line')} />
+        )}
+      </div>
+      <div
+        className={cx(
+          'mb-3 min-w-0 flex-1 rounded-card border',
+          state === 'current'
+            ? 'border-primary/30 bg-surface shadow-[0_10px_30px_rgb(16_20_18/0.07)]'
+            : state === 'locked'
+              ? 'border-dashed border-line bg-transparent'
+              : 'border-line-soft bg-surface',
+        )}
+      >
+        {onToggle ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={open}
+            className="flex w-full items-center gap-3 rounded-card p-4 focus-visible:outline-2 focus-visible:outline-blue-deep @2xl/content:px-5"
+          >
+            {head}
+            <ChevronDown
+              aria-hidden
+              className={cx('size-4 shrink-0 text-muted transition-transform', open && 'rotate-180')}
+            />
+          </button>
+        ) : (
+          <div
+            className={cx(
+              'flex items-center gap-3 rounded-t-card p-4 @2xl/content:px-5',
+              state === 'current' &&
+                'bg-[linear-gradient(90deg,var(--color-amber-tint)_0%,transparent_70%)] @2xl/content:py-5',
+            )}
+          >
+            {head}
+          </div>
+        )}
+        {open && <div className="border-t border-line-soft p-4 @2xl/content:p-5">{children}</div>}
+      </div>
     </li>
   );
 }
@@ -233,17 +281,16 @@ function RoomPhotos({
               key={room.id}
               className={cx(
                 'flex min-w-0 flex-col gap-2 rounded-inner border p-2.5 @2xl/content:p-3',
-                photos.length ? 'border-sage-mid/40' : flagged ? 'border-amber-mid' : 'border-line-soft',
+                photos.length
+                  ? 'border-sage-mid/40 bg-sage-tint/25'
+                  : flagged
+                    ? 'border-amber-mid bg-amber-tint/30'
+                    : 'border-line-soft bg-surface',
               )}
             >
               <div className="flex items-center justify-between gap-2">
                 <h4 className="min-w-0 truncate text-sm font-semibold text-ink">{room.displayName}</h4>
-                {photos.length > 0 && (
-                  <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-sage-deep">
-                    <Check aria-hidden className="size-3.5" />
-                    <span className="sr-only @md/content:not-sr-only">Done</span>
-                  </span>
-                )}
+                {photos.length > 0 && <span className="sr-only">Done</span>}
               </div>
               <PhotoSlot clean={c} room={room} phase={phase} photos={photos} onUpdated={onUpdated} />
               {phase === 'AFTER' && room.before.at(-1) && (
@@ -298,6 +345,9 @@ function PhotoSlot({
           aria-label={`${room.displayName}, ${label} photo (opens full size)`}
         >
           <img src={latest.thumbUrl} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+          <span className="absolute top-2 left-2 grid size-6 place-items-center rounded-full bg-sage-deep text-white shadow-sm">
+            <Check aria-hidden className="size-3.5" />
+          </span>
           {photos.length > 1 && (
             <span className="absolute right-2 bottom-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-ink">
               {photos.length} photos
@@ -306,7 +356,12 @@ function PhotoSlot({
         </a>
       ) : (
         <div className="grid aspect-[4/3] place-items-center rounded-inner border border-dashed border-line bg-ground text-muted">
-          <Camera aria-hidden className="size-6" />
+          <span className="flex flex-col items-center gap-2">
+            <span className="grid size-11 place-items-center rounded-full bg-surface shadow-[0_2px_8px_rgb(16_20_18/0.06)] ring-1 ring-line-soft">
+              <Camera aria-hidden className="size-5" />
+            </span>
+            <span className="text-xs font-medium">{phase === 'BEFORE' ? 'As you find it' : 'Clean and ready'}</span>
+          </span>
         </div>
       )}
       {can && (
@@ -327,12 +382,13 @@ function PhotoSlot({
           <label
             htmlFor={inputId}
             className={cx(
-              'inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full border px-2.5 text-sm font-semibold transition-colors',
+              'inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full border px-2.5 text-sm font-semibold whitespace-nowrap transition-colors',
               latest ? 'border-line bg-surface text-ink hover:bg-ground' : 'border-primary bg-primary text-primary-ink',
               add.isPending && 'pointer-events-none opacity-60',
             )}
           >
-            <Camera aria-hidden className="size-4 shrink-0" />
+            {/* Narrow tiles drop the icon so the label fits on one line (the empty slot shows a camera anyway). */}
+            <Camera aria-hidden className="hidden size-4 shrink-0 @sm/content:block" />
             {add.isPending ? 'Uploading…' : latest ? 'Add another' : 'Take photo'}
             <span className="sr-only">
               {' '}
@@ -575,10 +631,13 @@ function FinishStep({
   const showError = Boolean(error) && !(error instanceof ApiError && error.problem.code === 'CLEAN_MISSING_PHOTOS');
   return (
     <div className="flex flex-col gap-4">
-      <ul className="flex flex-col gap-1.5 text-sm text-ink">
+      <ul className="flex flex-col gap-2.5 rounded-inner bg-sage-tint/40 p-4 text-sm text-ink">
         {[`Before and after photos of ${c.rooms.length} rooms`, damageSummary(c), stockSummary(c)].map((line) => (
-          <li key={line} className="flex items-center gap-2">
-            <Check aria-hidden className="size-4 shrink-0 text-sage-deep" /> {line}
+          <li key={line} className="flex items-center gap-2.5">
+            <span aria-hidden className="grid size-5 shrink-0 place-items-center rounded-full bg-sage-deep text-white">
+              <Check className="size-3" />
+            </span>
+            {line}
           </li>
         ))}
       </ul>
@@ -602,14 +661,14 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
       </h2>
       <ul className="grid grid-cols-1 gap-3 @xl/content:grid-cols-2">
         {c.rooms.map((room) => (
-          <li key={room.id} className="rounded-card border border-line-soft bg-surface p-4">
-            <h3 className="font-semibold text-ink">{room.displayName}</h3>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+          <li key={room.id} className="rounded-card border border-line-soft bg-surface p-3.5">
+            <h3 className="px-0.5 font-semibold text-ink">{room.displayName}</h3>
+            <div className="mt-2.5 grid grid-cols-2 gap-2">
               {(['BEFORE', 'AFTER'] as const).map((phase) => {
                 const photo = (phase === 'BEFORE' ? room.before : room.after).at(-1);
                 const label = phase === 'BEFORE' ? 'Before' : 'After';
                 return (
-                  <figure key={phase} className="flex flex-col gap-1">
+                  <figure key={phase} className="relative">
                     {photo ? (
                       <a
                         href={photo.url}
@@ -623,7 +682,12 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
                     ) : (
                       <div className="aspect-[4/3] rounded-inner border border-dashed border-line bg-ground" />
                     )}
-                    <figcaption className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+                    <figcaption
+                      className={cx(
+                        'pointer-events-none absolute bottom-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase',
+                        phase === 'BEFORE' ? 'bg-white/90 text-ink' : 'bg-sage-deep text-white',
+                      )}
+                    >
                       {label}
                     </figcaption>
                   </figure>
@@ -635,10 +699,15 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
       </ul>
       <div className="grid grid-cols-1 gap-3 @xl/content:grid-cols-2">
         <div className="rounded-card border border-line-soft bg-surface p-4">
-          <h3 className="font-semibold text-ink">Damage</h3>
-          <p className="mt-1 text-sm text-muted">{damageSummary(c)}</p>
+          <div className="flex items-center gap-3">
+            <DamageAlertIcon size={40} className="shrink-0" />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-ink">Damage</h3>
+              <p className="text-sm text-muted">{damageSummary(c)}</p>
+            </div>
+          </div>
           {c.checklist.damage.reports.length > 0 && (
-            <ul className="mt-2 flex flex-col gap-1.5">
+            <ul className="mt-3 flex flex-col gap-1.5 border-t border-line-soft pt-3">
               {c.checklist.damage.reports.map((r) => (
                 <li key={r.id}>
                   <button
@@ -655,16 +724,21 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
           )}
         </div>
         <div className="rounded-card border border-line-soft bg-surface p-4">
-          <h3 className="font-semibold text-ink">Stock count</h3>
-          <p className="mt-1 text-sm text-muted">
-            {c.checklist.stockCount.items === 0
-              ? 'No supplies tracked'
-              : restock.length
-                ? 'Needs restocking:'
-                : 'Nothing needs restocking'}
-          </p>
+          <div className="flex items-center gap-3">
+            <SuppliesIcon size={40} className="shrink-0" />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-ink">Stock count</h3>
+              <p className="text-sm text-muted">
+                {c.checklist.stockCount.items === 0
+                  ? 'No supplies tracked'
+                  : restock.length
+                    ? 'Needs restocking:'
+                    : 'Nothing needs restocking'}
+              </p>
+            </div>
+          </div>
           {restock.length > 0 && (
-            <ul className="mt-2 flex flex-col gap-1.5">
+            <ul className="mt-3 flex flex-col gap-1.5 border-t border-line-soft pt-3">
               {restock.map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-2 text-sm">
                   <span className="text-ink">{r.name}</span>

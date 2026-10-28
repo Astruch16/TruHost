@@ -6,6 +6,7 @@ import { CareIllustration } from './care';
 import { ExpenseCategoryIcon } from './category-icons';
 import { ComingUpIllustration } from './coming-up';
 import { ExpensesIllustration } from './expenses';
+import { CleanStepIcon } from './clean-step-icons';
 import { CleanDoneIcon, CompassIcon, InviteIcon, StatementDocIcon } from './list-icons';
 import { ReceiptsIllustration } from './receipts';
 import { RevenueIllustration } from './revenue';
@@ -52,6 +53,8 @@ describe('empty state illustrations', () => {
   });
 });
 
+const STEPS = ['BEFORE_PHOTOS', 'DAMAGE', 'STOCK_COUNT', 'AFTER_PHOTOS', 'FINISH'] as const;
+
 describe('small icons', () => {
   const CATEGORIES = [
     'SUPPLIES',
@@ -88,6 +91,21 @@ describe('small icons', () => {
     expect(shape(svgs.at(-1)!)).toBe(shape(svgs.at(-2)!));
   });
 
+  it('draws a distinct, decorative icon for each step of a clean’s checklist', () => {
+    const { container } = render(
+      <>
+        {STEPS.map((step) => (
+          <CleanStepIcon key={step} step={step} />
+        ))}
+      </>,
+    );
+    const svgs = [...container.querySelectorAll('svg')];
+    expect(svgs).toHaveLength(STEPS.length);
+    for (const svg of svgs) expect(svg).toHaveAttribute('aria-hidden', 'true');
+    const shape = (svg: SVGSVGElement) => svg.innerHTML.replace(/ei[^"#)]*-/g, '');
+    expect(new Set(svgs.map(shape)).size).toBe(STEPS.length);
+  });
+
   it('gives each instance its own gradient ids', () => {
     const { container } = render(
       <>
@@ -100,6 +118,9 @@ describe('small icons', () => {
             <InviteIcon />
             <CompassIcon />
             <CleanDoneIcon />
+            {STEPS.map((step) => (
+              <CleanStepIcon key={step} step={step} />
+            ))}
           </span>
         ))}
       </>,
