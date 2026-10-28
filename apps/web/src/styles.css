@@ -34,6 +34,9 @@
   --color-blue-deep: #24456b;
   --color-lavender-tint: #e6e0f5;
   --color-lavender-deep: #3f3470;
+  /* Mid tones for small marks (a pill's dot and ring), as sage-mid and amber-mid are for theirs. */
+  --color-blue-mid: #4a78ad;
+  --color-lavender-mid: #7363b8;
   --color-sage-tint: #ddebdf;
   --color-sage-deep: #23442f;
   /* Brighter sage for small marks that must stand apart from the deep colours (the check-in dot beside the

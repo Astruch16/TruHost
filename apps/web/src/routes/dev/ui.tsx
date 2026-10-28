@@ -212,6 +212,7 @@ function StyleGuide() {
             <div className="flex flex-wrap gap-2">
               <Pill tone="dark">Out</Pill>
               <Pill tone="lavender">Low</Pill>
+              <Pill tone="amber">In progress</Pill>
               <Pill tone="sage">Stocked</Pill>
               <Pill tone="blue">Open</Pill>
               <Pill tone="neutral">Archived</Pill>
