@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { unwrap } from '@truhost/api-client';
 import { CLEAN_STATUS_LABELS, type CleanSummary } from '@truhost/shared';
 import { ArrowRight, Clock, DoorOpen } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
@@ -293,10 +294,31 @@ function HeroStat({ label, value }: { label: string; value: ReactNode }) {
 
 /** One of today's cleans: where, the window, progress, and the next step. The whole card opens it. */
 function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) {
+  const api = useApi();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
   const from = freeFrom(c);
   const late = c.scheduledDate < today;
+  // Today's scheduled clean starts right here, then opens on its checklist. If it can't be started (someone else's
+  // now, say), its page says why.
+  const startable = c.status === 'SCHEDULED' && !late;
+  const open = () => navigate({ to: '/cleaner/cleans/$cleanId', params: { cleanId: c.id } });
+  const start = useMutation({
+    mutationFn: () => unwrap(api.POST('/v1/cleans/{id}/start', { params: { path: { id: c.id } } })),
+    onSuccess: (data) => {
+      qc.setQueryData(queries.clean(api, c.id).queryKey, data);
+      void qc.invalidateQueries({ queryKey: ['cleans', 'list'] });
+    },
+    onSettled: () => void open(),
+  });
   const action =
-    c.status === 'SCHEDULED' ? 'Start the clean' : c.status === 'IN_PROGRESS' ? 'Carry on' : 'See the photos';
+    c.status === 'SCHEDULED'
+      ? late
+        ? 'Open the clean'
+        : 'Start the clean'
+      : c.status === 'IN_PROGRESS'
+        ? 'Carry on'
+        : 'See the photos';
   const pct = c.progress.rooms ? Math.round((c.progress.done / c.progress.rooms) * 100) : 0;
   return (
     <li className="group relative flex flex-col rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-[0_6px_18px_rgb(16_20_18/0.06)]">
@@ -348,17 +370,30 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
           </div>
         </div>
       )}
-      <span
-        aria-hidden
-        className={cx(
-          'mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors',
-          c.status === 'COMPLETE'
-            ? 'border border-line bg-surface text-ink group-hover:bg-ground'
-            : 'bg-primary text-primary-ink group-hover:brightness-110',
-        )}
-      >
-        {action} <ArrowRight className="size-4" />
-      </span>
+      {startable ? (
+        // A real button, above the card's link (z-10), so it starts the clean rather than only opening it.
+        <button
+          type="button"
+          onClick={() => start.mutate()}
+          disabled={start.isPending}
+          className="relative z-10 mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-ink transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep disabled:cursor-progress disabled:opacity-80"
+        >
+          {start.isPending ? 'Starting…' : action} <ArrowRight aria-hidden className="size-4" />
+        </button>
+      ) : (
+        // Looks like a button; the card's link takes the click (pointer-events-none keeps it from catching it).
+        <span
+          aria-hidden
+          className={cx(
+            'pointer-events-none mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors',
+            c.status === 'COMPLETE'
+              ? 'border border-line bg-surface text-ink group-hover:bg-ground'
+              : 'bg-primary text-primary-ink group-hover:bg-primary/90',
+          )}
+        >
+          {action} <ArrowRight className="size-4" />
+        </span>
+      )}
     </li>
   );
 }

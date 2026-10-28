@@ -270,6 +270,16 @@ describe('cleaner schedule', () => {
     expect(screen.getByLabelText(/, time off$/)).toBeInTheDocument();
   });
 
+  it('starts today’s clean straight from its card, then opens it', async () => {
+    const GET = cleansApi([summary()]);
+    const POST = vi.fn(() => ok(detail({ status: 'IN_PROGRESS', can: { ...CAN_NONE, addPhotos: true } })));
+    renderWith({ GET, POST } as unknown as ApiClient, <CleanerSchedulePage />);
+    const card = (await screen.findByRole('link', { name: 'Cedar Cabin' })).closest('li')!;
+    await userEvent.click(within(card).getByRole('button', { name: /Start the clean/ }));
+    expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/start', { params: { path: { id: 'c1' } } });
+    expect(await screen.findByText('Elsewhere')).toBeInTheDocument(); // the clean's page
+  });
+
   it('lists open cleans with what they pay, and books one (or says someone else got it)', async () => {
     const openOne = summary({
       id: 'o1',
