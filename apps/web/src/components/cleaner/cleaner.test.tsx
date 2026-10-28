@@ -185,6 +185,40 @@ describe('cleaner schedule', () => {
     ).toBeInTheDocument();
   });
 
+  it('puts the next clean beside a lone one today (wide screens, where they sit two to a row)', async () => {
+    renderWith(
+      { GET: cleansApi([summary(), summary({ id: 'n1', scheduledDate: addDays(today, 3) })]) } as unknown as ApiClient,
+      <CleanerSchedulePage />,
+    );
+    const upNext = (await screen.findByRole('link', { name: /^Up next: Cedar Cabin/ })).closest('li')!;
+    expect(upNext.className).toContain('hidden');
+    expect(upNext.className).toContain('@3xl/content:flex');
+    expect(within(upNext).getByRole('link')).toHaveAttribute('href', '/cleaner/cleans/n1');
+    expect(upNext).toHaveTextContent('Up next · In 3 days');
+    expect(upNext).toHaveTextContent('Ready by 4 PM');
+  });
+
+  it('says nothing else is booked beside a lone clean today when there’s nothing next', async () => {
+    renderWith({ GET: cleansApi([summary()]) } as unknown as ApiClient, <CleanerSchedulePage />);
+    expect(await screen.findByText('Nothing else booked yet')).toBeInTheDocument();
+  });
+
+  it('leaves two cleans today side by side, with nothing next to fill', async () => {
+    renderWith(
+      {
+        GET: cleansApi([
+          summary(),
+          summary({ id: 'c2', property: { id: 'p2', name: 'Seaside Loft', city: 'Tofino' } }),
+          summary({ id: 'n1', scheduledDate: addDays(today, 3) }),
+        ]),
+      } as unknown as ApiClient,
+      <CleanerSchedulePage />,
+    );
+    expect(await screen.findByRole('link', { name: 'Seaside Loft' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Up next/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('Nothing else booked yet')).not.toBeInTheDocument();
+  });
+
   it('moves through the weeks, narrows to a property, and jumps to a day picked on the calendar', async () => {
     const cedar = { id: 'p1', name: 'Cedar Cabin', city: 'Whistler' };
     const seaside = { id: 'p2', name: 'Seaside Loft', city: 'Tofino' };

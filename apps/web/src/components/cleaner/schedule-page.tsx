@@ -18,12 +18,13 @@ import {
 } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
-import { addDays, calendarDays, todayIso } from '../../lib/dates';
+import { addDays, calendarDays, nightsBetween, todayIso } from '../../lib/dates';
 import { shortDate } from '../../lib/months';
 import { greeting } from '../../lib/owner';
 import { useWeekStart } from '../../lib/preferences';
 import { queries } from '../../lib/queries';
 import { daysOff } from '../../lib/time-off';
+import { ComingUpIllustration } from '../illustrations/coming-up';
 import { LoadError } from '../ui/alert';
 import { Pill } from '../ui/pill';
 import { Skeleton } from '../ui/skeleton';
@@ -131,6 +132,8 @@ export function CleanerSchedulePage() {
               {groups.today.map((c) => (
                 <TodayCard key={c.id} clean={c} today={today} />
               ))}
+              {/* Two to a row: an odd one out gets what's next beside it, rather than a gap. */}
+              {groups.today.length % 2 === 1 && <UpNextCard clean={next ?? null} today={today} colors={colors} />}
             </ul>
           </section>
         )}
@@ -394,6 +397,100 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
           {action} <ArrowRight className="size-4" />
         </span>
       )}
+    </li>
+  );
+}
+
+/**
+ * Beside an odd one out among today's cleans (wide screens only, where they sit two to a row): the next clean after
+ * today, with its day as a calendar tile, or that nothing else is booked yet. The whole card opens it.
+ */
+function UpNextCard({
+  clean: c,
+  today,
+  colors,
+}: {
+  clean: CleanSummary | null;
+  today: string;
+  colors: Map<string, string>;
+}) {
+  if (!c) {
+    return (
+      <li className="hidden flex-col items-center justify-center gap-3 rounded-card border border-dashed border-line bg-surface/60 p-5 text-center @3xl/content:flex">
+        <ComingUpIllustration size={72} />
+        <div>
+          <p className="font-semibold text-ink">Nothing else booked yet</p>
+          <p className="mt-0.5 text-sm text-muted">New cleans appear here as stays are booked.</p>
+        </div>
+      </li>
+    );
+  }
+  const from = freeFrom(c);
+  const date = new Date(`${c.scheduledDate}T00:00:00Z`);
+  const part = (o: Intl.DateTimeFormatOptions) => date.toLocaleDateString('en-CA', { ...o, timeZone: 'UTC' });
+  const days = nightsBetween(today, c.scheduledDate);
+  return (
+    <li className="group relative hidden flex-col rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-[0_6px_18px_rgb(16_20_18/0.06)] @3xl/content:flex">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+            Up next · {days === 1 ? 'Tomorrow' : `In ${days} days`}
+          </p>
+          <h3 className="mt-1 flex items-center gap-2 text-lg leading-snug font-bold text-ink">
+            <span
+              aria-hidden
+              className={cx('size-2.5 shrink-0 rounded-full', colors.get(c.property.id) ?? 'bg-line')}
+            />
+            <Link
+              to="/cleaner/cleans/$cleanId"
+              params={{ cleanId: c.id }}
+              aria-label={`Up next: ${c.property.name}, ${dayLabel(c.scheduledDate)}`}
+              className="truncate after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-blue-deep"
+            >
+              {c.property.name}
+            </Link>
+          </h3>
+          <p className="text-sm text-muted">
+            {c.property.city} · {cleanOccasion(c)}
+          </p>
+        </div>
+        {/* The day, as a calendar tile. */}
+        <span
+          aria-hidden
+          className="flex w-14 shrink-0 flex-col items-center overflow-hidden rounded-xl border border-line-soft bg-ground text-center"
+        >
+          <span className="w-full bg-primary py-0.5 text-[10px] font-semibold tracking-[0.08em] text-primary-ink uppercase">
+            {part({ month: 'short' })}
+          </span>
+          <span className="figure pt-1 text-xl leading-none font-bold text-ink">{part({ day: 'numeric' })}</span>
+          <span className="pb-1.5 text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
+            {part({ weekday: 'short' })}
+          </span>
+        </span>
+      </div>
+      <dl className="mt-4 grid gap-2 text-sm">
+        {from && (
+          <div className="flex items-center gap-2 text-ink">
+            <DoorOpen aria-hidden className="size-4 shrink-0 text-muted" />
+            <dt className="sr-only">Free from</dt>
+            <dd>{from}</dd>
+          </div>
+        )}
+        <div className="flex items-center gap-2 font-semibold text-ink">
+          <Clock aria-hidden className="size-4 shrink-0 text-muted" />
+          <dt className="sr-only">Ready by</dt>
+          <dd>{readyBy(c)}</dd>
+        </div>
+      </dl>
+      {/* Looks like a button, at the foot (level with today's card's); the card's link takes the click. */}
+      <div className="mt-5 flex flex-1 flex-col justify-end">
+        <span
+          aria-hidden
+          className="pointer-events-none inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 text-sm font-semibold text-ink transition-colors group-hover:bg-ground"
+        >
+          Open the clean <ArrowRight className="size-4" />
+        </span>
+      </div>
     </li>
   );
 }
