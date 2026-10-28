@@ -42,16 +42,36 @@ export const controlStyles = cx(
 
 export type PillTone = 'dark' | 'blue' | 'lavender' | 'sage' | 'amber' | 'neutral' | 'danger';
 
+/**
+ * A pill: a soft tint lit from above (a white wash and a hairline highlight along the top), a hairline ring in the
+ * tone's own colour, and a dot with a faint halo before the label. Dark is for the urgent and the few top-level labels.
+ */
 export const pillStyles = (tone: PillTone) =>
   cx(
-    'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap',
-    tone === 'dark' && 'bg-ink text-white',
-    tone === 'blue' && 'bg-blue-tint text-blue-deep',
-    tone === 'lavender' && 'bg-lavender-tint text-lavender-deep',
-    tone === 'sage' && 'bg-sage-tint text-sage-deep',
-    tone === 'amber' && 'bg-amber-tint text-amber-deep',
-    tone === 'neutral' && 'bg-line-soft text-muted',
-    tone === 'danger' && 'bg-danger-tint text-danger-deep',
+    'inline-flex items-center gap-1.5 rounded-full py-[3px] pr-2.5 pl-2 text-[11.5px] leading-4 font-semibold tracking-[0.01em] whitespace-nowrap',
+    'bg-linear-to-b ring-1 ring-inset',
+    tone === 'dark'
+      ? 'bg-ink from-white/14 to-white/0 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(16_20_18/0.18)] ring-black/30'
+      : 'from-white/60 to-white/0 shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_1px_2px_rgb(16_20_18/0.04)]',
+    tone === 'blue' && 'bg-blue-tint text-blue-deep ring-blue-mid/25',
+    tone === 'lavender' && 'bg-lavender-tint text-lavender-deep ring-lavender-mid/25',
+    tone === 'sage' && 'bg-sage-tint text-sage-deep ring-sage-mid/25',
+    tone === 'amber' && 'bg-amber-tint text-amber-deep ring-amber-mid/30',
+    tone === 'neutral' && 'bg-ground text-muted ring-line',
+    tone === 'danger' && 'bg-danger-tint text-danger-deep ring-danger-mid/25',
+  );
+
+/** The dot before a pill's label: the tone's mid colour, with a halo of itself. */
+export const pillDotStyles = (tone: PillTone) =>
+  cx(
+    'size-1.5 shrink-0 rounded-full ring-[2.5px]',
+    tone === 'dark' && 'bg-amber-light ring-amber-light/20',
+    tone === 'blue' && 'bg-blue-mid ring-blue-mid/18',
+    tone === 'lavender' && 'bg-lavender-mid ring-lavender-mid/18',
+    tone === 'sage' && 'bg-sage-mid ring-sage-mid/18',
+    tone === 'amber' && 'bg-amber-mid ring-amber-mid/20',
+    tone === 'neutral' && 'bg-muted/45 ring-muted/10',
+    tone === 'danger' && 'bg-danger-mid ring-danger-mid/18',
   );
 
 /**
