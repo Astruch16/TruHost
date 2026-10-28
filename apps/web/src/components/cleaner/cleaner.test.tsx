@@ -350,10 +350,26 @@ describe('a clean’s walkthrough', () => {
     const POST = vi.fn(() => ok(working('BEFORE_PHOTOS')));
     renderWith({ GET: getFor(detail()), POST } as unknown as ApiClient, <CleanPage cleanId="c1" />);
     expect(await screen.findByText('You earn')).toBeInTheDocument();
+    // Before the start: the five steps ahead, and no progress yet.
+    const ahead = screen.getByRole('region', { name: 'How the clean goes' });
+    expect(
+      within(ahead)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual([
+      'Step 1Before photosEvery room as you find it',
+      'Step 2Any damage?Anything broken or missing',
+      'Step 3Stock countHow much of each supply is left',
+      'Step 4After photosEvery room, clean and ready',
+      'Step 5Clean finishedTruHost and the owner are told',
+    ]);
+    expect(screen.queryByRole('img', { name: /steps done/ })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Start the clean/ }));
     expect(POST).toHaveBeenCalledWith('/v1/cleans/{id}/start', { params: { path: { id: 'c1' } } });
 
     expect(await screen.findByText('Step 1 of 5')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '0 of 5 steps done' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'How the clean goes' })).not.toBeInTheDocument();
     const before = step(1, 'Before photos');
     expect(before).toHaveAttribute('aria-current', 'step');
     expect(within(before).getAllByText('Take photo')).toHaveLength(2);
@@ -362,6 +378,22 @@ describe('a clean’s walkthrough', () => {
     expect(step(4, 'After photos')).toHaveTextContent('Opens after “Stock count”');
     expect(screen.queryByLabelText(/Take photo \(after/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Clean finished/ })).not.toBeInTheDocument();
+  });
+
+  it('pins the notes beside the clean, and counts the steps done in the hero', async () => {
+    renderWith(
+      {
+        GET: getFor(working('STOCK_COUNT', { notes: 'Extra towels are in the hall closet.' })),
+      } as unknown as ApiClient,
+      <CleanPage cleanId="c1" />,
+    );
+    const notes = await screen.findByRole('region', { name: 'Notes for this clean' });
+    expect(notes).toHaveTextContent('Extra towels are in the hall closet.');
+    expect(screen.getByRole('img', { name: '2 of 5 steps done' })).toBeInTheDocument();
+    // Each room says whether it has its before and after photos.
+    const rooms = screen.getByRole('region', { name: 'Rooms', hidden: true });
+    expect(rooms).toHaveTextContent('0 of 2 done');
+    expect(rooms).toHaveTextContent('BedroomBefore takenAfter not taken yet');
   });
 
   it('offers an open clean to book from its page', async () => {

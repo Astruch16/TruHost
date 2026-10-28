@@ -1,4 +1,4 @@
-import type { CleanStatus, CleanSummary } from '@truhost/shared';
+import type { CleanStatus, CleanStep, CleanSummary } from '@truhost/shared';
 import { dayLabel } from './dashboard-format';
 import { addDays, weekColumn } from './dates';
 import { formatTime } from './my-properties';
@@ -9,6 +9,18 @@ export const CLEAN_STATUS_TONE: Record<CleanStatus, PillTone> = {
   IN_PROGRESS: 'amber',
   COMPLETE: 'sage',
   CANCELLED: 'neutral',
+};
+
+/** A clean's checklist steps, in the order they're worked. */
+export const CLEAN_STEPS: CleanStep[] = ['BEFORE_PHOTOS', 'DAMAGE', 'STOCK_COUNT', 'AFTER_PHOTOS', 'FINISH'];
+
+/** What each step asks for, in a line (the walkthrough before a clean starts). */
+export const CLEAN_STEP_HINTS: Record<CleanStep, string> = {
+  BEFORE_PHOTOS: 'Every room as you find it',
+  DAMAGE: 'Anything broken or missing',
+  STOCK_COUNT: 'How much of each supply is left',
+  AFTER_PHOTOS: 'Every room, clean and ready',
+  FINISH: 'TruHost and the owner are told',
 };
 
 /** What the clean follows: "After a guest stay", "After an owner stay", or an ad-hoc clean. */
