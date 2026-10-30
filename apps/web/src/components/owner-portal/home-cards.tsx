@@ -68,13 +68,9 @@ export function MonthEarningsHero({
             {monthLabel(month)} {released ? 'statement' : 'earnings'}
           </h2>
           {chip && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-primary-ink">
-              <span
-                aria-hidden
-                className={cx('size-1.5 rounded-full', released ? 'bg-sage-light' : 'bg-amber-light')}
-              />
+            <Pill tone={released ? 'sage' : 'amber'} glass>
               {chip}
-            </span>
+            </Pill>
           )}
         </div>
         <MonthStepper month={month} onChange={onMonthChange} />

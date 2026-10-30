@@ -234,10 +234,7 @@ function StatementCard({
     <li className="group relative flex flex-col rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-[0_6px_18px_rgb(16_20_18/0.06)]">
       <div className="flex items-start justify-between gap-3">
         <StatementDocIcon size={44} className="shrink-0" />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-tint px-2.5 py-1 text-xs font-semibold text-sage-deep">
-          <span aria-hidden className="size-1.5 rounded-full bg-sage-deep" />
-          Released {shortDate(s.releasedOn)}
-        </span>
+        <Pill tone="sage">Released {shortDate(s.releasedOn)}</Pill>
       </div>
       <h3 className="mt-4 text-lg leading-snug font-bold text-ink">
         {/* The link covers the card, so anywhere on it opens the statement; the PDF button sits above it. */}

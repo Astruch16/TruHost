@@ -16,6 +16,7 @@ import { LoadError } from '../ui/alert';
 import { Card } from '../ui/card';
 import { MonthStepper } from '../ui/month-stepper';
 import { Skeleton } from '../ui/skeleton';
+import { Pill } from '../ui/pill';
 
 /**
  * The owner's month: what they earned (net) up front, then gross, nights and occupancy, and average nightly earnings,
@@ -164,9 +165,9 @@ function Breakdown({ f }: { f: MonthFigures }) {
           Where it went
         </h3>
         {keep !== null && (
-          <span className="figure rounded-full bg-sage-tint px-2.5 py-1 text-xs font-semibold text-sage-deep">
+          <Pill tone="sage" className="figure">
             You keep {keep}%
-          </span>
+          </Pill>
         )}
       </div>
       <div aria-hidden className="flex h-4 gap-1 overflow-hidden rounded-full bg-line">

@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router';
-import { CLEAN_STATUS_LABELS, type CleanSummary } from '@truhost/shared';
+import { type CleanSummary } from '@truhost/shared';
 import { ChevronRight } from 'lucide-react';
-import { CLEAN_STATUS_TONE, cleanOccasion, freeFrom, readyBy } from '../../lib/cleans';
+import { cleanOccasion, freeFrom, readyBy } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
 import { shortDate } from '../../lib/months';
-import { Pill } from '../ui/pill';
+import { CleanStatusPill } from './clean-status-pill';
 
 /** A compact line for coming up and recently done: the day, where (with its colour), and the window or how it went. */
 export function CleanRow({ clean: c, color }: { clean: CleanSummary; color?: string }) {
@@ -49,7 +49,7 @@ export function CleanRow({ clean: c, color }: { clean: CleanSummary; color?: str
                     .join(' · ')}
           </span>
         </span>
-        {c.status !== 'SCHEDULED' && <Pill tone={CLEAN_STATUS_TONE[c.status]}>{CLEAN_STATUS_LABELS[c.status]}</Pill>}
+        {c.status !== 'SCHEDULED' && <CleanStatusPill status={c.status} />}
         <ChevronRight aria-hidden className="size-4 shrink-0 text-muted" />
       </Link>
     </li>

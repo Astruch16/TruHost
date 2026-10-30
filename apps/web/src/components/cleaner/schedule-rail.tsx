@@ -14,6 +14,8 @@ import { OwnPropertyIcon } from '../illustrations/statement-icons';
 import { SupplyBar } from '../supplies/supply-bar';
 import { Skeleton } from '../ui/skeleton';
 import { CleanRow } from './clean-row';
+import { Pill } from '../ui/pill';
+import type { PillTone } from '../../lib/styles';
 
 // Each card fills its cell of the schedule's grid, so cards side by side end on the same line.
 const railCard = 'flex min-w-0 flex-col rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5';
@@ -95,15 +97,10 @@ export function RailProperties({
   );
 }
 
-const STATE: Record<Exclude<SupplyState, 'OK'>, { label: string; text: string; chip: string; dot: string }> = {
-  OUT: { label: 'Out', text: 'text-danger-deep', chip: 'bg-danger-tint text-danger-deep', dot: 'bg-danger-mid' },
-  LOW: { label: 'Low', text: 'text-amber-deep', chip: 'bg-amber-tint text-amber-deep', dot: 'bg-amber-mid' },
-  UNKNOWN: {
-    label: 'Not checked',
-    text: 'text-muted',
-    chip: 'bg-ground text-muted ring-1 ring-line ring-inset',
-    dot: 'border border-dashed border-muted',
-  },
+const STATE: Record<Exclude<SupplyState, 'OK'>, { label: string; text: string; tone: PillTone }> = {
+  OUT: { label: 'Out', text: 'text-danger-deep', tone: 'danger' },
+  LOW: { label: 'Low', text: 'text-amber-deep', tone: 'amber' },
+  UNKNOWN: { label: 'Not checked', text: 'text-muted', tone: 'neutral' },
 };
 const ORDER: Record<Exclude<SupplyState, 'OK'>, number> = { OUT: 0, LOW: 1, UNKNOWN: 2 };
 const SHOWN = 4;
@@ -157,15 +154,10 @@ export function RailSupplies({
       )}
       <ul aria-label="Supplies to check" className="mt-3 flex flex-wrap gap-1.5 empty:hidden">
         {counts.map(({ state, n }) => (
-          <li
-            key={state}
-            className={cx(
-              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
-              STATE[state].chip,
-            )}
-          >
-            <span aria-hidden className={cx('size-1.5 rounded-full', STATE[state].dot)} />
-            {n} {STATE[state].label.toLowerCase()}
+          <li key={state}>
+            <Pill tone={STATE[state].tone}>
+              {n} {STATE[state].label.toLowerCase()}
+            </Pill>
           </li>
         ))}
       </ul>

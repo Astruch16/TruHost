@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
-import { cx } from '../../lib/cx';
 import { splitCents } from '../../lib/money';
+import { Pill } from '../ui/pill';
 
 export interface KpiChange {
   label: string;
@@ -38,19 +38,20 @@ export function KpiCard({
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[13px] text-muted">
         <span className="min-w-0">{support}</span>
         {change && (
-          <span
-            className={cx(
-              'figure inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold',
-              change.direction === 'up' && 'bg-sage-tint text-sage-deep',
-              change.direction === 'down' && 'bg-danger-tint text-danger-deep',
-              change.direction === 'flat' && 'bg-line-soft text-muted',
-            )}
+          <Pill
+            tone={change.direction === 'up' ? 'sage' : change.direction === 'down' ? 'danger' : 'neutral'}
+            icon={
+              change.direction === 'up' ? (
+                <ArrowUpRight />
+              ) : change.direction === 'down' ? (
+                <ArrowDownRight />
+              ) : undefined
+            }
+            className="figure"
           >
-            {change.direction === 'up' && <ArrowUpRight aria-hidden className="size-3" />}
-            {change.direction === 'down' && <ArrowDownRight aria-hidden className="size-3" />}
             {change.label}
             <span className="font-normal">vs {change.vs}</span>
-          </span>
+          </Pill>
         )}
       </div>
       {chart && <div className="mt-auto pt-2.5">{chart}</div>}

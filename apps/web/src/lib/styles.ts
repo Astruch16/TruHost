@@ -40,38 +40,66 @@ export const controlStyles = cx(
   'aria-invalid:border-danger-deep aria-invalid:focus-visible:ring-danger-tint',
 );
 
-export type PillTone = 'dark' | 'blue' | 'lavender' | 'sage' | 'amber' | 'neutral' | 'danger';
+export type PillTone = 'dark' | 'blue' | 'lavender' | 'sage' | 'amber' | 'rose' | 'neutral' | 'danger';
+
+export interface PillLook {
+  /** sm: the tight spots (a step's "Now", a room's "Before"). */
+  size?: 'md' | 'sm';
+  /** On the deep green (a hero): frosted white, the tone only in the dot. */
+  glass?: boolean;
+}
 
 /**
  * A pill: a soft tint lit from above (a white wash and a hairline highlight along the top), a hairline ring in the
- * tone's own colour, and a dot with a faint halo before the label. Dark is for the urgent and the few top-level labels.
+ * tone's own colour, and a dot with a faint halo before the label. Dark is for the urgent and the few top-level labels;
+ * glass sits on the deep green.
  */
-export const pillStyles = (tone: PillTone) =>
+export const pillStyles = (tone: PillTone, { size = 'md', glass = false }: PillLook = {}) =>
   cx(
-    'inline-flex items-center gap-1.5 rounded-full py-[3px] pr-2.5 pl-2 text-[11.5px] leading-4 font-semibold tracking-[0.01em] whitespace-nowrap',
+    'inline-flex items-center rounded-full font-semibold tracking-[0.01em] whitespace-nowrap',
+    size === 'md'
+      ? 'gap-1.5 py-[3px] pr-2.5 pl-2 text-[11.5px] leading-4'
+      : 'gap-1 py-px pr-2 pl-1.5 text-[10.5px] leading-4',
     'bg-linear-to-b ring-1 ring-inset',
-    tone === 'dark'
-      ? 'bg-ink from-white/14 to-white/0 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(16_20_18/0.18)] ring-black/30'
-      : 'from-white/60 to-white/0 shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_1px_2px_rgb(16_20_18/0.04)]',
-    tone === 'blue' && 'bg-blue-tint text-blue-deep ring-blue-mid/25',
-    tone === 'lavender' && 'bg-lavender-tint text-lavender-deep ring-lavender-mid/25',
-    tone === 'sage' && 'bg-sage-tint text-sage-deep ring-sage-mid/25',
-    tone === 'amber' && 'bg-amber-tint text-amber-deep ring-amber-mid/30',
-    tone === 'neutral' && 'bg-ground text-muted ring-line',
-    tone === 'danger' && 'bg-danger-tint text-danger-deep ring-danger-mid/25',
+    glass
+      ? 'bg-white/10 from-white/10 to-white/0 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12)] ring-white/20'
+      : tone === 'dark'
+        ? 'bg-ink from-white/14 to-white/0 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(16_20_18/0.18)] ring-black/30'
+        : 'from-white/60 to-white/0 shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_1px_2px_rgb(16_20_18/0.04)]',
+    !glass && tone === 'blue' && 'bg-blue-tint text-blue-deep ring-blue-mid/25',
+    !glass && tone === 'lavender' && 'bg-lavender-tint text-lavender-deep ring-lavender-mid/25',
+    !glass && tone === 'sage' && 'bg-sage-tint text-sage-deep ring-sage-mid/25',
+    !glass && tone === 'amber' && 'bg-amber-tint text-amber-deep ring-amber-mid/30',
+    !glass && tone === 'rose' && 'bg-rose-tint text-rose-deep ring-rose-mid/25',
+    !glass && tone === 'neutral' && 'bg-ground text-muted ring-line',
+    !glass && tone === 'danger' && 'bg-danger-tint text-danger-deep ring-danger-mid/25',
   );
 
-/** The dot before a pill's label: the tone's mid colour, with a halo of itself. */
-export const pillDotStyles = (tone: PillTone) =>
+/** The dot before a pill's label: the tone's mid colour (light, on glass), with a halo of itself. */
+export const pillDotStyles = (tone: PillTone, glass = false) =>
   cx(
     'size-1.5 shrink-0 rounded-full ring-[2.5px]',
-    tone === 'dark' && 'bg-amber-light ring-amber-light/20',
-    tone === 'blue' && 'bg-blue-mid ring-blue-mid/18',
-    tone === 'lavender' && 'bg-lavender-mid ring-lavender-mid/18',
-    tone === 'sage' && 'bg-sage-mid ring-sage-mid/18',
-    tone === 'amber' && 'bg-amber-mid ring-amber-mid/20',
-    tone === 'neutral' && 'bg-muted/45 ring-muted/10',
-    tone === 'danger' && 'bg-danger-mid ring-danger-mid/18',
+    glass
+      ? {
+          dark: 'bg-amber-light ring-amber-light/25',
+          blue: 'bg-blue-tint ring-blue-tint/25',
+          lavender: 'bg-lavender-tint ring-lavender-tint/25',
+          sage: 'bg-sage-light ring-sage-light/25',
+          amber: 'bg-amber-light ring-amber-light/25',
+          rose: 'bg-rose-tint ring-rose-tint/25',
+          neutral: 'bg-white/60 ring-white/15',
+          danger: 'bg-danger-light ring-danger-light/25',
+        }[tone]
+      : {
+          dark: 'bg-amber-light ring-amber-light/20',
+          blue: 'bg-blue-mid ring-blue-mid/18',
+          lavender: 'bg-lavender-mid ring-lavender-mid/18',
+          sage: 'bg-sage-mid ring-sage-mid/18',
+          amber: 'bg-amber-mid ring-amber-mid/20',
+          rose: 'bg-rose-mid ring-rose-mid/18',
+          neutral: 'bg-muted/45 ring-muted/10',
+          danger: 'bg-danger-mid ring-danger-mid/18',
+        }[tone],
   );
 
 /**

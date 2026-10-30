@@ -2,11 +2,10 @@ import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { CLEAN_STATUS_LABELS, type CleanSummary } from '@truhost/shared';
+import { type CleanSummary } from '@truhost/shared';
 import { ArrowRight, Clock, DoorOpen } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import {
-  CLEAN_STATUS_TONE,
   cleanOccasion,
   freeFrom,
   propertyColors,
@@ -26,12 +25,12 @@ import { queries } from '../../lib/queries';
 import { daysOff } from '../../lib/time-off';
 import { ComingUpIllustration } from '../illustrations/coming-up';
 import { LoadError } from '../ui/alert';
-import { Pill } from '../ui/pill';
 import { Skeleton } from '../ui/skeleton';
 import { ScheduleCalendar } from './schedule-calendar';
 import { RailProperties, RailRecent, RailSupplies } from './schedule-rail';
 import { OpenCleans } from './open-cleans';
 import { WeekBoard } from './week-board';
+import { CleanStatusPill } from './clean-status-pill';
 
 /**
  * A cleaner's home (mobile-first). A hero says what today holds and what's next, with the week's counts; today's cleans
@@ -341,7 +340,7 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
             {late && ` · from ${shortDate(c.scheduledDate)}`}
           </p>
         </div>
-        <Pill tone={CLEAN_STATUS_TONE[c.status]}>{CLEAN_STATUS_LABELS[c.status]}</Pill>
+        <CleanStatusPill status={c.status} />
       </div>
       <dl className="mt-4 grid gap-2 text-sm">
         {from && (

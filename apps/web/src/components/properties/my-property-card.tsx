@@ -4,6 +4,7 @@ import { cx } from '../../lib/cx';
 import { monogram, TINTS } from '../../lib/dashboard-format';
 import { formatTime, propertyFacts, type MyProperty } from '../../lib/my-properties';
 import { CoverImage } from '../cover-image';
+import { Pill } from '../ui/pill';
 
 /**
  * A property on the owner/cleaner landing page: its cover photo (or tinted initials), role, place, layout and stay
@@ -47,15 +48,13 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
               </span>
             }
           />
-          <span
-            className={cx(
-              'absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm backdrop-blur',
-              owner ? 'bg-white/90 text-sage-deep' : 'bg-white/90 text-lavender-deep',
-            )}
+          <Pill
+            tone={owner ? 'sage' : 'lavender'}
+            icon={owner ? <KeyRound /> : <Sparkles />}
+            className="absolute top-3 left-3 shadow-sm"
           >
-            {owner ? <KeyRound aria-hidden className="size-3.5" /> : <Sparkles aria-hidden className="size-3.5" />}
             {owner ? 'You own this' : 'You clean here'}
-          </span>
+          </Pill>
         </div>
         <div className="flex flex-1 flex-col gap-3 p-5">
           <div className="min-w-0">
@@ -70,8 +69,8 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
           {facts.length > 0 && (
             <ul aria-label="Layout" className="flex flex-wrap gap-1.5">
               {facts.map((f) => (
-                <li key={f} className="rounded-full bg-ground px-2.5 py-1 text-xs font-medium text-ink">
-                  {f}
+                <li key={f}>
+                  <Pill dot={false}>{f}</Pill>
                 </li>
               ))}
             </ul>

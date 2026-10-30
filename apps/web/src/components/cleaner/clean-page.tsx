@@ -2,13 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, unwrap } from '@truhost/api-client';
-import {
-  CLEAN_STATUS_LABELS,
-  CLEAN_STEP_LABELS,
-  type Clean,
-  type CleanStatus,
-  type MissingCleanPhotos,
-} from '@truhost/shared';
+import { CLEAN_STEP_LABELS, type Clean, type MissingCleanPhotos } from '@truhost/shared';
 import { ArrowLeft, ArrowRight, Camera, Check, Clock, DoorOpen, MapPin, Play, StickyNote, Wallet } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { CLEAN_STEP_HINTS, CLEAN_STEPS, cleanOccasion, freeFrom, readyBy } from '../../lib/cleans';
@@ -22,6 +16,8 @@ import { ErrorAlert } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
 import { SuccessNotice } from '../ui/success-notice';
 import { CleanChecklist, CompletedClean } from './clean-checklist';
+import { Pill } from '../ui/pill';
+import { CleanStatusPill } from './clean-status-pill';
 
 /**
  * One clean, as its cleaner works it on a phone. A hero on the deep green says where and when (free from, ready by,
@@ -154,13 +150,6 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
   );
 }
 
-const STATUS_DOT: Record<CleanStatus, string> = {
-  SCHEDULED: 'bg-blue-tint',
-  IN_PROGRESS: 'bg-amber-light',
-  COMPLETE: 'bg-sage-light',
-  CANCELLED: 'bg-white/50',
-};
-
 /**
  * The top of the page, on the deep green the schedule uses: the day and occasion, the property, its status and (once
  * started) a ring of the steps done; then the window to clean in and the pay; then what to do now.
@@ -199,10 +188,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
               <span className="inline-flex items-center gap-1.5 text-primary-ink-muted">
                 <MapPin aria-hidden className="size-4" /> {c.property.city}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/20 ring-inset">
-                <span aria-hidden className={cx('size-2 rounded-full', STATUS_DOT[c.status])} />
-                {CLEAN_STATUS_LABELS[c.status]}
-              </span>
+              <CleanStatusPill status={c.status} glass />
             </div>
           </div>
           {stepsDone !== null && <StepsRing done={stepsDone} total={CLEAN_STEPS.length} />}
@@ -469,15 +455,9 @@ function RoomsAtAGlance({ clean: c }: { clean: Clean }) {
 
 function PhaseTag({ label, done }: { label: string; done: boolean }) {
   return (
-    <span
-      className={cx(
-        'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-        done ? 'bg-sage-tint text-sage-deep' : 'bg-ground text-muted',
-      )}
-    >
-      {done && <Check aria-hidden className="size-2.5" />}
+    <Pill tone={done ? 'sage' : 'neutral'} size="sm">
       {label}
       <span className="sr-only">{done ? ' taken' : ' not taken yet'}</span>
-    </span>
+    </Pill>
   );
 }

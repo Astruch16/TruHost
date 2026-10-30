@@ -5,6 +5,7 @@ import { cx } from '../../lib/cx';
 import { monogram, TINTS } from '../../lib/dashboard-format';
 import { formatTime, propertyFacts } from '../../lib/my-properties';
 import { CoverImage } from '../cover-image';
+import { Pill } from '../ui/pill';
 
 /**
  * The top of a property page: its cover photo as a wide banner (or its tinted initials), with the name, town, role,
@@ -48,20 +49,13 @@ export function PropertyHero({
       </div>
       <div className="flex min-h-64 flex-col justify-between gap-6 p-5 @2xl/content:min-h-80 @2xl/content:p-7">
         <div className="flex items-start justify-between gap-3">
-          <span
-            className={cx(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur',
-              'bg-white/90',
-              role === 'OWNER' ? 'text-sage-deep' : 'text-lavender-deep',
-            )}
+          <Pill
+            tone={role === 'OWNER' ? 'sage' : 'lavender'}
+            icon={role === 'OWNER' ? <KeyRound /> : <Sparkles />}
+            className="shadow-sm"
           >
-            {role === 'OWNER' ? (
-              <KeyRound aria-hidden className="size-3.5" />
-            ) : (
-              <Sparkles aria-hidden className="size-3.5" />
-            )}
             {role === 'OWNER' ? 'You own this' : 'You clean here'}
-          </span>
+          </Pill>
           {actions && <div className="flex flex-wrap justify-end gap-2">{actions}</div>}
         </div>
         <div className={photo ? 'text-white' : 'text-ink'}>

@@ -2,6 +2,7 @@ import type { Booking } from '../../lib/api-types';
 import { BOOKING_FILTERS, FILTER_LABELS, initial, type BookingFilter } from '../../lib/bookings';
 import { stayStyle } from '../../lib/calendar';
 import { cx } from '../../lib/cx';
+import { Pill } from '../ui/pill';
 
 const MONTH = new Intl.DateTimeFormat('en-CA', { month: 'short', timeZone: 'UTC' });
 
@@ -36,11 +37,7 @@ export function GuestAvatar({ booking }: { booking: Pick<Booking, 'kind' | 'chan
 /** Where the guest booked, in the calendar's colours. */
 export function ChannelPill({ booking }: { booking: Pick<Booking, 'kind' | 'channel'> }) {
   const style = stayStyle(booking);
-  return (
-    <span className={cx('inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold', style.bar)}>
-      {style.label}
-    </span>
-  );
+  return <Pill tone={style.tone}>{style.label}</Pill>;
 }
 
 /** The quick filters, with how many each would show. Empty ones (other than All and the current one) are left out. */

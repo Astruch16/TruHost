@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Pill } from './ui/pill';
 
 /**
  * One line of a money breakdown, read like a statement: its illustration, what it is (with a short note), and the
@@ -31,8 +32,10 @@ export function StatementLine({
       <dd className="flex shrink-0 items-center gap-2">
         {/* The share gives way to the amount on narrow screens (the fee's note says it too). */}
         {share !== null && (
-          <span className="figure hidden rounded-full bg-surface px-2 py-0.5 text-xs text-muted @md/content:inline">
-            {share}%
+          <span className="hidden @md/content:inline-flex">
+            <Pill dot={false} className="figure">
+              {share}%
+            </Pill>
           </span>
         )}
         {value === null ? (
