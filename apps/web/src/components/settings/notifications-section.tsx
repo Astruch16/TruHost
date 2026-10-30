@@ -9,6 +9,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Switch } from '../ui/switch';
 import { useApi } from '../../lib/api-context';
 import { queries } from '../../lib/queries';
+import { Pill } from '../ui/pill';
 
 type Channel = 'email' | 'inApp';
 
@@ -153,8 +154,8 @@ function NotificationRow({
           {entry.description}
         </p>
         {!entry.live && entry.startsWith && (
-          <p className="mt-1.5 inline-flex rounded-full bg-ground px-2 py-0.5 text-xs font-medium text-muted">
-            Starts with {entry.startsWith}
+          <p className="mt-1.5">
+            <Pill>Starts with {entry.startsWith}</Pill>
           </p>
         )}
       </div>

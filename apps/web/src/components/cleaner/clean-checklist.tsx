@@ -161,10 +161,14 @@ function StepCard({
         <span className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
           <span className="figure">Step {n}</span>
           {state === 'current' && (
-            <span className="rounded-full bg-amber-tint px-2 py-px tracking-[0.06em] text-amber-deep">Now</span>
+            <Pill tone="amber" size="sm" pulse>
+              Now
+            </Pill>
           )}
           {state === 'done' && (
-            <span className="rounded-full bg-sage-tint px-2 py-px tracking-[0.06em] text-sage-deep">Done</span>
+            <Pill tone="sage" size="sm">
+              Done
+            </Pill>
           )}
         </span>
         <span

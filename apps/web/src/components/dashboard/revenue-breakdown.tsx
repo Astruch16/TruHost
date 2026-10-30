@@ -3,6 +3,7 @@ import { formatBps } from '../../lib/format';
 import { formatCents } from '../../lib/money';
 import { ExpensesIcon, FeeIcon, GrossIcon, OwnPropertyIcon } from '../illustrations/statement-icons';
 import { StatementLine } from '../statement-line';
+import { Pill } from '../ui/pill';
 
 /**
  * Where gross revenue went, read like the owner's statement: a bar of the split, then gross revenue, the management
@@ -51,9 +52,9 @@ export function RevenueBreakdown({
           Gross revenue <strong className="figure ml-1 text-xl font-bold text-ink">{formatCents(b.grossCents)}</strong>
         </p>
         {keep !== null && (
-          <span className="figure rounded-full bg-sage-tint px-2.5 py-1 text-xs font-semibold text-sage-deep">
+          <Pill tone="sage" className="figure">
             Owners keep {keep}%
-          </span>
+          </Pill>
         )}
       </div>
       <div

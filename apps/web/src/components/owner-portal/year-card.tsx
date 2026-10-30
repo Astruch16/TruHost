@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { OwnerHome } from '@truhost/shared';
 import { formatOccupancy } from '../../lib/format';
 import { KpiMoney } from '../dashboard/kpi-card';
+import { Pill } from '../ui/pill';
 
 /**
  * The year so far, from the owner's released statements: what they were paid, nights booked, occupancy and average
@@ -28,10 +29,9 @@ export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; m
               : `From your released statement${ytd.months === 1 ? '' : 's'}, so every figure is final.`}
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-tint px-3 py-1 text-xs font-semibold text-sage-deep">
-          <span aria-hidden className="size-1.5 rounded-full bg-sage-mid" />
+        <Pill tone="sage">
           {ytd.months} of {monthsSoFar} month{monthsSoFar === 1 ? '' : 's'} released
-        </span>
+        </Pill>
       </header>
       <dl className="grid grid-cols-2 gap-3 @3xl/content:grid-cols-4">
         <YearStat label="Net to you" value={<KpiMoney cents={ytd.netCents} />} support="Paid out this year" />

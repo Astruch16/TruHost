@@ -1,13 +1,13 @@
 import { Link } from '@tanstack/react-router';
-import { CLEAN_STATUS_LABELS, type CleanSummary } from '@truhost/shared';
+import { type CleanSummary } from '@truhost/shared';
 import { ChevronLeft, ChevronRight, Clock, DoorOpen } from 'lucide-react';
-import { CLEAN_STATUS_TONE, cleanOccasion } from '../../lib/cleans';
+import { cleanOccasion } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
 import { addDays } from '../../lib/dates';
 import { shortDate } from '../../lib/months';
 import { formatTime } from '../../lib/my-properties';
-import { Pill } from '../ui/pill';
+import { CleanStatusPill } from './clean-status-pill';
 
 /**
  * One week of a cleaner's cleans, a day to a column, moved through a week at a time, so the page stays the same size
@@ -204,7 +204,7 @@ function WeekTile({ clean: c, color }: { clean: CleanSummary; color?: string }) 
           )}
           {c.status !== 'SCHEDULED' && !cancelled && (
             <span className="mt-0.5">
-              <Pill tone={CLEAN_STATUS_TONE[c.status]}>{CLEAN_STATUS_LABELS[c.status]}</Pill>
+              <CleanStatusPill status={c.status} />
             </span>
           )}
         </span>

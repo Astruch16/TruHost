@@ -1,3 +1,5 @@
+import type { PillTone } from './styles';
+
 /**
  * Month-grid layout for the stays calendar. Pure: dates in, cells and bar segments out. As on Airbnb and Vrbo, a stay's
  * bar runs from the middle of its check-in day to the middle of its check-out day, so back-to-back stays meet on the
@@ -114,6 +116,8 @@ export interface StayStyle {
   edge: string;
   /** Classes for the legend swatch. */
   swatch: string;
+  /** Its pill's tone (a booking's channel in a list). */
+  tone: PillTone;
 }
 
 const BLOCK_STRIPES = 'bg-[repeating-linear-gradient(135deg,var(--color-line-soft)_0_6px,var(--color-line)_6px_8px)]';
@@ -126,6 +130,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: 'bg-rose-tint text-rose-deep',
     edge: 'border-rose-deep/40',
     swatch: 'bg-rose-tint ring-1 ring-rose-deep/40',
+    tone: 'rose',
   },
   {
     key: 'VRBO',
@@ -133,6 +138,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: 'bg-blue-tint text-blue-deep',
     edge: 'border-blue-deep/40',
     swatch: 'bg-blue-tint ring-1 ring-blue-deep/40',
+    tone: 'blue',
   },
   {
     key: 'BOOKING_COM',
@@ -140,6 +146,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: 'bg-amber-tint text-amber-deep',
     edge: 'border-amber-deep/40',
     swatch: 'bg-amber-tint ring-1 ring-amber-deep/40',
+    tone: 'amber',
   },
   {
     key: 'DIRECT',
@@ -147,6 +154,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: 'bg-sage-tint text-sage-deep',
     edge: 'border-sage-deep/40',
     swatch: 'bg-sage-tint ring-1 ring-sage-deep/40',
+    tone: 'sage',
   },
   {
     key: 'OTHER',
@@ -154,6 +162,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: 'bg-line text-ink',
     edge: 'border-ink/25',
     swatch: 'bg-line ring-1 ring-ink/25',
+    tone: 'neutral',
   },
   {
     key: 'OWNER_STAY',
@@ -161,6 +170,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: 'bg-lavender-tint text-lavender-deep',
     edge: 'border-lavender-deep/40',
     swatch: 'bg-lavender-tint ring-1 ring-lavender-deep/40',
+    tone: 'lavender',
   },
   {
     key: 'BLOCK',
@@ -168,6 +178,7 @@ export const STAY_STYLES: readonly StayStyle[] = [
     bar: `${BLOCK_STRIPES} text-muted`,
     edge: 'border-ink/25',
     swatch: `${BLOCK_STRIPES} ring-1 ring-ink/25`,
+    tone: 'neutral',
   },
 ];
 

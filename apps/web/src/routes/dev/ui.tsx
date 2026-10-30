@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute, notFound } from '@tanstack/react-router';
-import { Plus } from 'lucide-react';
+import { KeyRound, Plus } from 'lucide-react';
 import { ApiError } from '@truhost/api-client';
 import { CoverPhotoCard } from '../../components/cover-photo-card';
 import { DeletePropertyDialog } from '../../components/delete-property-dialog';
@@ -35,6 +35,7 @@ import { Select } from '../../components/ui/select';
 import { PageHeader } from '../../components/ui/page-header';
 import { Confirmation } from '../../components/ui/confirmation';
 import { Pill } from '../../components/ui/pill';
+import { CleanStatusPill } from '../../components/cleaner/clean-status-pill';
 import { SuccessNotice } from '../../components/ui/success-notice';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../components/ui/table';
 import { GuideContext } from '../../lib/guide-context';
@@ -217,6 +218,30 @@ function StyleGuide() {
               <Pill tone="blue">Open</Pill>
               <Pill tone="neutral">Archived</Pill>
               <Pill tone="danger">Overdue</Pill>
+              <Pill tone="rose">Airbnb</Pill>
+              <Pill tone="sage" icon={<KeyRound />}>
+                You own this
+              </Pill>
+              <Pill dot={false}>2 bedrooms</Pill>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <CleanStatusPill status="SCHEDULED" />
+              <CleanStatusPill status="IN_PROGRESS" />
+              <CleanStatusPill status="COMPLETE" />
+              <CleanStatusPill status="CANCELLED" />
+              <Pill tone="amber" size="sm" pulse>
+                Now
+              </Pill>
+              <Pill tone="sage" size="sm">
+                Done
+              </Pill>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-inner bg-primary p-4">
+              <CleanStatusPill status="IN_PROGRESS" glass />
+              <CleanStatusPill status="COMPLETE" glass />
+              <Pill tone="amber" glass>
+                Estimated
+              </Pill>
             </div>
           </Card>
 
