@@ -1,5 +1,6 @@
 import type { CleanSummary } from '@truhost/shared';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { dayMarkStyle, propertyColorValue } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
 import { calendarDays } from '../../lib/dates';
@@ -10,8 +11,9 @@ const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
- * A cleaner's month at a glance: each day they clean carries a dot per clean, in its property's colour, with a legend.
- * A day with cleans can be picked (again to unpick) to show just that day's cleans. Cancelled cleans aren't marked.
+ * A cleaner's month at a glance: each day they clean is ringed and tinted in its property's colour (a slice each when
+ * it has cleans at more than one, and a count when it has several), with a legend. A day with cleans can be picked
+ * (again to unpick) to show just that day's cleans. Cancelled cleans aren't marked.
  */
 export function ScheduleCalendar({
   month,
@@ -104,25 +106,30 @@ export function ScheduleCalendar({
               const isSelected = day === selected;
               const off = daysOff?.has(day) ?? false;
               const label = `${dayLabel(day)}${off ? ', time off' : ''}${here.length ? `: ${here.length} clean${here.length === 1 ? '' : 's'} (${here.map((c) => c.property.name).join(', ')})` : ''}`;
+              const tones = [...new Set(here.map((c) => propertyColorValue(colors.get(c.property.id))))];
               const body = (
-                <>
-                  <span
-                    className={cx(
-                      'figure grid size-8 place-items-center rounded-full text-sm',
-                      isToday && 'bg-primary font-bold text-primary-ink',
-                      !isToday && here.length > 0 && 'font-semibold text-ink',
-                      !isToday && here.length === 0 && (inMonth ? 'text-ink/70' : 'text-muted/50'),
-                    )}
-                  >
-                    {Number(day.slice(8))}
-                  </span>
-                  <span aria-hidden className="flex h-2 items-center justify-center gap-0.5">
-                    {here.slice(0, 3).map((c) => (
-                      <span key={c.id} className={cx('size-1.5 rounded-full', colors.get(c.property.id))} />
-                    ))}
-                    {here.length > 3 && <span className="text-[9px] leading-none font-bold text-muted">+</span>}
-                  </span>
-                </>
+                <span
+                  data-mark={here.length > 0 || undefined}
+                  style={here.length > 0 ? dayMarkStyle(tones, isToday) : undefined}
+                  className={cx(
+                    'figure relative grid size-9 place-items-center rounded-full text-sm',
+                    isToday && 'font-bold text-primary-ink',
+                    isToday && here.length === 0 && 'bg-primary',
+                    !isToday && here.length > 0 && 'font-semibold text-ink',
+                    !isToday && here.length === 0 && (inMonth ? 'text-ink/70' : 'text-muted/50'),
+                  )}
+                >
+                  {Number(day.slice(8))}
+                  {/* Several cleans that day: how many. */}
+                  {here.length > 1 && (
+                    <span
+                      aria-hidden
+                      className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-ink text-[9px] leading-none font-bold text-white ring-2 ring-surface"
+                    >
+                      {here.length}
+                    </span>
+                  )}
+                </span>
               );
               return (
                 <div
@@ -138,7 +145,7 @@ export function ScheduleCalendar({
                       aria-pressed={isSelected}
                       onClick={() => onSelect(isSelected ? null : day)}
                       className={cx(
-                        'flex w-full max-w-11 flex-col items-center gap-0.5 rounded-inner py-1 transition-colors focus-visible:outline-2 focus-visible:outline-blue-deep',
+                        'flex w-full max-w-11 flex-col items-center rounded-inner py-1 transition-colors focus-visible:outline-2 focus-visible:outline-blue-deep',
                         isSelected ? 'bg-sage-tint ring-1 ring-sage-deep/40' : 'hover:bg-ground',
                         !inMonth && 'opacity-60',
                       )}
@@ -146,7 +153,7 @@ export function ScheduleCalendar({
                       {body}
                     </button>
                   ) : (
-                    <span className="flex w-full max-w-11 flex-col items-center gap-0.5 py-1" aria-label={label}>
+                    <span className="flex w-full max-w-11 flex-col items-center py-1" aria-label={label}>
                       {body}
                     </span>
                   )}
@@ -163,7 +170,11 @@ export function ScheduleCalendar({
           <ul aria-label="Properties" className="mt-4 flex flex-col gap-1.5 border-t border-line-soft pt-3 text-sm">
             {properties.map((p) => (
               <li key={p.id} className="flex items-center gap-2 text-ink">
-                <span aria-hidden className={cx('size-2.5 shrink-0 rounded-full', colors.get(p.id))} />
+                <span
+                  aria-hidden
+                  style={dayMarkStyle([propertyColorValue(colors.get(p.id))])}
+                  className="size-3.5 shrink-0 rounded-full"
+                />
                 <span className="truncate font-medium">{p.name}</span>
               </li>
             ))}

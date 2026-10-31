@@ -291,6 +291,22 @@ describe('cleaner schedule', () => {
     expect(within(check).getByRole('link', { name: /Cedar Cabin/ })).toHaveAttribute('href', '/cleaner/properties/p1');
   });
 
+  it('rings and tints each day with cleans on the calendar, with a count when there are several', async () => {
+    // Both cleans in this month: today if it's late in the month, else tomorrow.
+    const day = today.slice(8) >= '28' ? today : addDays(today, 1);
+    const items = [
+      summary({ id: 'a', scheduledDate: day }),
+      summary({ id: 'b', scheduledDate: day, property: { id: 'p2', name: 'Seaside Loft', city: 'Tofino' } }),
+    ];
+    renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
+    const marked = await screen.findByRole('button', { name: /2 cleans \(Cedar Cabin, Seaside Loft\)/ });
+    const mark = marked.querySelector('[data-mark]') as HTMLElement;
+    expect(mark).toHaveTextContent(`${Number(day.slice(8))}2`);
+    // Drawn as a ring (its colours are checked in lib/cleans.test.ts); the legend's swatches match.
+    expect(mark.getAttribute('style') ?? '').toContain('border: 2px solid transparent');
+    expect(screen.getByRole('list', { name: 'Properties' }).querySelectorAll('[style]')).toHaveLength(2);
+  });
+
   it('shades approved time off on the calendar', async () => {
     const day = today.slice(8) === '28' || today.slice(8) > '28' ? today : addDays(today, 1);
     const cleans = cleansApi([summary({ id: 'n1', scheduledDate: addDays(today, 3) })]);

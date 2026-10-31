@@ -78,6 +78,42 @@ export const PROPERTY_DOTS = [
   'bg-rose-deep',
 ] as const;
 
+/** A property's colour (its dot class, from PROPERTY_DOTS) as a CSS value, for the borders and tints a class can't give. */
+export function propertyColorValue(dot: string | undefined): string {
+  return dot ? `var(--color-${dot.replace(/^bg-/, '')})` : 'var(--color-line)';
+}
+
+/**
+ * How a day with cleans is marked on the month: a ring in its properties' colours and a fill of the same, faint (a
+ * share each, as slices, when it has cleans at more than one). Today keeps its solid green fill inside the ring, with a
+ * white hairline between them.
+ */
+export function dayMarkStyle(
+  colors: readonly string[],
+  today = false,
+): { border: string; background: string; boxShadow?: string } {
+  const slices = (tint: boolean) =>
+    `conic-gradient(${colors
+      .map((c, i) => {
+        const value = tint ? `color-mix(in srgb, ${c} 16%, transparent)` : c;
+        return `${value} ${(i * 100) / colors.length}% ${((i + 1) * 100) / colors.length}%`;
+      })
+      .join(', ')})`;
+  const solid = (c: string) => `linear-gradient(${c}, ${c})`;
+  return {
+    border: '2px solid transparent',
+    background: [
+      // The fill (over the card's white, so the ring's colour doesn't show through it), then the ring.
+      ...(today
+        ? [`${solid('var(--color-primary)')} padding-box`]
+        : [`${slices(true)} padding-box`, `${solid('var(--color-surface)')} padding-box`]),
+      `${slices(false)} border-box`,
+    ].join(', '),
+    // On today's dark fill a white hairline inside the ring keeps a green ring from melting into it.
+    ...(today ? { boxShadow: 'inset 0 0 0 1.5px var(--color-surface)' } : {}),
+  };
+}
+
 /** Each property's dot colour, assigned in name order so a property keeps its colour from visit to visit. */
 export function propertyColors(properties: readonly { id: string; name: string }[]): Map<string, string> {
   const unique = [...new Map(properties.map((p) => [p.id, p])).values()].sort((a, b) => a.name.localeCompare(b.name));
