@@ -161,20 +161,21 @@ export function WeekBoard({
 /**
  * A clean on the board, outlined in its property's colour with a faint wash of it at the top (as the calendar marks its
  * days): the property, when it's free and when it must be ready. A cancelled one is dashed and greyed. Opens the clean.
+ * Its status (once started) sits centred under it, so tiles side by side keep the same height.
  */
 function WeekTile({ clean: c, color }: { clean: CleanSummary; color?: string }) {
   const cancelled = c.status === 'CANCELLED';
   const unusual = c.kind === 'TURNOVER' && c.stay?.kind === 'GUEST' ? null : cleanOccasion(c);
   const until = c.window.until;
   return (
-    <li>
+    <li className="flex flex-col items-center gap-1.5">
       <Link
         to="/cleaner/cleans/$cleanId"
         params={{ cleanId: c.id }}
         title={`${c.property.name}${unusual ? ` · ${unusual}` : ''}`}
         style={{ '--tile': propertyColorValue(color) } as CSSProperties}
         className={cx(
-          'group block rounded-inner border-[1.5px] transition-[border-color,box-shadow] hover:shadow-[0_4px_12px_rgb(16_20_18/0.07)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+          'group block w-full rounded-inner border-[1.5px] transition-[border-color,box-shadow] hover:shadow-[0_4px_12px_rgb(16_20_18/0.07)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
           cancelled
             ? 'border-dashed border-line bg-surface opacity-55'
             : 'border-[color-mix(in_srgb,var(--tile)_70%,transparent)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--tile)_9%,var(--color-surface)),var(--color-surface)_75%)] hover:border-[var(--tile)]',
@@ -208,13 +209,9 @@ function WeekTile({ clean: c, color }: { clean: CleanSummary; color?: string }) 
               </span>
             </span>
           )}
-          {c.status !== 'SCHEDULED' && !cancelled && (
-            <span className="mt-0.5">
-              <CleanStatusPill status={c.status} />
-            </span>
-          )}
         </span>
       </Link>
+      {c.status !== 'SCHEDULED' && !cancelled && <CleanStatusPill status={c.status} />}
     </li>
   );
 }

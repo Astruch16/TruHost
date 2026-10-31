@@ -236,6 +236,17 @@ describe('cleaner schedule', () => {
     expect(tile('x').className).toContain('border-dashed');
   });
 
+  it('puts a started clean’s status under its tile on the board, not inside it', async () => {
+    renderWith(
+      { GET: cleansApi([summary({ id: 'a', status: 'IN_PROGRESS' })]) } as unknown as ApiClient,
+      <CleanerSchedulePage />,
+    );
+    const board = await screen.findByRole('region', { name: 'This week' });
+    const tile = within(board).getByRole('link', { name: /Cedar Cabin/ });
+    expect(tile).not.toHaveTextContent('In progress');
+    expect(tile.parentElement).toHaveTextContent(/In progress$/);
+  });
+
   it('moves through the weeks, narrows to a property, and jumps to a day picked on the calendar', async () => {
     const cedar = { id: 'p1', name: 'Cedar Cabin', city: 'Whistler' };
     const seaside = { id: 'p2', name: 'Seaside Loft', city: 'Tofino' };
