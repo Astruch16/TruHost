@@ -88,6 +88,26 @@ describe('agenda and hero helpers', () => {
     // Tue Oct 20; weeks from Sunday: this week ends Sat Oct 24.
     expect(scheduleCounts(items, '2026-10-20', 0)).toEqual({ thisWeek: 2, next30: 3, properties: 3 });
   });
+
+  it('counts a clean still under way from an earlier day, but not one done, missed or cancelled', async () => {
+    const { scheduleCounts } = await import('./cleans');
+    const p = (id: string) => ({ id, name: id, city: '' });
+    const items = [
+      // Started on Tuesday and not finished: still to do this week.
+      { scheduledDate: '2026-10-27', status: 'IN_PROGRESS' as const, property: p('a') },
+      // Done, never started (a missed day) and cancelled: nothing left to do.
+      { scheduledDate: '2026-10-28', status: 'COMPLETE' as const, property: p('b') },
+      { scheduledDate: '2026-10-29', status: 'SCHEDULED' as const, property: p('c') },
+      { scheduledDate: '2026-10-31', status: 'CANCELLED' as const, property: p('d') },
+      // Today, and later this month.
+      { scheduledDate: '2026-10-31', status: 'SCHEDULED' as const, property: p('a') },
+      { scheduledDate: '2026-11-04', status: 'SCHEDULED' as const, property: p('e') },
+    ];
+    // Sat Oct 31; weeks from Sunday: this week ends today.
+    expect(scheduleCounts(items, '2026-10-31', 0)).toEqual({ thisWeek: 2, next30: 3, properties: 2 });
+    // Weeks from Monday: this week runs to Sun Nov 1.
+    expect(scheduleCounts(items, '2026-10-31', 1)).toEqual({ thisWeek: 2, next30: 3, properties: 2 });
+  });
 });
 
 describe('week board and rail helpers', () => {

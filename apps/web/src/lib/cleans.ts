@@ -97,13 +97,18 @@ export function byDay<T extends Pick<CleanSummary, 'scheduledDate'>>(
   return days;
 }
 
-/** The hero's counts: cleans the rest of this week and in the next 30 days (from today), and the properties ahead. */
+/**
+ * The hero's counts: cleans still to do the rest of this week and in the next 30 days (from today), and the properties
+ * they're at. A clean still under way from an earlier day is still to do, so it counts (as it does in "today").
+ */
 export function scheduleCounts(
   items: readonly Pick<CleanSummary, 'scheduledDate' | 'status' | 'property'>[],
   today: string,
   weekStartsOn: 0 | 1,
 ): { thisWeek: number; next30: number; properties: number } {
-  const live = items.filter((c) => c.status !== 'CANCELLED' && c.status !== 'COMPLETE' && c.scheduledDate >= today);
+  const live = items.filter(
+    (c) => c.status === 'IN_PROGRESS' || (c.status === 'SCHEDULED' && c.scheduledDate >= today),
+  );
   const weekEnd = addDays(today, 6 - weekColumn(today, weekStartsOn));
   const in30 = addDays(today, 30);
   return {

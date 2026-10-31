@@ -24,6 +24,9 @@ import { useWeekStart } from '../../lib/preferences';
 import { queries } from '../../lib/queries';
 import { daysOff } from '../../lib/time-off';
 import { ComingUpIllustration } from '../illustrations/coming-up';
+import type { IconProps } from '../illustrations/defs';
+import { CleanDoneIcon, WeekIcon } from '../illustrations/list-icons';
+import { OwnPropertyIcon } from '../illustrations/statement-icons';
 import { LoadError } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
 import { ScheduleCalendar } from './schedule-calendar';
@@ -113,6 +116,8 @@ export function CleanerSchedulePage() {
         doneToday={groups.today.filter((c) => c.status === 'COMPLETE').length}
         next={next ?? null}
         counts={counts}
+        weekEnd={current.days[6]!}
+        today={today}
       />
 
       {/*
@@ -200,8 +205,10 @@ export function CleanerSchedulePage() {
 }
 
 /**
- * The top of the page, on the deep green the owner home uses: a greeting, what today holds (or what's next), a way
- * straight into the next clean, and the week's counts.
+ * The top of the page, as four cards of one size in a row (two by two on a tablet; on a phone, today across the top
+ * and the three counts under it). First, on the deep green the owner home uses: a greeting, what today holds (or
+ * what's next) and a way straight into the next clean. Then a card for each count: cleans left this week, in the next
+ * 30 days, and the properties they're at, each saying the dates it covers.
  */
 function ScheduleHero({
   firstName,
@@ -209,12 +216,16 @@ function ScheduleHero({
   doneToday,
   next,
   counts,
+  weekEnd,
+  today,
 }: {
   firstName: string;
   todayCount: number;
   doneToday: number;
   next: CleanSummary | null;
   counts: { thisWeek: number; next30: number; properties: number };
+  weekEnd: string;
+  today: string;
 }) {
   const headline =
     todayCount > 0
@@ -226,70 +237,96 @@ function ScheduleHero({
     <section
       aria-labelledby="schedule-hero"
       data-tour="cleaner-schedule"
-      className="relative overflow-hidden rounded-card bg-primary px-6 py-6 text-primary-ink @2xl/content:px-8 @2xl/content:py-7"
+      className="grid grid-cols-3 gap-3 @2xl/content:auto-rows-fr @2xl/content:grid-cols-2 @2xl/content:gap-4 @5xl/content:grid-cols-4"
     >
-      <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 size-56 rounded-full bg-white/5" />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-24 bottom-[-6rem] size-64 rounded-full bg-white/5"
-      />
-      {/*
-        Wide: three columns, the outer two sharing what's left, so the counts sit in the middle of the hero, level with
-        the button. The text's column never gets narrower than the text (up to 28rem), so where the middle would run
-        into it, the counts sit just after it instead.
-      */}
-      <div className="relative flex flex-col gap-6 @4xl/content:grid @4xl/content:grid-cols-[minmax(max-content,1fr)_auto_minmax(0,1fr)] @4xl/content:items-end @4xl/content:gap-x-12">
-        <div className="min-w-0 @4xl/content:max-w-[28rem]">
-          <p className="text-sm font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
+      <div className="relative col-span-3 flex flex-col overflow-hidden rounded-card bg-primary p-6 text-primary-ink @2xl/content:col-span-1">
+        <div aria-hidden className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-white/5" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -bottom-20 size-44 rounded-full bg-white/5"
+        />
+        <div className="relative flex flex-1 flex-col">
+          <p className="text-xs font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
             {greeting()}
             {firstName ? `, ${firstName}` : ''}
           </p>
-          <h1
-            id="schedule-hero"
-            className="mt-2 text-3xl leading-tight font-bold tracking-[-0.02em] @2xl/content:text-4xl"
-          >
+          <h1 id="schedule-hero" className="mt-2 text-3xl leading-tight font-bold tracking-[-0.02em]">
             {headline}
           </h1>
           {next ? (
-            <p className="mt-2 text-primary-ink-muted">
+            <p className="mt-2 text-sm text-primary-ink-muted">
               {todayCount > 0 ? 'After that: ' : 'Next up: '}
               <span className="font-semibold text-primary-ink">{next.property.name}</span>,{' '}
               {dayLabel(next.scheduledDate)}
               {freeFrom(next) ? ` · ${freeFrom(next)!.replace('Free from', 'from')}` : ''}
             </p>
           ) : (
-            <p className="mt-2 text-primary-ink-muted">
+            <p className="mt-2 text-sm text-primary-ink-muted">
               Nothing else is scheduled yet. New cleans appear as stays are booked.
             </p>
           )}
           {next && (
-            <Link
-              to="/cleaner/cleans/$cleanId"
-              params={{ cleanId: next.id }}
-              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary-ink-muted"
-            >
-              Open the next clean <ArrowRight aria-hidden className="size-4" />
-            </Link>
+            <div className="mt-auto pt-5">
+              <Link
+                to="/cleaner/cleans/$cleanId"
+                params={{ cleanId: next.id }}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary-ink-muted"
+              >
+                Open the next clean <ArrowRight aria-hidden className="size-4" />
+              </Link>
+            </div>
           )}
         </div>
-        <dl className="grid shrink-0 grid-cols-3 gap-2.5 @4xl/content:w-[26rem]">
-          <HeroStat label="This week" value={counts.thisWeek} />
-          <HeroStat label="Next 30 days" value={counts.next30} />
-          <HeroStat label={counts.properties === 1 ? 'Property' : 'Properties'} value={counts.properties} />
-        </dl>
       </div>
+      <CountCard
+        icon={WeekIcon}
+        label="This week"
+        value={counts.thisWeek}
+        detail={`To do, through ${dayLabel(weekEnd)}`}
+      />
+      <CountCard
+        icon={CleanDoneIcon}
+        label="Next 30 days"
+        value={counts.next30}
+        detail={`To do, through ${dayLabel(addDays(today, 30))}`}
+      />
+      <CountCard
+        icon={OwnPropertyIcon}
+        label={counts.properties === 1 ? 'Property' : 'Properties'}
+        value={counts.properties}
+        detail="With cleans still to do"
+      />
     </section>
   );
 }
 
-function HeroStat({ label, value }: { label: string; value: ReactNode }) {
+/**
+ * One count, as its own card: an illustrated icon, the label, the figure and the dates it covers. On a phone (three to
+ * a row) it keeps to the label and figure, the figures level however the labels wrap.
+ */
+function CountCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: (props: IconProps) => ReactNode;
+  label: string;
+  value: number;
+  detail: string;
+}) {
   return (
-    <div className="flex min-w-0 flex-col rounded-xl bg-white/[0.08] px-3.5 py-3 ring-1 ring-white/12 ring-inset">
-      {/* Labels may wrap on phones; the reserved two lines keep the three figures level. */}
-      <dt className="flex min-h-[calc(2lh+0.5rem)] items-end justify-center border-b border-white/15 pb-2 text-[11px] leading-tight font-semibold tracking-[0.08em] text-center text-white uppercase @4xl/content:min-h-0">
-        {label}
-      </dt>
-      <dd className="figure mt-2.5 text-center text-2xl leading-none font-bold text-white">{value}</dd>
+    <div className="flex min-w-0 flex-col rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-6">
+      <Icon size={44} className="hidden shrink-0 @2xl/content:block" />
+      <dl className="flex flex-1 flex-col @2xl/content:mt-4">
+        <dt className="text-[11px] leading-tight font-semibold tracking-[0.08em] text-muted uppercase @2xl/content:text-xs">
+          {label}
+        </dt>
+        <dd className="figure mt-auto pt-1.5 text-3xl leading-none font-bold tracking-[-0.02em] text-ink @2xl/content:pt-3 @2xl/content:text-4xl">
+          {value}
+        </dd>
+        <dd className="mt-1.5 hidden text-sm text-muted @2xl/content:block">{detail}</dd>
+      </dl>
     </div>
   );
 }
