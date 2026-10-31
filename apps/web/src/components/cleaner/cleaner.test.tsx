@@ -219,6 +219,23 @@ describe('cleaner schedule', () => {
     expect(screen.queryByText('Nothing else booked yet')).not.toBeInTheDocument();
   });
 
+  it('outlines each clean on the week board in its property’s colour, a cancelled one dashed', async () => {
+    const items = [
+      summary({ id: 'a' }),
+      summary({ id: 'x', status: 'CANCELLED', property: { id: 'p2', name: 'Seaside Loft', city: 'Tofino' } }),
+    ];
+    renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
+    const board = await screen.findByRole('region', { name: 'This week' });
+    const tile = (id: string) =>
+      within(board)
+        .getAllByRole('link')
+        .find((l) => l.getAttribute('href') === `/cleaner/cleans/${id}`)!;
+    // Cedar Cabin is the first property by name, so it gets the first colour.
+    expect(tile('a').style.getPropertyValue('--tile')).toBe('var(--color-sage-mid)');
+    expect(tile('a').className).toContain('border-[color-mix(in_srgb,var(--tile)_70%,transparent)]');
+    expect(tile('x').className).toContain('border-dashed');
+  });
+
   it('moves through the weeks, narrows to a property, and jumps to a day picked on the calendar', async () => {
     const cedar = { id: 'p1', name: 'Cedar Cabin', city: 'Whistler' };
     const seaside = { id: 'p2', name: 'Seaside Loft', city: 'Tofino' };

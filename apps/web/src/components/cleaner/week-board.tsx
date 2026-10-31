@@ -1,7 +1,8 @@
+import type { CSSProperties } from 'react';
 import { Link } from '@tanstack/react-router';
 import { type CleanSummary } from '@truhost/shared';
 import { ChevronLeft, ChevronRight, Clock, DoorOpen } from 'lucide-react';
-import { cleanOccasion } from '../../lib/cleans';
+import { cleanOccasion, propertyColorValue } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
 import { addDays } from '../../lib/dates';
@@ -157,7 +158,10 @@ export function WeekBoard({
   );
 }
 
-/** A clean on the board: its property (in its colour), when it's free and when it must be ready. Opens the clean. */
+/**
+ * A clean on the board, outlined in its property's colour with a faint wash of it at the top (as the calendar marks its
+ * days): the property, when it's free and when it must be ready. A cancelled one is dashed and greyed. Opens the clean.
+ */
 function WeekTile({ clean: c, color }: { clean: CleanSummary; color?: string }) {
   const cancelled = c.status === 'CANCELLED';
   const unusual = c.kind === 'TURNOVER' && c.stay?.kind === 'GUEST' ? null : cleanOccasion(c);
@@ -168,12 +172,14 @@ function WeekTile({ clean: c, color }: { clean: CleanSummary; color?: string }) 
         to="/cleaner/cleans/$cleanId"
         params={{ cleanId: c.id }}
         title={`${c.property.name}${unusual ? ` · ${unusual}` : ''}`}
+        style={{ '--tile': propertyColorValue(color) } as CSSProperties}
         className={cx(
-          'group block overflow-hidden rounded-inner border border-line-soft bg-surface transition-[border-color,box-shadow] hover:border-line hover:shadow-[0_4px_12px_rgb(16_20_18/0.07)] focus-visible:outline-2 focus-visible:outline-blue-deep',
-          cancelled && 'opacity-55',
+          'group block rounded-inner border-[1.5px] transition-[border-color,box-shadow] hover:shadow-[0_4px_12px_rgb(16_20_18/0.07)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+          cancelled
+            ? 'border-dashed border-line bg-surface opacity-55'
+            : 'border-[color-mix(in_srgb,var(--tile)_70%,transparent)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--tile)_9%,var(--color-surface)),var(--color-surface)_75%)] hover:border-[var(--tile)]',
         )}
       >
-        <span aria-hidden className={cx('block h-1', color ?? 'bg-line')} />
         <span className="flex flex-col gap-1 px-2.5 pt-2 pb-2.5">
           <span
             className={cx(
