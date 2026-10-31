@@ -354,6 +354,24 @@ describe('cleaner schedule', () => {
     expect(await within(second).findByRole('alert')).toHaveTextContent('Another cleaner has just booked this one.');
   });
 
+  it('puts today and each count in its own card, a clean still under way counted as to do', async () => {
+    const items = [
+      summary({ id: 'w', scheduledDate: addDays(today, -1), status: 'IN_PROGRESS' }),
+      summary({
+        id: 'n',
+        scheduledDate: addDays(today, 40),
+        property: { id: 'p2', name: 'Seaside Loft', city: 'Tofino' },
+      }),
+    ];
+    renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);
+    const hero = await screen.findByRole('region', { name: '1 clean today' });
+    const card = (label: string) => within(hero).getByText(label).closest('dl')!;
+    expect(card('This week')).toHaveTextContent(/^This week1To do, through /);
+    expect(card('Next 30 days')).toHaveTextContent(/^Next 30 days1To do, through /);
+    // The clean in 40 days is past the 30, but its property still has a clean to do.
+    expect(card('Properties')).toHaveTextContent('Properties2With cleans still to do');
+  });
+
   it('says when there’s nothing today, and when the next clean is', async () => {
     const items = [summary({ id: 'c2', scheduledDate: addDays(today, 2) })];
     renderWith({ GET: cleansApi(items) } as unknown as ApiClient, <CleanerSchedulePage />);

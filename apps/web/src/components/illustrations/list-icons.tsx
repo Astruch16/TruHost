@@ -137,3 +137,32 @@ export function TimeOffIcon(props: IconProps) {
     </IconFrame>
   );
 }
+
+/** This week: a calendar page with one week picked out in gold, on amber. */
+export function WeekIcon(props: IconProps) {
+  const { id, url } = useIllustrationIds();
+  return (
+    <IconFrame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'sheen', 'gold', 'paper']} />
+      <circle cx="20" cy="20" r="19" fill="#FBEECB" />
+      <ellipse cx="20" cy="32.6" rx="11.5" ry="2.1" fill={url.shadow} />
+      <rect x="9.5" y="10.5" width="21" height="20" rx="2.5" transform="translate(0.8 1.2)" fill="#D9BE7E" />
+      <rect x="9.5" y="10.5" width="21" height="20" rx="2.5" fill={url.paper} />
+      <path d="M9.5 16 V13 Q9.5 10.5 12 10.5 H28 Q30.5 10.5 30.5 13 V16 Z" fill="#4F7A63" />
+      <rect x="13.4" y="8.4" width="2.2" height="4.6" rx="1.1" fill="#2F5548" />
+      <rect x="24.4" y="8.4" width="2.2" height="4.6" rx="1.1" fill="#2F5548" />
+      <g fill="#E3E4E1">
+        <rect x="12" y="18.4" width="3" height="2.4" rx="0.6" />
+        <rect x="16.4" y="18.4" width="3" height="2.4" rx="0.6" />
+        <rect x="20.8" y="18.4" width="3" height="2.4" rx="0.6" />
+        <rect x="25.2" y="18.4" width="3" height="2.4" rx="0.6" />
+        <rect x="12" y="26.4" width="3" height="2.4" rx="0.6" />
+        <rect x="16.4" y="26.4" width="3" height="2.4" rx="0.6" />
+      </g>
+      {/* The week, picked out */}
+      <rect x="11.2" y="22" width="17.8" height="3.4" rx="1.7" transform="translate(0 0.6)" fill="#C99A2E" />
+      <rect x="11.2" y="22" width="17.8" height="3.4" rx="1.7" fill={url.gold} />
+      <rect x="11.2" y="22" width="17.8" height="3.4" rx="1.7" fill={url.sheen} />
+    </IconFrame>
+  );
+}
