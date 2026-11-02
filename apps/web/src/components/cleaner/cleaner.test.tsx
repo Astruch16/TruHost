@@ -486,6 +486,15 @@ describe('a clean’s walkthrough', () => {
     const notes = await screen.findByRole('region', { name: 'Notes for this clean' });
     expect(notes).toHaveTextContent('Extra towels are in the hall closet.');
     expect(screen.getByRole('img', { name: '2 of 5 steps done' })).toBeInTheDocument();
+    // The hero's facts, each on its own card: the window, the progress and the pay.
+    const facts = screen.getAllByRole('term').map((dt) => [dt.textContent, dt.nextElementSibling?.textContent]);
+    expect(facts).toEqual([
+      ['Free from', '11 AM'],
+      ['Ready by', expect.stringMatching(/^4 PM/)],
+      ['Progress', '3 to go'],
+      ['You earn', expect.stringMatching(/^\$/)],
+    ]);
+    expect(screen.getByText(/^Now: Stock count\./)).toBeInTheDocument();
     // Each room says whether it has its before and after photos.
     const rooms = screen.getByRole('region', { name: 'Rooms', hidden: true });
     expect(rooms).toHaveTextContent('0 of 2 done');

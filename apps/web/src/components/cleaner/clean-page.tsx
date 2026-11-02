@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, unwrap } from '@truhost/api-client';
 import { CLEAN_STEP_LABELS, type Clean, type MissingCleanPhotos } from '@truhost/shared';
-import { ArrowLeft, ArrowRight, Camera, Check, Clock, DoorOpen, MapPin, Play, StickyNote, Wallet } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Clock, DoorOpen, ListChecks, MapPin, Play, StickyNote, Wallet } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { CLEAN_STEP_HINTS, CLEAN_STEPS, cleanOccasion, freeFrom, readyBy } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
@@ -127,8 +127,9 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
             aria-label="About this clean"
             className="flex min-w-0 flex-col gap-4 @4xl/content:sticky @4xl/content:top-6 @4xl/content:col-start-2 @4xl/content:row-start-1"
           >
-            {c.notes && <CleanNotes notes={c.notes} />}
+            {/* Rooms first: its heading sits level with the checklist's, so their cards line up. Phones don't show it. */}
             {working && c.rooms.length > 0 && <RoomsAtAGlance clean={c} />}
+            {c.notes && <CleanNotes notes={c.notes} />}
           </aside>
         )}
         <div className="min-w-0 @4xl/content:col-start-1 @4xl/content:row-start-1">
@@ -151,8 +152,9 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
 }
 
 /**
- * The top of the page, on the deep green the schedule uses: the day and occasion, the property, its status and (once
- * started) a ring of the steps done; then the window to clean in and the pay; then what to do now.
+ * The top of the page, as cards. A deep-green card says where (the day and occasion, the property, its status) and
+ * what to do now; beside it (below, on a phone), a white card for each fact: free from, ready by, how far along it is
+ * (once started) and the pay (once TruHost has set it).
  */
 function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }) {
   const from = freeFrom(c);
@@ -162,95 +164,139 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
       : c.status === 'IN_PROGRESS'
         ? CLEAN_STEPS.indexOf(c.checklist.current ?? 'FINISH')
         : null;
+  const facts: ReactNode[] = [
+    <FactCard
+      key="from"
+      icon={<DoorOpen className="size-4" />}
+      label="Free from"
+      value={from ? from.replace('Free from ', '') : 'Any time'}
+    />,
+    <FactCard
+      key="ready"
+      icon={<Clock className="size-4" />}
+      label="Ready by"
+      value={readyBy(c).replace('Ready by ', '')}
+    />,
+  ];
+  if (stepsDone !== null) {
+    facts.push(
+      <FactCard
+        key="progress"
+        icon={<ListChecks className="size-4" />}
+        label="Progress"
+        value={stepsDone === CLEAN_STEPS.length ? 'All done' : `${CLEAN_STEPS.length - stepsDone} to go`}
+        aside={<StepsRing done={stepsDone} total={CLEAN_STEPS.length} />}
+      />,
+    );
+  }
+  // Pay, once TruHost has set it (a clean at $0 means it hasn't been).
+  if (c.cleanerPayCents) {
+    facts.push(
+      <FactCard
+        key="pay"
+        icon={<Wallet className="size-4" />}
+        label="You earn"
+        value={formatCents(c.cleanerPayCents)}
+        figure
+      />,
+    );
+  }
+  // Under way or done, the green card closes on where it's at (before the start, it holds what to do instead).
+  const now = c.status === 'IN_PROGRESS' ? c.checklist.current : null;
+  const line = now ? (
+    <>
+      <span className="font-semibold text-white">Now: {CLEAN_STEP_LABELS[now]}.</span> {CLEAN_STEP_HINTS[now]}
+    </>
+  ) : c.status === 'COMPLETE' ? (
+    <>
+      <span className="font-semibold text-white">All {CLEAN_STEPS.length} steps done.</span> TruHost and the owner have
+      been told it’s ready for guests.
+    </>
+  ) : null;
   return (
     <section
       aria-labelledby="clean-heading"
-      className="relative overflow-hidden rounded-card bg-primary px-6 py-6 text-primary-ink @2xl/content:px-8 @2xl/content:py-7"
+      className="grid gap-3 @2xl/content:gap-4 @4xl/content:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]"
     >
-      <div aria-hidden className="pointer-events-none absolute -top-20 -right-12 size-64 rounded-full bg-white/5" />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-white/[0.04]"
-      />
-      <div className="relative flex flex-col gap-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-[0.12em] text-primary-ink-muted uppercase">
-              {dayLabel(c.scheduledDate)} · {cleanOccasion(c)}
-            </p>
-            <h1
-              id="clean-heading"
-              className="mt-2 text-3xl leading-tight font-bold tracking-[-0.02em] @2xl/content:text-4xl"
-            >
-              {c.property.name}
-            </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span className="inline-flex items-center gap-1.5 text-primary-ink-muted">
-                <MapPin aria-hidden className="size-4" /> {c.property.city}
-              </span>
-              <CleanStatusPill status={c.status} glass />
-            </div>
+      <div className="relative flex flex-col overflow-hidden rounded-card bg-primary p-6 text-primary-ink @2xl/content:p-7">
+        <div aria-hidden className="pointer-events-none absolute -top-20 -right-12 size-56 rounded-full bg-white/5" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-10 -bottom-28 size-64 rounded-full bg-white/[0.04]"
+        />
+        <div className="relative flex flex-1 flex-col">
+          <p className="text-xs font-semibold tracking-[0.12em] text-primary-ink-muted uppercase @2xl/content:text-sm">
+            {dayLabel(c.scheduledDate)} · {cleanOccasion(c)}
+          </p>
+          <h1
+            id="clean-heading"
+            className="mt-2 text-3xl leading-tight font-bold tracking-[-0.02em] @2xl/content:text-4xl"
+          >
+            {c.property.name}
+          </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="inline-flex items-center gap-1.5 text-primary-ink-muted">
+              <MapPin aria-hidden className="size-4" /> {c.property.city}
+            </span>
+            <CleanStatusPill status={c.status} glass />
           </div>
-          {stepsDone !== null && <StepsRing done={stepsDone} total={CLEAN_STEPS.length} />}
+          {line && <p className="mt-auto pt-6 text-primary-ink-muted">{line}</p>}
+          {children && (
+            <div className="mt-auto pt-6">
+              <div className="border-t border-white/15 pt-5">{children}</div>
+            </div>
+          )}
         </div>
-
-        <dl className="grid grid-cols-2 gap-2.5 @2xl/content:flex @2xl/content:items-stretch">
-          <HeroFact
-            icon={<DoorOpen className="size-4" />}
-            label="Free from"
-            value={from ? from.replace('Free from ', '') : 'Any time'}
-          />
-          {/* Free from, then on to ready by. */}
-          <span aria-hidden className="hidden items-center gap-1 text-white/35 @2xl/content:flex">
-            <span className="w-6 border-t-2 border-dashed border-current" />
-            <ArrowRight className="size-4" />
-          </span>
-          <HeroFact icon={<Clock className="size-4" />} label="Ready by" value={readyBy(c).replace('Ready by ', '')} />
-          {/* Pay, once TruHost has set it (a clean at $0 means it hasn't been). */}
-          {c.cleanerPayCents ? (
-            <HeroFact
-              icon={<Wallet className="size-4" />}
-              label="You earn"
-              value={formatCents(c.cleanerPayCents)}
-              gold
-              className="col-span-2 @2xl/content:ml-auto"
-            />
-          ) : null}
-        </dl>
-
-        {children && <div className="border-t border-white/15 pt-5">{children}</div>}
       </div>
+
+      <dl
+        className={cx(
+          // A phone: two by two. A tablet, below the green card: one row. Wide, beside it: two by two again, or two
+          // stacked when there are only two. An odd one out spans the bottom of a two-by-two.
+          'grid auto-rows-fr grid-cols-2 gap-3 @2xl/content:auto-cols-fr @2xl/content:grid-flow-col @2xl/content:grid-cols-none @2xl/content:gap-4',
+          '@4xl/content:grid-flow-row',
+          facts.length === 2 ? '@4xl/content:grid-cols-1' : '@4xl/content:grid-cols-2',
+          facts.length % 2 === 1 &&
+            '[&>*:last-child]:col-span-2 @2xl/content:[&>*:last-child]:col-span-1 @4xl/content:[&>*:last-child]:col-span-2',
+        )}
+      >
+        {facts}
+      </dl>
     </section>
   );
 }
 
-function HeroFact({
+/** One fact about the clean, on its own white card: an icon and a label, its value, and any mark beside them. */
+function FactCard({
   icon,
   label,
   value,
-  gold = false,
-  className,
+  aside,
+  figure = false,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
-  gold?: boolean;
-  className?: string;
+  aside?: ReactNode;
+  figure?: boolean;
 }) {
   return (
-    <div
-      className={cx(
-        'min-w-0 rounded-xl bg-white/[0.08] px-4 py-3 ring-1 ring-white/12 ring-inset @2xl/content:min-w-44',
-        className,
-      )}
-    >
-      <dt className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary-ink-muted uppercase">
-        <span aria-hidden>{icon}</span>
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] gap-x-3 rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5">
+      <dt className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+        <span aria-hidden className="mb-3 grid size-9 place-items-center rounded-full bg-sage-tint text-primary">
+          {icon}
+        </span>
         {label}
       </dt>
-      <dd className={cx('mt-1.5 text-lg leading-snug font-bold', gold ? 'figure text-amber-light' : 'text-white')}>
+      <dd
+        className={cx(
+          'col-start-1 self-end pt-1 text-lg leading-snug font-bold text-ink @2xl/content:text-xl',
+          figure && 'figure',
+        )}
+      >
         {value}
       </dd>
+      {aside && <dd className="col-start-2 row-span-2 row-start-1 self-center">{aside}</dd>}
     </div>
   );
 }
@@ -264,17 +310,17 @@ function StepsRing({ done, total }: { done: number; total: number }) {
     <div
       role="img"
       aria-label={`${done} of ${total} steps done`}
-      className="relative grid size-20 shrink-0 place-items-center @2xl/content:size-24"
+      className="relative grid size-16 shrink-0 place-items-center @2xl/content:size-20"
     >
       <svg viewBox="0 0 72 72" aria-hidden className="absolute inset-0 size-full -rotate-90">
-        <circle cx="36" cy="36" r={r} fill="none" stroke="rgb(255 255 255 / 0.14)" strokeWidth="6" />
+        <circle cx="36" cy="36" r={r} fill="none" stroke="var(--color-line-soft)" strokeWidth="6" />
         {done > 0 && (
           <circle
             cx="36"
             cy="36"
             r={r}
             fill="none"
-            stroke={finished ? 'var(--color-sage-light)' : 'var(--color-amber-light)'}
+            stroke={finished ? 'var(--color-sage-mid)' : 'var(--color-primary)'}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={length}
@@ -283,15 +329,10 @@ function StepsRing({ done, total }: { done: number; total: number }) {
         )}
       </svg>
       {finished ? (
-        <Check aria-hidden className="size-8 text-sage-light" />
+        <Check aria-hidden className="size-7 text-sage-mid" />
       ) : (
-        <span aria-hidden className="text-center">
-          <span className="figure block text-xl leading-none font-bold @2xl/content:text-2xl">
-            {done}/{total}
-          </span>
-          <span className="mt-1 block text-[10px] font-semibold tracking-[0.08em] text-primary-ink-muted uppercase">
-            Steps
-          </span>
+        <span aria-hidden className="figure text-base leading-none font-bold text-ink @2xl/content:text-lg">
+          {done}/{total}
         </span>
       )}
     </div>
@@ -404,23 +445,23 @@ function CleanNotes({ notes }: { notes: string }) {
   );
 }
 
-/** Wide screens only: every room, its latest photo, and whether it has its before and after shots. */
+/**
+ * Wide screens only: every room, its latest photo, and whether it has its before and after shots. Its heading is
+ * outside the card, like the checklist's beside it, so the two cards' tops line up.
+ */
 function RoomsAtAGlance({ clean: c }: { clean: Clean }) {
   const done = c.rooms.filter((r) => r.before.length > 0 && r.after.length > 0).length;
   return (
-    <section
-      aria-labelledby="rooms-glance"
-      className="hidden rounded-card border border-line-soft bg-surface p-4 @4xl/content:block"
-    >
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 id="rooms-glance" className="font-bold text-ink">
+    <section aria-labelledby="rooms-glance" className="hidden flex-col gap-3 @4xl/content:flex">
+      <div className="flex items-end justify-between gap-3">
+        <h2 id="rooms-glance" className="text-lg font-bold text-ink">
           Rooms
         </h2>
-        <span className="figure text-xs font-semibold text-muted">
+        <p className="figure text-sm font-semibold text-muted">
           {done} of {c.rooms.length} done
-        </span>
+        </p>
       </div>
-      <ul className="mt-3 flex flex-col gap-2.5">
+      <ul className="flex flex-col gap-2.5 rounded-card border border-line-soft bg-surface p-4">
         {c.rooms.map((room) => {
           const latest = room.after.at(-1) ?? room.before.at(-1);
           return (
