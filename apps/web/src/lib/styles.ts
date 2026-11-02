@@ -49,58 +49,58 @@ export interface PillLook {
   glass?: boolean;
 }
 
+/** Each tone's accent, on white and on the deep green: the dot, and the icon in its place. */
+const PILL_ACCENT: Record<PillTone, { dot: string; icon: string; glassDot: string; glassIcon: string }> = {
+  dark: { dot: 'bg-amber-light', icon: 'text-amber-light', glassDot: 'bg-amber-light', glassIcon: 'text-amber-light' },
+  blue: { dot: 'bg-blue-mid', icon: 'text-blue-mid', glassDot: 'bg-blue-tint', glassIcon: 'text-blue-tint' },
+  lavender: {
+    dot: 'bg-lavender-mid',
+    icon: 'text-lavender-mid',
+    glassDot: 'bg-lavender-tint',
+    glassIcon: 'text-lavender-tint',
+  },
+  sage: { dot: 'bg-sage-mid', icon: 'text-sage-mid', glassDot: 'bg-sage-light', glassIcon: 'text-sage-light' },
+  amber: { dot: 'bg-amber-mid', icon: 'text-amber-mid', glassDot: 'bg-amber-light', glassIcon: 'text-amber-light' },
+  rose: { dot: 'bg-rose-mid', icon: 'text-rose-mid', glassDot: 'bg-rose-tint', glassIcon: 'text-rose-tint' },
+  neutral: { dot: 'bg-muted/40', icon: 'text-muted', glassDot: 'bg-white/55', glassIcon: 'text-white/70' },
+  danger: {
+    dot: 'bg-danger-mid',
+    icon: 'text-danger-mid',
+    glassDot: 'bg-danger-light',
+    glassIcon: 'text-danger-light',
+  },
+};
+
 /**
- * A pill: a soft tint lit from above (a white wash and a hairline highlight along the top), a hairline ring in the
- * tone's own colour, and a dot with a faint halo before the label. Dark is for the urgent and the few top-level labels;
- * glass sits on the deep green.
+ * A pill: quiet by design. White, a grey hairline and ink text, with the tone carried only by the dot (or icon) before
+ * the label, so a row of them reads calm and the colour still sorts them at a glance. Danger keeps its text red;
+ * dark (the urgent "Out" and a few top-level labels) is the one solid pill; glass is frosted, on the deep green.
  */
 export const pillStyles = (tone: PillTone, { size = 'md', glass = false }: PillLook = {}) =>
   cx(
-    'inline-flex items-center rounded-full font-semibold tracking-[0.01em] whitespace-nowrap',
-    size === 'md'
-      ? 'gap-1.5 py-[3px] pr-2.5 pl-2 text-[11.5px] leading-4'
-      : 'gap-1 py-px pr-2 pl-1.5 text-[10.5px] leading-4',
-    'bg-linear-to-b ring-1 ring-inset',
+    'inline-flex items-center rounded-full font-medium whitespace-nowrap ring-1 ring-inset',
+    size === 'md' ? 'gap-1.5 py-[3px] pr-2.5 pl-2 text-xs leading-4' : 'gap-1 py-px pr-2 pl-1.5 text-[11px] leading-4',
     glass
-      ? 'bg-white/10 from-white/10 to-white/0 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12)] ring-white/20'
+      ? 'bg-white/10 text-white ring-white/20'
       : tone === 'dark'
-        ? 'bg-ink from-white/14 to-white/0 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(16_20_18/0.18)] ring-black/30'
-        : 'from-white/60 to-white/0 shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_1px_2px_rgb(16_20_18/0.04)]',
-    !glass && tone === 'blue' && 'bg-blue-tint text-blue-deep ring-blue-mid/25',
-    !glass && tone === 'lavender' && 'bg-lavender-tint text-lavender-deep ring-lavender-mid/25',
-    !glass && tone === 'sage' && 'bg-sage-tint text-sage-deep ring-sage-mid/25',
-    !glass && tone === 'amber' && 'bg-amber-tint text-amber-deep ring-amber-mid/30',
-    !glass && tone === 'rose' && 'bg-rose-tint text-rose-deep ring-rose-mid/25',
-    !glass && tone === 'neutral' && 'bg-ground text-muted ring-line',
-    !glass && tone === 'danger' && 'bg-danger-tint text-danger-deep ring-danger-mid/25',
+        ? 'bg-ink text-white ring-ink'
+        : cx(
+            'bg-surface shadow-[0_1px_1px_rgb(16_20_18/0.04)]',
+            tone === 'danger'
+              ? 'text-danger-deep ring-danger-line'
+              : tone === 'neutral'
+                ? 'text-muted ring-line'
+                : 'text-ink ring-line',
+          ),
   );
 
-/** The dot before a pill's label: the tone's mid colour (light, on glass), with a halo of itself. */
+/** The dot before a pill's label: the tone's colour (a light one, on glass or dark). */
 export const pillDotStyles = (tone: PillTone, glass = false) =>
-  cx(
-    'size-1.5 shrink-0 rounded-full ring-[2.5px]',
-    glass
-      ? {
-          dark: 'bg-amber-light ring-amber-light/25',
-          blue: 'bg-blue-tint ring-blue-tint/25',
-          lavender: 'bg-lavender-tint ring-lavender-tint/25',
-          sage: 'bg-sage-light ring-sage-light/25',
-          amber: 'bg-amber-light ring-amber-light/25',
-          rose: 'bg-rose-tint ring-rose-tint/25',
-          neutral: 'bg-white/60 ring-white/15',
-          danger: 'bg-danger-light ring-danger-light/25',
-        }[tone]
-      : {
-          dark: 'bg-amber-light ring-amber-light/20',
-          blue: 'bg-blue-mid ring-blue-mid/18',
-          lavender: 'bg-lavender-mid ring-lavender-mid/18',
-          sage: 'bg-sage-mid ring-sage-mid/18',
-          amber: 'bg-amber-mid ring-amber-mid/20',
-          rose: 'bg-rose-mid ring-rose-mid/18',
-          neutral: 'bg-muted/45 ring-muted/10',
-          danger: 'bg-danger-mid ring-danger-mid/18',
-        }[tone],
-  );
+  cx('size-1.5 shrink-0 rounded-full', glass ? PILL_ACCENT[tone].glassDot : PILL_ACCENT[tone].dot);
+
+/** An icon in place of the dot takes the same colour. */
+export const pillIconStyles = (tone: PillTone, glass = false) =>
+  glass ? PILL_ACCENT[tone].glassIcon : PILL_ACCENT[tone].icon;
 
 /**
  * Shared look for every dropdown surface (selects, profile menu, property switcher, notifications): rounded
