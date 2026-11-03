@@ -194,7 +194,7 @@ function StepCard({
         <span
           className={cx(
             'relative shrink-0 rounded-full',
-            state === 'current' && 'ring-4 ring-amber-light/45',
+            state === 'current' && 'ring-4 ring-sage-light/40',
             state === 'locked' && 'opacity-45 grayscale',
           )}
         >
@@ -242,7 +242,7 @@ function StepCard({
             className={cx(
               'flex items-center gap-3 rounded-t-card p-4 @2xl/content:px-5',
               state === 'current' &&
-                'bg-[linear-gradient(90deg,var(--color-amber-tint)_0%,transparent_70%)] @2xl/content:py-5',
+                'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-sage-tint)_85%,transparent)_0%,transparent_70%)] @2xl/content:py-5',
             )}
           >
             {head}
