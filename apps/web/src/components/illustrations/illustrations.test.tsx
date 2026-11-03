@@ -7,7 +7,15 @@ import { ExpenseCategoryIcon } from './category-icons';
 import { ComingUpIllustration } from './coming-up';
 import { ExpensesIllustration } from './expenses';
 import { CleanStepIcon } from './clean-step-icons';
-import { CleanDoneIcon, CompassIcon, InviteIcon, StatementDocIcon, WeekIcon } from './list-icons';
+import {
+  CleanDoneIcon,
+  CompassIcon,
+  DoorOpenIcon,
+  InviteIcon,
+  ReadyByIcon,
+  StatementDocIcon,
+  WeekIcon,
+} from './list-icons';
 import { ReceiptsIllustration } from './receipts';
 import { RevenueIllustration } from './revenue';
 
@@ -119,6 +127,8 @@ describe('small icons', () => {
             <CompassIcon />
             <CleanDoneIcon />
             <WeekIcon />
+            <DoorOpenIcon />
+            <ReadyByIcon />
             {STEPS.map((step) => (
               <CleanStepIcon key={step} step={step} />
             ))}

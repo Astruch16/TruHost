@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, unwrap } from '@truhost/api-client';
 import { CLEAN_STEP_LABELS, type Clean, type MissingCleanPhotos } from '@truhost/shared';
-import { ArrowLeft, Camera, Check, Clock, DoorOpen, ListChecks, MapPin, Play, StickyNote, Wallet } from 'lucide-react';
+import { ArrowLeft, Camera, Check, MapPin, Play, StickyNote } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { CLEAN_STEP_HINTS, CLEAN_STEPS, cleanOccasion, freeFrom, readyBy } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
@@ -11,6 +11,8 @@ import { dayLabel } from '../../lib/dashboard-format';
 import { formatCents } from '../../lib/money';
 import { queries } from '../../lib/queries';
 import { CleanStepIcon } from '../illustrations/clean-step-icons';
+import { CleanDoneIcon, DoorOpenIcon, ReadyByIcon } from '../illustrations/list-icons';
+import { GrossIcon } from '../illustrations/statement-icons';
 import { NotAvailable } from '../shell/not-available';
 import { ErrorAlert } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
@@ -167,13 +169,13 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
   const facts: ReactNode[] = [
     <FactCard
       key="from"
-      icon={<DoorOpen className="size-4" />}
+      icon={<DoorOpenIcon size={44} />}
       label="Free from"
       value={from ? from.replace('Free from ', '') : 'Any time'}
     />,
     <FactCard
       key="ready"
-      icon={<Clock className="size-4" />}
+      icon={<ReadyByIcon size={44} />}
       label="Ready by"
       value={readyBy(c).replace('Ready by ', '')}
     />,
@@ -182,7 +184,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
     facts.push(
       <FactCard
         key="progress"
-        icon={<ListChecks className="size-4" />}
+        icon={<CleanDoneIcon size={44} />}
         label="Progress"
         value={stepsDone === CLEAN_STEPS.length ? 'All done' : `${CLEAN_STEPS.length - stepsDone} to go`}
         aside={<StepsRing done={stepsDone} total={CLEAN_STEPS.length} />}
@@ -194,7 +196,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
     facts.push(
       <FactCard
         key="pay"
-        icon={<Wallet className="size-4" />}
+        icon={<GrossIcon size={44} />}
         label="You earn"
         value={formatCents(c.cleanerPayCents)}
         figure
@@ -283,9 +285,7 @@ function FactCard({
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] gap-x-3 rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-5">
       <dt className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-        <span aria-hidden className="mb-3 grid size-9 place-items-center rounded-full bg-sage-tint text-primary">
-          {icon}
-        </span>
+        <span className="mb-3 block w-fit">{icon}</span>
         {label}
       </dt>
       <dd
@@ -296,7 +296,8 @@ function FactCard({
       >
         {value}
       </dd>
-      {aside && <dd className="col-start-2 row-span-2 row-start-1 self-center">{aside}</dd>}
+      {/* Narrower cards say it in words only: a mark beside them would squeeze the value onto two lines. */}
+      {aside && <dd className="col-start-2 row-span-2 row-start-1 hidden self-center @4xl/content:block">{aside}</dd>}
     </div>
   );
 }

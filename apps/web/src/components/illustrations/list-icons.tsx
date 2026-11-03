@@ -166,3 +166,70 @@ export function WeekIcon(props: IconProps) {
     </IconFrame>
   );
 }
+
+/** Free from: a green door left ajar, a gold handle and the dark doorway behind it, on amber. */
+export function DoorOpenIcon(props: IconProps) {
+  const { id, url } = useIllustrationIds();
+  return (
+    <IconFrame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'sheen', 'gold', 'paper']} />
+      <circle cx="20" cy="20" r="19" fill="#FBEECB" />
+      <ellipse cx="20" cy="32.8" rx="11" ry="2.1" fill={url.shadow} />
+      {/* The frame, and the doorway inside it */}
+      <rect x="11.5" y="7.5" width="17" height="24" rx="1.8" transform="translate(0.8 1.1)" fill="#D9BE7E" />
+      <rect x="11.5" y="7.5" width="17" height="24" rx="1.8" fill={url.paper} />
+      <rect x="11.5" y="7.5" width="17" height="24" rx="1.8" fill="none" stroke="#E6D3A6" strokeWidth="0.7" />
+      <rect x="14" y="10" width="12" height="21.5" rx="0.8" fill="#23442F" />
+      {/* The door, swung open toward us */}
+      <path d="M14 10 L22.6 8.2 V33.2 L14 31.5 Z" transform="translate(0.7 0.4)" fill="#2F5548" />
+      <path d="M14 10 L22.6 8.2 V33.2 L14 31.5 Z" fill="#4F7A63" />
+      <path d="M14 10 L22.6 8.2 V33.2 L14 31.5 Z" fill={url.sheen} />
+      <path
+        d="M16 13 L20.8 12 V18.6 L16 19.2 Z"
+        fill="none"
+        stroke="#93BFA0"
+        strokeWidth="0.8"
+        strokeLinejoin="round"
+      />
+      <circle cx="20.6" cy="21.6" r="1.5" fill="#C99A2E" />
+      <circle cx="20.4" cy="21.2" r="1.5" fill={url.gold} />
+    </IconFrame>
+  );
+}
+
+/** Ready by: an alarm clock, green with gold bells and hands, on lavender. */
+export function ReadyByIcon(props: IconProps) {
+  const { id, url } = useIllustrationIds();
+  return (
+    <IconFrame {...props}>
+      <IllustrationDefs ids={id} use={['shadow', 'sheen', 'gold', 'paper']} />
+      <circle cx="20" cy="20" r="19" fill="#E6E0F5" />
+      <ellipse cx="20" cy="33.4" rx="10" ry="1.9" fill={url.shadow} />
+      {/* The bells and feet */}
+      <circle cx="12.6" cy="10.8" r="3.2" fill="#C99A2E" />
+      <circle cx="27.4" cy="10.8" r="3.2" fill="#C99A2E" />
+      <circle cx="12.4" cy="10.4" r="3.2" fill={url.gold} />
+      <circle cx="27.6" cy="10.4" r="3.2" fill={url.gold} />
+      <path d="M14 30 L12.2 32.4 M26 30 L27.8 32.4" stroke="#2F5548" strokeWidth="1.8" strokeLinecap="round" />
+      {/* The body and face */}
+      <circle cx="20.6" cy="21.6" r="10.4" fill="#2F5548" />
+      <circle cx="20" cy="20.6" r="10.4" fill="#4F7A63" />
+      <circle cx="20" cy="20.6" r="8" fill={url.paper} />
+      <path
+        d="M20 13.8 V15 M20 26.2 V27.4 M13.2 20.6 H14.4 M25.6 20.6 H26.8"
+        stroke="#C9CEC6"
+        strokeWidth="1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M20 20.6 V16 M20 20.6 L23.4 22.4"
+        stroke="#1A1D21"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="20" cy="20.6" r="1.2" fill={url.gold} />
+      <circle cx="20" cy="20.6" r="10.4" fill={url.sheen} />
+    </IconFrame>
+  );
+}
