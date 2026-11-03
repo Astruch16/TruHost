@@ -11,9 +11,11 @@ import {
   type Room,
   type RoomType,
 } from '@truhost/shared';
+import { PropertyRoomsCard } from '../../components/property-basics';
 import { RoomsCard } from '../../components/rooms/rooms-card';
 import { PageHeader } from '../../components/ui/page-header';
 import { ApiContext } from '../../lib/api-context';
+import { ROOM_TYPES } from '../../lib/rooms';
 
 /** Dev only: the rooms card on an in-memory fake API (no sign-in), for review screenshots and trying it out. */
 export const Route = createFileRoute('/dev/rooms')({
@@ -131,6 +133,27 @@ const SAMPLE: Row[] = [
   { id: 's10', type: 'OTHER', label: 'Bunk room', number: 1, position: 9 },
 ];
 
+/** One room of every type, so each type's icon shows in the read-only card. */
+const EVERY_TYPE: Row[] = ROOM_TYPES.map((type, i) => ({
+  id: `t${i}`,
+  type,
+  label: roomTypeNeedsLabel(type) ? 'Bunk room' : null,
+  number: 1,
+  position: i,
+}));
+
+function ReadOnlyPreview({ rows }: { rows: Row[] }) {
+  const [api] = useState(() => fakeRoomsApi(rows));
+  const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+  return (
+    <ApiContext.Provider value={api}>
+      <QueryClientProvider client={client}>
+        <PropertyRoomsCard propertyId="p" />
+      </QueryClientProvider>
+    </ApiContext.Provider>
+  );
+}
+
 function Preview({
   rows,
   layout,
@@ -161,6 +184,10 @@ function RoomsPreview() {
         <section aria-label="Set-up property" className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold text-muted">A property with rooms</h2>
           <Preview rows={SAMPLE} layout={{ bedrooms: 3, bathrooms: 2, halfBathrooms: null }} />
+        </section>
+        <section aria-label="Every room type" className="flex max-w-80 flex-col gap-2">
+          <h2 className="text-sm font-semibold text-muted">Read only (cleaners, owners): one room of every type</h2>
+          <ReadOnlyPreview rows={EVERY_TYPE} />
         </section>
       </div>
     </div>

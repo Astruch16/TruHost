@@ -43,18 +43,28 @@ function CleanerProperty() {
   return (
     <>
       <PageHeader eyebrow="You clean here" title={p.name} description={`${p.city}, ${p.province}`} />
-      <div className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-2">
-        {/* Wrappers carry the welcome tour's anchors (data-tour) and the grid span. */}
-        <div data-tour="cleaner-supplies" className="min-w-0 @4xl/content:col-span-2">
+      {/* Supplies, the long one, beside a side column of the short ones (rooms, address, next cleans); damage below,
+          across. A phone stacks them in that order. */}
+      <div className="grid grid-cols-1 items-start gap-6 @4xl/content:grid-cols-[minmax(0,1fr)_20rem]">
+        {/* Wrappers carry the welcome tour's anchors (data-tour) and the grid placement. */}
+        <div data-tour="cleaner-supplies" className="min-w-0">
           <SuppliesCard propertyId={propertyId} mode="report" />
         </div>
+        <aside
+          aria-label="About this property"
+          className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @4xl/content:grid-cols-1"
+        >
+          <div data-tour="cleaner-rooms" className="min-w-0">
+            <PropertyRoomsCard propertyId={propertyId} />
+          </div>
+          <PropertyAddressCard property={p} />
+          {/* Below the supplies (a tablet), rooms and address pair up and the cleans take the row under them. */}
+          <div className="min-w-0 @2xl/content:col-span-2 @4xl/content:col-span-1">
+            <PropertyCleansCard propertyId={propertyId} />
+          </div>
+        </aside>
         <div data-tour="cleaner-damage" className="min-w-0 @4xl/content:col-span-2">
           <DamageCard propertyId={propertyId} canReport />
-        </div>
-        <PropertyAddressCard property={p} />
-        <PropertyCleansCard propertyId={propertyId} />
-        <div data-tour="cleaner-rooms" className="min-w-0 @4xl/content:col-span-2">
-          <PropertyRoomsCard propertyId={propertyId} />
         </div>
       </div>
     </>
