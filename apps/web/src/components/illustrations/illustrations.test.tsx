@@ -17,6 +17,8 @@ import {
   WeekIcon,
 } from './list-icons';
 import { ReceiptsIllustration } from './receipts';
+import { RoomIcon } from './room-icons';
+import { ROOM_TYPES } from '../../lib/rooms';
 import { RevenueIllustration } from './revenue';
 
 const ALL = [
@@ -114,6 +116,21 @@ describe('small icons', () => {
     expect(new Set(svgs.map(shape)).size).toBe(STEPS.length);
   });
 
+  it('draws a distinct, decorative icon for each type of room', () => {
+    const { container } = render(
+      <>
+        {ROOM_TYPES.map((type) => (
+          <RoomIcon key={type} type={type} />
+        ))}
+      </>,
+    );
+    const svgs = [...container.querySelectorAll('svg')];
+    expect(svgs).toHaveLength(ROOM_TYPES.length);
+    for (const svg of svgs) expect(svg).toHaveAttribute('aria-hidden', 'true');
+    const shape = (svg: SVGSVGElement) => svg.innerHTML.replace(/ei[^"#)]*-/g, '');
+    expect(new Set(svgs.map(shape)).size).toBe(ROOM_TYPES.length);
+  });
+
   it('gives each instance its own gradient ids', () => {
     const { container } = render(
       <>
@@ -131,6 +148,9 @@ describe('small icons', () => {
             <ReadyByIcon />
             {STEPS.map((step) => (
               <CleanStepIcon key={step} step={step} />
+            ))}
+            {ROOM_TYPES.map((type) => (
+              <RoomIcon key={type} type={type} />
             ))}
           </span>
         ))}

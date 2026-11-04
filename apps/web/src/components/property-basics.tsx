@@ -2,6 +2,7 @@ import type { Property } from '@truhost/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, MapPin, Pencil } from 'lucide-react';
 import { useApi } from '../lib/api-context';
+import { RoomIcon } from './illustrations/room-icons';
 import { queries } from '../lib/queries';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
@@ -33,7 +34,10 @@ export function PropertyAddressCard({ property: p }: { property: Property }) {
   );
 }
 
-/** The property's rooms, in the order a cleaner walks through them. `onEdit` adds an Edit button (admins). */
+/**
+ * The property's rooms, each with its type's icon, in the order a cleaner walks through them (numbered). Compact: it
+ * sits in a side column. `onEdit` adds an Edit button (admins).
+ */
 export function PropertyRoomsCard({
   propertyId,
   className,
@@ -66,13 +70,14 @@ export function PropertyRoomsCard({
           No rooms added yet.{onEdit && ' Use Edit rooms to set up the walkthrough.'}
         </p>
       ) : (
-        <ol className="flex flex-col divide-y divide-line-soft text-sm">
+        <ol className="flex flex-col gap-1.5 text-sm">
           {rooms.data.items.map((r, i) => (
-            <li key={r.id} className="flex items-center gap-3 py-2.5">
-              <span className="figure grid size-6 place-items-center rounded-full bg-ground text-xs font-semibold text-muted">
+            <li key={r.id} className="flex items-center gap-3 rounded-inner py-1 pr-1">
+              <RoomIcon type={r.type} size={36} className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate font-medium text-ink">{r.displayName}</span>
+              <span aria-hidden className="figure shrink-0 text-xs font-semibold text-muted">
                 {i + 1}
               </span>
-              {r.displayName}
             </li>
           ))}
         </ol>
