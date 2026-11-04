@@ -35,8 +35,9 @@ export function PropertyAddressCard({ property: p }: { property: Property }) {
 }
 
 /**
- * The property's rooms, each with its type's icon, in the order a cleaner walks through them (numbered). Compact: it
- * sits in a side column. `onEdit` adds an Edit button (admins).
+ * The property's rooms, each with its type's icon, in the order a cleaner walks through them: a numbered step down the
+ * left, joined by a line like the checklist's timeline, so the number reads as the order, not how many. Compact: it sits
+ * in a side column. `onEdit` adds an Edit button (admins).
  */
 export function PropertyRoomsCard({
   propertyId,
@@ -51,7 +52,7 @@ export function PropertyRoomsCard({
   return (
     <Card
       title="Rooms"
-      description="In cleaning-checklist order."
+      description="The order the cleaning checklist goes through them, first to last."
       className={className}
       actions={
         onEdit ? (
@@ -70,13 +71,26 @@ export function PropertyRoomsCard({
           No rooms added yet.{onEdit && ' Use Edit rooms to set up the walkthrough.'}
         </p>
       ) : (
-        <ol className="flex flex-col gap-1.5 text-sm">
-          {rooms.data.items.map((r, i) => (
-            <li key={r.id} className="flex items-center gap-3 rounded-inner py-1 pr-1">
-              <RoomIcon type={r.type} size={36} className="shrink-0" />
-              <span className="min-w-0 flex-1 truncate font-medium text-ink">{r.displayName}</span>
-              <span aria-hidden className="figure shrink-0 text-xs font-semibold text-muted">
+        <ol className="flex flex-col text-sm">
+          {rooms.data.items.map((r, i, all) => (
+            <li key={r.id} className="relative flex items-center gap-3 py-1.5">
+              {/* The line down to the next step. */}
+              {i < all.length - 1 && (
+                <span
+                  aria-hidden
+                  className="absolute top-[calc(50%+11px)] left-[10.5px] h-[calc(100%-22px)] w-px bg-line"
+                />
+              )}
+              <span
+                aria-hidden
+                className="figure grid size-[22px] shrink-0 place-items-center rounded-full border border-line bg-surface text-[11px] font-semibold text-muted"
+              >
                 {i + 1}
+              </span>
+              <RoomIcon type={r.type} size={36} className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate font-medium text-ink">
+                <span className="sr-only">Step {i + 1}: </span>
+                {r.displayName}
               </span>
             </li>
           ))}
