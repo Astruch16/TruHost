@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { AddressMap } from './address-map';
 import { AllClearIllustration } from './all-clear';
 import { BookingsIllustration } from './bookings';
 import { CareIllustration } from './care';
@@ -131,6 +132,13 @@ describe('small icons', () => {
     expect(new Set(svgs.map(shape)).size).toBe(ROOM_TYPES.length);
   });
 
+  it('draws the address map as decoration that fills its box without stretching', () => {
+    const { container } = render(<AddressMap />);
+    const svg = container.querySelector('svg')!;
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).toHaveAttribute('preserveAspectRatio', 'xMidYMid slice');
+  });
+
   it('gives each instance its own gradient ids', () => {
     const { container } = render(
       <>
@@ -146,6 +154,7 @@ describe('small icons', () => {
             <WeekIcon />
             <DoorOpenIcon />
             <ReadyByIcon />
+            <AddressMap />
             {STEPS.map((step) => (
               <CleanStepIcon key={step} step={step} />
             ))}

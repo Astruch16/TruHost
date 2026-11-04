@@ -1,43 +1,92 @@
 import type { Property } from '@truhost/shared';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, MapPin, Pencil } from 'lucide-react';
+import { Check, Copy, Navigation, Pencil } from 'lucide-react';
 import { useApi } from '../lib/api-context';
+import { AddressMap } from './illustrations/address-map';
+import { DoorOpenIcon, ReadyByIcon } from './illustrations/list-icons';
 import { RoomIcon } from './illustrations/room-icons';
+import { cx } from '../lib/cx';
+import { buttonStyles } from '../lib/styles';
 import { queries } from '../lib/queries';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 
-/** Address and stay times: what everyone with access to a property can see. */
+/**
+ * Address and stay times: what everyone with access to a property can see. A drawn map (not a real one) heads it; the
+ * address comes with Directions (opens the address in Google Maps) and Copy; then check-out and check-in, the two times a
+ * clean fits between. In a row with a taller card, the map grows (up to a point) to fill the height.
+ */
 export function PropertyAddressCard({ property: p }: { property: Property }) {
+  const street = p.addressLine2 ? `${p.addressLine1}, ${p.addressLine2}` : p.addressLine1;
+  const locality = `${p.city}, ${p.province} ${p.postalCode}`;
+  const full = `${street}, ${locality}`;
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+
   return (
-    <Card title="Address">
-      <div className="flex flex-col gap-3 text-sm">
-        <p className="flex gap-2.5">
-          <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
-          <span>
-            {p.addressLine1}
-            {p.addressLine2 && <>, {p.addressLine2}</>}
-            <br />
-            {p.city}, {p.province} {p.postalCode}
-          </span>
-        </p>
-        <p className="flex gap-2.5">
-          <Clock aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
-          <span className="figure">
-            Check-in {p.checkInTime} · Check-out {p.checkOutTime}
-          </span>
-        </p>
+    <Card title="Address" className="flex flex-col">
+      <div className="flex flex-1 flex-col gap-4 @container/address">
+        <div className="relative max-h-52 min-h-24 flex-1 overflow-hidden rounded-inner ring-1 ring-line-soft">
+          <AddressMap className="absolute inset-0 size-full" />
+        </div>
+        <div>
+          <p className="text-base font-semibold text-ink">{street}</p>
+          <p className="text-sm text-muted">{locality}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(full)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Directions (opens in a new tab)"
+              className={buttonStyles({ variant: 'secondary', size: 'sm' })}
+            >
+              <Navigation aria-hidden className="size-4" /> Directions
+            </a>
+            <Button
+              variant="secondary"
+              size="sm"
+              aria-label={copied ? 'Address copied' : 'Copy address'}
+              onClick={() => void navigator.clipboard?.writeText(full).then(() => setCopied(true))}
+            >
+              {copied ? <Check aria-hidden className="size-4" /> : <Copy aria-hidden className="size-4" />}
+              {/* Icon only in a narrow card, so the two buttons stay on one line. */}
+              <span className="hidden @[17rem]/address:inline">{copied ? 'Copied' : 'Copy'}</span>
+            </Button>
+          </div>
+        </div>
+        <dl className="grid grid-cols-2 gap-2">
+          <StayTime icon={<DoorOpenIcon size={34} />} label="Check-out" time={p.checkOutTime} />
+          <StayTime icon={<ReadyByIcon size={34} />} label="Check-in" time={p.checkInTime} />
+        </dl>
       </div>
     </Card>
   );
 }
 
+function StayTime({ icon, label, time }: { icon: ReactNode; label: string; time: string }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5 rounded-inner border border-line-soft bg-ground/60 p-2.5 @[17rem]/address:flex-row @[17rem]/address:items-center @[17rem]/address:gap-2.5">
+      <span className="shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <dt className="truncate text-xs text-muted">{label}</dt>
+        <dd className="figure text-base font-semibold text-ink">{time}</dd>
+      </div>
+    </div>
+  );
+}
+
 /**
- * The property's rooms, each with its type's icon, in the order a cleaner walks through them: a numbered step down the
- * left, joined by a line like the checklist's timeline, so the number reads as the order, not how many. Compact: it sits
- * in a side column. `onEdit` adds an Edit button (admins).
+ * The property's rooms as tiles, each with its type's icon, in the order a cleaner walks through them. The step number
+ * is a badge on the icon and the description says it's the order, so it doesn't read as how many. Two tiles a row, more
+ * where the card is wide; the name sits under the icon, so it fits a narrow column. `onEdit` adds an Edit button
+ * (admins).
  */
 export function PropertyRoomsCard({
   propertyId,
@@ -52,8 +101,12 @@ export function PropertyRoomsCard({
   return (
     <Card
       title="Rooms"
-      description="The order the cleaning checklist goes through them, first to last."
-      className={className}
+      description={
+        rooms.data && rooms.data.items.length > 0
+          ? `${rooms.data.items.length} room${rooms.data.items.length === 1 ? '' : 's'}, numbered in the order the cleaning checklist goes through them.`
+          : 'Numbered in the order the cleaning checklist goes through them.'
+      }
+      className={cx('flex flex-col', className)}
       actions={
         onEdit ? (
           <Button variant="secondary" size="sm" onClick={onEdit}>
@@ -71,30 +124,31 @@ export function PropertyRoomsCard({
           No rooms added yet.{onEdit && ' Use Edit rooms to set up the walkthrough.'}
         </p>
       ) : (
-        <ol className="flex flex-col text-sm">
-          {rooms.data.items.map((r, i, all) => (
-            <li key={r.id} className="relative flex items-center gap-3 py-1.5">
-              {/* The line down to the next step. */}
-              {i < all.length - 1 && (
-                <span
-                  aria-hidden
-                  className="absolute top-[calc(50%+11px)] left-[10.5px] h-[calc(100%-22px)] w-px bg-line"
-                />
-              )}
-              <span
-                aria-hidden
-                className="figure grid size-[22px] shrink-0 place-items-center rounded-full border border-line bg-surface text-[11px] font-semibold text-muted"
+        // Rows stretch into spare height when the card shares a row with a taller one; otherwise they fit their content.
+        <div className="flex flex-1 flex-col @container/rooms">
+          <ol className="grid flex-1 grid-cols-2 gap-2 @md/rooms:grid-cols-3 @3xl/rooms:grid-cols-4">
+            {rooms.data.items.map((r, i) => (
+              <li
+                key={r.id}
+                className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-inner border border-line-soft bg-ground/60 px-2 py-3 text-center"
               >
-                {i + 1}
-              </span>
-              <RoomIcon type={r.type} size={36} className="shrink-0" />
-              <span className="min-w-0 flex-1 truncate font-medium text-ink">
-                <span className="sr-only">Step {i + 1}: </span>
-                {r.displayName}
-              </span>
-            </li>
-          ))}
-        </ol>
+                <span className="relative shrink-0">
+                  <RoomIcon type={r.type} size={40} />
+                  <span
+                    aria-hidden
+                    className="figure absolute -top-1 -right-1.5 grid size-[18px] place-items-center rounded-full bg-ink text-[10px] font-bold text-white ring-2 ring-surface"
+                  >
+                    {i + 1}
+                  </span>
+                </span>
+                <span className="line-clamp-2 max-w-full text-sm leading-snug font-medium break-words text-ink">
+                  <span className="sr-only">Step {i + 1}: </span>
+                  {r.displayName}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
     </Card>
   );
