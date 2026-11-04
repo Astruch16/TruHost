@@ -29,7 +29,12 @@ export function ProfileMenu({
       <Menu.Trigger
         aria-label={`Account menu for ${name}`}
         data-tour="profile-menu"
-        className="flex min-h-11 items-center gap-3 rounded-full py-1 pr-1 pl-1 transition-colors hover:bg-ink/5 data-[state=open]:bg-ink/5 sm:pr-3"
+        className={cx(
+          // Outlined like the property switcher across the header.
+          'flex min-h-11 items-center gap-3 rounded-full border border-line bg-surface py-1 pr-1 pl-1 sm:pr-4',
+          'transition-[border-color,box-shadow] duration-150 hover:border-ink/25 hover:shadow-sm',
+          'data-[state=open]:border-sage-deep/40 data-[state=open]:shadow-[0_0_0_4px_rgba(35,68,47,0.08)]',
+        )}
       >
         <Avatar url={avatarUrl} initials={initials} className="size-10 text-sm" />
         <span className="hidden text-left leading-tight sm:block">
