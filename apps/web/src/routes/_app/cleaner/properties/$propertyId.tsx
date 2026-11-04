@@ -43,28 +43,28 @@ function CleanerProperty() {
   return (
     <>
       <PageHeader eyebrow="You clean here" title={p.name} description={`${p.city}, ${p.province}`} />
-      {/* Supplies, the long one, beside a side column of the short ones (rooms, address, next cleans); damage below,
-          across. A phone stacks them in that order. */}
-      <div className="grid grid-cols-1 items-start gap-6 @4xl/content:grid-cols-[minmax(0,1fr)_20rem]">
+      {/* Two balanced columns, wide: the supplies (two tiles a row) on the left; on the right, rooms and address side by
+          side, then the next cleans and the damage reports. Narrower, they stack in that order (rooms and address still
+          paired on a tablet). No card spans the page. */}
+      <div className="grid grid-cols-1 items-start gap-6 @4xl/content:grid-cols-2">
         {/* Wrappers carry the welcome tour's anchors (data-tour) and the grid placement. */}
         <div data-tour="cleaner-supplies" className="min-w-0">
           <SuppliesCard propertyId={propertyId} mode="report" />
         </div>
-        <aside
-          aria-label="About this property"
-          className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2 @4xl/content:grid-cols-1"
-        >
-          <div data-tour="cleaner-rooms" className="min-w-0">
+        <div className="grid min-w-0 grid-cols-1 content-start gap-6 @2xl/content:grid-cols-2">
+          {/* Rooms and address share a row, at one height. */}
+          <div data-tour="cleaner-rooms" className="min-w-0 [&>*]:h-full">
             <PropertyRoomsCard propertyId={propertyId} />
           </div>
-          <PropertyAddressCard property={p} />
-          {/* Below the supplies (a tablet), rooms and address pair up and the cleans take the row under them. */}
-          <div className="min-w-0 @2xl/content:col-span-2 @4xl/content:col-span-1">
+          <div className="min-w-0 [&>*]:h-full">
+            <PropertyAddressCard property={p} />
+          </div>
+          <div className="min-w-0 @2xl/content:col-span-2">
             <PropertyCleansCard propertyId={propertyId} />
           </div>
-        </aside>
-        <div data-tour="cleaner-damage" className="min-w-0 @4xl/content:col-span-2">
-          <DamageCard propertyId={propertyId} canReport />
+          <div data-tour="cleaner-damage" className="min-w-0 @2xl/content:col-span-2">
+            <DamageCard propertyId={propertyId} canReport />
+          </div>
         </div>
       </div>
     </>
