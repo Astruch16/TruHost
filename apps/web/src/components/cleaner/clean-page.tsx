@@ -26,8 +26,8 @@ import { CleanStatusPill } from './clean-status-pill';
  * the pay), how far along it is, and what to do now (book it, start it, or why it can't be started yet). Below it,
  * before the start, the five steps it will take; once started, its checklist (CleanChecklist): before photos, damage,
  * a stock count, after photos and "Clean finished", which tells TruHost and the owner. Finishing is a milestone: the
- * celebrating guide. A finished clean shows what was done. Wide, a side column keeps the notes and every room's photos
- * in view.
+ * celebrating guide. A finished clean shows what was done. Wide, a side column beside it has the notes and every room's
+ * photos; it scrolls with the page, so its heading stays level with the checklist's.
  */
 export function CleanPage({ cleanId }: { cleanId: string }) {
   const api = useApi();
@@ -127,7 +127,7 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
         {side && (
           <aside
             aria-label="About this clean"
-            className="flex min-w-0 flex-col gap-4 @4xl/content:sticky @4xl/content:top-6 @4xl/content:col-start-2 @4xl/content:row-start-1"
+            className="flex min-w-0 flex-col gap-4 @4xl/content:col-start-2 @4xl/content:row-start-1"
           >
             {/* Rooms first: its heading sits level with the checklist's, so their cards line up. Phones don't show it. */}
             {working && c.rooms.length > 0 && <RoomsAtAGlance clean={c} />}
