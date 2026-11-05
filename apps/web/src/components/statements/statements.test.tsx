@@ -56,8 +56,9 @@ describe('Statements page', () => {
       { GET: vi.fn(() => ok(SEPTEMBER)), POST: post } as unknown as Partial<ApiClient>,
       <StatementsPage month="2026-09" onMonthChange={() => undefined} />,
     );
-    const rows = await screen.findAllByRole('row');
-    const text = rows.slice(1).map((r) => r.textContent);
+    const list = await screen.findByRole('list', { name: 'Statements for September 2026' });
+    const rows = [...list.children] as HTMLElement[];
+    const text = rows.map((r) => r.textContent);
     expect(text[0]).toContain('Cedar Cabin');
     expect(text[0]).toContain('Finalized');
     expect(text[0]).toContain('$2,762.15');
@@ -66,7 +67,25 @@ describe('Statements page', () => {
     expect(text[3]).toContain('1 payout pending');
     expect(screen.getByRole('link', { name: 'Release: Cedar Cabin' })).toBeInTheDocument();
 
-    await userEvent.click(within(rows[3]!).getByRole('button', { name: 'Start draft' }));
+    expect(screen.getByRole('link', { name: 'Review: Seaside Loft' })).toBeInTheDocument();
+    // Steps reached, read aloud.
+    expect(within(rows[0]!).getByRole('list', { name: 'Steps' }).textContent).toBe(
+      'Draft: doneFinalized: doneReleased: not yet',
+    );
+
+    // The month at a glance, and what's left to do.
+    expect(screen.getByRole('img', { name: '1 not started, 1 draft, 1 finalized, 1 released' })).toBeInTheDocument();
+    for (const next of [
+      'Start 1 draft',
+      'Fix 1 issue before finalizing',
+      '1 payout not entered yet',
+      'Review and finalize 1 draft',
+      'Release 1 payout',
+    ]) {
+      expect(screen.getByText(next)).toBeInTheDocument();
+    }
+
+    await userEvent.click(within(rows[2]!).getByRole('button', { name: 'Start draft' }));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/v1/properties/{id}/statements', {
         params: { path: { id: 'p-kits' } },

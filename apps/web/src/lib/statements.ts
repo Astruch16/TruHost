@@ -23,6 +23,17 @@ export const STATE_TONE: Record<StatementState, PillTone> = {
   RELEASED: 'sage',
 };
 
+/** The fill for each state in a progress bar: the colour of its pill's dot. */
+export const STATE_BAR: Record<StatementState, string> = {
+  NOT_STARTED: 'bg-muted/30',
+  DRAFT: 'bg-lavender-mid',
+  FINALIZED: 'bg-amber-mid',
+  RELEASED: 'bg-sage-mid',
+};
+
+/** The states in order, from no statement to paid out. */
+export const STATE_ORDER: readonly StatementState[] = ['NOT_STARTED', 'DRAFT', 'FINALIZED', 'RELEASED'];
+
 /** Signed amounts as on a statement: "−$150.00" for deductions, "+$42.50" for credits, "$0.00" for zero. */
 export function formatSigned(cents: number): string {
   if (cents === 0) return formatCents(0);
