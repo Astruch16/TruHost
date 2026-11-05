@@ -128,7 +128,9 @@ export function DashboardView({
               <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
                 {greeting(now.getHours())},
               </p>
-              <h1 className="text-3xl font-bold tracking-tight text-ink">{firstName}</h1>
+              <h1 className="font-display text-[2.25rem] leading-tight font-semibold tracking-[-0.015em] text-ink">
+                {firstName}
+              </h1>
               <p className="mt-1.5 text-muted">
                 {longDate(now)}.{' '}
                 {noProperties

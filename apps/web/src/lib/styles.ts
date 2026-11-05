@@ -13,7 +13,7 @@ export function buttonStyles({
   block = false,
 }: { variant?: ButtonVariant; size?: ButtonSize; block?: boolean } = {}) {
   return cx(
-    'inline-flex shrink-0 select-none items-center justify-center gap-2 font-semibold whitespace-nowrap',
+    'inline-flex shrink-0 select-none items-center justify-center gap-2 font-sans font-semibold whitespace-nowrap',
     'transition-[background-color,border-color,color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2',
     'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
     size === 'md' ? 'min-h-11 rounded-control px-4 text-sm' : 'min-h-9 rounded-control-sm px-3 text-sm',
@@ -78,7 +78,7 @@ const PILL_ACCENT: Record<PillTone, { dot: string; icon: string; glassDot: strin
  */
 export const pillStyles = (tone: PillTone, { size = 'md', glass = false }: PillLook = {}) =>
   cx(
-    'inline-flex items-center rounded-full font-medium whitespace-nowrap ring-1 ring-inset',
+    'inline-flex items-center rounded-full font-sans font-medium whitespace-nowrap ring-1 ring-inset',
     size === 'md' ? 'gap-1.5 py-[3px] pr-2.5 pl-2 text-xs leading-4' : 'gap-1 py-px pr-2 pl-1.5 text-[11px] leading-4',
     glass
       ? 'bg-white/10 text-white ring-white/20'

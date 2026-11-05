@@ -232,7 +232,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
           </p>
           <h1
             id="clean-heading"
-            className="mt-2 text-3xl leading-tight font-bold tracking-[-0.02em] @2xl/content:text-4xl"
+            className="mt-2 font-display text-[2rem] leading-tight font-semibold tracking-[-0.015em] @2xl/content:text-[2.5rem]"
           >
             {c.property.name}
           </h1>
@@ -411,7 +411,10 @@ function StepsAhead() {
       aria-labelledby="steps-ahead"
       className="rounded-card border border-line-soft bg-surface p-5 @2xl/content:p-6"
     >
-      <h2 id="steps-ahead" className="text-lg font-bold text-ink">
+      <h2
+        id="steps-ahead"
+        className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+      >
         How the clean goes
       </h2>
       <p className="mt-1 text-sm text-muted">Once it’s started, a checklist takes you through five steps, in order.</p>
@@ -455,7 +458,10 @@ function RoomsAtAGlance({ clean: c }: { clean: Clean }) {
   return (
     <section aria-labelledby="rooms-glance" className="hidden flex-col gap-3 @4xl/content:flex">
       <div className="flex items-end justify-between gap-3">
-        <h2 id="rooms-glance" className="text-lg font-bold text-ink">
+        <h2
+          id="rooms-glance"
+          className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+        >
           Rooms
         </h2>
         <p className="figure text-sm font-semibold text-muted">

@@ -75,7 +75,9 @@ export function AvatarCard({ me }: { me: Me }) {
         </button>
         <div className="min-w-0 flex-1 @xl/content:pb-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-xl font-bold tracking-tight text-ink">{name}</h2>
+            <h2 className="truncate font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.01em] text-ink">
+              {name}
+            </h2>
             <Pill tone="sage">{roleLabel(me)}</Pill>
           </div>
           <p className="truncate text-sm text-muted">{me.email}</p>

@@ -21,7 +21,9 @@ export function AuthCard({
       <div className="flex flex-col items-center gap-3 text-center">
         <LogoMark size={56} className="size-12 drop-shadow-[0_8px_20px_rgba(23,63,58,0.35)] sm:size-14" />
         <div>
-          <h1 className="text-[22px] font-bold tracking-[-0.02em] sm:text-2xl">{title}</h1>
+          <h1 className="font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.015em] sm:text-[1.75rem]">
+            {title}
+          </h1>
           {subtitle && <div className="mt-0.5 text-[15px] text-muted">{subtitle}</div>}
         </div>
       </div>

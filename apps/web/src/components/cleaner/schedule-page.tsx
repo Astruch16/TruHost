@@ -129,7 +129,10 @@ export function CleanerSchedulePage() {
       <div className="grid grid-flow-row-dense gap-6 @2xl/content:grid-cols-2 @5xl/content:grid-cols-3">
         {groups.today.length > 0 && (
           <section aria-labelledby="today" className="col-span-full">
-            <h2 id="today" className="mb-3 text-lg font-bold text-ink">
+            <h2
+              id="today"
+              className="mb-3 font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+            >
               Today
             </h2>
             <ul className="grid gap-4 @3xl/content:grid-cols-2">
@@ -250,7 +253,10 @@ function ScheduleHero({
             {greeting()}
             {firstName ? `, ${firstName}` : ''}
           </p>
-          <h1 id="schedule-hero" className="mt-2 text-3xl leading-tight font-bold tracking-[-0.02em]">
+          <h1
+            id="schedule-hero"
+            className="mt-2 font-display text-[2rem] leading-tight font-semibold tracking-[-0.015em]"
+          >
             {headline}
           </h1>
           {next ? (

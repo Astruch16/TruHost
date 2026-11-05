@@ -48,7 +48,14 @@ export function Card({
         >
           <div className="min-w-0">
             {title && (
-              <h2 className={cx('font-bold tracking-[-0.01em] text-ink', inner ? 'text-base' : 'text-lg')}>{title}</h2>
+              <h2
+                className={cx(
+                  'font-display font-semibold tracking-[-0.01em] text-ink',
+                  inner ? 'text-lg' : 'text-[1.375rem] leading-tight',
+                )}
+              >
+                {title}
+              </h2>
             )}
             {description && <p className="mt-1 text-[13px] leading-relaxed text-muted">{description}</p>}
           </div>

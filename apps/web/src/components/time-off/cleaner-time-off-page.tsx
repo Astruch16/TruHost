@@ -29,7 +29,10 @@ export function CleanerTimeOffPage() {
       <div className="grid grid-cols-1 items-start gap-6 @4xl/content:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <RequestTimeOff />
         <section aria-labelledby="your-requests" className="flex flex-col gap-3">
-          <h2 id="your-requests" className="text-lg font-bold text-ink">
+          <h2
+            id="your-requests"
+            className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+          >
             Your requests
           </h2>
           {list.error ? (

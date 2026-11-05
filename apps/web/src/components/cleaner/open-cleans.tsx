@@ -26,7 +26,10 @@ export function OpenCleans({ cleans, colors }: { cleans: readonly CleanSummary[]
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 id="open-cleans" className="text-lg font-bold text-ink">
+          <h2
+            id="open-cleans"
+            className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+          >
             Open cleans
           </h2>
           <p className="text-sm text-muted">
