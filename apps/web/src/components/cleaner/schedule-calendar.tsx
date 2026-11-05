@@ -66,7 +66,10 @@ export function ScheduleCalendar({
         >
           <ChevronLeft aria-hidden className="size-4" />
         </button>
-        <h2 id="schedule-calendar" className="font-semibold text-ink">
+        <h2
+          id="schedule-calendar"
+          className="font-display text-lg leading-tight font-semibold tracking-[-0.01em] text-ink"
+        >
           {monthLabel(month)}
         </h2>
         <button

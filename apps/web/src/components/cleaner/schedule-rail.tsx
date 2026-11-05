@@ -45,7 +45,7 @@ function RailHeading({
     <div className="flex items-start gap-3">
       <Icon className="shrink-0" />
       <div className="min-w-0">
-        <h2 id={id} className="text-base font-bold text-ink">
+        <h2 id={id} className="font-display text-lg leading-tight font-semibold tracking-[-0.01em] text-ink">
           {title}
         </h2>
         <p className="text-xs text-muted">{detail}</p>

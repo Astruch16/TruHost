@@ -59,7 +59,9 @@ export function PropertyHero({
           {actions && <div className="flex flex-wrap justify-end gap-2">{actions}</div>}
         </div>
         <div className={photo ? 'text-white' : 'text-ink'}>
-          <h1 className="text-3xl font-bold tracking-tight @2xl/content:text-4xl">{p.name}</h1>
+          <h1 className="font-display text-[2rem] leading-tight font-semibold tracking-[-0.015em] @2xl/content:text-[2.5rem]">
+            {p.name}
+          </h1>
           <p className={cx('mt-1 flex items-center gap-1.5', photo ? 'text-white/85' : 'text-muted')}>
             <MapPin aria-hidden className="size-4" /> {p.city}, {p.province}
           </p>

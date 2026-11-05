@@ -58,7 +58,9 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
         </div>
         <div className="flex flex-1 flex-col gap-3 p-5">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold text-ink">{p.name}</h2>
+            <h2 className="truncate font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink">
+              {p.name}
+            </h2>
             <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted">
               <MapPin aria-hidden className="size-3.5 shrink-0" />
               <span className="truncate">

@@ -51,7 +51,10 @@ export function WeekBoard({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="week-board" className="text-lg font-bold text-ink">
+          <h2
+            id="week-board"
+            className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+          >
             {first === currentStart
               ? 'This week'
               : first === addDays(currentStart, 7)

@@ -50,7 +50,9 @@ export function Dialog({
             )}
           >
             <div>
-              <RadixDialog.Title className="text-lg font-semibold text-ink">{title}</RadixDialog.Title>
+              <RadixDialog.Title className="font-display text-xl leading-tight font-semibold tracking-[-0.01em] text-ink">
+                {title}
+              </RadixDialog.Title>
               {description && (
                 <RadixDialog.Description className="mt-1 text-sm text-muted">{description}</RadixDialog.Description>
               )}

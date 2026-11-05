@@ -20,7 +20,7 @@ export function NotAvailable({
       <div className="flex max-w-md flex-col items-center gap-4 rounded-card border border-line-soft bg-surface px-6 py-10 text-center @2xl/content:px-10">
         <CompassIcon size={64} />
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-ink">{title}</h1>
+          <h1 className="font-display text-2xl leading-tight font-semibold tracking-[-0.01em] text-ink">{title}</h1>
           <p className="mt-1.5 text-sm text-muted">{children}</p>
         </div>
         <Link to="/" className={buttonStyles()}>

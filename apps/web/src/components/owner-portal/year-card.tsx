@@ -20,7 +20,10 @@ export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; m
       <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">Year to date</p>
-          <h2 id="ytd" className="mt-1 text-xl font-bold tracking-tight text-ink">
+          <h2
+            id="ytd"
+            className="mt-1 font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+          >
             {ytd.year} so far
           </h2>
           <p className="mt-0.5 text-sm text-muted">

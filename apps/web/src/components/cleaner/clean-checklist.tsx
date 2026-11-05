@@ -80,7 +80,10 @@ export function CleanChecklist({
   return (
     <section aria-labelledby="checklist-heading" className="flex flex-col gap-3">
       <div className="flex items-end justify-between gap-3">
-        <h2 id="checklist-heading" className="text-lg font-bold text-ink">
+        <h2
+          id="checklist-heading"
+          className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+        >
           Checklist
         </h2>
         <p className="figure text-sm font-semibold text-muted">
@@ -660,7 +663,10 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
   const restock = c.checklist.stockCount.restock;
   return (
     <section aria-labelledby="done-heading" className="flex flex-col gap-3">
-      <h2 id="done-heading" className="text-lg font-bold text-ink">
+      <h2
+        id="done-heading"
+        className="font-display text-[1.375rem] leading-tight font-semibold tracking-[-0.01em] text-ink"
+      >
         What was done
       </h2>
       <ul className="grid grid-cols-1 gap-3 @xl/content:grid-cols-2">
