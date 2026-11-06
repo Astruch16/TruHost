@@ -72,6 +72,9 @@ describe('Statements page', () => {
     expect(within(rows[0]!).getByRole('list', { name: 'Steps' }).textContent).toBe(
       'Draft: doneFinalized: doneReleased: not yet',
     );
+    expect(within(rows[2]!).getByRole('list', { name: 'Steps' }).textContent).toBe(
+      'Draft: not yetFinalized: not yetReleased: not yet',
+    );
 
     // The month at a glance, and what's left to do.
     expect(screen.getByRole('img', { name: '1 not started, 1 draft, 1 finalized, 1 released' })).toBeInTheDocument();
