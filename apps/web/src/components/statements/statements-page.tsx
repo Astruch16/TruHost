@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
-import { Check, CircleAlert, CircleCheck, Clock3, FilePlus2, FileSearch, Send } from 'lucide-react';
+import { CircleAlert, CircleCheck, Clock3, FilePlus2, FileSearch, Send } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import type { StatementMonth, StatementRow } from '../../lib/api-types';
 import { cx } from '../../lib/cx';
@@ -221,27 +221,13 @@ const STEPS = [
 function StatementSteps({ state, className }: { state: StatementRow['state']; className?: string }) {
   const reached = STATE_ORDER.indexOf(state) - 1;
   return (
-    <ol aria-label="Steps" className={cx('w-48 grid-cols-3', className)}>
+    <ol aria-label="Steps" className={cx('w-48 grid-cols-3 gap-x-1', className)}>
       {STEPS.map((s, i) => {
         const done = i <= reached;
         return (
-          <li key={s.state} className="relative flex flex-col items-center gap-1">
-            {i > 0 && (
-              <span
-                aria-hidden
-                className={cx('absolute top-[9px] right-1/2 h-0.5 w-full', i <= reached ? 'bg-sage-mid' : 'bg-line')}
-              />
-            )}
-            <span
-              aria-hidden
-              className={cx(
-                'relative grid size-5 place-items-center rounded-full',
-                done ? 'bg-sage-mid text-white' : 'border border-line bg-surface',
-              )}
-            >
-              {done && <Check className="size-3" strokeWidth={3} />}
-            </span>
-            <span className={cx('text-[11px]', i === reached ? 'font-semibold text-ink' : 'text-muted')}>
+          <li key={s.state} className="text-center first:text-left last:text-right">
+            <span aria-hidden className={cx('block h-1.5 rounded-full', done ? STATE_BAR[state] : 'bg-line')} />
+            <span className={cx('mt-1.5 block text-[11px]', i === reached ? 'font-semibold text-ink' : 'text-muted')}>
               {s.label}
               <span className="sr-only">{done ? ': done' : ': not yet'}</span>
             </span>
