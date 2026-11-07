@@ -9,13 +9,20 @@ import { ApiContext } from '../../lib/api-context';
 import { RestockList } from './restock-list';
 import { RestockSummary } from './restock-summary';
 
-const item = (id: string, property: 'p1' | 'p2', name: string, levelPct: number, urgency: RestockItem['urgency']) =>
+const item = (
+  id: string,
+  property: 'p1' | 'p2',
+  name: string,
+  levelPct: number,
+  urgency: RestockItem['urgency'],
+  category: RestockItem['category'] = 'OTHER',
+) =>
   ({
     id,
     propertyId: property,
     property: { id: property, name: property === 'p1' ? 'Petersburg Retreat' : 'Cedar Cabin' },
     name,
-    category: 'OTHER',
+    category,
     thresholdPct: 25,
     position: 0,
     levelPct,
@@ -26,10 +33,10 @@ const item = (id: string, property: 'p1' | 'p2', name: string, levelPct: number,
   }) as RestockItem;
 
 const ITEMS = [
-  item('a', 'p1', 'Conditioner', 0, 'OUT'),
-  item('b', 'p2', 'Coffee pods', 0, 'OUT'),
-  item('c', 'p1', 'Hand soap', 25, 'LOW'),
-  item('d', 'p1', 'Paper towels', 50, 'SOON'),
+  item('a', 'p1', 'Coffee pods', 0, 'OUT', 'KITCHEN'),
+  item('b', 'p2', 'Conditioner', 0, 'OUT', 'BATHROOM'),
+  item('c', 'p1', 'Hand soap', 25, 'LOW', 'BATHROOM'),
+  item('d', 'p1', 'Shampoo', 50, 'SOON', 'BATHROOM'),
 ];
 
 async function renderPage() {
@@ -70,6 +77,25 @@ describe('supplies page', () => {
     expect(within(card).getByText('2 to restock · 1 low soon')).toBeInTheDocument();
     expect(within(card).getAllByRole('listitem')).toHaveLength(3);
     expect(within(card).getByRole('link', { name: /All supplies/ })).toHaveAttribute('href', '/admin/properties/p1');
+  });
+
+  it('sorts each property’s items by area, most urgent first in each', async () => {
+    await renderPage();
+    const card = screen.getByRole('heading', { name: 'Petersburg Retreat' }).closest('section')!;
+    const areas = within(card)
+      .getAllByRole('region')
+      .map((area) => [
+        area.getAttribute('aria-label'),
+        within(area)
+          .getAllByRole('meter')
+          .map((bar) => bar.getAttribute('aria-label')),
+      ]);
+    // Kitchen holds the most urgent item, but the areas keep their fixed order.
+    expect(areas).toEqual([
+      ['Bathroom', ['Hand soap level', 'Shampoo level']],
+      ['Kitchen', ['Coffee pods level']],
+    ]);
+    expect(within(card).getByRole('heading', { name: 'Bathroom 2 items', level: 3 })).toBeInTheDocument();
   });
 
   it('“Restocked” marks the item full', async () => {

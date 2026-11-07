@@ -18,9 +18,6 @@ import {
   suppliesSummary,
   THRESHOLD_OPTIONS,
 } from '../../lib/supplies';
-import { SuppliesIcon } from '../illustrations/category-icons';
-import { RoomIcon } from '../illustrations/room-icons';
-import { CleaningIcon } from '../illustrations/statement-icons';
 import { SuppliesIllustration } from '../illustrations/supplies';
 import { ErrorAlert, LoadError } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -32,6 +29,7 @@ import { Input } from '../ui/input';
 import { Pill } from '../ui/pill';
 import { Select } from '../ui/select';
 import { Skeleton } from '../ui/skeleton';
+import { CategoryHeading } from './category-heading';
 import { SupplyBar, SupplyMeta } from './supply-bar';
 
 /**
@@ -170,13 +168,11 @@ function SuppliesBody({ propertyId, mode }: { propertyId: string; mode: Supplies
             className="border-t border-line-soft pt-5 first-of-type:border-t-0 first-of-type:pt-0"
           >
             {group.label && (
-              <h3 className="mb-3 flex items-center gap-2.5 text-base font-bold text-ink">
-                <CategoryIcon category={group.category as SupplyCategory} />
-                {group.label}
-                <span className="figure text-sm font-medium text-muted">
-                  {group.items.length} {group.items.length === 1 ? 'item' : 'items'}
-                </span>
-              </h3>
+              <CategoryHeading
+                category={group.category as SupplyCategory}
+                label={group.label}
+                count={group.items.length}
+              />
             )}
             {/* Tiles fill the card's width: one column on a phone, three or four across a wide card. */}
             <ul
@@ -212,23 +208,6 @@ function SuppliesBody({ propertyId, mode }: { propertyId: string; mode: Supplies
       {history && <HistoryDialog item={history} open onOpenChange={(open) => !open && setHistory(null)} />}
     </div>
   );
-}
-
-/** An area's icon, beside its heading: the room it's kept in, the spray bottle for cleaning, the box for the rest. */
-function CategoryIcon({ category }: { category: SupplyCategory }) {
-  const props = { size: 28, className: 'shrink-0' };
-  switch (category) {
-    case 'BATHROOM':
-      return <RoomIcon type="BATHROOM" {...props} />;
-    case 'KITCHEN':
-      return <RoomIcon type="KITCHEN" {...props} />;
-    case 'LAUNDRY':
-      return <RoomIcon type="LAUNDRY" {...props} />;
-    case 'CLEANING':
-      return <CleaningIcon {...props} />;
-    case 'OTHER':
-      return <SuppliesIcon {...props} />;
-  }
 }
 
 function SupplyRow({

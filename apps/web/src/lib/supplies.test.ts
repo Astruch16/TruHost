@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   checkedAgo,
   groupByCategory,
+  inCategories,
   restockFirst,
   groupByProperty,
   restockSummary,
@@ -35,6 +36,19 @@ describe('supplies helpers', () => {
       ['Bathroom', ['b']],
       ['Kitchen', ['c', 'a']],
       ['Other', ['d']],
+    ]);
+  });
+
+  it('groups by category without changing the order it was given (the restock list, most urgent first)', () => {
+    const groups = inCategories([
+      { id: 'kitchen-out', category: 'KITCHEN', position: 5 },
+      { id: 'bath-low', category: 'BATHROOM', position: 9 },
+      { id: 'kitchen-soon', category: 'KITCHEN', position: 1 },
+      { id: 'bath-soon', category: 'BATHROOM', position: 2 },
+    ] as const);
+    expect(groups.map((g) => [g.category, g.items.map((i) => i.id)])).toEqual([
+      ['BATHROOM', ['bath-low', 'bath-soon']],
+      ['KITCHEN', ['kitchen-out', 'kitchen-soon']],
     ]);
   });
 

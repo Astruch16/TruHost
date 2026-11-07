@@ -37,13 +37,18 @@ export const STATE_LABELS: Record<SupplyState, string> = {
   OUT: 'Out',
 };
 
-/** Items grouped by category, in CATEGORY_ORDER, each group in the property's order. Empty groups are left out. */
-export function groupByCategory<T extends Pick<SupplyItem, 'category' | 'position'>>(items: readonly T[]) {
+/** Items grouped by category, in CATEGORY_ORDER, each group in the order given. Empty groups are left out. */
+export function inCategories<T extends Pick<SupplyItem, 'category'>>(items: readonly T[]) {
   return CATEGORY_ORDER.map((category) => ({
     category,
     label: SUPPLY_CATEGORY_LABELS[category],
-    items: items.filter((i) => i.category === category).sort((a, b) => a.position - b.position),
+    items: items.filter((i) => i.category === category),
   })).filter((g) => g.items.length > 0);
+}
+
+/** Items grouped by category, each group in the property's order. */
+export function groupByCategory<T extends Pick<SupplyItem, 'category' | 'position'>>(items: readonly T[]) {
+  return inCategories([...items].sort((a, b) => a.position - b.position));
 }
 
 /**
