@@ -289,12 +289,13 @@ const supply = (
   name: string,
   levelPct: number,
   urgency: RestockItem['urgency'],
+  category: RestockItem['category'],
 ): RestockItem => ({
   id,
   propertyId: property.id,
   property: { id: property.id, name: property.name },
   name,
-  category: 'OTHER',
+  category,
   thresholdPct: 25,
   position: 0,
   levelPct,
@@ -305,10 +306,16 @@ const supply = (
 });
 
 const FIXTURE_SUPPLIES: RestockItem[] = [
-  supply('s1', FIXTURE_PROPERTIES[1]!, 'Coffee pods', 0, 'OUT'),
-  supply('s2', FIXTURE_PROPERTIES[0]!, 'Toilet paper', 25, 'LOW'),
-  supply('s3', FIXTURE_PROPERTIES[1]!, 'Dryer sheets', 25, 'LOW'),
-  supply('s4', FIXTURE_PROPERTIES[0]!, 'Shampoo', 50, 'SOON'),
+  supply('s1', FIXTURE_PROPERTIES[1]!, 'Coffee pods', 0, 'OUT', 'KITCHEN'),
+  supply('s2', FIXTURE_PROPERTIES[0]!, 'Conditioner', 0, 'OUT', 'BATHROOM'),
+  supply('s3', FIXTURE_PROPERTIES[0]!, 'Toilet paper', 25, 'LOW', 'BATHROOM'),
+  supply('s4', FIXTURE_PROPERTIES[1]!, 'Dryer sheets', 25, 'LOW', 'LAUNDRY'),
+  supply('s5', FIXTURE_PROPERTIES[0]!, 'Dish soap', 25, 'LOW', 'KITCHEN'),
+  supply('s6', FIXTURE_PROPERTIES[1]!, 'Hand soap', 25, 'LOW', 'BATHROOM'),
+  supply('s7', FIXTURE_PROPERTIES[0]!, 'Laundry detergent', 25, 'LOW', 'LAUNDRY'),
+  supply('s8', FIXTURE_PROPERTIES[0]!, 'Shampoo', 50, 'SOON', 'BATHROOM'),
+  supply('s9', FIXTURE_PROPERTIES[1]!, 'Paper towels', 50, 'SOON', 'KITCHEN'),
+  supply('s10', FIXTURE_PROPERTIES[0]!, 'Cleaning spray', 50, 'SOON', 'CLEANING'),
 ];
 
 function Preview() {
