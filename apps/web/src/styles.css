@@ -53,8 +53,8 @@
   --color-rose-mid: #c2477a;
   --color-amber-tint: #fbeecb;
   --color-amber-deep: #6f4c0e;
-  /* Supply health bars (components/supplies/supply-bar.tsx): each fill is a gradient from light to mid. The deep
-     pairs are for text. */
+  /* Bright shades: supply bars (components/supplies/supply-bar.tsx) fill in mid and tint an empty item's track in
+     danger-light; they are used across the app too. The deep pairs are for text. */
   --color-sage-light: #74bb8c;
   --color-amber-light: #ebc25e;
   --color-amber-mid: #d29a2a;
