@@ -70,7 +70,7 @@ export function SuppliesCard({
       description={
         items.length === 0
           ? 'What’s kept stocked for guests, and how full it is.'
-          : `${lastChecked(items)}${due > 0 ? '' : ` · ${suppliesSummary(items)}`}. The notch on each bar is its restock point.`
+          : `${lastChecked(items)}${due > 0 ? '' : ` · ${suppliesSummary(items)}`}.`
       }
       className={className}
       actions={

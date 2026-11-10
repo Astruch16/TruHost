@@ -4,16 +4,19 @@ import { checkedAgo, levelText, URGENCY_LABELS } from '../../lib/supplies';
 import { Pill } from '../ui/pill';
 
 const FILL: Record<SupplyState, string> = {
-  OK: 'from-sage-light to-sage-mid',
-  LOW: 'from-amber-light to-amber-mid',
-  OUT: 'from-danger-light to-danger-mid',
+  OK: 'bg-sage-mid',
+  LOW: 'bg-amber-mid',
+  OUT: 'bg-danger-mid',
   UNKNOWN: '',
 };
 
+/** Each quarter of the bar, as the levels people tap: ¼, ½, ¾ and Full. */
+const QUARTERS = [0, 25, 50, 75] as const;
+
 /**
- * A supply's health bar: how full it is (0–100%), coloured by where it stands (stocked, running low, out), with a
- * notch at its restock point that stands just proud of the bar. The fill is one smooth piece with a soft gradient and
- * sheen; faint quarter marks show on the empty part of the track only. Not checked yet: an empty dashed track.
+ * A supply's level bar, like the statements tracker: four quarter segments that fill in the colour of where the item
+ * stands (stocked, running low, out). A level between quarters part-fills its segment. Empty: the segments tinted red.
+ * Not checked yet: four dashed segments. The restock point is in the text beside it ("Restock at 25%"), and on hover.
  */
 export function SupplyBar({
   name,
@@ -27,11 +30,10 @@ export function SupplyBar({
   levelPct: number | null;
   state: SupplyState;
   thresholdPct: number;
-  /** md: 10px (cards); sm: 8px (dashboard). */
+  /** md: 8px (cards); sm: 6px (dashboard). */
   size?: 'sm' | 'md';
   className?: string;
 }) {
-  const unknown = levelPct === null;
   return (
     <div
       role="meter"
@@ -40,47 +42,38 @@ export function SupplyBar({
       aria-valuemax={100}
       aria-valuenow={levelPct ?? undefined}
       aria-valuetext={levelText(levelPct)}
-      className={cx('relative py-[3px]', className)}
+      title={`Restock at ${thresholdPct}%`}
+      className={cx('grid grid-cols-4 gap-1', className)}
     >
-      <div
-        className={cx(
-          'relative overflow-hidden rounded-full',
-          size === 'sm' ? 'h-2' : 'h-2.5',
-          unknown
-            ? 'border border-dashed border-line bg-ground'
-            : 'bg-ink/[0.06] shadow-[inset_0_1px_2px_rgb(0_0_0/0.08)]',
-        )}
-      >
-        {/* Quarter marks, under the fill so they only show on the empty part. */}
-        {[25, 50, 75].map((pct) => (
+      {QUARTERS.map((from) => {
+        const filled = levelPct === null ? 0 : Math.min(1, Math.max(0, (levelPct - from) / 25));
+        return (
           <span
-            key={pct}
+            key={from}
             aria-hidden
-            className="absolute inset-y-[30%] w-px -translate-x-1/2 rounded-full bg-ink/15"
-            style={{ left: `${pct}%` }}
-          />
-        ))}
-        {!unknown && (
-          <div
-            aria-hidden
+            data-filled={filled}
             className={cx(
-              'absolute inset-y-0 left-0 rounded-full bg-linear-to-r shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]',
-              'transition-[width] duration-500 ease-out motion-reduce:transition-none',
-              FILL[state],
-              // Empty still shows a dot, so the bar reads as a bar.
-              state === 'OUT' && (size === 'sm' ? 'min-w-2' : 'min-w-2.5'),
+              'overflow-hidden rounded-full',
+              size === 'sm' ? 'h-1.5' : 'h-2',
+              levelPct === null
+                ? 'border border-dashed border-line'
+                : state === 'OUT'
+                  ? 'bg-danger-light/30'
+                  : 'bg-line',
             )}
-            style={{ width: `${levelPct}%` }}
-          />
-        )}
-      </div>
-      {/* Restock point: a notch standing just proud of the track. */}
-      <span
-        aria-hidden
-        title={`Restock at ${thresholdPct}%`}
-        className="absolute inset-y-0 w-[3px] -translate-x-1/2 rounded-full bg-ink/50 ring-1 ring-surface/80"
-        style={{ left: `${thresholdPct}%` }}
-      />
+          >
+            {filled > 0 && (
+              <span
+                className={cx(
+                  'block h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none',
+                  FILL[state],
+                )}
+                style={{ width: `${filled * 100}%` }}
+              />
+            )}
+          </span>
+        );
+      })}
     </div>
   );
 }
