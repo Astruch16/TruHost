@@ -9923,6 +9923,7 @@ export interface operations {
               province: string;
               archived: boolean;
               hasPlan: boolean;
+              feeRateBps: number | null;
               coverPhoto: {
                 /** Format: uuid */
                 id: string;
@@ -9937,6 +9938,12 @@ export interface operations {
             }[];
             attention: {
               total: number;
+              counts: {
+                PAYOUT_MISSING: number;
+                RECEIPT_MISSING: number;
+                NO_PLAN: number;
+                INVITE_PENDING: number;
+              };
               items: {
                 /** @enum {string} */
                 kind: 'PAYOUT_MISSING' | 'RECEIPT_MISSING' | 'NO_PLAN' | 'INVITE_PENDING';

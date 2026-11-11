@@ -84,6 +84,8 @@ export const dashboard = z.object({
       province: z.string(),
       archived: z.boolean(),
       hasPlan: z.boolean(),
+      /** The plan rate in force this month, in bps (0 for an owner-managed property); null without a plan. */
+      feeRateBps: bps.nullable(),
       coverPhoto: propertyPhotoLinks.nullable(),
       occupancyBps: bps.nullable(),
       nightsBooked: z.number().int(),
@@ -92,6 +94,13 @@ export const dashboard = z.object({
   ),
   attention: z.object({
     total: z.number().int(),
+    /** How many of each kind there are; `items` lists at most ten of each. */
+    counts: z.object({
+      PAYOUT_MISSING: z.number().int(),
+      RECEIPT_MISSING: z.number().int(),
+      NO_PLAN: z.number().int(),
+      INVITE_PENDING: z.number().int(),
+    }),
     items: z.array(
       z.object({
         kind: z.enum(['PAYOUT_MISSING', 'RECEIPT_MISSING', 'NO_PLAN', 'INVITE_PENDING']),

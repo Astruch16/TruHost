@@ -28,6 +28,8 @@ export interface NavItem {
   exact?: boolean;
   /** Also on the owner's bottom tab bar (phones). */
   tab?: boolean;
+  /** The small label the sidebar groups it under ("Money"); items without one sit above the groups, or after. */
+  section?: 'Money' | 'Operations' | 'People';
 }
 
 /** Owners (not staff) get the owner portal: its own pages, in the same shell. */
@@ -71,15 +73,15 @@ export function navItems(me: { staffRole: string | null; memberships: { role: st
   if (me.staffRole === 'ADMIN') {
     items.push(
       { to: '/admin/calendar', label: 'Calendar', icon: CalendarRange },
-      { to: '/admin/properties', label: 'Properties', icon: Building2 },
-      { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays },
-      { to: '/admin/expenses', label: 'Expenses', icon: ReceiptText },
-      { to: '/admin/statements', label: 'Statements', icon: ScrollText },
-      { to: '/admin/supplies', label: 'Supplies', icon: Package },
-      { to: '/admin/damage', label: 'Damage', icon: TriangleAlert },
-      { to: '/admin/team', label: 'Team', icon: Users },
-      { to: '/admin/time-off', label: 'Time off', icon: CalendarOff },
-      { to: '/admin/plans', label: 'Plans', icon: Shield },
+      { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays, section: 'Money' },
+      { to: '/admin/expenses', label: 'Expenses', icon: ReceiptText, section: 'Money' },
+      { to: '/admin/statements', label: 'Statements', icon: ScrollText, section: 'Money' },
+      { to: '/admin/plans', label: 'Plans', icon: Shield, section: 'Money' },
+      { to: '/admin/properties', label: 'Properties', icon: Building2, section: 'Operations' },
+      { to: '/admin/supplies', label: 'Supplies', icon: Package, section: 'Operations' },
+      { to: '/admin/damage', label: 'Damage', icon: TriangleAlert, section: 'Operations' },
+      { to: '/admin/time-off', label: 'Time off', icon: CalendarOff, section: 'Operations' },
+      { to: '/admin/team', label: 'Team', icon: Users, section: 'People' },
     );
   }
   items.push({ to: '/account', label: 'Settings', icon: Settings });
@@ -95,4 +97,15 @@ export function roleLabel(me: { staffRole: string | null; memberships: { role: s
   if (me.memberships.some((m) => m.role === 'OWNER')) return 'Owner';
   if (me.memberships.some((m) => m.role === 'CLEANER')) return 'Cleaner';
   return 'Member';
+}
+
+/** Nav items in runs that share a section (in order), for the sidebar's labelled groups. */
+export function navGroups(items: readonly NavItem[]): { section: NavItem['section']; items: NavItem[] }[] {
+  const groups: { section: NavItem['section']; items: NavItem[] }[] = [];
+  for (const item of items) {
+    const last = groups.at(-1);
+    if (last && last.section === item.section) last.items.push(item);
+    else groups.push({ section: item.section, items: [item] });
+  }
+  return groups;
 }

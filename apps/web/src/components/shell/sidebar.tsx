@@ -1,13 +1,13 @@
 import { Link } from '@tanstack/react-router';
 import { CircleHelp, LogOut } from 'lucide-react';
 import { cx } from '../../lib/cx';
-import type { NavItem } from '../../lib/nav';
+import { navGroups, type NavItem } from '../../lib/nav';
 import { APP_BUILD, APP_VERSION } from '../../lib/version';
 import { Logo } from './logo';
 import { MountainScene } from './mountain-scene';
 
 const itemClass = cx(
-  'group flex min-h-12 items-center gap-3 rounded-control px-3.5 text-base font-medium text-sidebar-ink/90',
+  'group flex min-h-10 items-center gap-3 rounded-control px-3.5 text-base font-medium text-sidebar-ink/90',
   'transition-colors hover:bg-sidebar-hover hover:text-sidebar-ink',
   'focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-sidebar-ink',
   'data-[status=active]:bg-sidebar-active data-[status=active]:font-semibold data-[status=active]:text-white',
@@ -33,22 +33,38 @@ export function Sidebar({
       </div>
       {/* On a short screen the scene below gives way first, then the nav scrolls, so the foot stays in view. */}
       <nav aria-label="Main" className="scroll-area relative z-10 min-h-0 flex-initial overflow-y-auto px-3 py-0.5">
-        <ul className="flex flex-col gap-1">
-          {items.map(({ to, label, icon: Icon, badge, exact }) => (
-            <li key={to}>
-              <Link to={to} onClick={onNavigate} className={itemClass} activeOptions={{ exact: exact ?? false }}>
-                <Icon aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
-                <span className="flex-1">{label}</span>
-                {badge ? (
-                  <span className="grid min-w-6 place-items-center rounded-full bg-white/15 px-1.5 text-xs font-semibold text-white">
-                    {badge}
-                    <span className="sr-only"> needing attention</span>
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {/* Admin items sit in small labelled groups (Money, Operations, People); the rest have no label. */}
+        {navGroups(items).map((group, g) => (
+          <div key={group.section ?? `plain-${g}`} className={cx(group.section && 'mt-4 first:mt-0')}>
+            {group.section && (
+              <p
+                id={`nav-${group.section}`}
+                className="px-3.5 pb-1.5 text-[11px] font-semibold tracking-[0.12em] text-sidebar-muted uppercase"
+              >
+                {group.section}
+              </p>
+            )}
+            <ul
+              aria-labelledby={group.section ? `nav-${group.section}` : undefined}
+              className={cx('flex flex-col gap-0.5', !group.section && g > 0 && 'mt-4')}
+            >
+              {group.items.map(({ to, label, icon: Icon, badge, exact }) => (
+                <li key={to}>
+                  <Link to={to} onClick={onNavigate} className={itemClass} activeOptions={{ exact: exact ?? false }}>
+                    <Icon aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
+                    <span className="flex-1">{label}</span>
+                    {badge ? (
+                      <span className="grid min-w-6 place-items-center rounded-full bg-white/15 px-1.5 text-xs font-semibold text-white">
+                        {badge}
+                        <span className="sr-only"> needing attention</span>
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       {/* Decorative foot: a size container, so the scene and tagline appear only when there is real room below the

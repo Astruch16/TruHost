@@ -23988,6 +23988,12 @@
                           "hasPlan": {
                             "type": "boolean"
                           },
+                          "feeRateBps": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10000
+                          },
                           "coverPhoto": {
                             "nullable": true,
                             "type": "object",
@@ -24036,6 +24042,7 @@
                           "province",
                           "archived",
                           "hasPlan",
+                          "feeRateBps",
                           "coverPhoto",
                           "occupancyBps",
                           "nightsBooked",
@@ -24051,6 +24058,33 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "counts": {
+                          "type": "object",
+                          "properties": {
+                            "PAYOUT_MISSING": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "RECEIPT_MISSING": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "NO_PLAN": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "INVITE_PENDING": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": ["PAYOUT_MISSING", "RECEIPT_MISSING", "NO_PLAN", "INVITE_PENDING"],
+                          "additionalProperties": false
                         },
                         "items": {
                           "type": "array",
@@ -24094,7 +24128,7 @@
                           }
                         }
                       },
-                      "required": ["total", "items"],
+                      "required": ["total", "counts", "items"],
                       "additionalProperties": false
                     },
                     "upcoming": {

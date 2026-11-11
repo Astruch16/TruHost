@@ -11,14 +11,15 @@ import { navItems } from '../../lib/nav';
 /**
  * Dev-only preview of the dashboard layout with FIXTURE data (not served in production builds). The real
  * dashboard at /admin only ever shows figures from the API. `?state=empty` previews the no-properties state;
- * `?state=new` a single property with nothing entered yet.
+ * `?state=new` a single property with nothing entered yet; `?state=pending` a month whose stays are all still waiting
+ * on their payout (no gross yet, only expenses).
  */
 export const Route = createFileRoute('/dev/dashboard')({
   beforeLoad: () => {
     if (!import.meta.env.DEV) throw notFound();
   },
   validateSearch: (s: Record<string, unknown>) => ({
-    state: s.state === 'empty' || s.state === 'new' || s.state === 'error' ? s.state : 'data',
+    state: s.state === 'empty' || s.state === 'new' || s.state === 'error' || s.state === 'pending' ? s.state : 'data',
   }),
   component: Preview,
 });
@@ -38,6 +39,7 @@ const samplePhoto = { id: 'photo-1', url: SAMPLE_PHOTO, thumbUrl: SAMPLE_PHOTO, 
 const FIXTURE_PROPERTIES = [
   { id: 'p1', name: 'Fixture Suite', city: 'Chilliwack', province: 'BC' },
   { id: 'p2', name: 'Fixture Cabin', city: 'Cultus Lake', province: 'BC' },
+  { id: 'p3', name: 'Fixture Retreat', city: 'Harrison Hot Springs', province: 'BC' },
 ];
 
 const stay = (
@@ -113,6 +115,7 @@ const FIXTURE: Dashboard = {
       ...FIXTURE_PROPERTIES[0]!,
       archived: false,
       hasPlan: true,
+      feeRateBps: 2200,
       coverPhoto: samplePhoto,
       occupancyBps: 5484,
       nightsBooked: 17,
@@ -122,18 +125,49 @@ const FIXTURE: Dashboard = {
       ...FIXTURE_PROPERTIES[1]!,
       archived: false,
       hasPlan: false,
+      feeRateBps: null,
       coverPhoto: null,
       occupancyBps: 833,
       nightsBooked: 2,
       grossCents: 0,
     },
+    {
+      // An admin's own property: on the 0% plan.
+      ...FIXTURE_PROPERTIES[2]!,
+      archived: false,
+      hasPlan: true,
+      feeRateBps: 0,
+      coverPhoto: null,
+      occupancyBps: 0,
+      nightsBooked: 0,
+      grossCents: 0,
+    },
   ],
   attention: {
-    total: 3,
+    total: 5,
+    counts: { PAYOUT_MISSING: 3, RECEIPT_MISSING: 1, NO_PLAN: 1, INVITE_PENDING: 0 },
     items: [
       {
         kind: 'PAYOUT_MISSING',
         id: 'b1',
+        propertyId: 'p2',
+        propertyName: 'Fixture Cabin',
+        title: 'Payout not entered',
+        detail: 'Stay from Oct 2 (2 nights) isn’t counted until its payout and cleaning fee are entered.',
+        date: '2026-10-02',
+      },
+      {
+        kind: 'PAYOUT_MISSING',
+        id: 'b2',
+        propertyId: 'p1',
+        propertyName: 'Fixture Suite',
+        title: 'Payout not entered',
+        detail: 'Stay from Oct 4 (3 nights) isn’t counted until its payout and cleaning fee are entered.',
+        date: '2026-10-04',
+      },
+      {
+        kind: 'PAYOUT_MISSING',
+        id: 'b3',
         propertyId: 'p2',
         propertyName: 'Fixture Cabin',
         title: 'Payout not entered',
@@ -273,14 +307,41 @@ const EMPTY_SINGLE: Dashboard = {
       ...FIXTURE_PROPERTIES[0]!,
       archived: false,
       hasPlan: true,
+      feeRateBps: 2200,
       coverPhoto: null,
       occupancyBps: 0,
       nightsBooked: 0,
       grossCents: 0,
     },
   ],
-  attention: { total: 0, items: [] },
+  attention: { total: 0, counts: { PAYOUT_MISSING: 0, RECEIPT_MISSING: 0, NO_PLAN: 0, INVITE_PENDING: 0 }, items: [] },
   upcoming: { total: 0, items: [] },
+};
+
+/** Early in a month: three stays in, none with its payout yet, and an owner-borne expense. Net isn't final. */
+const PENDING: Dashboard = {
+  ...FIXTURE,
+  kpis: {
+    ...FIXTURE.kpis,
+    grossCents: 0,
+    stays: 3,
+    incompleteBookings: 3,
+    managementFeeCents: 0,
+    grossByStayCents: [0, 0, 0],
+    feeShareBps: null,
+    avgNightlyEarningsCents: null,
+    completeNights: 0,
+    nightlyLowCents: null,
+    nightlyHighCents: null,
+  },
+  breakdown: {
+    grossCents: 0,
+    managementFeeCents: 0,
+    ownerExpensesCents: 4_200,
+    netToOwnersCents: -4_200,
+    cleaningFeesCents: 0,
+  },
+  properties: FIXTURE.properties.map((p) => ({ ...p, grossCents: 0 })),
 };
 
 const supply = (
@@ -342,18 +403,26 @@ function Preview() {
         onMonthChange={setMonth}
         scope={{ propertyId: null, name: null }}
         properties={props}
-        dashboard={state === 'empty' || state === 'error' ? undefined : state === 'new' ? EMPTY_SINGLE : FIXTURE}
+        dashboard={
+          state === 'empty' || state === 'error'
+            ? undefined
+            : state === 'new'
+              ? EMPTY_SINGLE
+              : state === 'pending'
+                ? PENDING
+                : FIXTURE
+        }
         dashboardError={state === 'error' ? new Error('preview') : null}
         onRetryDashboard={() => undefined}
         retryingDashboard={false}
-        stays={state === 'data' ? FIXTURE_STAYS : state === 'error' ? undefined : []}
+        stays={state === 'data' || state === 'pending' ? FIXTURE_STAYS : state === 'error' ? undefined : []}
         staysError={state === 'error' ? new Error('preview') : null}
         onRetryStays={() => undefined}
         retryingStays={false}
-        supplies={state === 'data' ? FIXTURE_SUPPLIES : state === 'error' ? undefined : []}
+        supplies={state === 'data' || state === 'pending' ? FIXTURE_SUPPLIES : state === 'error' ? undefined : []}
         suppliesError={state === 'error' ? new Error('preview') : null}
         onAction={() => undefined}
-        damage={state === 'data' ? DEV_DAMAGE.filter((r) => r.status !== 'RESOLVED') : []}
+        damage={state === 'data' || state === 'pending' ? DEV_DAMAGE.filter((r) => r.status !== 'RESOLVED') : []}
         onReportDamage={() => undefined}
         onOpenDamage={() => undefined}
         onAddProperty={() => undefined}

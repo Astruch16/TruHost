@@ -27,4 +27,15 @@ describe('sidebar', () => {
     expect(onSignOut).toHaveBeenCalled();
     expect(screen.getByText(new RegExp(`TruHost v${__APP_VERSION__}`))).toHaveTextContent(__APP_COMMIT__);
   });
+
+  it('groups the admin’s pages under Money, Operations and People', async () => {
+    await renderSidebar();
+    const group = (name: string) =>
+      within(screen.getByRole('list', { name }))
+        .getAllByRole('link')
+        .map((a) => a.textContent);
+    expect(group('Money')).toEqual(['Bookings', 'Expenses', 'Statements', 'Plans']);
+    expect(group('Operations')).toEqual(['Properties', 'Supplies', 'Damage', 'Time off']);
+    expect(group('People')).toEqual(['Team']);
+  });
 });

@@ -61,9 +61,15 @@ describe('admin dashboard', () => {
         cleaningFeesCents: 18_000,
       },
     });
-    expect(body.properties.map((p: { name: string; hasPlan: boolean }) => [p.name, p.hasPlan])).toEqual([
-      ['Property A', true],
-      ['Property B', false],
+    expect(
+      body.properties.map((p: { name: string; hasPlan: boolean; feeRateBps: number | null }) => [
+        p.name,
+        p.hasPlan,
+        p.feeRateBps,
+      ]),
+    ).toEqual([
+      ['Property A', true, 2200],
+      ['Property B', false, null],
     ]);
   });
 
@@ -187,6 +193,7 @@ describe('admin dashboard', () => {
 
     const { body } = await dash('month=2026-11');
     expect(body.attention.total).toBe(4);
+    expect(body.attention.counts).toEqual({ PAYOUT_MISSING: 1, RECEIPT_MISSING: 1, NO_PLAN: 1, INVITE_PENDING: 1 });
     expect(body.attention.items.map((i: { kind: string; id: string }) => [i.kind, i.id])).toEqual([
       ['PAYOUT_MISSING', stay.id],
       ['RECEIPT_MISSING', expense.id],
@@ -198,6 +205,31 @@ describe('admin dashboard', () => {
     // Scoped to B: only B's missing plan; the invite is for a cleaner of A.
     const scoped = await dash(`month=2026-11&propertyId=${w.propertyB.id}`);
     expect(scoped.body.attention.items.map((i: { kind: string }) => i.kind)).toEqual(['NO_PLAN']);
+  });
+
+  it('lists at most ten of each kind that needs attention, and counts them all', async () => {
+    // Twelve October stays waiting on payout (one night each, back to back), then one missing receipt.
+    for (let i = 0; i < 12; i++) {
+      const day = (n: number) => `2026-10-${String(n).padStart(2, '0')}`;
+      await book({ checkInDate: day(1 + i), checkOutDate: day(2 + i) }, w.propertyB.id);
+    }
+    await t
+      .as('admin')
+      .post(`/v1/properties/${w.propertyA.id}/expenses`, {
+        category: 'SUPPLIES',
+        incurredOn: '2026-11-18',
+        description: 'Coffee pods',
+        amountCents: 2_499,
+      })
+      .expect(201);
+
+    const { body } = await dash('month=2026-11');
+    expect(body.attention.counts).toMatchObject({ PAYOUT_MISSING: 12, RECEIPT_MISSING: 1 });
+    expect(body.attention.total).toBe(12 + 1 + body.attention.counts.NO_PLAN + body.attention.counts.INVITE_PENDING);
+    const kinds = body.attention.items.map((i: { kind: string }) => i.kind);
+    // Ten payouts, and the receipt is still listed after them.
+    expect(kinds.filter((k: string) => k === 'PAYOUT_MISSING')).toHaveLength(10);
+    expect(kinds).toContain('RECEIPT_MISSING');
   });
 
   it('lists the next 14 days of check-ins and check-outs, check-outs first on the same day', async () => {
@@ -260,7 +292,11 @@ describe('admin dashboard', () => {
       kpis: { grossCents: 0, nightsBooked: 0, occupancyBps: null, avgNightlyEarningsCents: null },
       noComparisonReason: 'NO_PROPERTIES',
       properties: [],
-      attention: { total: 0, items: [] },
+      attention: {
+        total: 0,
+        counts: { PAYOUT_MISSING: 0, RECEIPT_MISSING: 0, NO_PLAN: 0, INVITE_PENDING: 0 },
+        items: [],
+      },
       upcoming: { total: 0, items: [] },
     });
   });

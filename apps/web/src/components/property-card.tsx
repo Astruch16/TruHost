@@ -1,16 +1,17 @@
 import { Link } from '@tanstack/react-router';
 import { Pencil } from 'lucide-react';
 import { cx } from '../lib/cx';
-import { monogram, TINTS } from '../lib/dashboard-format';
+import { TINTS } from '../lib/dashboard-format';
 import { formatOccupancy } from '../lib/format';
 import { formatCents } from '../lib/money';
 import { CoverImage } from './cover-image';
+import { PropertyScene } from './illustrations/property-scene';
 import { Pill } from './ui/pill';
 import { Skeleton } from './ui/skeleton';
 
 /**
- * Property card with its cover photo (or a tinted monogram without one), status and the month's figures. Used on
- * the dashboard and the admin properties page. `wide` is for a card that has a row to itself (the dashboard with one
+ * Property card with its cover photo (or a drawn cabin in the hills without one), status and the month's figures.
+ * Used on the dashboard and the admin properties page. `wide` is for a card that has a row to itself (the dashboard with one
  * property): once it's wide enough, the photo sits beside the details, with occupancy as a bar and nights booked too.
  */
 export function PropertyCard({
@@ -66,11 +67,7 @@ export function PropertyCard({
           url={property.photoUrl}
           alt=""
           className="size-full transition-transform duration-300 group-hover:scale-[1.02]"
-          fallback={
-            <span aria-hidden className="grid size-full place-items-center">
-              <span className={cx('text-4xl font-bold tracking-tight', tint.fg)}>{monogram(property.name)}</span>
-            </span>
-          }
+          fallback={<PropertyScene index={index} className="size-full" />}
         />
       </div>
       <div
