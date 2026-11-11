@@ -12,14 +12,14 @@ import { navItems } from '../../lib/nav';
  * Dev-only preview of the dashboard layout with FIXTURE data (not served in production builds). The real
  * dashboard at /admin only ever shows figures from the API. `?state=empty` previews the no-properties state;
  * `?state=new` a single property with nothing entered yet; `?state=pending` a month whose stays are all still waiting
- * on their payout (no gross yet, only expenses).
+ * on their payout (no gross yet, only expenses); `?state=single` one property chosen in the switcher, with its details.
  */
 export const Route = createFileRoute('/dev/dashboard')({
   beforeLoad: () => {
     if (!import.meta.env.DEV) throw notFound();
   },
   validateSearch: (s: Record<string, unknown>) => ({
-    state: s.state === 'empty' || s.state === 'new' || s.state === 'error' || s.state === 'pending' ? s.state : 'data',
+    state: (['empty', 'new', 'error', 'pending', 'single'] as const).find((v) => v === s.state) ?? 'data',
   }),
   component: Preview,
 });
@@ -318,6 +318,37 @@ const EMPTY_SINGLE: Dashboard = {
   upcoming: { total: 0, items: [] },
 };
 
+/** Fixture Suite's full record, as the properties list returns it (made-up details, for the single-property card). */
+const SUITE_RECORD = {
+  ...FIXTURE_PROPERTIES[0]!,
+  description: 'A bright two-bedroom suite near the river trails, with a full kitchen and a fenced yard.',
+  bedrooms: 2,
+  bathrooms: 1,
+  halfBathrooms: 1,
+  maxGuests: 5,
+  airbnbUrl: 'https://www.airbnb.ca/rooms/1',
+  vrboUrl: 'https://www.vrbo.com/1',
+  bookingComUrl: null,
+  addressLine1: '100 Example Road',
+  addressLine2: null,
+  postalCode: 'V2P 0A1',
+  country: 'CA',
+  timeZone: 'America/Vancouver',
+  checkInTime: '16:00',
+  checkOutTime: '11:00',
+  provincialRegistrationNumber: 'H000000000',
+  businessLicenceNumber: null,
+  archivedAt: null,
+  coverPhoto: samplePhoto,
+};
+
+/** Fixture Suite on its own (chosen in the switcher). */
+const SINGLE: Dashboard = {
+  ...FIXTURE,
+  scope: { propertyId: 'p1', propertyCount: 1 },
+  properties: [FIXTURE.properties[0]!],
+};
+
 /** Early in a month: three stays in, none with its payout yet, and an owner-borne expense. Net isn't final. */
 const PENDING: Dashboard = {
   ...FIXTURE,
@@ -382,7 +413,14 @@ const FIXTURE_SUPPLIES: RestockItem[] = [
 function Preview() {
   const { state } = Route.useSearch();
   const [month, setMonth] = useState('2026-10');
-  const props = state === 'empty' ? [] : state === 'new' ? [FIXTURE_PROPERTIES[0]!] : FIXTURE_PROPERTIES;
+  const props =
+    state === 'empty'
+      ? []
+      : state === 'new'
+        ? [FIXTURE_PROPERTIES[0]!]
+        : state === 'single'
+          ? [SUITE_RECORD]
+          : FIXTURE_PROPERTIES;
   return (
     <AppShell
       nav={navItems({ staffRole: 'ADMIN', memberships: [] })}
@@ -410,19 +448,37 @@ function Preview() {
               ? EMPTY_SINGLE
               : state === 'pending'
                 ? PENDING
-                : FIXTURE
+                : state === 'single'
+                  ? SINGLE
+                  : FIXTURE
         }
         dashboardError={state === 'error' ? new Error('preview') : null}
         onRetryDashboard={() => undefined}
         retryingDashboard={false}
-        stays={state === 'data' || state === 'pending' ? FIXTURE_STAYS : state === 'error' ? undefined : []}
+        stays={
+          state === 'data' || state === 'pending' || state === 'single'
+            ? FIXTURE_STAYS
+            : state === 'error'
+              ? undefined
+              : []
+        }
         staysError={state === 'error' ? new Error('preview') : null}
         onRetryStays={() => undefined}
         retryingStays={false}
-        supplies={state === 'data' || state === 'pending' ? FIXTURE_SUPPLIES : state === 'error' ? undefined : []}
+        supplies={
+          state === 'data' || state === 'pending' || state === 'single'
+            ? FIXTURE_SUPPLIES
+            : state === 'error'
+              ? undefined
+              : []
+        }
         suppliesError={state === 'error' ? new Error('preview') : null}
         onAction={() => undefined}
-        damage={state === 'data' || state === 'pending' ? DEV_DAMAGE.filter((r) => r.status !== 'RESOLVED') : []}
+        damage={
+          state === 'data' || state === 'pending' || state === 'single'
+            ? DEV_DAMAGE.filter((r) => r.status !== 'RESOLVED')
+            : []
+        }
         onReportDamage={() => undefined}
         onOpenDamage={() => undefined}
         onAddProperty={() => undefined}

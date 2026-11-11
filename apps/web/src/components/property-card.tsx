@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Pencil } from 'lucide-react';
 import { cx } from '../lib/cx';
@@ -21,6 +22,7 @@ export function PropertyCard({
   figures,
   onEdit,
   wide = false,
+  details,
 }: {
   property: {
     id: string;
@@ -39,6 +41,8 @@ export function PropertyCard({
   /** Shows an Edit button on the photo (the properties page). */
   onEdit?: () => void;
   wide?: boolean;
+  /** The property's details, shown between its name and the figures on a wide card with the room. */
+  details?: ReactNode;
 }) {
   const tint = TINTS[index % TINTS.length]!;
   const figure = (value: string) =>
@@ -86,15 +90,17 @@ export function PropertyCard({
             <Pill tone="sage">Active</Pill>
           )}
         </div>
+        {wide && details && <div className="hidden @[34rem]/card:block">{details}</div>}
         <dl
           className={cx(
             'mt-auto grid grid-cols-2 gap-2 text-sm',
             wide && known?.nightsBooked !== undefined && '@[34rem]/card:grid-cols-3 @[34rem]/card:gap-4',
+            wide && Boolean(details) && '@[34rem]/card:border-t @[34rem]/card:border-line-soft @[34rem]/card:pt-4',
           )}
         >
           <div>
             <dt className="text-xs text-muted">Occupancy</dt>
-            <dd className={cx('text-lg font-bold text-ink', wide && '@[34rem]/card:text-2xl')}>
+            <dd className={cx('text-lg font-bold text-ink', wide && '@[34rem]/card:text-xl @[60rem]/card:text-2xl')}>
               {figure(known ? formatOccupancy(known.occupancyBps) : '—')}
             </dd>
             {wide && known && known.occupancyBps !== null && (
@@ -113,14 +119,14 @@ export function PropertyCard({
           {wide && known?.nightsBooked !== undefined && (
             <div className="hidden @[34rem]/card:block">
               <dt className="text-xs text-muted">Nights booked</dt>
-              <dd className="text-lg font-bold text-ink @[34rem]/card:text-2xl">
+              <dd className="text-lg font-bold text-ink @[34rem]/card:text-xl @[60rem]/card:text-2xl">
                 <span className="figure">{known.nightsBooked}</span>
               </dd>
             </div>
           )}
           <div>
             <dt className="text-xs text-muted">{revenueLabel}</dt>
-            <dd className={cx('text-lg font-bold text-ink', wide && '@[34rem]/card:text-2xl')}>
+            <dd className={cx('text-lg font-bold text-ink', wide && '@[34rem]/card:text-xl @[60rem]/card:text-2xl')}>
               {figure(known ? formatCents(known.grossCents) : '—')}
             </dd>
           </div>
