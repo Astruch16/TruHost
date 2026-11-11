@@ -1,13 +1,14 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Clock, KeyRound, MapPin, Pencil, Sparkles } from 'lucide-react';
 import { cx } from '../../lib/cx';
-import { monogram, TINTS } from '../../lib/dashboard-format';
+import { TINTS } from '../../lib/dashboard-format';
 import { formatTime, propertyFacts, type MyProperty } from '../../lib/my-properties';
 import { CoverImage } from '../cover-image';
+import { PropertyScene } from '../illustrations/property-scene';
 import { Pill } from '../ui/pill';
 
 /**
- * A property on the owner/cleaner landing page: its cover photo (or tinted initials), role, place, layout and stay
+ * A property on the owner/cleaner landing page: its cover photo (or a drawn cabin in the hills), role, place, layout and stay
  * times. Opens the owner page or the cleaner page, by the person's role on it.
  */
 export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: () => void }) {
@@ -42,11 +43,7 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
             url={p.coverPhoto?.thumbUrl}
             alt=""
             className="size-full transition-transform duration-500 group-hover:scale-[1.03]"
-            fallback={
-              <span aria-hidden className="grid size-full place-items-center">
-                <span className={cx('text-5xl font-bold tracking-tight', tint.fg)}>{monogram(p.name)}</span>
-              </span>
-            }
+            fallback={<PropertyScene index={index} className="size-full" />}
           />
           <Pill
             tone={owner ? 'sage' : 'lavender'}

@@ -1,3 +1,4 @@
+import { formatBps } from './format';
 /** Display helpers for dashboard figures. Everything here formats numbers the API computed; nothing calculates. */
 
 /** Relative change in bps → "+12.5%" / "−8%" (one decimal under 10%). */
@@ -44,3 +45,35 @@ export const TINTS = [
   { bg: 'bg-blue-tint', fg: 'text-blue-deep' },
   { bg: 'bg-lavender-tint', fg: 'text-lavender-deep' },
 ] as const;
+
+/** "1 stay", "3 stays". */
+export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** "A", "A and B", "A, B and C". */
+const names = (list: string[]) =>
+  list.length <= 2 ? list.join(' and ') : `${list.slice(0, -1).join(', ')} and ${list.at(-1)}`;
+
+/**
+ * The management fee's note, from each property's plan rate (from the API): "22% of gross" for one property; across
+ * several, "22% on 2 properties", naming any 0% property ("Petersburg Retreat owner-managed (0%)") and any without a
+ * plan.
+ */
+export function feeNote(properties: readonly { name: string; feeRateBps: number | null }[]): string {
+  const rated = properties.filter((p): p is { name: string; feeRateBps: number } => p.feeRateBps !== null);
+  if (rated.length === 0) return 'No plan in force';
+  if (properties.length === 1) {
+    return rated[0]!.feeRateBps === 0 ? 'Owner-managed (0%)' : `${formatBps(rated[0]!.feeRateBps)} of gross`;
+  }
+  const rates = [...new Set(rated.map((p) => p.feeRateBps).filter((r) => r > 0))].sort((a, b) => b - a);
+  const ownerManaged = rated.filter((p) => p.feeRateBps === 0).map((p) => p.name);
+  const unplanned = properties.filter((p) => p.feeRateBps === null).map((p) => p.name);
+  return [
+    ...rates.map(
+      (r) => `${formatBps(r)} on ${plural(rated.filter((p) => p.feeRateBps === r).length, 'property', 'properties')}`,
+    ),
+    ownerManaged.length > 0 && `${names(ownerManaged)} owner-managed (0%)`,
+    unplanned.length > 0 && `${names(unplanned)}: no plan`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}

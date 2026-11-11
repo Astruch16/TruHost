@@ -6,9 +6,10 @@ import { formatCentsShort } from '../../lib/money';
  * carry the meaning, so they are hidden from screen readers. Every value comes from GET /v1/dashboard.
  */
 
-/** Gross revenue: one segment per stay, each as wide as its share of the month's gross. */
+/** Gross revenue: one segment per stay, each as wide as its share of the month's gross. Empty with no gross. */
 export function StaysBar({ grossByStayCents }: { grossByStayCents: number[] }) {
-  if (grossByStayCents.length === 0) return <span aria-hidden className="block h-1.5 rounded-[3px] bg-line" />;
+  if (grossByStayCents.every((cents) => cents === 0))
+    return <span aria-hidden className="block h-1.5 rounded-[3px] bg-line" />;
   const gap = grossByStayCents.length > 40 ? 'gap-px' : grossByStayCents.length > 16 ? 'gap-0.5' : 'gap-1';
   return (
     <span aria-hidden className={cx('flex', gap)}>

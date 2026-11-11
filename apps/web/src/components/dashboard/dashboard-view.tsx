@@ -1,4 +1,5 @@
-import { CalendarPlus, ReceiptText, Upload } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { ArrowRight, CalendarPlus, ReceiptText } from 'lucide-react';
 import type { DamageReport, RestockItem } from '@truhost/shared';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
@@ -25,7 +26,8 @@ import { NeedsAttention } from './needs-attention';
 import { SuppliesPanel } from './supplies-panel';
 import { RevenueBreakdown } from './revenue-breakdown';
 
-export type DashboardAction = 'booking' | 'expense' | 'receipt';
+/** Quick actions, and Needs attention's "enter payouts". */
+export type DashboardAction = 'booking' | 'expense' | 'payouts';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const shortMonth = (month: string) => monthLabel(month).split(' ')[0]!.slice(0, 3);
@@ -38,9 +40,10 @@ const KPI_GRID = 'grid grid-cols-2 gap-3 @2xl/content:grid-cols-4 @2xl/content:g
  * same thing. Layout follows the width of the content area (container queries), not the viewport:
  * - narrow: one column; rail panels stack under the main content
  * - medium (≥ 42rem): KPIs four across; rail panels in a two-column grid below
- * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, calendar, supplies) plus a 380px right
- *   rail (quick actions, needs attention, coming up)
- * - extra wide (≥ 100rem): performance and breakdown side by side, calendar full width beneath
+ * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, breakdown, calendar, supplies) plus a 380px
+ *   right rail (quick actions, needs attention, coming up)
+ * Property performance and the breakdown each take the main column's width (neither is stretched to match the other,
+ * so neither has empty space): up to three property cards across, and the breakdown in two columns when it's wide.
  */
 export function DashboardView({
   firstName,
@@ -172,60 +175,40 @@ export function DashboardView({
           </Card>
         ) : failed ? null : (
           <>
-            <div className="grid gap-6 @[100rem]/content:grid-cols-2">
-              {/* A column: the cards fill the card's height when it's stretched to match the one beside it. */}
-              <Card title="Property performance" description={monthLabel(dataMonth)} className="flex flex-col">
-                {!d ? (
-                  <Skeleton className="h-56 rounded-inner" />
-                ) : (
-                  <div
-                    aria-busy={dashboardUpdating || undefined}
-                    className={cx(
-                      // auto-fit: cards share the row (two take half each) rather than leaving empty columns. One
-                      // property gets the whole row, laid out wide.
-                      'grid flex-1 auto-rows-fr grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-4',
-                      updatingStyles(dashboardUpdating),
-                    )}
-                  >
-                    {d.properties.map((p, i) => (
-                      <PropertyCard
-                        key={p.id}
-                        property={{
-                          id: p.id,
-                          name: p.name,
-                          location: `${p.city}, ${p.province}`,
-                          archived: p.archived,
-                          hasPlan: p.hasPlan,
-                          photoUrl: p.coverPhoto?.thumbUrl ?? null,
-                        }}
-                        figures={p}
-                        index={tintIndex(p.id, i)}
-                        revenueLabel={`Gross, ${shortMonth(dataMonth)}`}
-                        wide={d.properties.length === 1}
-                      />
-                    ))}
-                  </div>
-                )}
-              </Card>
+            <Card title="Property performance" description={monthLabel(dataMonth)}>
+              {!d ? (
+                <Skeleton className="h-56 rounded-inner" />
+              ) : (
+                <PerformanceCards
+                  properties={d.properties}
+                  updating={dashboardUpdating}
+                  tintIndex={tintIndex}
+                  revenueLabel={`Gross, ${shortMonth(dataMonth)}`}
+                />
+              )}
+            </Card>
 
-              <Card title="Where the revenue went" description={monthLabel(dataMonth)}>
-                {!d ? (
-                  <Skeleton className="h-40" />
-                ) : d.breakdown.grossCents === 0 &&
-                  d.breakdown.ownerExpensesCents === 0 &&
-                  d.breakdown.cleaningFeesCents === 0 ? (
-                  <div {...dim(dashboardUpdating)}>
-                    <EmptyState size="compact" illustration={<RevenueIllustration />} title="No revenue this month yet">
-                      Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.
-                    </EmptyState>
-                  </div>
-                ) : (
-                  <div {...dim(dashboardUpdating)}>
-                    <RevenueBreakdown breakdown={d.breakdown} feeRatesBps={d.kpis.feeRatesBps} />
-                  </div>
-                )}
-              </Card>
-            </div>
+            <Card title="Where the revenue went" description={monthLabel(dataMonth)}>
+              {!d ? (
+                <Skeleton className="h-40" />
+              ) : d.breakdown.grossCents === 0 &&
+                d.breakdown.ownerExpensesCents === 0 &&
+                d.breakdown.cleaningFeesCents === 0 ? (
+                <div {...dim(dashboardUpdating)}>
+                  <EmptyState size="compact" illustration={<RevenueIllustration />} title="No revenue this month yet">
+                    Once a stay's payout is entered, you'll see how it splits between owners, fees and expenses.
+                  </EmptyState>
+                </div>
+              ) : (
+                <div {...dim(dashboardUpdating)}>
+                  <RevenueBreakdown
+                    breakdown={d.breakdown}
+                    properties={d.properties}
+                    pendingStays={d.kpis.incompleteBookings}
+                  />
+                </div>
+              )}
+            </Card>
 
             <Card
               title="Bookings"
@@ -286,17 +269,20 @@ export function DashboardView({
             <Button block disabled={noProperties} onClick={() => onAction('booking')}>
               <CalendarPlus aria-hidden className="size-4" /> Add booking
             </Button>
+            {/* One action for both: the expense form takes its receipt (upload → expense → receipt attached). */}
             <Button block variant="secondary" disabled={noProperties} onClick={() => onAction('expense')}>
-              <ReceiptText aria-hidden className="size-4" /> Add expense
-            </Button>
-            <Button block variant="secondary" disabled={noProperties} onClick={() => onAction('receipt')}>
-              <Upload aria-hidden className="size-4" /> Upload receipt
+              <ReceiptText aria-hidden className="size-4" /> Add expense or receipt
             </Button>
           </div>
         </Card>
         {d ? (
           <div {...dim(dashboardUpdating)}>
-            <NeedsAttention items={d.attention.items} total={d.attention.total} showProperty={multi} />
+            <NeedsAttention
+              items={d.attention.items}
+              counts={d.attention.counts}
+              showProperty={multi}
+              onEnterPayouts={() => onAction('payouts')}
+            />
           </div>
         ) : (
           railSkeleton
@@ -409,6 +395,71 @@ function Kpis({ d }: { d: Dashboard }) {
           }
           change={rel(d.comparison?.avgNightlyEarningsCents)}
         />
+      </div>
+    </div>
+  );
+}
+
+/** The most property cards shown; with more, two and a "View all" tile, so a row is never left with a hole. */
+const MAX_CARDS = 3;
+
+/**
+ * The month's figures per property: up to three cards across (a lone property gets the row, laid out wide). With more
+ * than three, the first two and a tile to the Properties page. Narrow, they stack.
+ */
+function PerformanceCards({
+  properties,
+  updating,
+  tintIndex,
+  revenueLabel,
+}: {
+  properties: Dashboard['properties'];
+  updating: boolean;
+  tintIndex: (id: string, fallback: number) => number;
+  revenueLabel: string;
+}) {
+  const overflow = properties.length > MAX_CARDS;
+  const shown = overflow ? properties.slice(0, MAX_CARDS - 1) : properties;
+  const tiles = shown.length + (overflow ? 1 : 0);
+  return (
+    <div className="@container/perf">
+      <div
+        aria-busy={updating || undefined}
+        className={cx(
+          'grid auto-rows-fr grid-cols-1 gap-4',
+          tiles === 2 && '@xl/perf:grid-cols-2',
+          tiles === 3 && '@3xl/perf:grid-cols-3',
+          updatingStyles(updating),
+        )}
+      >
+        {shown.map((p, i) => (
+          <PropertyCard
+            key={p.id}
+            property={{
+              id: p.id,
+              name: p.name,
+              location: `${p.city}, ${p.province}`,
+              archived: p.archived,
+              hasPlan: p.hasPlan,
+              photoUrl: p.coverPhoto?.thumbUrl ?? null,
+            }}
+            figures={p}
+            index={tintIndex(p.id, i)}
+            revenueLabel={revenueLabel}
+            wide={properties.length === 1}
+          />
+        ))}
+        {overflow && (
+          <Link
+            to="/admin/properties"
+            className="group flex min-h-40 flex-col items-center justify-center gap-2 rounded-inner border border-dashed border-line bg-ground/60 p-6 text-center transition-colors hover:border-ink/25 hover:bg-ground"
+          >
+            <span className="font-display text-xl font-semibold text-ink">View all {properties.length} properties</span>
+            <span className="flex items-center gap-1 text-sm font-semibold text-primary">
+              Properties <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        )}
       </div>
     </div>
   );

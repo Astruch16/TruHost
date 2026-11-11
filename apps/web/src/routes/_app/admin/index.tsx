@@ -5,8 +5,8 @@ import { BookingDialog } from '../../../components/booking-dialog';
 import { DamageReportDialog } from '../../../components/damage/damage-report-dialog';
 import { ReportDamageDialog } from '../../../components/damage/report-damage-dialog';
 import { DashboardView, type DashboardAction } from '../../../components/dashboard/dashboard-view';
+import { PayoutsDialog } from '../../../components/dashboard/payouts-dialog';
 import { ExpenseDialog } from '../../../components/expense-dialog';
-import { ReceiptDialog } from '../../../components/receipt-dialog';
 import { useApi } from '../../../lib/api-context';
 import { monthKey, monthRange } from '../../../lib/months';
 import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
@@ -101,11 +101,14 @@ function Dashboard() {
         />
       )}
       {openDamage && <DamageReportDialog reportId={openDamage} open onOpenChange={(o) => !o && setOpenDamage(null)} />}
-      {action === 'receipt' && (
-        <ReceiptDialog
-          onClose={() => setAction(null)}
-          properties={propertyList}
-          initialPropertyId={propertyId ?? undefined}
+      {action === 'payouts' && dash.data && (
+        <PayoutsDialog
+          open
+          onOpenChange={(open) => !open && setAction(null)}
+          earliest={dash.data.attention.items.find((i) => i.kind === 'PAYOUT_MISSING')?.date ?? dash.data.today}
+          today={dash.data.today}
+          propertyId={propertyId}
+          propertyNames={new Map(propertyList.map((p) => [p.id, p.name]))}
         />
       )}
     </>

@@ -16,6 +16,7 @@ import { comparisonBlocker, periodOf, pointChangeBps, relativeChangeBps } from '
 const DEFAULT_TZ = 'America/Vancouver';
 const UPCOMING_DAYS = 14;
 const UPCOMING_LIMIT = 8;
+/** Needs attention lists at most this many of each kind (counts says how many there are). */
 const ATTENTION_LIMIT = 10;
 const INVITE_STALE_DAYS = 7;
 
@@ -163,6 +164,7 @@ export class DashboardService {
           province: p.province,
           archived: p.archivedAt !== null,
           hasPlan: figures[i]!.plan !== null,
+          feeRateBps: figures[i]!.managementFeeBps,
           coverPhoto: p.coverPhoto ? await this.files.photoLinks(p.coverPhoto) : null,
           occupancyBps: figures[i]!.occupancyBps,
           nightsBooked: figures[i]!.nightsBooked,
@@ -221,8 +223,8 @@ export class DashboardService {
       }),
     ]);
 
-    const items: Dashboard['attention']['items'] = [
-      ...payouts.map((b) => {
+    const kinds = {
+      PAYOUT_MISSING: payouts.map((b) => {
         const checkIn = toIsoDate(b.checkInDate);
         const nights = nightsBetween(b.checkInDate, b.checkOutDate);
         return {
@@ -235,7 +237,7 @@ export class DashboardService {
           date: checkIn,
         };
       }),
-      ...receipts.map((e) => ({
+      RECEIPT_MISSING: receipts.map((e) => ({
         kind: 'RECEIPT_MISSING' as const,
         id: e.id,
         propertyId: e.propertyId,
@@ -244,7 +246,7 @@ export class DashboardService {
         detail: `${e.description}, ${money.format(e.amountCents / 100)}. Owner-borne expenses need a receipt.`,
         date: toIsoDate(e.incurredOn),
       })),
-      ...properties
+      NO_PLAN: properties
         .filter((p) => !planned.some((pp) => pp.propertyId === p.id))
         .map((p) => ({
           kind: 'NO_PLAN' as const,
@@ -255,7 +257,7 @@ export class DashboardService {
           detail: `${p.name} has no management plan for ${monthName(currentMonth)}, so no TruPlan fee is charged.`,
           date: null,
         })),
-      ...invites.map((i) => ({
+      INVITE_PENDING: invites.map((i) => ({
         kind: 'INVITE_PENDING' as const,
         id: i.id,
         propertyId: null,
@@ -264,8 +266,18 @@ export class DashboardService {
         detail: `${i.user.email} hasn’t accepted an invite sent ${shortDate(toIsoDate(i.createdAt))}.`,
         date: toIsoDate(i.createdAt),
       })),
-    ];
-    return { total: items.length, items: items.slice(0, ATTENTION_LIMIT) };
+    };
+    const lists: Dashboard['attention']['items'][] = Object.values(kinds);
+    return {
+      total: lists.reduce((n, list) => n + list.length, 0),
+      counts: {
+        PAYOUT_MISSING: kinds.PAYOUT_MISSING.length,
+        RECEIPT_MISSING: kinds.RECEIPT_MISSING.length,
+        NO_PLAN: kinds.NO_PLAN.length,
+        INVITE_PENDING: kinds.INVITE_PENDING.length,
+      },
+      items: lists.flatMap((list) => list.slice(0, ATTENTION_LIMIT)),
+    };
   }
 
   /** Confirmed check-ins and check-outs in the next 14 days, each property judged in its own time zone. */

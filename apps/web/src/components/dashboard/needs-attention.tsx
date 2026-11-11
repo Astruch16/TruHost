@@ -1,5 +1,7 @@
+import type { ReactElement, ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
+import { attentionGroups, type AttentionGroup, type AttentionItem } from '../../lib/attention';
 import type { IconProps } from '../illustrations/defs';
 import { InviteIcon } from '../illustrations/list-icons';
 import { ExpensesIcon, FeeIcon, GrossIcon } from '../illustrations/statement-icons';
@@ -8,84 +10,106 @@ import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
 import { Pill } from '../ui/pill';
 
-export interface AttentionItem {
-  kind: 'PAYOUT_MISSING' | 'RECEIPT_MISSING' | 'NO_PLAN' | 'INVITE_PENDING';
-  id: string;
-  propertyId: string | null;
-  propertyName: string | null;
-  title: string;
-  detail: string;
-  date: string | null;
-}
-
-const ICONS: Record<AttentionItem['kind'], (props: IconProps) => React.ReactElement> = {
+const ICONS: Record<AttentionItem['kind'], (props: IconProps) => ReactElement> = {
   PAYOUT_MISSING: GrossIcon,
   RECEIPT_MISSING: ExpensesIcon,
   NO_PLAN: FeeIcon,
   INVITE_PENDING: InviteIcon,
 };
 
-function Target({ item, children }: { item: AttentionItem; children: React.ReactNode }) {
-  const className =
-    'group flex items-start gap-3 rounded-control px-2 py-3 -mx-2 transition-colors hover:bg-ground focus-visible:bg-ground';
-  const month = item.date?.slice(0, 7);
-  switch (item.kind) {
+const ROW =
+  'group -mx-2 flex w-[calc(100%+1rem)] items-start gap-3 rounded-control px-2 py-3 text-left transition-colors hover:bg-ground focus-visible:bg-ground';
+
+/** Where a row goes: payouts open the payout list; the rest go to the page where they're fixed. */
+function Target({
+  group,
+  onEnterPayouts,
+  children,
+}: {
+  group: AttentionGroup;
+  onEnterPayouts?: () => void;
+  children: ReactNode;
+}) {
+  const one = group.count === 1 ? group.items[0] : undefined;
+  switch (group.kind) {
     case 'PAYOUT_MISSING':
-      return (
-        <Link to="/admin/bookings" search={{ month }} className={className}>
+      return onEnterPayouts ? (
+        <button type="button" onClick={onEnterPayouts} className={ROW}>
+          {children}
+        </button>
+      ) : (
+        <Link to="/admin/bookings" search={{ month: group.items[0]?.date?.slice(0, 7) }} className={ROW}>
           {children}
         </Link>
       );
     case 'RECEIPT_MISSING':
       return (
-        <Link to="/admin/expenses" search={{ month }} className={className}>
+        <Link to="/admin/expenses" search={{ month: one?.date?.slice(0, 7) }} className={ROW}>
           {children}
         </Link>
       );
     case 'NO_PLAN':
-      return (
-        <Link to="/admin/properties/$propertyId" params={{ propertyId: item.id }} className={className}>
+      return one ? (
+        <Link to="/admin/properties/$propertyId" params={{ propertyId: one.id }} className={ROW}>
+          {children}
+        </Link>
+      ) : (
+        <Link to="/admin/properties" className={ROW}>
           {children}
         </Link>
       );
     case 'INVITE_PENDING':
       return (
-        <Link to="/admin/team" className={className}>
+        <Link to="/admin/team" className={ROW}>
           {children}
         </Link>
       );
   }
 }
 
+/**
+ * What needs the admin, one row per kind: a single item reads as itself ("Receipt missing" with its detail); several
+ * of a kind read as one ("3 stays waiting on payout") with the properties involved. Stays waiting on payout open a
+ * list where every payout can be entered in one place (`onEnterPayouts`); the rest go to the page that fixes them.
+ */
 export function NeedsAttention({
   items,
-  total,
+  counts,
   showProperty,
+  onEnterPayouts,
 }: {
   items: AttentionItem[];
-  total: number;
+  /** How many of each kind there are (items lists at most ten of each). */
+  counts: Record<AttentionItem['kind'], number>;
   showProperty: boolean;
+  onEnterPayouts?: () => void;
 }) {
+  const groups = attentionGroups(items, counts);
   return (
     <Card title="Needs attention" tour="needs-attention">
-      {items.length === 0 ? (
+      {groups.length === 0 ? (
         <EmptyState size="compact" illustration={<AllClearIllustration />} title="All clear">
           No missing payouts, receipts or plans. Anything that needs you will show up here.
         </EmptyState>
       ) : (
         <ul className="flex flex-col">
-          {items.map((item) => {
-            const Icon = ICONS[item.kind];
+          {groups.map((group) => {
+            const Icon = ICONS[group.kind];
             return (
-              <li key={`${item.kind}-${item.id}`}>
-                <Target item={item}>
+              <li key={group.kind}>
+                <Target group={group} onEnterPayouts={onEnterPayouts}>
                   <Icon className="shrink-0" />
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-ink">{item.title}</span>
-                      {showProperty && item.propertyName && <Pill tone="blue">{item.propertyName}</Pill>}
+                      <span className="font-semibold text-ink">{group.title}</span>
+                      {showProperty &&
+                        group.properties.map((name) => (
+                          <Pill key={name} tone="blue">
+                            {name}
+                          </Pill>
+                        ))}
                     </span>
-                    <span className="mt-0.5 block text-sm text-muted">{item.detail}</span>
+                    <span className="mt-0.5 block text-sm text-muted">{group.detail}</span>
                   </span>
                   <ChevronRight aria-hidden className="mt-2 size-4 shrink-0 text-muted group-hover:text-ink" />
                 </Target>
@@ -94,7 +118,6 @@ export function NeedsAttention({
           })}
         </ul>
       )}
-      {total > items.length && <p className="mt-2 text-sm text-muted">+{total - items.length} more</p>}
     </Card>
   );
 }
