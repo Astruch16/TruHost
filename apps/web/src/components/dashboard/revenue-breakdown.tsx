@@ -42,7 +42,7 @@ export function RevenueBreakdown({
   const segments = [
     { key: 'net', label: 'Net to owners', cents: net, className: 'bg-primary' },
     { key: 'fee', label: 'Management fee', cents: b.managementFeeCents, className: 'bg-lavender-deep' },
-    { key: 'expenses', label: 'Owner-borne expenses', cents: b.ownerExpensesCents, className: 'bg-amber-mid' },
+    { key: 'expenses', label: 'Owner-borne expenses', cents: b.ownerExpensesCents, className: 'bg-blue-light' },
   ];
 
   return (
