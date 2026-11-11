@@ -83,7 +83,7 @@ export function MonthSummary({
         label="Cleans to schedule"
         value={count('CHECK_OUT')}
         support={next('CHECK_OUT')}
-        chart={<DayMarks marks={marks('CHECK_OUT')} color="var(--color-lavender-deep)" />}
+        chart={<DayMarks marks={marks('CHECK_OUT')} color="var(--color-orange-mid)" />}
       />
     </div>
   );
