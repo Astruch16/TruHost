@@ -77,8 +77,8 @@ export function MonthCalendar({
                   </span>
                 )}
                 {showCleans && day && checkouts.has(day) && (
-                  <span className="mt-auto mb-1.5 flex items-center gap-1 text-xs font-medium text-lavender-deep">
-                    <span aria-hidden className="size-1.5 rounded-full bg-lavender-deep" />
+                  <span className="mt-auto mb-1.5 flex items-center gap-1 text-xs font-medium text-orange-deep">
+                    <span aria-hidden className="size-1.5 rounded-full bg-orange-mid" />
                     Clean{checkouts.get(day)! > 1 ? ` ×${checkouts.get(day)}` : ''}
                   </span>
                 )}
@@ -168,7 +168,7 @@ export function CalendarLegend({
       ))}
       {cleans && (
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="size-1.5 rounded-full bg-lavender-deep" /> Clean to schedule
+          <span aria-hidden className="size-1.5 rounded-full bg-orange-mid" /> Clean to schedule
         </li>
       )}
     </ul>

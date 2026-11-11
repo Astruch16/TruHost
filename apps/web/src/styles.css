@@ -43,8 +43,12 @@
   --color-sage-tint: #ddebdf;
   --color-sage-deep: #23442f;
   /* Brighter sage for small marks that must stand apart from the deep colours (the check-in dot beside the
-     lavender check-out dot). About 4:1 on white. */
+     burnt-orange check-out dot). About 4:1 on white. */
   --color-sage-mid: #3f8f5f;
+  /* Burnt orange: check-outs and the cleans they need (dots and day marks in Coming up and the calendars). Mid for
+     marks, about 4:1 on white; deep for text beside them, about 6:1. */
+  --color-orange-mid: #c8601e;
+  --color-orange-deep: #a34a12;
 
   /* Booking channels in the stays calendar (lib/calendar.ts): Airbnb rose, Booking.com amber. Vrbo uses blue and
      Direct uses sage from the pairs above. */
