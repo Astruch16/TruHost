@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, CalendarPlus, ReceiptText } from 'lucide-react';
-import type { DamageReport, RestockItem } from '@truhost/shared';
+import type { DamageReport, Property, RestockItem } from '@truhost/shared';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
@@ -18,6 +18,7 @@ import { ComingUp } from './coming-up';
 import { BookingsIllustration } from '../illustrations/bookings';
 import { RevenueIllustration } from '../illustrations/revenue';
 import { PropertyCard } from '../property-card';
+import { PropertyDetails } from '../property-details';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { CalendarLegend, MonthCalendar } from './month-calendar';
@@ -78,8 +79,11 @@ export function DashboardView({
   onMonthChange: (month: string) => void;
   /** Selected property in the switcher, or null for all. */
   scope: { propertyId: string | null; name: string | null };
-  /** All properties the admin can see (for names and stable tints); undefined while loading. */
-  properties: { id: string; name: string }[] | undefined;
+  /**
+   * All properties the admin can see (for names and stable tints); undefined while loading. Full records, where
+   * given, fill in a lone property's card with its details.
+   */
+  properties: ({ id: string; name: string } & Partial<Property>)[] | undefined;
   dashboard: Dashboard | undefined;
   /** `dashboard` is still the previous month's while the chosen month loads: it is shown dimmed. */
   dashboardUpdating?: boolean;
@@ -181,6 +185,7 @@ export function DashboardView({
               ) : (
                 <PerformanceCards
                   properties={d.properties}
+                  records={propertyList}
                   updating={dashboardUpdating}
                   tintIndex={tintIndex}
                   revenueLabel={`Gross, ${shortMonth(dataMonth)}`}
@@ -409,11 +414,14 @@ const MAX_CARDS = 3;
  */
 function PerformanceCards({
   properties,
+  records,
   updating,
   tintIndex,
   revenueLabel,
 }: {
   properties: Dashboard['properties'];
+  /** The properties' full records, for a lone property's details. */
+  records: ({ id: string } & Partial<Property>)[];
   updating: boolean;
   tintIndex: (id: string, fallback: number) => number;
   revenueLabel: string;
@@ -447,6 +455,11 @@ function PerformanceCards({
             index={tintIndex(p.id, i)}
             revenueLabel={revenueLabel}
             wide={properties.length === 1}
+            details={
+              properties.length === 1 ? (
+                <Details record={records.find((r) => r.id === p.id)} feeRateBps={p.feeRateBps} />
+              ) : undefined
+            }
           />
         ))}
         {overflow && (
@@ -463,4 +476,12 @@ function PerformanceCards({
       </div>
     </div>
   );
+}
+
+/** A full property record (the properties list returns them), rather than just an id and name. */
+const isFullRecord = (r: Partial<Property> | undefined): r is Property => r?.addressLine1 !== undefined;
+
+/** A lone property's details, once its full record is there. */
+function Details({ record, feeRateBps }: { record: Partial<Property> | undefined; feeRateBps: number | null }) {
+  return isFullRecord(record) ? <PropertyDetails property={record} feeRateBps={feeRateBps} /> : null;
 }
