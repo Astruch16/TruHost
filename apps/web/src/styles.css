@@ -19,6 +19,8 @@
   --color-sidebar-active: #2c5a53;
   --color-sidebar-ink: #eef3f1;
   --color-sidebar-muted: #b9cbc6;
+  /* The logo's gold ("Host"), for the sidebar's section labels. */
+  --color-sidebar-accent: #f2d987;
   --color-ground: #f6f6f3;
   --color-surface: #ffffff;
   --color-ink: #1a1d21;

@@ -35,19 +35,18 @@ export function Sidebar({
       <nav aria-label="Main" className="scroll-area relative z-10 min-h-0 flex-initial overflow-y-auto px-3 py-0.5">
         {/* Admin items sit in small labelled groups (Money, Operations, People); the rest have no label. */}
         {navGroups(items).map((group, g) => (
-          <div key={group.section ?? `plain-${g}`} className={cx(group.section && 'mt-4 first:mt-0')}>
+          // Every group after the first sits below a hairline; a section's label is in the logo's gold, so it reads
+          // as a heading rather than another item.
+          <div key={group.section ?? `plain-${g}`} className={cx(g > 0 && 'mt-2.5 border-t border-white/12 pt-2.5')}>
             {group.section && (
               <p
                 id={`nav-${group.section}`}
-                className="px-3.5 pb-1.5 text-[11px] font-semibold tracking-[0.12em] text-sidebar-muted uppercase"
+                className="px-3.5 pt-1 pb-1.5 text-[11px] font-bold tracking-[0.14em] text-sidebar-accent uppercase"
               >
                 {group.section}
               </p>
             )}
-            <ul
-              aria-labelledby={group.section ? `nav-${group.section}` : undefined}
-              className={cx('flex flex-col gap-0.5', !group.section && g > 0 && 'mt-4')}
-            >
+            <ul aria-labelledby={group.section ? `nav-${group.section}` : undefined} className="flex flex-col gap-0.5">
               {group.items.map(({ to, label, icon: Icon, badge, exact }) => (
                 <li key={to}>
                   <Link to={to} onClick={onNavigate} className={itemClass} activeOptions={{ exact: exact ?? false }}>
