@@ -8,7 +8,6 @@ import { ExpensesIcon, FeeIcon, GrossIcon } from '../illustrations/statement-ico
 import { AllClearIllustration } from '../illustrations/all-clear';
 import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
-import { Pill } from '../ui/pill';
 
 const ICONS: Record<AttentionItem['kind'], (props: IconProps) => ReactElement> = {
   PAYOUT_MISSING: GrossIcon,
@@ -18,7 +17,7 @@ const ICONS: Record<AttentionItem['kind'], (props: IconProps) => ReactElement> =
 };
 
 const ROW =
-  'group -mx-2 flex w-[calc(100%+1rem)] items-start gap-3 rounded-control px-2 py-3 text-left transition-colors hover:bg-ground focus-visible:bg-ground';
+  'group -mx-2 flex w-[calc(100%+1rem)] items-start gap-3.5 rounded-control px-2 py-4 text-left transition-colors hover:bg-ground focus-visible:bg-ground';
 
 /** Where a row goes: payouts open the payout list; the rest go to the page where they're fixed. */
 function Target({
@@ -68,8 +67,9 @@ function Target({
 }
 
 /**
- * What needs the admin, one row per kind: a single item reads as itself ("Receipt missing" with its detail); several
- * of a kind read as one ("3 stays waiting on payout") with the properties involved. Stays waiting on payout open a
+ * What needs the admin, one row per kind, each below a hairline: a single item reads as itself ("Receipt missing" with
+ * its detail); several of a kind read as one ("Stays waiting on payout" with its count), with a quiet line naming the
+ * properties involved and the earliest date, then what to do. Stays waiting on payout open a
  * list where every payout can be entered in one place (`onEnterPayouts`); the rest go to the page that fixes them.
  */
 export function NeedsAttention({
@@ -95,23 +95,26 @@ export function NeedsAttention({
         <ul className="flex flex-col">
           {groups.map((group) => {
             const Icon = ICONS[group.kind];
+            const meta = [...(showProperty ? group.properties : []), group.since && `from ${group.since}`]
+              .filter(Boolean)
+              .join(' · ');
             return (
-              <li key={group.kind}>
+              <li key={group.kind} className="border-t border-line-soft first:border-t-0">
                 <Target group={group} onEnterPayouts={onEnterPayouts}>
                   <Icon className="shrink-0" />
                   <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
+                    <span className="flex items-center gap-2">
                       <span className="font-semibold text-ink">{group.title}</span>
-                      {showProperty &&
-                        group.properties.map((name) => (
-                          <Pill key={name} tone="blue">
-                            {name}
-                          </Pill>
-                        ))}
+                      {group.count > 1 && (
+                        <span className="figure grid h-5 min-w-5 place-items-center rounded-full bg-ink/[0.07] px-1.5 text-xs font-semibold text-ink">
+                          {group.count}
+                        </span>
+                      )}
                     </span>
-                    <span className="mt-0.5 block text-sm text-muted">{group.detail}</span>
+                    {meta && <span className="mt-1 block text-xs font-medium text-muted">{meta}</span>}
+                    <span className="mt-1.5 block text-sm leading-snug text-pretty text-muted">{group.detail}</span>
                   </span>
-                  <ChevronRight aria-hidden className="mt-2 size-4 shrink-0 text-muted group-hover:text-ink" />
+                  <ChevronRight aria-hidden className="size-4 shrink-0 self-center text-muted group-hover:text-ink" />
                 </Target>
               </li>
             );

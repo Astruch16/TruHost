@@ -51,10 +51,10 @@ async function renderCard(onEnterPayouts = vi.fn()) {
 describe('needs attention', () => {
   it('shows stays waiting on payout as one row that opens the payout list', async () => {
     const onEnterPayouts = await renderCard();
-    const row = screen.getByRole('button', { name: /3 stays waiting on payout/ });
-    // Each property involved, once.
-    expect(row).toHaveTextContent('Cedar Cabin');
-    expect(row).toHaveTextContent('Seaside Loft');
+    const row = screen.getByRole('button', { name: /Stays waiting on payout/ });
+    // Its count beside the title, then a quiet line: each property involved once, and the earliest date.
+    expect(row).toHaveTextContent(/^Stays waiting on payout3Cedar Cabin · Seaside Loft · from Nov 2/);
+    expect(row).toHaveTextContent('Enter their payouts and cleaning fees to count them.');
     expect(screen.queryByText('Payout not entered')).not.toBeInTheDocument();
     await userEvent.click(row);
     expect(onEnterPayouts).toHaveBeenCalled();
