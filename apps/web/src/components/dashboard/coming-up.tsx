@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { cx } from '../../lib/cx';
+import { afterStay, sentence } from '../../lib/calendar';
 import { dayLabel } from '../../lib/dashboard-format';
 import { byProperty, readUpcomingSort, saveUpcomingSort, type UpcomingSort } from '../../lib/upcoming';
 import { ComingUpIllustration } from '../illustrations/coming-up';
@@ -22,8 +23,15 @@ const EVENT = { CHECK_IN: 'Check-in', CHECK_OUT: 'Check-out and clean' } as cons
 const DOT = { CHECK_IN: 'bg-sage-mid', CHECK_OUT: 'bg-amber-mid' } as const;
 const EVENT_TEXT = { CHECK_IN: 'text-sage-deep', CHECK_OUT: 'text-amber-deep' } as const;
 
+/**
+ * The line under an event. A check-in gives the stay that's starting ("Maya · 6 nights"); a check-out is one day, so
+ * it says what it ends ("Maya · after a 6-night stay"), never "6 nights" as if the clean took that long.
+ */
 const stayLine = (e: UpcomingItem) =>
-  [e.kind === 'OWNER_STAY' ? 'Owner stay' : e.guestName, `${e.nights} night${e.nights === 1 ? '' : 's'}`]
+  (e.type === 'CHECK_OUT'
+    ? [e.kind === 'GUEST' ? e.guestName : null, afterStay(e)]
+    : [e.kind === 'OWNER_STAY' ? 'Owner stay' : e.guestName, `${e.nights} night${e.nights === 1 ? '' : 's'}`]
+  )
     .filter(Boolean)
     .join(' · ');
 
@@ -63,7 +71,7 @@ export function ComingUp({
       ) : !showProperty ? (
         <ul className="flex flex-col divide-y divide-line-soft">
           {items.map((e) => (
-            <Row key={`${e.bookingId}-${e.type}`} event={e} title={EVENT[e.type]} detail={stayLine(e)} />
+            <Row key={`${e.bookingId}-${e.type}`} event={e} title={EVENT[e.type]} detail={sentence(stayLine(e))} />
           ))}
         </ul>
       ) : sort === 'date' ? (
@@ -94,7 +102,13 @@ export function ComingUp({
               </h3>
               <ul className="mt-1 flex flex-col">
                 {group.items.map((e) => (
-                  <Row key={`${e.bookingId}-${e.type}`} event={e} title={EVENT[e.type]} detail={stayLine(e)} compact />
+                  <Row
+                    key={`${e.bookingId}-${e.type}`}
+                    event={e}
+                    title={EVENT[e.type]}
+                    detail={sentence(stayLine(e))}
+                    compact
+                  />
                 ))}
               </ul>
             </section>
@@ -131,7 +145,7 @@ function Row({
       <span aria-hidden className={cx('mt-1.5 size-2.5 shrink-0 rounded-full', DOT[e.type])} />
       <div className="min-w-0 flex-1">
         <p className={cx('truncate text-ink', compact ? 'text-sm font-medium' : 'font-semibold')}>{title}</p>
-        <p className="truncate text-sm text-muted">{detail}</p>
+        <p className="text-sm text-pretty text-muted">{detail}</p>
       </div>
       <span className="figure shrink-0 text-sm text-muted">{dayLabel(e.date)}</span>
     </li>

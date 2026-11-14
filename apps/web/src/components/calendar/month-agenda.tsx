@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { stayLabel, type AgendaEvent } from '../../lib/calendar';
+import { afterStay, sentence, stayLabel, type AgendaEvent } from '../../lib/calendar';
 import { cx } from '../../lib/cx';
 import { channelLabel } from '../../lib/format';
 import { BookingsIllustration } from '../illustrations/bookings';
@@ -91,9 +91,13 @@ function AgendaItem({
 }) {
   const { stay } = event;
   const checkIn = event.type === 'CHECK_IN';
-  const detail = [stayLabel(stay), stay.kind === 'GUEST' ? channelLabel(stay.channel) : null, property]
-    .filter(Boolean)
-    .join(' · ');
+  // A check-out is one day: it says what it ends ("Andrew · after an 8-night stay"), not the nights.
+  const what = checkIn
+    ? stayLabel(stay)
+    : [stay.kind === 'GUEST' ? stay.guestName?.trim() : null, afterStay(stay)].filter(Boolean).join(' · ');
+  const detail = sentence(
+    [what, stay.kind === 'GUEST' ? channelLabel(stay.channel) : null, property].filter(Boolean).join(' · '),
+  );
   const body = (
     <>
       {/* Coming (green) or going (gold), as in Coming up and the calendar's clean markers. */}
