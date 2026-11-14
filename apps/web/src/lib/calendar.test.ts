@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkoutsByDay, monthAgenda, nextEvent, stayLabel, monthGrid, type CalendarStay } from './calendar';
+import { afterStay, checkoutsByDay, monthAgenda, nextEvent, stayLabel, monthGrid, type CalendarStay } from './calendar';
 
 const stay = (id: string, checkInDate: string, checkOutDate: string, propertyId = 'a'): CalendarStay => ({
   id,
@@ -106,5 +106,19 @@ describe('monthAgenda', () => {
     ]);
     expect(nextEvent(agenda, 'CHECK_IN', '2026-10-04')).toBe('2026-10-30');
     expect(nextEvent(agenda, 'CHECK_OUT', '2026-10-06')).toBeNull();
+  });
+});
+
+describe('what a check-out ends', () => {
+  it.each([
+    [{ kind: 'GUEST', nights: 6 }, 'after a 6\u2011night stay'],
+    [{ kind: 'GUEST', nights: 1 }, 'after a 1\u2011night stay'],
+    [{ kind: 'GUEST', nights: 8 }, 'after an 8\u2011night stay'],
+    [{ kind: 'GUEST', nights: 11 }, 'after an 11\u2011night stay'],
+    [{ kind: 'GUEST', nights: 18 }, 'after an 18\u2011night stay'],
+    [{ kind: 'GUEST', nights: 21 }, 'after a 21\u2011night stay'],
+    [{ kind: 'OWNER_STAY', nights: 7 }, 'after a 7\u2011night owner stay'],
+  ] as const)('%j reads “%s”', (stay, text) => {
+    expect(afterStay(stay)).toBe(text);
   });
 });

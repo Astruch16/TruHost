@@ -43,6 +43,10 @@ describe('coming up', () => {
     const list = screen.getByRole('list', { name: 'By date' });
     expect(titles(list)).toEqual(['Seaside Loft', 'Cedar Cabin', 'Seaside Loft', 'Cedar Cabin']);
     expect(within(list).getAllByRole('listitem')[0]).toHaveTextContent('Check-in · 3 nights');
+    // A check-out is one day: it says what stay it ends, not "3 nights".
+    expect(within(list).getAllByRole('listitem')[2]).toHaveTextContent(
+      'Check-out and clean · after a 3\u2011night stay',
+    );
     expect(screen.getByRole('button', { name: 'Date' })).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -55,6 +59,7 @@ describe('coming up', () => {
       'Seaside Loft',
     ]);
     expect(titles(within(groups[0]!).getByRole('list'))).toEqual(['Check-in', 'Check-out and clean']);
+    expect(within(groups[0]!).getAllByRole('listitem')[1]).toHaveTextContent('After a 6\u2011night stay');
     expect(localStorage.getItem('truhost:comingUpSort')).toBe('property');
   });
 

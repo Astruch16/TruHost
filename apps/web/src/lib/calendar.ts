@@ -215,6 +215,20 @@ export function stayLabel(stay: Pick<CalendarStay, 'kind' | 'nights' | 'guestNam
   return name ? `${name} · ${nights}` : nights;
 }
 
+/**
+ * What a check-out ends, for lines under "Check-out and clean": "after a 6-night stay", "after an 8-night stay",
+ * "after a 7-night owner stay". A check-out is one day, so the nights belong to the stay before it.
+ */
+export function afterStay(stay: Pick<CalendarStay, 'kind' | 'nights'>): string {
+  const n = stay.nights;
+  const article = n === 11 || n === 18 || String(n).startsWith('8') ? 'an' : 'a';
+  // A non-breaking hyphen, so a wrapped line never splits "6-" from "night".
+  return `after ${article} ${n}\u2011night ${stay.kind === 'OWNER_STAY' ? 'owner stay' : 'stay'}`;
+}
+
+/** The same text starting with a capital, for the start of a line. */
+export const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
 export interface AgendaEvent {
   type: 'CHECK_IN' | 'CHECK_OUT';
   stay: CalendarStay;
