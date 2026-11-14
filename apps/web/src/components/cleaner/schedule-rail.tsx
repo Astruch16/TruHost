@@ -98,7 +98,7 @@ export function RailProperties({
 }
 
 const STATE: Record<Exclude<SupplyState, 'OK'>, { label: string; text: string; tone: PillTone }> = {
-  OUT: { label: 'Out', text: 'text-danger-deep', tone: 'danger' },
+  OUT: { label: 'Out', text: 'text-rose-deep', tone: 'rose' },
   LOW: { label: 'Low', text: 'text-amber-deep', tone: 'amber' },
   UNKNOWN: { label: 'Not checked', text: 'text-muted', tone: 'neutral' },
 };

@@ -18,9 +18,9 @@ export interface UpcomingItem {
 }
 
 const EVENT = { CHECK_IN: 'Check-in', CHECK_OUT: 'Check-out and clean' } as const;
-// Green for arrivals, burnt orange for check-outs: far apart in hue, so they read apart at dot size.
-const DOT = { CHECK_IN: 'bg-sage-mid', CHECK_OUT: 'bg-orange-mid' } as const;
-const EVENT_TEXT = { CHECK_IN: 'text-sage-deep', CHECK_OUT: 'text-orange-deep' } as const;
+// Green for arrivals, gold for check-outs and their cleans: they read apart at dot size.
+const DOT = { CHECK_IN: 'bg-sage-mid', CHECK_OUT: 'bg-amber-mid' } as const;
+const EVENT_TEXT = { CHECK_IN: 'text-sage-deep', CHECK_OUT: 'text-amber-deep' } as const;
 
 const stayLine = (e: UpcomingItem) =>
   [e.kind === 'OWNER_STAY' ? 'Owner stay' : e.guestName, `${e.nights} night${e.nights === 1 ? '' : 's'}`]

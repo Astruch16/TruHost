@@ -25,7 +25,7 @@ export function RestockSummary({ items }: { items: RestockItem[] }) {
         label="Out"
         value={out}
         support={where('OUT') ?? (out ? 'Restock these first' : 'Nothing has run out')}
-        chart={<Marks n={out} color="var(--color-danger-mid)" />}
+        chart={<Marks n={out} color="var(--color-rose-mid)" />}
       />
       <KpiCard
         label="Running low"

@@ -6,7 +6,7 @@ import { Pill } from '../ui/pill';
 const FILL: Record<SupplyState, string> = {
   OK: 'bg-sage-mid',
   LOW: 'bg-amber-mid',
-  OUT: 'bg-danger-mid',
+  OUT: 'bg-rose-mid',
   UNKNOWN: '',
 };
 
@@ -55,11 +55,7 @@ export function SupplyBar({
             className={cx(
               'overflow-hidden rounded-full',
               size === 'sm' ? 'h-1.5' : 'h-2',
-              levelPct === null
-                ? 'border border-dashed border-line'
-                : state === 'OUT'
-                  ? 'bg-danger-light/30'
-                  : 'bg-line',
+              levelPct === null ? 'border border-dashed border-line' : state === 'OUT' ? 'bg-rose-mid/20' : 'bg-line',
             )}
           >
             {filled > 0 && (
@@ -105,6 +101,6 @@ export function SupplyMeta({
 /** Out (red), Running low (amber) or Low soon (blue): where an item on the restock list stands. */
 export function UrgencyPill({ urgency }: { urgency: RestockUrgency }) {
   return (
-    <Pill tone={urgency === 'OUT' ? 'danger' : urgency === 'LOW' ? 'amber' : 'blue'}>{URGENCY_LABELS[urgency]}</Pill>
+    <Pill tone={urgency === 'OUT' ? 'rose' : urgency === 'LOW' ? 'amber' : 'blue'}>{URGENCY_LABELS[urgency]}</Pill>
   );
 }

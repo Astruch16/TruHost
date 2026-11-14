@@ -47,12 +47,8 @@
   --color-sage-tint: #ddebdf;
   --color-sage-deep: #23442f;
   /* Brighter sage for small marks that must stand apart from the deep colours (the check-in dot beside the
-     burnt-orange check-out dot). About 4:1 on white. */
+     gold check-out dot). About 4:1 on white. */
   --color-sage-mid: #3f8f5f;
-  /* Burnt orange: check-outs and the cleans they need (dots and day marks in Coming up and the calendars). Mid for
-     marks, about 4:1 on white; deep for text beside them, about 6:1. */
-  --color-orange-mid: #c8601e;
-  --color-orange-deep: #a34a12;
 
   /* Booking channels in the stays calendar (lib/calendar.ts): Airbnb rose, Booking.com amber. Vrbo uses blue and
      Direct uses sage from the pairs above. */
@@ -65,7 +61,9 @@
      danger-light; they are used across the app too. The deep pairs are for text. */
   --color-sage-light: #74bb8c;
   --color-amber-light: #ebc25e;
-  --color-amber-mid: #d29a2a;
+  /* Gold: what's low or needs attention (supplies running low, check-outs and the cleans they need, "not final").
+     There is no orange in the app (src/no-orange.test.ts). */
+  --color-amber-mid: #d9ae3c;
   --color-danger-light: #e27a6e;
   --color-danger-mid: #c4473b;
 

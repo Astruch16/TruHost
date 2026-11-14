@@ -77,8 +77,8 @@ export function MonthCalendar({
                   </span>
                 )}
                 {showCleans && day && checkouts.has(day) && (
-                  <span className="mt-auto mb-1.5 flex items-center gap-1 text-xs font-medium text-orange-deep">
-                    <span aria-hidden className="size-1.5 rounded-full bg-orange-mid" />
+                  <span className="mt-auto mb-1.5 flex items-center gap-1 text-xs font-medium text-amber-deep">
+                    <span aria-hidden className="size-1.5 rounded-full bg-amber-mid" />
                     Clean{checkouts.get(day)! > 1 ? ` ×${checkouts.get(day)}` : ''}
                   </span>
                 )}
@@ -97,11 +97,12 @@ export function MonthCalendar({
               const to = seg.endCol + (seg.endsMidDay ? 0.5 : 1);
               const insetStart = seg.continuesBefore ? 0 : 2;
               const insetEnd = seg.continuesAfter ? 0 : 2;
-              // The label goes where the bar starts, or at the start of a week it runs into (if there's room). A start
-              // with less than a day of room that carries on to another row of this month leaves it to that row.
+              // The label goes where the bar starts, and again at the start of every week it runs into (truncated if the
+              // bar is short there; its title has it in full). A start with less than a day of room that carries on to
+              // another row of this month leaves the label to that row.
               const room = to - from >= 1;
               const continuesBelow = seg.continuesAfter && wi < weeks.length - 1;
-              const showLabel = seg.continuesBefore ? seg.startCol === 0 && room : room || !continuesBelow;
+              const showLabel = seg.continuesBefore || room || !continuesBelow;
               const Bar = onSelect ? 'button' : 'div';
               return (
                 <Bar
@@ -168,7 +169,7 @@ export function CalendarLegend({
       ))}
       {cleans && (
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="size-1.5 rounded-full bg-orange-mid" /> Clean to schedule
+          <span aria-hidden className="size-1.5 rounded-full bg-amber-mid" /> Clean to schedule
         </li>
       )}
     </ul>

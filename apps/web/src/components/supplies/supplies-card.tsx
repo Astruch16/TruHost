@@ -64,7 +64,7 @@ export function SuppliesCard({
       title={
         <span className="flex flex-wrap items-center gap-2">
           Supplies
-          {due > 0 && <Pill tone={items.some((i) => i.state === 'OUT') ? 'danger' : 'amber'}>{due} to restock</Pill>}
+          {due > 0 && <Pill tone={items.some((i) => i.state === 'OUT') ? 'rose' : 'amber'}>{due} to restock</Pill>}
         </span>
       }
       description={
@@ -230,7 +230,7 @@ function SupplyRow({
     <li
       className={cx(
         'flex flex-col gap-2 rounded-inner p-3.5',
-        item.state === 'OUT' ? 'bg-danger-tint/45' : item.state === 'LOW' ? 'bg-amber-tint/50' : 'bg-ground/80',
+        item.state === 'OUT' ? 'bg-rose-tint/60' : item.state === 'LOW' ? 'bg-amber-tint/50' : 'bg-ground/80',
       )}
     >
       <div className="flex min-h-7 items-start justify-between gap-2">
@@ -311,7 +311,7 @@ function lastChecked(items: SupplyItem[]): string {
 }
 
 function StatePill({ state }: { state: SupplyItem['state'] }) {
-  if (state === 'OUT') return <Pill tone="danger">Out</Pill>;
+  if (state === 'OUT') return <Pill tone="rose">Out</Pill>;
   if (state === 'LOW') return <Pill tone="amber">Running low</Pill>;
   // Not checked yet says so beside the bar; stocked needs no badge.
   return null;
@@ -345,7 +345,7 @@ function LevelPicker({
               'min-h-11 rounded-control-sm border text-sm font-semibold transition-colors disabled:cursor-progress',
               on
                 ? o.pct === 0
-                  ? 'border-danger-deep bg-danger-tint text-danger-deep'
+                  ? 'border-rose-deep bg-rose-tint text-rose-deep'
                   : 'border-primary bg-primary text-primary-ink'
                 : 'border-line bg-surface text-ink hover:bg-ground',
               pendingPct === o.pct && 'animate-pulse',

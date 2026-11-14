@@ -65,7 +65,7 @@ export function SupplyAlertIcon({ out, size = 40, className }: { out: boolean; s
         width="2.6"
         height={out ? 1.2 : 5.8}
         rx="1.2"
-        fill={out ? '#C4473B' : '#D29A2A'}
+        fill={out ? '#C4473B' : '#D9AE3C'}
       />
     </svg>
   );
