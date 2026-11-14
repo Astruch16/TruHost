@@ -8,7 +8,8 @@ import { DashboardView, type DashboardAction } from '../../../components/dashboa
 import { PayoutsDialog } from '../../../components/dashboard/payouts-dialog';
 import { ExpenseDialog } from '../../../components/expense-dialog';
 import { useApi } from '../../../lib/api-context';
-import { monthKey, monthRange } from '../../../lib/months';
+import { addDays, todayIso } from '../../../lib/dates';
+import { monthKey } from '../../../lib/months';
 import { usePrefetchAdjacentMonths } from '../../../lib/month-prefetch';
 import { queries } from '../../../lib/queries';
 import { monthSearch, useScope } from '../../../lib/scope';
@@ -36,16 +37,10 @@ function Dashboard() {
   const damage = useQuery(queries.damageReports(api, 'OPEN', propertyId ?? undefined));
   const [reportingDamage, setReportingDamage] = useState(false);
   const [openDamage, setOpenDamage] = useState<string | null>(null);
-  const calendar = useQuery(queries.bookings(api, monthRange(month), propertyId ?? undefined));
+  // The week ahead (today and the six days after it), whatever month the figures are for.
+  const today = todayIso();
+  const week = useQuery(queries.bookings(api, { from: today, to: addDays(today, 7) }, propertyId ?? undefined));
   usePrefetchAdjacentMonths(month, (m) => queries.dashboard(api, m, propertyId), dash.isSuccess);
-  usePrefetchAdjacentMonths(
-    month,
-    (m) => queries.bookings(api, monthRange(m), propertyId ?? undefined),
-    calendar.isSuccess,
-  );
-  // The month the calendar's stays are for: the previous one while the chosen month loads.
-  const [staysMonth, setStaysMonth] = useState(month);
-  if (calendar.data && !calendar.isPlaceholderData && staysMonth !== month) setStaysMonth(month);
   const propertyList = properties.data?.items ?? [];
 
   return (
@@ -62,12 +57,11 @@ function Dashboard() {
         dashboardError={dash.error}
         onRetryDashboard={() => void dash.refetch()}
         retryingDashboard={dash.isFetching}
-        stays={calendar.data?.items.filter((b) => b.status === 'CONFIRMED')}
-        staysMonth={calendar.isPlaceholderData ? staysMonth : month}
-        staysUpdating={calendar.isPlaceholderData}
-        staysError={calendar.error}
-        onRetryStays={() => void calendar.refetch()}
-        retryingStays={calendar.isFetching}
+        weekStart={today}
+        stays={week.data?.items.filter((b) => b.status === 'CONFIRMED')}
+        staysError={week.error}
+        onRetryStays={() => void week.refetch()}
+        retryingStays={week.isFetching}
         supplies={restock.data?.items.filter((i) => !propertyId || i.property.id === propertyId)}
         suppliesError={restock.error}
         onRetrySupplies={() => void restock.refetch()}

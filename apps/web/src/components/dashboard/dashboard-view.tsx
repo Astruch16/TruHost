@@ -3,7 +3,8 @@ import { ArrowRight, CalendarPlus, ReceiptText } from 'lucide-react';
 import type { DamageReport, Property, RestockItem } from '@truhost/shared';
 import type { Dashboard } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
-import { formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
+import { addDays } from '../../lib/dates';
+import { dayLabel, formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
 import { formatBps, formatOccupancy } from '../../lib/format';
 import { monthLabel } from '../../lib/months';
 import { LoadError } from '../ui/alert';
@@ -15,13 +16,12 @@ import { cx } from '../../lib/cx';
 import { updatingStyles } from '../../lib/styles';
 import { Skeleton } from '../ui/skeleton';
 import { ComingUp } from './coming-up';
-import { BookingsIllustration } from '../illustrations/bookings';
 import { RevenueIllustration } from '../illustrations/revenue';
 import { PropertyCard } from '../property-card';
 import { PropertyDetails } from '../property-details';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
-import { CalendarLegend, MonthCalendar } from './month-calendar';
+import { WeekTimeline } from './week-timeline';
 import { DamagePanel } from './damage-panel';
 import { NeedsAttention } from './needs-attention';
 import { SuppliesPanel } from './supplies-panel';
@@ -41,8 +41,8 @@ const KPI_GRID = 'grid grid-cols-2 gap-3 @2xl/content:grid-cols-4 @2xl/content:g
  * same thing. Layout follows the width of the content area (container queries), not the viewport:
  * - narrow: one column; rail panels stack under the main content
  * - medium (≥ 42rem): KPIs four across; rail panels in a two-column grid below
- * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, breakdown, calendar, supplies) plus a 380px
- *   right rail (quick actions, needs attention, coming up)
+ * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, breakdown, the next 7 days) plus a 380px
+ *   right rail (quick actions, needs attention, coming up, supplies, damage)
  * Property performance and the breakdown each take the main column's width (neither is stretched to match the other,
  * so neither has empty space): up to three property cards across, and the breakdown in two columns when it's wide.
  */
@@ -58,9 +58,8 @@ export function DashboardView({
   dashboardError,
   onRetryDashboard,
   retryingDashboard,
+  weekStart,
   stays,
-  staysMonth,
-  staysUpdating = false,
   staysError,
   onRetryStays,
   retryingStays,
@@ -90,11 +89,10 @@ export function DashboardView({
   dashboardError: unknown;
   onRetryDashboard: () => void;
   retryingDashboard: boolean;
-  /** Confirmed stays overlapping the month; undefined while loading. */
+  /** Today, where the next-7-days timeline starts. */
+  weekStart: string;
+  /** Confirmed stays overlapping the next seven days; undefined while loading. */
   stays: CalendarStay[] | undefined;
-  /** The month `stays` are for (the previous one while the chosen month loads). Defaults to `month`. */
-  staysMonth?: string;
-  staysUpdating?: boolean;
   staysError: unknown;
   onRetryStays: () => void;
   retryingStays: boolean;
@@ -123,7 +121,6 @@ export function DashboardView({
   // While the next month loads, the figures on screen are still the previous month's: label them with their own
   // month and dim them, rather than blanking to skeletons.
   const dataMonth = d?.month ?? month;
-  const calendarMonth = staysMonth ?? month;
   const dim = (updating: boolean) => ({ 'aria-busy': updating || undefined, className: updatingStyles(updating) });
 
   return (
@@ -215,56 +212,34 @@ export function DashboardView({
               )}
             </Card>
 
+            {/* Not tied to the month: the week ahead, from today. */}
             <Card
-              title="Bookings"
-              description={monthLabel(calendarMonth)}
-              actions={<CalendarLegend month={calendarMonth} stays={stays} />}
+              title="Next 7 days"
+              description={`${dayLabel(weekStart)} – ${dayLabel(addDays(weekStart, 6))}`}
+              actions={
+                <Link
+                  to="/admin/calendar"
+                  className="rounded-control-sm text-sm font-semibold text-primary hover:underline"
+                >
+                  Full calendar
+                </Link>
+              }
             >
               {staysError && !stays ? (
-                <LoadError what="the calendar" onRetry={onRetryStays} retrying={retryingStays} />
+                <LoadError what="the week ahead" onRetry={onRetryStays} retrying={retryingStays} />
               ) : !stays ? (
-                <Skeleton className="h-72" />
-              ) : stays.length === 0 ? (
-                <div {...dim(staysUpdating)}>
-                  <EmptyState
-                    size="compact"
-                    illustration={<BookingsIllustration />}
-                    title="No stays this month"
-                    action={
-                      <Button variant="secondary" onClick={() => onAction('booking')}>
-                        Add booking
-                      </Button>
-                    }
-                  >
-                    Add a booking and it appears here as a bar across its nights.
-                  </EmptyState>
-                </div>
+                <Skeleton className="h-48" />
               ) : (
-                <div {...dim(staysUpdating)}>
-                  <MonthCalendar
-                    month={calendarMonth}
-                    stays={stays}
-                    propertyNames={new Map(propertyList.map((p) => [p.id, p.name]))}
-                    today={d?.today ?? null}
-                    showProperty={multi}
-                  />
-                </div>
+                <WeekTimeline
+                  start={weekStart}
+                  stays={stays}
+                  properties={scope.propertyId ? propertyList.filter((p) => p.id === scope.propertyId) : propertyList}
+                  allProperties={propertyList}
+                />
               )}
             </Card>
           </>
         )}
-
-        {/* Not tied to the month: what needs restocking now or soon, full width under the calendar. */}
-        {!noProperties &&
-          (supplies ? (
-            <SuppliesPanel items={supplies} showProperty={multi} />
-          ) : suppliesError ? (
-            <Card title="Supplies">
-              <LoadError what="supplies" onRetry={() => onRetrySupplies?.()} retrying={false} />
-            </Card>
-          ) : (
-            <Skeleton className="h-48 rounded-card" />
-          ))}
       </div>
 
       {/* Rail: stacks under the main content (narrow), two columns below it (medium), right rail (wide). */}
@@ -299,6 +274,17 @@ export function DashboardView({
         ) : (
           railSkeleton
         )}
+        {/* What needs restocking: a compact card, the Supplies page has the rest. */}
+        {!noProperties &&
+          (supplies ? (
+            <SuppliesPanel items={supplies} showProperty={multi} />
+          ) : suppliesError ? (
+            <Card title="Supplies">
+              <LoadError what="supplies" onRetry={() => onRetrySupplies?.()} retrying={false} />
+            </Card>
+          ) : (
+            railSkeleton
+          ))}
         {!noProperties &&
           (damage ? (
             <DamagePanel

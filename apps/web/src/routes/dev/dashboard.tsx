@@ -68,6 +68,8 @@ const FIXTURE_STAYS: CalendarStay[] = [
   stay('s5', 'p2', '2026-10-17', '2026-10-24', 7, 'OWNER_STAY'),
   stay('s6', 'p1', '2026-10-22', '2026-10-27', 5, 'GUEST', 'DIRECT'),
   stay('s7', 'p1', '2026-10-30', '2026-11-01', 2),
+  // The owner-managed property: the owner stays a few nights in the first week (striped on the timeline).
+  stay('s8', 'p3', '2026-10-05', '2026-10-09', 4, 'OWNER_STAY'),
 ];
 
 /** Per-day strip derived from the fixture stays (two properties, October). */
@@ -455,6 +457,7 @@ function Preview() {
         dashboardError={state === 'error' ? new Error('preview') : null}
         onRetryDashboard={() => undefined}
         retryingDashboard={false}
+        weekStart="2026-10-06"
         stays={
           state === 'data' || state === 'pending' || state === 'single'
             ? FIXTURE_STAYS

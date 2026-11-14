@@ -16,7 +16,7 @@ export function SuppliesIcon(props: IconProps) {
       <circle cx="20" cy="20" r="19" fill="#FBEECB" />
       <ellipse cx="20" cy="32.6" rx="12" ry="2.2" fill={url.shadow} />
       <rect x="10" y="17.6" width="20" height="13.4" rx="1.6" fill="#A9773E" />
-      <rect x="10" y="16.2" width="20" height="13.4" rx="1.6" fill="#D9A86C" />
+      <rect x="10" y="16.2" width="20" height="13.4" rx="1.6" fill="#CDAA80" />
       <rect x="8.8" y="13.6" width="22.4" height="5" rx="1.3" fill="#A9773E" />
       <rect x="8.8" y="12.4" width="22.4" height="5" rx="1.3" fill="#E7BC80" />
       <rect x="18.4" y="12.4" width="3.2" height="17.2" fill="#F4E4C1" fillOpacity="0.9" />

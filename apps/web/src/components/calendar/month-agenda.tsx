@@ -96,10 +96,10 @@ function AgendaItem({
     .join(' · ');
   const body = (
     <>
-      {/* Coming (green) or going (burnt orange), as in Coming up and the calendar's clean markers. */}
+      {/* Coming (green) or going (gold), as in Coming up and the calendar's clean markers. */}
       <span
         aria-hidden
-        className={cx('mt-1.5 size-2.5 shrink-0 rounded-full', checkIn ? 'bg-sage-mid' : 'bg-orange-mid')}
+        className={cx('mt-1.5 size-2.5 shrink-0 rounded-full', checkIn ? 'bg-sage-mid' : 'bg-amber-mid')}
       />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-ink">{checkIn ? 'Check-in' : 'Check-out and clean'}</span>{' '}

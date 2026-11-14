@@ -13,7 +13,7 @@ import { CategoryHeading } from './category-heading';
 import { SupplyBar, SupplyMeta, UrgencyPill } from './supply-bar';
 
 const TILE: Record<RestockItem['urgency'], string> = {
-  OUT: 'bg-danger-tint/45',
+  OUT: 'bg-rose-tint/60',
   LOW: 'bg-amber-tint/50',
   SOON: 'bg-ground/80',
 };
