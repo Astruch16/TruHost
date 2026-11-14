@@ -38,7 +38,7 @@ function barStyle(stay: CalendarStay, color: string): { className: string; style
 
 /**
  * Dashboard: the next seven days at a glance. One row per property (its colour beside its name), a column per day
- * (today marked), each stay as a bar from midday on check-in to midday on check-out. Guest stays are in the
+ * (today circled in the header), each stay as a bar from midday on check-in to midday on check-out. Guest stays are in the
  * property's colour, owner stays striped lavender; a gold marker shows each clean a check-out needs. Narrow, each
  * property's name sits above its row.
  */
@@ -104,13 +104,10 @@ export function WeekTimeline({
                 <span className="truncate text-sm font-semibold text-ink">{property.name}</span>
               </p>
               <div className="relative col-span-7" style={{ height }}>
-                {/* Day columns, today tinted */}
+                {/* Day columns (today is marked in the header only, so the rows show nothing but stays) */}
                 <div aria-hidden className="absolute inset-0 grid grid-cols-7">
-                  {days.map((d, i) => (
-                    <span
-                      key={d}
-                      className={cx('border-l border-line-soft first:border-l-0', i === 0 && 'bg-sage-tint/40')}
-                    />
+                  {days.map((d) => (
+                    <span key={d} className="border-l border-line-soft first:border-l-0" />
                   ))}
                 </div>
                 <ul aria-label={`${property.name}: the next 7 days`} className="contents">
