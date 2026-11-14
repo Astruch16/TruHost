@@ -41,8 +41,8 @@ const KPI_GRID = 'grid grid-cols-2 gap-3 @2xl/content:grid-cols-4 @2xl/content:g
  * same thing. Layout follows the width of the content area (container queries), not the viewport:
  * - narrow: one column; rail panels stack under the main content
  * - medium (≥ 42rem): KPIs four across; rail panels in a two-column grid below
- * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, breakdown, the next 7 days) plus a 380px
- *   right rail (quick actions, needs attention, coming up, supplies, damage)
+ * - wide (≥ 68.75rem ≈ 1100px of content): main column (KPIs, performance, breakdown, the next 7 days, damage) plus a
+ *   380px right rail (quick actions, needs attention, coming up, supplies)
  * Property performance and the breakdown each take the main column's width (neither is stretched to match the other,
  * so neither has empty space): up to three property cards across, and the breakdown in two columns when it's wide.
  */
@@ -240,6 +240,19 @@ export function DashboardView({
             </Card>
           </>
         )}
+        {/* Open damage: in the main column, where there's room for each report. */}
+        {!noProperties &&
+          (damage ? (
+            <DamagePanel
+              items={damage}
+              today={d?.today ?? now.toISOString().slice(0, 10)}
+              showProperty={multi}
+              onReport={() => onReportDamage?.()}
+              onOpen={(id) => onOpenDamage?.(id)}
+            />
+          ) : (
+            <Skeleton className="h-48 rounded-card" />
+          ))}
       </div>
 
       {/* Rail: stacks under the main content (narrow), two columns below it (medium), right rail (wide). */}
@@ -282,18 +295,6 @@ export function DashboardView({
             <Card title="Supplies">
               <LoadError what="supplies" onRetry={() => onRetrySupplies?.()} retrying={false} />
             </Card>
-          ) : (
-            railSkeleton
-          ))}
-        {!noProperties &&
-          (damage ? (
-            <DamagePanel
-              items={damage}
-              today={d?.today ?? now.toISOString().slice(0, 10)}
-              showProperty={multi}
-              onReport={() => onReportDamage?.()}
-              onOpen={(id) => onOpenDamage?.(id)}
-            />
           ) : (
             railSkeleton
           ))}

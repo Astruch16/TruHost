@@ -14,8 +14,8 @@ import { Pill } from '../ui/pill';
 const SHOWN = 4;
 
 /**
- * Dashboard: open damage reports (newest first), each with where it stands and how long is left to claim, and a way to
- * report more. "See all" opens Damage.
+ * Dashboard (main column): open damage reports (newest first) as tiles, two across when there's room, each with where it
+ * stands and how long is left to claim. "Report damage" and "See all" sit in the header.
  */
 export function DamagePanel({
   items,
@@ -37,28 +37,33 @@ export function DamagePanel({
       title="Damage reports"
       description={items.length ? `${items.length} open` : undefined}
       actions={
-        <Link to="/admin/damage" className="rounded-control-sm text-sm font-semibold text-primary hover:underline">
-          See all
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="secondary" size="sm" onClick={onReport}>
+            <TriangleAlert aria-hidden className="size-4" /> Report damage
+          </Button>
+          <Link to="/admin/damage" className="rounded-control-sm text-sm font-semibold text-primary hover:underline">
+            See all
+          </Link>
+        </div>
       }
     >
-      <div className="flex flex-col gap-3">
+      <div className="@container/damage flex flex-col gap-3">
         {items.length === 0 ? (
           <EmptyState size="compact" illustration={<DamageIllustration />} title="No open damage">
             Damage a cleaner or TruHost reports shows up here, with how long is left to claim.
           </EmptyState>
         ) : (
-          <ul className="flex flex-col">
+          <ul className="grid gap-3 @2xl/damage:grid-cols-2">
             {shown.map((r) => {
               const window = claimWindow(r, today);
               return (
-                <li key={r.id}>
+                <li key={r.id} className="flex">
                   <button
                     type="button"
                     onClick={() => onOpen(r.id)}
-                    className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-control px-2 py-2.5 text-left transition-colors hover:bg-ground focus-visible:bg-ground"
+                    className="flex w-full items-center gap-3.5 rounded-inner border border-line-soft p-3 text-left transition-colors hover:border-line hover:bg-ground focus-visible:bg-ground"
                   >
-                    <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-inner bg-ground">
+                    <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-inner bg-ground">
                       {r.coverThumbUrl ? (
                         <img src={r.coverThumbUrl} alt="" className="size-full object-cover" />
                       ) : (
@@ -100,9 +105,6 @@ export function DamagePanel({
             </Link>
           </p>
         )}
-        <Button variant="secondary" block onClick={onReport}>
-          <TriangleAlert aria-hidden className="size-4" /> Report damage
-        </Button>
       </div>
     </Card>
   );

@@ -72,7 +72,7 @@ export function WeekTimeline({
   return (
     <div className="@container/timeline flex flex-col gap-3">
       {/* Day headers, over the day columns */}
-      <div className="grid grid-cols-7 @xl/timeline:grid-cols-[9rem_repeat(7,minmax(0,1fr))]">
+      <div className="grid grid-cols-7 @xl/timeline:grid-cols-[11rem_repeat(7,minmax(0,1fr))]">
         <span className="hidden @xl/timeline:block" />
         {days.map((d, i) => (
           <span key={d} className="flex flex-col items-center gap-0.5 text-center">
@@ -97,7 +97,7 @@ export function WeekTimeline({
           return (
             <div
               key={property.id}
-              className="grid grid-cols-7 items-center gap-y-1.5 py-2.5 @xl/timeline:grid-cols-[9rem_repeat(7,minmax(0,1fr))]"
+              className="grid grid-cols-7 items-center gap-y-1.5 py-2.5 @xl/timeline:grid-cols-[11rem_repeat(7,minmax(0,1fr))]"
             >
               <p className="col-span-7 flex min-w-0 items-center gap-2 pr-3 @xl/timeline:col-span-1">
                 <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: color }} />
