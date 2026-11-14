@@ -128,7 +128,8 @@ export function DashboardView({
       <div className="flex min-w-0 flex-col gap-6">
         <Card tour="dashboard-month">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
+            {/* The greeting wraps before the month picker has to drop below it. */}
+            <div className="min-w-0 flex-1 basis-72">
               <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
                 {greeting(now.getHours())},
               </p>
