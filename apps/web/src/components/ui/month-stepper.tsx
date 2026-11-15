@@ -5,7 +5,7 @@ import { addMonths, monthLabel } from '../../lib/months';
 import { MonthPopover } from './month-picker';
 
 /**
- * "‹ October 2026 ›": a white pill that floats off its card, the month in a chip outlined in green, with a calendar icon so it reads
+ * "‹ October 2026 ›": a white pill that floats off its card, the month in green with a calendar icon and a down arrow so it reads
  * as a control rather than part of the card. The arrows step a month; the month itself opens a year of months to jump
  * to any of them.
  */
@@ -34,14 +34,11 @@ export function MonthStepper({ month, onChange }: { month: string; onChange: (mo
       >
         <Popover.Trigger
           aria-label={`${monthLabel(month)}. Choose a month`}
-          className="figure group inline-flex min-h-9 min-w-36 items-center justify-center gap-2 rounded-full border border-sage-mid/70 bg-surface px-3.5 font-semibold text-sage-deep transition-colors hover:border-sage-mid hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep data-[state=open]:ring-2 data-[state=open]:ring-sage-mid/40"
+          className="figure inline-flex min-h-9 min-w-36 items-center justify-center gap-2 rounded-full px-3.5 font-semibold text-sage-deep transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep data-[state=open]:bg-ground"
         >
           <CalendarDays aria-hidden className="size-4 shrink-0" />
           <span aria-live="polite">{monthLabel(month)}</span>
-          <ChevronDown
-            aria-hidden
-            className="size-3.5 transition-transform duration-150 group-data-[state=open]:rotate-180"
-          />
+          <ChevronDown aria-hidden className="size-3.5" />
         </Popover.Trigger>
       </MonthPopover>
       <button type="button" aria-label="Next month" className={button} onClick={() => onChange(addMonths(month, 1))}>
