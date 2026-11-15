@@ -1,11 +1,11 @@
 import type { CSSProperties } from 'react';
-import { Sparkles } from 'lucide-react';
 import type { CalendarStay } from '../../lib/calendar';
 import { stayLabel } from '../../lib/calendar';
 import { propertyColors, propertyColorValue } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
 import { timelineDays, timelineRow, TIMELINE_DAYS } from '../../lib/timeline';
+import { CleanMark } from './clean-mark';
 
 /** A bar's height, the gap between lanes, and the room under them for clean markers. */
 const BAR_H = 26;
@@ -144,10 +144,10 @@ export function WeekTimeline({
                     <li
                       key={`clean-${d}`}
                       title={`Clean, ${dayLabel(days[d]!)}`}
-                      className="absolute grid size-[18px] -translate-x-1/2 place-items-center rounded-full bg-surface ring-1 ring-amber-mid"
+                      className="absolute -translate-x-1/2"
                       style={{ left: pos(d + 0.5), bottom: 2 }}
                     >
-                      <Sparkles aria-hidden className="size-3 text-amber-deep" strokeWidth={2} />
+                      <CleanMark />
                       <span className="sr-only">Clean, {dayLabel(days[d]!)}</span>
                     </li>
                   ))}
@@ -176,10 +176,7 @@ export function WeekTimeline({
           Owner stay
         </li>
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="grid size-4 place-items-center rounded-full bg-surface ring-1 ring-amber-mid">
-            <Sparkles className="size-2.5 text-amber-deep" strokeWidth={2} />
-          </span>{' '}
-          Clean
+          <CleanMark size="sm" /> Clean
         </li>
       </ul>
     </div>

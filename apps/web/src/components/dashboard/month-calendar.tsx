@@ -3,6 +3,7 @@ import { shortDate } from '../../lib/months';
 import { cx } from '../../lib/cx';
 import { monogram } from '../../lib/dashboard-format';
 import { useWeekStart, weekdayNames } from '../../lib/preferences';
+import { CleanMark } from './clean-mark';
 
 const BAR_H = 22;
 const BAR_GAP = 4;
@@ -77,8 +78,8 @@ export function MonthCalendar({
                   </span>
                 )}
                 {showCleans && day && checkouts.has(day) && (
-                  <span className="mt-auto mb-1.5 flex items-center gap-1 text-xs font-medium text-amber-deep">
-                    <span aria-hidden className="size-1.5 rounded-full bg-amber-mid" />
+                  <span className="mt-auto mb-1.5 flex items-center gap-1.5 text-xs font-medium text-amber-deep">
+                    <CleanMark size="sm" />
                     Clean{checkouts.get(day)! > 1 ? ` ×${checkouts.get(day)}` : ''}
                   </span>
                 )}
@@ -169,7 +170,7 @@ export function CalendarLegend({
       ))}
       {cleans && (
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="size-1.5 rounded-full bg-amber-mid" /> Clean to schedule
+          <CleanMark size="sm" /> Clean to schedule
         </li>
       )}
     </ul>
