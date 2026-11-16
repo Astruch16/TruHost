@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import type { RestockItem } from '@truhost/shared';
 import { AppShell } from '../../components/shell/app-shell';
-import { DashboardView } from '../../components/dashboard/dashboard-view';
-import type { Dashboard } from '../../lib/api-types';
+import { DashboardView, type KpiView } from '../../components/dashboard/dashboard-view';
+import type { Dashboard, DashboardYear } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 import { navItems } from '../../lib/nav';
@@ -412,7 +412,59 @@ const FIXTURE_SUPPLIES: RestockItem[] = [
   supply('s10', FIXTURE_PROPERTIES[0]!, 'Cleaning spray', 50, 'SOON', 'CLEANING'),
 ];
 
+/**
+ * Made-up months for the year-to-date views (January through October 2026, October still under way). The totals are
+ * the months added up as the API does: sums, with occupancy, avg. nightly and fee share from their parts.
+ */
+const FIXTURE_YEAR: DashboardYear = (() => {
+  // [gross, fee, owner expenses, nights booked, available, complete nights, stays, waiting on payout]
+  const raw: [number, number, number, number, number, number, number, number][] = [
+    [298_000, 65_560, 8_200, 34, 93, 34, 7, 0],
+    [356_500, 78_430, 4_100, 41, 84, 41, 8, 0],
+    [402_000, 88_440, 12_350, 46, 93, 46, 9, 0],
+    [318_000, 69_960, 6_000, 37, 90, 37, 7, 0],
+    [455_000, 100_100, 9_900, 52, 93, 52, 10, 0],
+    [548_000, 120_560, 15_200, 61, 90, 61, 12, 0],
+    [612_500, 134_750, 7_400, 66, 93, 66, 13, 0],
+    [588_000, 129_360, 11_050, 63, 93, 63, 12, 0],
+    [431_000, 94_820, 5_600, 48, 90, 48, 10, 0],
+    [412_340, 90_715, 6_418, 19, 55, 17, 6, 1],
+  ];
+  const half = (n: number, d: number) => Math.floor((2 * n + d) / (2 * d));
+  const span = (rows: typeof raw) => {
+    const sum = (i: number) => rows.reduce((a, r) => a + r[i]!, 0);
+    const gross = sum(0);
+    return {
+      grossCents: gross,
+      managementFeeCents: sum(1),
+      ownerExpensesCents: sum(2),
+      netToOwnersCents: gross - sum(1) - sum(2),
+      cleaningFeesCents: sum(6) * 8_500,
+      stays: sum(6),
+      incompleteBookings: sum(7),
+      nightsBooked: sum(3),
+      availableNights: sum(4),
+      occupancyBps: half(sum(3) * 10_000, sum(4)),
+      avgNightlyEarningsCents: sum(5) > 0 ? half(gross, sum(5)) : null,
+      completeNights: sum(5),
+      feeShareBps: gross > 0 ? half(sum(1) * 10_000, gross) : null,
+    };
+  };
+  return {
+    year: 2026,
+    through: '2026-10',
+    today: '2026-10-06',
+    months: raw.map((r, i) => ({
+      month: `2026-${String(i + 1).padStart(2, '0')}`,
+      period: i === 9 ? ('MONTH_TO_DATE' as const) : ('COMPLETE' as const),
+      ...span([r]),
+    })),
+    totals: span(raw),
+  };
+})();
+
 function Preview() {
+  const [kpiView, setKpiView] = useState<KpiView>('month');
   const { state } = Route.useSearch();
   const [month, setMonth] = useState('2026-10');
   const props =
@@ -485,6 +537,9 @@ function Preview() {
         onReportDamage={() => undefined}
         onOpenDamage={() => undefined}
         onAddProperty={() => undefined}
+        kpiView={kpiView}
+        onKpiViewChange={setKpiView}
+        year={state === 'error' || state === 'empty' ? undefined : { ...FIXTURE_YEAR, through: month }}
       />
     </AppShell>
   );

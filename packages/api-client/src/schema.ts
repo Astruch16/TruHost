@@ -1476,6 +1476,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/dashboard/year': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Dashboard_year'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/audit-logs': {
     parameters: {
       query?: never;
@@ -9975,6 +9991,66 @@ export interface operations {
                 nights: number;
                 guestName: string | null;
               }[];
+            };
+          };
+        };
+      };
+    };
+  };
+  Dashboard_year: {
+    parameters: {
+      query: {
+        through: string;
+        propertyId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            year: number;
+            through: string;
+            /** Format: date */
+            today: string;
+            months: {
+              grossCents: number;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netToOwnersCents: number;
+              cleaningFeesCents: number;
+              stays: number;
+              incompleteBookings: number;
+              nightsBooked: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              avgNightlyEarningsCents: number | null;
+              completeNights: number;
+              feeShareBps: number | null;
+              month: string;
+              /** @enum {string} */
+              period: 'COMPLETE' | 'MONTH_TO_DATE' | 'UPCOMING';
+            }[];
+            totals: {
+              grossCents: number;
+              managementFeeCents: number;
+              ownerExpensesCents: number;
+              netToOwnersCents: number;
+              cleaningFeesCents: number;
+              stays: number;
+              incompleteBookings: number;
+              nightsBooked: number;
+              availableNights: number;
+              occupancyBps: number | null;
+              avgNightlyEarningsCents: number | null;
+              completeNights: number;
+              feeShareBps: number | null;
             };
           };
         };

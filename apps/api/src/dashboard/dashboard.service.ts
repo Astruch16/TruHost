@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Dashboard, DashboardQuery } from '@truhost/shared';
+import type { Dashboard, DashboardQuery, DashboardYear, DashboardYearQuery } from '@truhost/shared';
 import { AccessService } from '../access/access.service.js';
 import type { Actor } from '../auth/actor.js';
 import { addDays, addMonths, CLOCK, localDate, type Clock } from '../common/clock.js';
@@ -173,6 +173,40 @@ export class DashboardService {
       ),
       attention: await this.attention(properties, today, now, q.propertyId),
       upcoming: await this.upcoming(properties, now),
+    };
+  }
+
+  /**
+   * Year to date: each month from January through `q.through`, for all active properties or one, and the months
+   * together. Every figure comes from the reporting module's month figures; a span's occupancy and avg. nightly
+   * earnings are recombined from their parts (nights, complete gross), never averaged.
+   */
+  async year(actor: Actor, q: DashboardYearQuery): Promise<DashboardYear> {
+    this.access.assert(actor, 'dashboard:read');
+    const properties = await this.prisma.property.findMany({
+      where: q.propertyId ? { id: q.propertyId } : { archivedAt: null },
+      select: { id: true, timeZone: true },
+      orderBy: { name: 'asc' },
+    });
+    if (q.propertyId && properties.length === 0) throw notFound('Property');
+    const ids = properties.map((p) => p.id);
+    const today = localDate(properties[0]?.timeZone ?? DEFAULT_TZ, this.clock.now());
+    const year = Number(q.through.slice(0, 4));
+    const months = Array.from(
+      { length: Number(q.through.slice(5, 7)) },
+      (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`,
+    );
+
+    const perMonth: { month: string; figures: Awaited<ReturnType<ReportsService['compute']>> }[] = [];
+    for (const month of months)
+      perMonth.push({ month, figures: ids.length > 0 ? await this.reports.compute(ids, month) : [] });
+
+    return {
+      year,
+      through: q.through,
+      today,
+      months: perMonth.map(({ month, figures }) => ({ month, period: periodOf(month, today), ...span(figures) })),
+      totals: span(perMonth.flatMap((m) => m.figures)),
     };
   }
 
@@ -350,4 +384,40 @@ function nightsByDay(figures: { bookedByDay: number[]; unavailableByDay: number[
 function extreme(values: (number | null)[], pick: (...v: number[]) => number): number | null {
   const present = values.filter((v): v is number => v !== null);
   return present.length > 0 ? pick(...present) : null;
+}
+
+/** A span's figures from the month figures that make it up: sums, with rates recombined from their parts. */
+function span(figures: Awaited<ReturnType<ReportsService['compute']>>): DashboardYear['totals'] {
+  const sum = (
+    key:
+      | 'grossCents'
+      | 'managementFeeCents'
+      | 'ownerExpensesCents'
+      | 'netCents'
+      | 'cleaningFeesCents'
+      | 'stays'
+      | 'incompleteBookings'
+      | 'nightsBooked'
+      | 'availableNights'
+      | 'completeNights'
+      | 'completeGrossCents',
+  ) => figures.reduce((acc, f) => acc + f[key], 0);
+  const gross = sum('grossCents');
+  const available = sum('availableNights');
+  const completeNights = sum('completeNights');
+  return {
+    grossCents: gross,
+    managementFeeCents: sum('managementFeeCents'),
+    ownerExpensesCents: sum('ownerExpensesCents'),
+    netToOwnersCents: sum('netCents'),
+    cleaningFeesCents: sum('cleaningFeesCents'),
+    stays: sum('stays'),
+    incompleteBookings: sum('incompleteBookings'),
+    nightsBooked: sum('nightsBooked'),
+    availableNights: available,
+    occupancyBps: available > 0 ? divideHalfUp(sum('nightsBooked') * 10_000, available) : null,
+    avgNightlyEarningsCents: completeNights > 0 ? divideHalfUp(sum('completeGrossCents'), completeNights) : null,
+    completeNights,
+    feeShareBps: gross > 0 ? divideHalfUp(sum('managementFeeCents') * 10_000, gross) : null,
+  };
 }

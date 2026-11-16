@@ -132,3 +132,37 @@ export const dashboard = z.object({
   }),
 });
 export type Dashboard = z.infer<typeof dashboard>;
+
+/** Year to date: January through `through` (a month of that year), for all properties or one. */
+export const dashboardYearQuery = z.object({ through: month, propertyId: id.optional() });
+export type DashboardYearQuery = z.infer<typeof dashboardYearQuery>;
+
+/** A span's figures, summed from the reporting module's month figures (rates recombined exactly from their parts). */
+const spanFigures = z.object({
+  grossCents: nonNegativeCents,
+  managementFeeCents: nonNegativeCents,
+  ownerExpensesCents: nonNegativeCents,
+  netToOwnersCents: cents,
+  /** TruHost revenue, shown separately. */
+  cleaningFeesCents: nonNegativeCents,
+  stays: z.number().int(),
+  incompleteBookings: z.number().int(),
+  nightsBooked: z.number().int(),
+  availableNights: z.number().int(),
+  occupancyBps: bps.nullable(),
+  avgNightlyEarningsCents: nonNegativeCents.nullable(),
+  completeNights: z.number().int(),
+  /** The fee as a share of gross, half up. Null with no gross. */
+  feeShareBps: bps.nullable(),
+});
+
+export const dashboardYear = z.object({
+  year: z.number().int(),
+  through: month,
+  today: isoDate,
+  /** January through `through`, each with whether it has ended, is under way, or is still to come. */
+  months: z.array(spanFigures.extend({ month, period: DashboardPeriod })),
+  /** The months above, together: year to date. */
+  totals: spanFigures,
+});
+export type DashboardYear = z.infer<typeof dashboardYear>;

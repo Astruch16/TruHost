@@ -274,6 +274,79 @@ describe('admin dashboard', () => {
     await t.as('admin').get('/v1/dashboard?month=2026-11&propertyId=00000000-0000-7000-8000-000000000000').expect(404);
   });
 
+  describe('year to date', () => {
+    const year = (query: string) => t.as('admin').get(`/v1/dashboard/year?${query}`).expect(200);
+
+    it('adds up January through the chosen month, recombining rates from their parts', async () => {
+      // On top of the fixture's two November stays: an October stay at A (TruPlan 22%), $600 payout, $90 cleaning.
+      await book({
+        checkInDate: '2026-10-05',
+        checkOutDate: '2026-10-08',
+        payoutCents: 60_000,
+        guestCleaningFeeCents: 9_000,
+      });
+
+      const { body } = await year('through=2026-11');
+      expect(body.year).toBe(2026);
+      expect(body.months.map((m: { month: string }) => m.month)).toEqual([
+        '2026-01',
+        '2026-02',
+        '2026-03',
+        '2026-04',
+        '2026-05',
+        '2026-06',
+        '2026-07',
+        '2026-08',
+        '2026-09',
+        '2026-10',
+        '2026-11',
+      ]);
+      const october = body.months[9];
+      expect(october).toMatchObject({
+        period: 'COMPLETE',
+        grossCents: 51_000,
+        managementFeeCents: 11_220,
+        nightsBooked: 3,
+      });
+      expect(body.months[10]).toMatchObject({
+        period: 'MONTH_TO_DATE',
+        grossCents: 102_000,
+        managementFeeCents: 11_220,
+      });
+      // Nights available: Jan–Nov is 334 days, at two properties.
+      expect(body.totals).toEqual({
+        grossCents: 153_000,
+        managementFeeCents: 22_440,
+        ownerExpensesCents: 8_398,
+        netToOwnersCents: 122_162,
+        cleaningFeesCents: 27_000,
+        stays: 3,
+        incompleteBookings: 0,
+        nightsBooked: 9,
+        availableNights: 668,
+        occupancyBps: 135, // 9 / 668, half up
+        avgNightlyEarningsCents: 17_000, // $1,530 over 9 complete nights
+        completeNights: 9,
+        feeShareBps: 1467, // $224.40 of $1,530, half up
+      });
+    });
+
+    it('stops at the chosen month, scopes to one property, and 404s an unknown one', async () => {
+      const feb = await year('through=2026-02');
+      expect(feb.body.months).toHaveLength(2);
+      expect(feb.body.totals.grossCents).toBe(0);
+      expect(feb.body.totals.occupancyBps).toBe(0);
+
+      const b = await year(`through=2026-11&propertyId=${w.propertyB.id}`);
+      expect(b.body.totals).toMatchObject({ grossCents: 51_000, managementFeeCents: 0, availableNights: 334 });
+
+      await t
+        .as('admin')
+        .get('/v1/dashboard/year?through=2026-11&propertyId=0192f5e0-0000-7000-8000-00000000dead')
+        .expect(404);
+    });
+  });
+
   it('has empty, zero-filled sections with no properties', async () => {
     await resetDb(t.prisma);
     await t.prisma.user.create({
