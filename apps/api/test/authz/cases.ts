@@ -877,6 +877,7 @@ export const CASES: AuthzCase[] = [
 
   // ── dashboard ──
   { route: 'GET /v1/dashboard', path: () => '/v1/dashboard?month=2026-11', allow: ADMIN },
+  { route: 'GET /v1/dashboard/year', path: () => '/v1/dashboard/year?through=2026-11', allow: ADMIN },
 
   // ── audit ──
   { route: 'GET /v1/audit-logs', path: () => '/v1/audit-logs', allow: ADMIN },

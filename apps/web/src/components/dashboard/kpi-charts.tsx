@@ -65,3 +65,37 @@ export function NightlyRange({ lowCents, highCents }: { lowCents: number | null;
     </span>
   );
 }
+
+/**
+ * Year to date: one small bar per month, as tall as its share of the year's highest month. Months still to come are
+ * paler (booked so far); a month with nothing shows a hairline so the strip keeps its rhythm.
+ */
+export function MonthBars({
+  values,
+  upcoming,
+  color,
+}: {
+  values: (number | null)[];
+  upcoming: boolean[];
+  color: string;
+}) {
+  const max = Math.max(0, ...values.map((v) => v ?? 0));
+  return (
+    <span aria-hidden className="flex h-6 items-end gap-[2px]">
+      {values.map((v, i) => {
+        const share = max > 0 && v ? Math.max(0, v) / max : 0;
+        return (
+          <span
+            key={i}
+            className="min-w-px flex-1 rounded-t-[2px]"
+            style={{
+              height: share > 0 ? `max(${share * 100}%, 3px)` : '2px',
+              background: share > 0 ? color : 'var(--color-line)',
+              opacity: upcoming[i] ? 0.45 : 1,
+            }}
+          />
+        );
+      })}
+    </span>
+  );
+}

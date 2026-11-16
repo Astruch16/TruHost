@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, CalendarPlus, ReceiptText } from 'lucide-react';
 import type { DamageReport, Property, RestockItem } from '@truhost/shared';
-import type { Dashboard } from '../../lib/api-types';
+import type { Dashboard, DashboardYear } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { addDays } from '../../lib/dates';
 import { dayLabel, formatChange, formatPoints, greeting, longDate } from '../../lib/dashboard-format';
@@ -22,10 +22,16 @@ import { PropertyDetails } from '../property-details';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { WeekTimeline } from './week-timeline';
+import { TrendsChart } from './trends-chart';
+import { YearKpis } from './year-kpis';
+import { monthShort as shortMonthName } from '../../lib/trends';
 import { DamagePanel } from './damage-panel';
 import { NeedsAttention } from './needs-attention';
 import { SuppliesPanel } from './supplies-panel';
 import { RevenueBreakdown } from './revenue-breakdown';
+
+/** What the top card shows: the month's figures, the year so far, or the year as a chart. */
+export type KpiView = 'month' | 'year' | 'trends';
 
 /** Quick actions, and Needs attention's "enter payouts". */
 export type DashboardAction = 'booking' | 'expense' | 'payouts';
@@ -71,6 +77,12 @@ export function DashboardView({
   onOpenDamage,
   onAction,
   onAddProperty,
+  kpiView = 'month',
+  onKpiViewChange,
+  year,
+  yearError,
+  onRetryYear,
+  retryingYear = false,
 }: {
   firstName: string;
   now: Date;
@@ -106,6 +118,13 @@ export function DashboardView({
   onOpenDamage?: (id: string) => void;
   onAction: (action: DashboardAction) => void;
   onAddProperty: () => void;
+  kpiView?: KpiView;
+  onKpiViewChange?: (view: KpiView) => void;
+  /** January through `month` (GET /v1/dashboard/year); undefined while loading or not asked for. */
+  year?: DashboardYear;
+  yearError?: unknown;
+  onRetryYear?: () => void;
+  retryingYear?: boolean;
 }) {
   const propertyList = properties ?? [];
   const noProperties = properties !== undefined && properties.length === 0;
@@ -148,18 +167,49 @@ export function DashboardView({
             <MonthStepper month={month} onChange={onMonthChange} />
           </div>
           {!noProperties && (
-            <div className="mt-6">
-              {failed ? (
-                <LoadError what="the dashboard" onRetry={onRetryDashboard} retrying={retryingDashboard} />
-              ) : !d ? (
-                <div className={KPI_GRID}>
-                  {[0, 1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-36 rounded-inner" />
-                  ))}
-                </div>
+            <div className="mt-6 flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <ViewSwitch value={kpiView} onChange={(v) => onKpiViewChange?.(v)} />
+                {/* Said once for all four cards, so their labels stay on one line. */}
+                <p className="text-xs font-semibold tracking-wide text-muted uppercase">
+                  {kpiView === 'month'
+                    ? d?.period === 'MONTH_TO_DATE'
+                      ? 'Month to date'
+                      : d?.period === 'UPCOMING'
+                        ? 'Booked so far'
+                        : monthLabel(month)
+                    : `Jan – ${shortMonthName(month)} ${month.slice(0, 4)}`}
+                </p>
+              </div>
+              {kpiView === 'month' ? (
+                failed ? (
+                  <LoadError what="the dashboard" onRetry={onRetryDashboard} retrying={retryingDashboard} />
+                ) : !d ? (
+                  <div className={KPI_GRID}>
+                    {[0, 1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-36 rounded-inner" />
+                    ))}
+                  </div>
+                ) : (
+                  <div {...dim(dashboardUpdating)}>
+                    <Kpis d={d} />
+                  </div>
+                )
+              ) : yearError && !year ? (
+                <LoadError what="the year" onRetry={() => onRetryYear?.()} retrying={retryingYear} />
+              ) : !year ? (
+                kpiView === 'year' ? (
+                  <div className={KPI_GRID}>
+                    {[0, 1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-36 rounded-inner" />
+                    ))}
+                  </div>
+                ) : (
+                  <Skeleton className="h-72 rounded-inner" />
+                )
               ) : (
-                <div {...dim(dashboardUpdating)}>
-                  <Kpis d={d} />
+                <div {...dim(year.through !== month)}>
+                  {kpiView === 'year' ? <YearKpis year={year} grid={KPI_GRID} /> : <TrendsChart year={year} />}
                 </div>
               )}
             </div>
@@ -306,8 +356,6 @@ export function DashboardView({
 
 /** The four KPI cards: four across on wide screens, two by two below that. */
 function Kpis({ d }: { d: Dashboard }) {
-  const periodNote =
-    d.period === 'MONTH_TO_DATE' ? 'Month to date' : d.period === 'UPCOMING' ? 'Booked so far' : undefined;
   const vs = d.comparison ? shortMonth(d.comparison.month) : '';
   const rel = (c: { changeBps: number | null } | undefined): KpiChange | null =>
     c && c.changeBps !== null
@@ -317,8 +365,6 @@ function Kpis({ d }: { d: Dashboard }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Said once for all four cards, so their labels stay on one line. */}
-      {periodNote && <p className="text-xs font-semibold tracking-wide text-muted uppercase">{periodNote}</p>}
       <div className={KPI_GRID}>
         <KpiCard
           label="Gross revenue"
@@ -472,4 +518,31 @@ const isFullRecord = (r: Partial<Property> | undefined): r is Property => r?.add
 /** A lone property's details, once its full record is there. */
 function Details({ record, feeRateBps }: { record: Partial<Property> | undefined; feeRateBps: number | null }) {
   return isFullRecord(record) ? <PropertyDetails property={record} feeRateBps={feeRateBps} /> : null;
+}
+
+/** This month, year to date, or the year as a chart: three small buttons, the chosen one pressed. */
+function ViewSwitch({ value, onChange }: { value: KpiView; onChange: (view: KpiView) => void }) {
+  const options: [KpiView, string][] = [
+    ['month', 'This month'],
+    ['year', 'Year to date'],
+    ['trends', 'Trends'],
+  ];
+  return (
+    <div role="group" aria-label="Show" className="flex rounded-full bg-ground p-0.5 ring-1 ring-line-soft">
+      {options.map(([key, label]) => (
+        <button
+          key={key}
+          type="button"
+          aria-pressed={value === key}
+          onClick={() => onChange(key)}
+          className={cx(
+            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+            value === key ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 }

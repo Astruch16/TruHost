@@ -147,6 +147,16 @@ export const queries = {
       placeholderData: (prev, q) => keepWhileSameScope((k) => k[2])(prev, q, queryKey),
     });
   },
+  /** January through `through`, month by month and together (under 'dashboard', so changes refresh it too). */
+  dashboardYear: (api: ApiClient, through: string, propertyId: string | null) => {
+    const queryKey = ['dashboard', 'year', through, propertyId] as const;
+    return queryOptions({
+      queryKey,
+      queryFn: () =>
+        unwrap(api.GET('/v1/dashboard/year', { params: { query: { through, propertyId: propertyId ?? undefined } } })),
+      placeholderData: (prev, q) => keepWhileSameScope((k) => k[3])(prev, q, queryKey),
+    });
+  },
   /** Supplies sit under one key, so a reading refreshes every list that shows it (property and restock). */
   supplies: (api: ApiClient, propertyId: string) =>
     queryOptions({

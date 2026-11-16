@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BookingDialog } from '../../../components/booking-dialog';
 import { DamageReportDialog } from '../../../components/damage/damage-report-dialog';
 import { ReportDamageDialog } from '../../../components/damage/report-damage-dialog';
-import { DashboardView, type DashboardAction } from '../../../components/dashboard/dashboard-view';
+import { DashboardView, type DashboardAction, type KpiView } from '../../../components/dashboard/dashboard-view';
 import { PayoutsDialog } from '../../../components/dashboard/payouts-dialog';
 import { ExpenseDialog } from '../../../components/expense-dialog';
 import { useApi } from '../../../lib/api-context';
@@ -29,10 +29,13 @@ function Dashboard() {
   const month = Route.useSearch().month ?? monthKey();
   const { propertyId } = useScope();
   const [action, setAction] = useState<DashboardAction | null>(null);
+  const [kpiView, setKpiView] = useState<KpiView>('month');
 
   const me = useQuery(queries.me(api));
   const properties = useQuery(queries.properties(api));
   const dash = useQuery(queries.dashboard(api, month, propertyId));
+  // The year so far, only once asked for (it's twelve months of figures).
+  const year = useQuery({ ...queries.dashboardYear(api, month, propertyId), enabled: kpiView !== 'month' });
   const restock = useQuery(queries.restock(api));
   const damage = useQuery(queries.damageReports(api, 'OPEN', propertyId ?? undefined));
   const [reportingDamage, setReportingDamage] = useState(false);
@@ -69,6 +72,12 @@ function Dashboard() {
         onReportDamage={() => setReportingDamage(true)}
         onOpenDamage={setOpenDamage}
         onAction={setAction}
+        kpiView={kpiView}
+        onKpiViewChange={setKpiView}
+        year={year.data}
+        yearError={year.error}
+        onRetryYear={() => void year.refetch()}
+        retryingYear={year.isFetching}
         onAddProperty={() => void navigate({ to: '/admin/properties' })}
       />
       {action === 'booking' && (
