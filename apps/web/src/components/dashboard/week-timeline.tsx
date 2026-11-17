@@ -1,9 +1,11 @@
 import type { CSSProperties } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CalendarStay } from '../../lib/calendar';
 import { stayLabel } from '../../lib/calendar';
 import { propertyColors, propertyColorValue } from '../../lib/cleans';
 import { cx } from '../../lib/cx';
 import { dayLabel } from '../../lib/dashboard-format';
+import { shortDate } from '../../lib/months';
 import { timelineDays, timelineRow, TIMELINE_DAYS } from '../../lib/timeline';
 import { CleanMark } from './clean-mark';
 
@@ -114,26 +116,36 @@ export function WeekTimeline({
                   {bars.length === 0 && <li className="sr-only">Nothing booked</li>}
                   {bars.map((b) => {
                     const look = barStyle(b.stay, color);
-                    const label = stayLabel(b.stay);
+                    // A stay that began before the window, or runs past it, is drawn whole like any other (never cut
+                    // flat at the edge): an arrow at that end, and the date the window can't show in its label.
+                    const label = [
+                      stayLabel(b.stay),
+                      b.clippedStart && `since ${shortDate(b.stay.checkInDate)}`,
+                      b.clippedEnd && `until ${shortDate(b.stay.checkOutDate)}`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ');
                     return (
                       <li
                         key={b.stay.id}
-                        title={`${label}, ${dayLabel(b.stay.checkInDate)} to ${dayLabel(b.stay.checkOutDate)}`}
+                        title={`${stayLabel(b.stay)}, ${dayLabel(b.stay.checkInDate)} to ${dayLabel(b.stay.checkOutDate)}`}
                         className={cx(
-                          'absolute flex items-center overflow-hidden px-2 text-xs font-semibold whitespace-nowrap',
+                          'absolute flex items-center gap-1 overflow-hidden rounded-md px-2 text-xs font-semibold whitespace-nowrap',
                           look.className,
-                          b.clippedStart ? 'rounded-l-none border-l-0' : 'rounded-l-md',
-                          b.clippedEnd ? 'rounded-r-none border-r-0' : 'rounded-r-md',
+                          b.clippedStart && 'pl-1',
+                          b.clippedEnd && 'pr-1',
                         )}
                         style={{
                           ...look.style,
-                          left: `calc(${pos(b.from)} + ${b.clippedStart ? 0 : 2}px)`,
-                          width: `calc(${pos(b.to - b.from)} - ${(b.clippedStart ? 0 : 2) + (b.clippedEnd ? 0 : 2)}px)`,
+                          left: `calc(${pos(b.from)} + 2px)`,
+                          width: `calc(${pos(b.to - b.from)} - 4px)`,
                           top: 4 + b.lane * (BAR_H + LANE_GAP),
                           height: BAR_H,
                         }}
                       >
-                        <span className="min-w-0 truncate">{label}</span>
+                        {b.clippedStart && <ChevronLeft aria-hidden className="size-3.5 shrink-0 opacity-70" />}
+                        <span className="min-w-0 flex-1 truncate">{label}</span>
+                        {b.clippedEnd && <ChevronRight aria-hidden className="size-3.5 shrink-0 opacity-70" />}
                         <span className="sr-only">
                           , {dayLabel(b.stay.checkInDate)} to {dayLabel(b.stay.checkOutDate)}
                         </span>
