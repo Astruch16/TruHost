@@ -1,97 +1,137 @@
+import { GlowDef } from './parts';
+
+/** Window rows for a block: [x, y, width, height] of each lit or dark pane, from a fixed seed. */
+function panes(x: number, y: number, w: number, h: number, seed: number) {
+  let s = seed;
+  const next = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const out: { x: number; y: number; lit: boolean }[] = [];
+  for (let row = y + 4; row < y + h - 4; row += 6) {
+    for (let col = x + 3; col < x + w - 4; col += 5) out.push({ x: col, y: row, lit: next() > 0.55 });
+  }
+  return out;
+}
+
+const BLOCKS = [
+  { x: 0, y: 108, w: 22, h: 40, fill: '#6E6492' },
+  { x: 24, y: 96, w: 20, h: 52, fill: '#5E5585' },
+  { x: 48, y: 88, w: 30, h: 60, fill: '#4E4775' },
+  { x: 82, y: 104, w: 22, h: 44, fill: '#5E5585' },
+  { x: 196, y: 94, w: 30, h: 54, fill: '#4E4775' },
+  { x: 230, y: 108, w: 26, h: 40, fill: '#5E5585' },
+  { x: 258, y: 98, w: 22, h: 50, fill: '#6E6492' },
+  { x: 284, y: 90, w: 36, h: 58, fill: '#4E4775' },
+];
+
 /**
- * In the city: a glass condo tower among the downtown blocks at dusk, the North Shore mountains behind, the water and
- * a strip of park with trees in front. Some windows are lit.
+ * The city at dusk: an indigo sky warming to pink at the horizon, the first stars and a crescent moon, the North Shore
+ * mountains behind the skyline, blocks with lit windows, and a glass condo tower in the middle with a beacon on top,
+ * above the water (the lights reflected in it) and a park with glowing lamps.
  */
 export function CityScene({ uid }: { uid: string }) {
-  const lit = '#F2D987';
+  const u = (n: string) => `url(#${uid}-${n})`;
+  const towerPanes = panes(140, 46, 34, 102, 11);
   return (
     <g>
       <defs>
         <linearGradient id={`${uid}-sky`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#D5CDEE" />
-          <stop offset="1" stopColor="#F8EEF0" />
+          <stop offset="0" stopColor="#36406E" />
+          <stop offset="0.55" stopColor="#9A7AA8" />
+          <stop offset="1" stopColor="#F1B9B4" />
         </linearGradient>
         <linearGradient id={`${uid}-glass`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#7E9DC2" />
-          <stop offset="1" stopColor="#6383AA" />
+          <stop offset="0" stopColor="#7A8FC0" />
+          <stop offset="1" stopColor="#4E6296" />
         </linearGradient>
+        <linearGradient id={`${uid}-water`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#6A6898" />
+          <stop offset="1" stopColor="#363C68" />
+        </linearGradient>
+        <GlowDef id={`${uid}-glow`} color="#FFD98A" />
+        <GlowDef id={`${uid}-beacon`} color="#F07A86" />
       </defs>
-      <rect width="320" height="180" fill={`url(#${uid}-sky)`} />
-      <circle cx="252" cy="92" r="17" fill="#FBE3C2" />
-      <circle cx="252" cy="92" r="26" fill="#FBE3C2" opacity="0.35" />
+      <rect width="320" height="180" fill={u('sky')} />
+      {/* Stars and a crescent moon */}
+      <g fill="#FFFFFF">
+        <circle cx="40" cy="20" r="0.9" />
+        <circle cx="96" cy="12" r="0.7" />
+        <circle cx="210" cy="16" r="0.9" />
+        <circle cx="262" cy="28" r="0.7" />
+        <circle cx="300" cy="12" r="0.9" />
+        <circle cx="128" cy="30" r="0.6" />
+      </g>
+      <path d="M252 46 a12 12 0 1 0 12 -14 a9 9 0 1 1 -12 14 Z" fill="#FFF3DC" />
       {/* North Shore mountains */}
-      <path d="M-10 116 L40 84 L84 104 L132 72 L182 100 L232 78 L282 102 L330 88 V140 H-10 Z" fill="#CBC2E5" />
       <path
-        d="M132 72 L122 80 L130 79 L134 84 L140 79 Z M40 84 L33 89 L39 88 L42 92 L47 88 Z"
-        fill="#FFFFFF"
+        d="M-10 112 C20 98 40 80 64 74 C82 70 92 84 110 80 C130 76 146 62 168 60 C190 58 204 76 226 74 C250 72 270 64 292 70 C308 74 318 80 330 84 L330 130 L-10 130 Z"
+        fill="#7C6E9A"
+      />
+      <path
+        d="M160 63 C164 61 166 60 168 60 C172 61 176 63 180 66 C176 65 174 68 171 66 C168 68 166 65 163 67 Z"
+        fill="#EBDCEB"
         opacity="0.8"
       />
-      {/* Far blocks */}
-      <g fill="#B4AAD2">
-        <rect x="0" y="106" width="22" height="40" />
-        <rect x="26" y="96" width="18" height="50" />
-        <rect x="216" y="102" width="20" height="44" />
-        <rect x="276" y="104" width="22" height="42" />
-        <rect x="300" y="94" width="22" height="52" />
-      </g>
-      {/* Mid blocks with window rows */}
-      <g fill="#8E86BA">
-        <rect x="48" y="90" width="30" height="56" rx="1" />
-        <rect x="180" y="98" width="30" height="48" rx="1" />
-        <rect x="238" y="112" width="34" height="34" rx="1" />
-        <rect x="6" y="118" width="30" height="28" rx="1" />
-      </g>
-      <g fill="#A79FCF">
-        <path d="M52 96 h22 v2 h-22 Z M52 104 h22 v2 h-22 Z M52 112 h22 v2 h-22 Z M52 120 h22 v2 h-22 Z M52 128 h22 v2 h-22 Z" />
-        <path d="M184 104 h22 v2 h-22 Z M184 112 h22 v2 h-22 Z M184 120 h22 v2 h-22 Z M184 128 h22 v2 h-22 Z" />
-        <path d="M242 118 h26 v2 h-26 Z M242 126 h26 v2 h-26 Z M242 134 h26 v2 h-26 Z" />
-      </g>
-      <g fill={lit}>
-        <rect x="58" y="103.5" width="5" height="3" />
-        <rect x="66" y="119.5" width="5" height="3" />
-        <rect x="190" y="111.5" width="5" height="3" />
-        <rect x="250" y="125.5" width="5" height="3" />
-      </g>
-      {/* The condo tower: glass front, a shaded side, balcony lines, a few lit windows */}
-      <rect x="146" y="44" width="10" height="102" fill="#4E6B90" />
-      <rect x="114" y="48" width="34" height="98" fill={`url(#${uid}-glass)`} />
-      <path d="M114 48 H148 L146 44 H120 Z" fill="#A8BEDA" />
-      <rect x="126" y="38" width="10" height="8" fill="#4E6B90" />
-      <path d="M131 38 V30" stroke="#4E6B90" strokeWidth="1.4" />
-      <g stroke="#FFFFFF" strokeOpacity="0.45" strokeWidth="1.2">
-        <path d="M114 58 H148 M114 68 H148 M114 78 H148 M114 88 H148 M114 98 H148 M114 108 H148 M114 118 H148 M114 128 H148" />
-      </g>
-      <path d="M131 48 V146" stroke="#FFFFFF" strokeOpacity="0.2" strokeWidth="1" />
-      <g fill={lit}>
-        <rect x="118" y="60" width="9" height="6" />
-        <rect x="135" y="80" width="9" height="6" />
-        <rect x="118" y="100" width="9" height="6" />
-        <rect x="135" y="120" width="9" height="6" />
-        <rect x="118" y="130" width="9" height="6" />
-      </g>
-      <path d="M114 48 L120 48 L120 146 L114 146 Z" fill="#FFFFFF" opacity="0.12" />
-      {/* Water, seawall, park and trees */}
-      <rect x="-10" y="145" width="340" height="12" fill="#A6BADA" />
+      {/* Blocks, their windows partly lit */}
+      {BLOCKS.map((b, i) => (
+        <g key={i}>
+          <rect x={b.x} y={b.y} width={b.w} height={b.h} fill={b.fill} />
+          {panes(b.x, b.y, b.w, b.h, i + 3).map((p, j) => (
+            <rect
+              key={j}
+              x={p.x}
+              y={p.y}
+              width="2.6"
+              height="2.6"
+              rx="0.4"
+              fill={p.lit ? '#FFD98A' : '#3E3866'}
+              opacity={p.lit ? 0.95 : 0.6}
+            />
+          ))}
+        </g>
+      ))}
+      {/* The condo tower: glass front, shaded side, balconies, lit windows, beacon */}
+      <rect x="174" y="50" width="10" height="98" fill="#3E4D7E" />
+      <rect x="138" y="54" width="38" height="94" fill={u('glass')} />
+      <path d="M138 54 H176 L174 50 H144 Z" fill="#B7C4E6" />
       <path
-        d="M120 149 v6 M140 149 v5 M60 151 h14 M220 150 h18"
+        d="M138 64 H176 M138 74 H176 M138 84 H176 M138 94 H176 M138 104 H176 M138 114 H176 M138 124 H176 M138 134 H176"
         stroke="#FFFFFF"
-        strokeOpacity="0.55"
+        strokeOpacity="0.28"
+        strokeWidth="1"
+      />
+      {towerPanes.map((p, j) =>
+        p.lit ? <rect key={j} x={p.x} y={p.y} width="3.4" height="3" rx="0.4" fill="#FFE39E" /> : null,
+      )}
+      <path d="M138 54 L144 54 L144 148 L138 148 Z" fill="#FFFFFF" opacity="0.12" />
+      <rect x="152" y="42" width="10" height="8" fill="#3E4D7E" />
+      <path d="M157 42 V32" stroke="#3E4D7E" strokeWidth="1.4" />
+      <circle cx="157" cy="31" r="5" fill={u('beacon')} />
+      <circle cx="157" cy="31" r="1.4" fill="#F07A86" />
+      {/* Water, with the lights in it */}
+      <rect x="-10" y="148" width="340" height="12" fill={u('water')} />
+      <path
+        d="M150 150 v7 M160 151 v5 M168 150 v6 M60 151 v5 M66 150 v6 M210 151 v5 M290 150 v6"
+        stroke="#FFD98A"
+        strokeOpacity="0.7"
         strokeWidth="1.2"
         strokeLinecap="round"
       />
-      <rect x="-10" y="156" width="340" height="3" fill="#CFC8BC" />
-      <rect x="-10" y="159" width="340" height="21" fill="#6FA27F" />
-      <path d="M-10 172 C80 166 180 176 330 168 V180 H-10 Z" fill="#5E8C6E" />
-      <g fill="#4E8460">
-        <circle cx="34" cy="158" r="9" />
-        <circle cx="96" cy="160" r="8" />
-        <circle cx="206" cy="159" r="9" />
-        <circle cx="282" cy="160" r="8" />
+      {/* Seawall, park, round trees and glowing lamps */}
+      <rect x="-10" y="158" width="340" height="2.5" fill="#B9A9B6" />
+      <path d="M-10 160.5 H330 V180 H-10 Z" fill="#2E4A44" />
+      <path d="M-10 172 C80 166 180 176 330 168 V180 H-10 Z" fill="#253E39" />
+      <g fill="#3C5F55">
+        <circle cx="30" cy="160" r="9" />
+        <circle cx="98" cy="162" r="8" />
+        <circle cx="222" cy="161" r="9" />
+        <circle cx="290" cy="162" r="8" />
       </g>
-      <g fill="#FFFFFF" opacity="0.15">
-        <circle cx="31" cy="155" r="4" />
-        <circle cx="203" cy="156" r="4" />
-      </g>
+      {[60, 130, 190, 256].map((x) => (
+        <g key={x}>
+          <path d={`M${x} 172 V161`} stroke="#1E302C" strokeWidth="1.2" />
+          <circle cx={x} cy="160" r="6" fill={u('glow')} />
+          <circle cx={x} cy="160" r="1.4" fill="#FFE39E" />
+        </g>
+      ))}
     </g>
   );
 }
