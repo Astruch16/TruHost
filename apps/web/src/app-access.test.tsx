@@ -405,7 +405,8 @@ describe('adding your own property (My properties)', () => {
 
   it('lets an admin edit their properties from the cards; owners can’t', async () => {
     renderAt('/properties', admin);
-    expect(await screen.findByRole('button', { name: 'Edit Cedar Cabin' })).toBeInTheDocument();
+    // A grid card says "Edit Cedar Cabin"; a feature card (one or two properties) "Edit details for Cedar Cabin".
+    expect(await screen.findByRole('button', { name: /^Edit (details for )?Cedar Cabin$/ })).toBeInTheDocument();
     cleanup();
     renderAt('/properties', owner);
     await screen.findByRole('link', { name: /Cedar Cabin/ });
