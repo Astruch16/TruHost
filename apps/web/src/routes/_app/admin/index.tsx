@@ -48,6 +48,12 @@ function Dashboard() {
   const today = todayIso();
   const week = useQuery(queries.bookings(api, { from: today, to: addDays(today, 7) }, propertyId ?? undefined));
   usePrefetchAdjacentMonths(month, (m) => queries.dashboard(api, m, propertyId), dash.isSuccess);
+  // In Year to date and Trends, the neighbouring months' year figures too, so stepping a month there is instant.
+  usePrefetchAdjacentMonths(
+    month,
+    (m) => queries.dashboardYear(api, m, propertyId),
+    year.isSuccess && kpiView !== 'month',
+  );
   const propertyList = properties.data?.items ?? [];
 
   return (

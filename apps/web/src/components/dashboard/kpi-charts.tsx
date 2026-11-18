@@ -15,7 +15,11 @@ export function StaysBar({ grossByStayCents }: { grossByStayCents: number[] }) {
   return (
     <span aria-hidden className={cx('flex', gap)}>
       {grossByStayCents.map((cents, i) => (
-        <span key={i} className="h-1.5 min-w-px rounded-[3px] bg-[#4F7A63]" style={{ flexGrow: cents, flexBasis: 0 }} />
+        <span
+          key={i}
+          className="h-1.5 min-w-px rounded-[3px] bg-[#4F7A63] transition-[flex-grow] duration-500 ease-out"
+          style={{ flexGrow: cents, flexBasis: 0 }}
+        />
       ))}
     </span>
   );
@@ -25,7 +29,10 @@ export function StaysBar({ grossByStayCents }: { grossByStayCents: number[] }) {
 export function ShareBar({ shareBps }: { shareBps: number | null }) {
   return (
     <span aria-hidden className="flex h-1.5 overflow-hidden rounded-[3px] bg-lavender-tint">
-      <span className="bg-[#6A5FB8]" style={{ width: `${(shareBps ?? 0) / 100}%` }} />
+      <span
+        className="bg-[#6A5FB8] transition-[width] duration-500 ease-out"
+        style={{ width: `${(shareBps ?? 0) / 100}%` }}
+      />
     </span>
   );
 }
@@ -51,7 +58,14 @@ export function NightsStrip({ nightsByDay }: { nightsByDay: { booked: number; av
               : share === 0
                 ? OPEN
                 : `color-mix(in srgb, ${BOOKED} ${Math.round(share * 100)}%, ${OPEN})`;
-        return <span key={i} className="h-1.5 flex-1 rounded-[2px]" style={{ background }} data-share={share} />;
+        return (
+          <span
+            key={i}
+            className="h-1.5 flex-1 rounded-[2px] transition-[background-color] duration-300"
+            style={{ background }}
+            data-share={share}
+          />
+        );
       })}
     </span>
   );
@@ -95,7 +109,7 @@ export function MonthBars({
           return (
             <span key={i} className="group/bar relative flex h-full min-w-px flex-1 items-end">
               <span
-                className="w-full rounded-t-[2px] transition-[filter] group-hover/bar:brightness-110"
+                className="w-full rounded-t-[2px] transition-[height,filter] duration-500 ease-out group-hover/bar:brightness-110"
                 style={{
                   height: share > 0 ? `max(${share * 100}%, 3px)` : '2px',
                   background: share > 0 ? color : 'var(--color-line)',
