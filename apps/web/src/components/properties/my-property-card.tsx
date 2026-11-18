@@ -7,6 +7,9 @@ import { CoverImage } from '../cover-image';
 import { PropertyScene } from '../illustrations/property-scene';
 import { Pill } from '../ui/pill';
 
+/** The cover photo, or the drawn scene in its place; both zoom in a touch when the card is hovered. */
+const COVER = 'size-full transition-transform duration-500 group-hover:scale-[1.03]';
+
 /**
  * A property on the owner/cleaner landing page: its cover photo (or a drawn cabin in the hills), role, place, layout and stay
  * times. Opens the owner page or the cleaner page, by the person's role on it.
@@ -42,8 +45,8 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
           <CoverImage
             url={p.coverPhoto?.thumbUrl}
             alt=""
-            className="size-full transition-transform duration-500 group-hover:scale-[1.03]"
-            fallback={<PropertyScene index={index} className="size-full" />}
+            className={COVER}
+            fallback={<PropertyScene index={index} className={COVER} />}
           />
           <Pill
             tone={owner ? 'sage' : 'lavender'}

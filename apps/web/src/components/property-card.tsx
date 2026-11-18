@@ -10,6 +10,9 @@ import { PropertyScene } from './illustrations/property-scene';
 import { Pill } from './ui/pill';
 import { Skeleton } from './ui/skeleton';
 
+/** The cover photo, or the drawn scene in its place; both zoom in a touch when the card is hovered. */
+const COVER = 'size-full transition-transform duration-300 group-hover:scale-[1.02]';
+
 /**
  * Property card with its cover photo (or a drawn cabin in the hills without one), status and the month's figures.
  * Used on the dashboard and the admin properties page. `wide` is for a card that has a row to itself (the dashboard with one
@@ -70,8 +73,8 @@ export function PropertyCard({
         <CoverImage
           url={property.photoUrl}
           alt=""
-          className="size-full transition-transform duration-300 group-hover:scale-[1.02]"
-          fallback={<PropertyScene index={index} className="size-full" />}
+          className={COVER}
+          fallback={<PropertyScene index={index} className={COVER} />}
         />
       </div>
       <div
