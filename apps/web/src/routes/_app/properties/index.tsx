@@ -2,7 +2,9 @@ import { useState, type ReactNode } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { AddPropertyTile } from '../../../components/properties/add-property-tile';
 import { MyPropertyCard, MyPropertyCardSkeleton } from '../../../components/properties/my-property-card';
+import { MyPropertyFeature } from '../../../components/properties/my-property-feature';
 import { PropertyDialog } from '../../../components/property-dialog';
 import { Button } from '../../../components/ui/button';
 import { LoadError } from '../../../components/ui/alert';
@@ -14,15 +16,19 @@ import { myProperties, type MyProperty } from '../../../lib/my-properties';
 import { queries } from '../../../lib/queries';
 
 /**
- * Owner/cleaner landing: the properties this person holds a membership on (admins included), as photo cards. Someone
- * who owns some and cleans others sees them in two groups. Admins can add one of their own properties here (they become
- * its owner) and edit them; owners and cleaners can't add or edit properties (the API enforces it).
+ * Owner/cleaner landing: the properties this person holds a membership on (admins included). One or two get a wide
+ * feature card each (photo beside details) so the page isn't a lone card in a sea of space, with an "Add another
+ * property" banner under them for admins; three or more are a grid of photo cards. Someone who owns some and cleans
+ * others sees them in two groups. Admins can add one of their own properties here (they become its owner) and edit
+ * them; owners and cleaners can't add or edit properties (the API enforces it).
  */
 export const Route = createFileRoute('/_app/properties/')({
   component: MyProperties,
 });
 
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))] gap-5';
+/** Up to this many properties, each gets a feature card rather than a grid card. */
+const FEATURE_MAX = 2;
 
 function MyProperties() {
   const api = useApi();
@@ -32,6 +38,7 @@ function MyProperties() {
   const loading = !me.data || !properties.data;
   const { owned, cleaned } = loading ? { owned: [], cleaned: [] } : myProperties(me.data, properties.data.items);
   const total = owned.length + cleaned.length;
+  const feature = total <= FEATURE_MAX;
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<MyProperty['property'] | null>(null);
@@ -69,13 +76,28 @@ function MyProperties() {
         ) : (
           <EmptyState title="No properties yet">A TruHost admin will add you to a property.</EmptyState>
         )
-      ) : owned.length > 0 && cleaned.length > 0 ? (
-        <div className="flex flex-col gap-10">
-          <Group title="Properties you own" items={owned} onEdit={canAdd ? setEditing : undefined} />
-          <Group title="Properties you clean" items={cleaned} onEdit={canAdd ? setEditing : undefined} />
-        </div>
       ) : (
-        <Cards items={owned.length ? owned : cleaned} onEdit={canAdd ? setEditing : undefined} />
+        <div className="flex flex-col gap-5">
+          {owned.length > 0 && cleaned.length > 0 ? (
+            <div className="flex flex-col gap-10">
+              <Group
+                title="Properties you own"
+                items={owned}
+                feature={feature}
+                onEdit={canAdd ? setEditing : undefined}
+              />
+              <Group
+                title="Properties you clean"
+                items={cleaned}
+                feature={feature}
+                onEdit={canAdd ? setEditing : undefined}
+              />
+            </div>
+          ) : (
+            <Cards items={owned.length ? owned : cleaned} feature={feature} onEdit={canAdd ? setEditing : undefined} />
+          )}
+          {canAdd && feature && <AddPropertyTile onClick={() => setAdding(true)} />}
+        </div>
       )}
       {canAdd && (
         <PropertyDialog
@@ -100,21 +122,24 @@ function describe(owned: number, cleaned: number): string {
 
 type OnEdit = ((property: MyProperty['property']) => void) | undefined;
 
-function Group({ title, items, onEdit }: { title: string; items: MyProperty[]; onEdit: OnEdit }): ReactNode {
+type CardsProps = { items: MyProperty[]; feature: boolean; onEdit: OnEdit };
+
+function Group({ title, ...cards }: CardsProps & { title: string }): ReactNode {
   return (
     <section aria-label={title} className="flex flex-col gap-4">
       <h2 className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">{title}</h2>
-      <Cards items={items} onEdit={onEdit} />
+      <Cards {...cards} />
     </section>
   );
 }
 
-function Cards({ items, onEdit }: { items: MyProperty[]; onEdit: OnEdit }) {
+function Cards({ items, feature, onEdit }: CardsProps) {
+  const Card = feature ? MyPropertyFeature : MyPropertyCard;
   return (
-    <ul className={GRID}>
+    <ul className={feature ? 'flex flex-col gap-5' : GRID}>
       {items.map((item) => (
         <li key={item.property.id}>
-          <MyPropertyCard item={item} onEdit={onEdit && (() => onEdit(item.property))} />
+          <Card item={item} onEdit={onEdit && (() => onEdit(item.property))} />
         </li>
       ))}
     </ul>

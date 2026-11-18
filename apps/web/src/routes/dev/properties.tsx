@@ -1,14 +1,20 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import type { Property } from '@truhost/shared';
+import { AddPropertyTile } from '../../components/properties/add-property-tile';
 import { MyPropertyCard, MyPropertyCardSkeleton } from '../../components/properties/my-property-card';
+import { MyPropertyFeature } from '../../components/properties/my-property-feature';
 import { PageHeader } from '../../components/ui/page-header';
 import { myProperties } from '../../lib/my-properties';
 
-/** Dev only: the owner/cleaner "My properties" cards with sample data and drawn stand-in photos. */
+/**
+ * Dev only: the owner/cleaner "My properties" cards with sample data and drawn stand-in photos: the grid (three or
+ * more properties) and, `?one=1`, the feature card and Add banner someone with one property sees.
+ */
 export const Route = createFileRoute('/dev/properties')({
   beforeLoad: () => {
     if (!import.meta.env.DEV) throw notFound();
   },
+  validateSearch: (search: Record<string, unknown>) => ({ one: Boolean(search.one) }),
   component: PropertiesPreview,
 });
 
@@ -104,10 +110,29 @@ const ME = {
   ],
 };
 
+const ONE_DESCRIPTION =
+  'A cedar cabin above the village, with a wood stove, a hot tub on the deck and the lifts ten minutes away.';
+
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))] gap-5';
 
 function PropertiesPreview() {
   const { owned, cleaned } = myProperties(ME, PROPERTIES);
+  if (Route.useSearch().one) {
+    const item = {
+      property: { ...PROPERTIES[2]!, description: ONE_DESCRIPTION, airbnbUrl: 'https://example.test' },
+      role: 'OWNER' as const,
+      index: 0,
+    };
+    return (
+      <div className="@container/content min-h-dvh bg-ground px-4 py-8 @2xl/content:px-8">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
+          <PageHeader title="My properties" description="You own 1 property with TruHost." />
+          <MyPropertyFeature item={item} onEdit={() => undefined} />
+          <AddPropertyTile onClick={() => undefined} />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="@container/content min-h-dvh bg-ground px-4 py-8 @2xl/content:px-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
