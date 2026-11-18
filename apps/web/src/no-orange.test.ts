@@ -33,12 +33,6 @@ function hsl(hex: string): [number, number, number] {
   return [(h * 60 + 360) % 360, s, l];
 }
 
-/**
- * Supplied artwork kept exactly as delivered, warm tones included: the condo scene's window glows (chosen over
- * nudging them to gold, 2026-11-18).
- */
-const ARTWORK_EXCEPTIONS = new Set(['assets/scenes/condo.svg']);
-
 const isOrange = (hex: string) => {
   const [h, s, l] = hsl(hex);
   return h >= 12 && h <= 40 && s >= 0.55 && l >= 0.3 && l <= 0.7;
@@ -62,11 +56,9 @@ describe('no orange in the app', () => {
             if (isOrange(hex!)) found.push(`${where} #${hex}`);
           }
           // Colours written as rgb(r, g, b), as artwork files often are.
-          if (!ARTWORK_EXCEPTIONS.has(relative(SRC, path))) {
-            for (const [, r, g, b] of line.matchAll(/rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/g)) {
-              const hex = [r, g, b].map((v) => Number(v).toString(16).padStart(2, '0')).join('');
-              if (isOrange(hex)) found.push(`${where} rgb(${r}, ${g}, ${b})`);
-            }
+          for (const [, r, g, b] of line.matchAll(/rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/g)) {
+            const hex = [r, g, b].map((v) => Number(v).toString(16).padStart(2, '0')).join('');
+            if (isOrange(hex)) found.push(`${where} rgb(${r}, ${g}, ${b})`);
           }
           if (
             /(--color-orange|\b(?:bg|text|border|ring|fill|stroke|from|via|to|outline|decoration|shadow|accent)-orange-)/.test(
