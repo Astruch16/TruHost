@@ -1,5 +1,6 @@
 import { cx } from '../../lib/cx';
 import { formatCentsShort } from '../../lib/money';
+import { monthInitial } from '../../lib/trends';
 
 /**
  * The small charts under each KPI (docs/design/KpiCards.dc.html, Option A). Decorative: the figures beside them
@@ -67,35 +68,53 @@ export function NightlyRange({ lowCents, highCents }: { lowCents: number | null;
 }
 
 /**
- * Year to date: one small bar per month, as tall as its share of the year's highest month. Months still to come are
- * paler (booked so far); a month with nothing shows a hairline so the strip keeps its rhythm.
+ * The year's months as small bars, each lettered underneath (J F M…). Hovering a bar shows its month and value;
+ * months still to come are paler. The bars are a glance: the card opens the full trend for numbers and a table.
  */
 export function MonthBars({
+  months,
   values,
   upcoming,
   color,
+  describe,
 }: {
+  months: string[];
   values: (number | null)[];
   upcoming: boolean[];
   color: string;
+  /** The month and its figure, for the tooltip: "Aug 2026 · $6,125.00". */
+  describe: (i: number) => string;
 }) {
   const max = Math.max(0, ...values.map((v) => v ?? 0));
   return (
-    <span aria-hidden className="flex h-6 items-end gap-[2px]">
-      {values.map((v, i) => {
-        const share = max > 0 && v ? Math.max(0, v) / max : 0;
-        return (
-          <span
-            key={i}
-            className="min-w-px flex-1 rounded-t-[2px]"
-            style={{
-              height: share > 0 ? `max(${share * 100}%, 3px)` : '2px',
-              background: share > 0 ? color : 'var(--color-line)',
-              opacity: upcoming[i] ? 0.45 : 1,
-            }}
-          />
-        );
-      })}
+    <span aria-hidden className="flex flex-col gap-1">
+      <span className="flex h-7 items-end gap-[2px]">
+        {values.map((v, i) => {
+          const share = max > 0 && v ? Math.max(0, v) / max : 0;
+          return (
+            <span key={i} className="group/bar relative flex h-full min-w-px flex-1 items-end">
+              <span
+                className="w-full rounded-t-[2px] transition-[filter] group-hover/bar:brightness-110"
+                style={{
+                  height: share > 0 ? `max(${share * 100}%, 3px)` : '2px',
+                  background: share > 0 ? color : 'var(--color-line)',
+                  opacity: upcoming[i] ? 0.45 : 1,
+                }}
+              />
+              <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 hidden -translate-x-1/2 rounded-control bg-ink px-2 py-1 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg group-hover/bar:block">
+                {describe(i)}
+              </span>
+            </span>
+          );
+        })}
+      </span>
+      <span className="flex gap-[2px]">
+        {months.map((m) => (
+          <span key={m} className="min-w-px flex-1 text-center text-[10px] leading-none font-medium text-muted">
+            {monthInitial(m)}
+          </span>
+        ))}
+      </span>
     </span>
   );
 }
