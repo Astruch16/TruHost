@@ -10,8 +10,8 @@ import { Grain } from './scenes/parts';
 const SCENES = [MountainScene, CoastScene, CityScene, LakeScene, ForestScene] as const;
 
 /**
- * A property's stand-in when it has no photo: an illustrated scene, each at its own time of day (mountains at golden
- * hour, the coast at sunset, the city at dusk (a lit condo tower, supplied artwork), lake country in late-afternoon warmth, the snowy woods at blue hour),
+ * A property's stand-in when it has no photo: an illustrated scene, each at its own time of day (a log cabin in the
+ * mountains (supplied artwork), the coast at sunset, the city at dusk (a lit condo tower, supplied artwork), lake country in late-afternoon warmth, the snowy woods at blue hour),
  * with a fine paper grain over it. `index` (the property's place in the list) picks the scene, so up to five
  * properties each get their own. Decorative; it fills its box, cropping the sides rather than stretching, and keeps
  * the home near the middle and the ground in view.
