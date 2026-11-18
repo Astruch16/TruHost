@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { useIllustrationIds } from '../../lib/illustration-ids';
 
 /** Only the gradients an illustration uses are rendered. */
@@ -39,7 +38,7 @@ export function IllustrationDefs({
   );
 }
 
-/** Common props: 88px by default (as on the board), drawn on an 80×80 grid. */
+/** Props of the empty-state illustrations (96px by default, drawn on a 96×96 grid). */
 export interface IllustrationProps {
   size?: number;
   className?: string;
@@ -49,13 +48,4 @@ export interface IllustrationProps {
 export interface IconProps {
   size?: number;
   className?: string;
-}
-
-/** The 40×40 frame of a small icon: hidden from assistive tech, since the row's text says what it is. */
-export function IconFrame({ size = 40, className, children }: IconProps & { children: ReactNode }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden className={className}>
-      {children}
-    </svg>
-  );
 }

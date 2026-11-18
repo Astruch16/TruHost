@@ -23,44 +23,34 @@ import { ROOM_TYPES } from '../../lib/rooms';
 import { RevenueIllustration } from './revenue';
 
 const ALL = [
-  [RevenueIllustration, 'A pie chart with a gold coin', ['ei-pop', 'ei-float']],
-  [BookingsIllustration, 'A calendar page with one stay marked', ['ei-grow']],
-  [ReceiptsIllustration, 'A paper receipt with a gold seal', ['ei-stamp']],
-  [CareIllustration, 'Two photos of a tidy room with a gold sparkle', ['ei-stamp']],
-  [ExpensesIllustration, 'A green wallet with a card tucked inside', ['ei-peek']],
-  [ComingUpIllustration, 'A log cabin with a lit lantern by the door', ['ei-glow']],
-  [AllClearIllustration, 'A green shield with a check mark', ['ei-float', 'ei-twinkle']],
+  [RevenueIllustration, 'A pie chart with a gold coin'],
+  [BookingsIllustration, 'A calendar page'],
+  [ReceiptsIllustration, 'A paper receipt with a gold seal'],
+  [CareIllustration, 'Two instant photos of a tidy room'],
+  [ExpensesIllustration, 'A wallet with a card tucked inside'],
+  [ComingUpIllustration, 'A cabin waiting for its next guests'],
+  [AllClearIllustration, 'A green shield with a check mark'],
 ] as const;
 
+const srcs = (container: HTMLElement) => [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+
 describe('empty state illustrations', () => {
-  it.each(ALL)('%o: board label, size and animations', (Illustration, label, classes) => {
-    const { container } = render(<Illustration />);
-    const svg = screen.getByRole('img', { name: label });
-    expect(svg).toHaveAttribute('width', '88');
-    expect(svg).toHaveAttribute('viewBox', '0 0 80 80');
-    for (const c of classes) expect(container.querySelector(`.${c}`)).not.toBeNull();
+  it.each(ALL)('%o: its own picture, named, 96px by default', (Illustration, label) => {
+    render(<Illustration />);
+    const img = screen.getByRole('img', { name: label });
+    expect(img).toHaveAttribute('width', '96');
+    expect(img.getAttribute('src')).toBeTruthy();
   });
 
-  it('gives each instance its own gradient ids, and every fill points at its own', () => {
+  it('draws a different picture for each', () => {
     const { container } = render(
       <>
         {ALL.map(([Illustration], i) => (
-          <Illustration key={`a${i}`} />
-        ))}
-        {ALL.map(([Illustration], i) => (
-          <Illustration key={`b${i}`} />
+          <Illustration key={i} />
         ))}
       </>,
     );
-    const ids = [...container.querySelectorAll('[id]')].map((el) => el.id);
-    expect(ids.length).toBeGreaterThan(0);
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const svg of container.querySelectorAll('svg')) {
-      const own = new Set([...svg.querySelectorAll('[id]')].map((el) => el.id));
-      for (const el of svg.querySelectorAll('[fill^="url("]')) {
-        expect(own).toContain(/url\(#(.+)\)/.exec(el.getAttribute('fill')!)![1]);
-      }
-    }
+    expect(new Set(srcs(container)).size).toBe(ALL.length);
   });
 });
 
@@ -90,16 +80,17 @@ describe('small icons', () => {
         <ExpenseCategoryIcon category={null} />
       </>,
     );
-    const svgs = [...container.querySelectorAll('svg')];
-    expect(svgs).toHaveLength(CATEGORIES.length + 1);
-    for (const svg of svgs) {
-      expect(svg).toHaveAttribute('aria-hidden', 'true');
-      expect(svg).toHaveAttribute('viewBox', '0 0 40 40');
+    const imgs = [...container.querySelectorAll('img')];
+    expect(imgs).toHaveLength(CATEGORIES.length + 1);
+    for (const img of imgs) {
+      expect(img).toHaveAttribute('aria-hidden', 'true');
+      expect(img).toHaveAttribute('alt', '');
+      expect(img).toHaveAttribute('width', '40');
     }
-    // Shapes without the per-instance gradient ids: every category but OTHER looks different.
-    const shape = (svg: SVGSVGElement) => svg.innerHTML.replace(/ei[^"#)]*-/g, '');
-    expect(new Set(svgs.slice(0, -2).map(shape)).size).toBe(CATEGORIES.length - 1);
-    expect(shape(svgs.at(-1)!)).toBe(shape(svgs.at(-2)!));
+    // Every category but OTHER looks different; OTHER and no category both get the receipt.
+    const all = srcs(container);
+    expect(new Set(all.slice(0, -2)).size).toBe(CATEGORIES.length - 1);
+    expect(all.at(-1)).toBe(all.at(-2));
   });
 
   it('draws a distinct, decorative icon for each step of a clean’s checklist', () => {
@@ -110,11 +101,8 @@ describe('small icons', () => {
         ))}
       </>,
     );
-    const svgs = [...container.querySelectorAll('svg')];
-    expect(svgs).toHaveLength(STEPS.length);
-    for (const svg of svgs) expect(svg).toHaveAttribute('aria-hidden', 'true');
-    const shape = (svg: SVGSVGElement) => svg.innerHTML.replace(/ei[^"#)]*-/g, '');
-    expect(new Set(svgs.map(shape)).size).toBe(STEPS.length);
+    for (const img of container.querySelectorAll('img')) expect(img).toHaveAttribute('aria-hidden', 'true');
+    expect(new Set(srcs(container)).size).toBe(STEPS.length);
   });
 
   it('draws a distinct, decorative icon for each type of room', () => {
@@ -125,11 +113,23 @@ describe('small icons', () => {
         ))}
       </>,
     );
-    const svgs = [...container.querySelectorAll('svg')];
-    expect(svgs).toHaveLength(ROOM_TYPES.length);
-    for (const svg of svgs) expect(svg).toHaveAttribute('aria-hidden', 'true');
-    const shape = (svg: SVGSVGElement) => svg.innerHTML.replace(/ei[^"#)]*-/g, '');
-    expect(new Set(svgs.map(shape)).size).toBe(ROOM_TYPES.length);
+    for (const img of container.querySelectorAll('img')) expect(img).toHaveAttribute('aria-hidden', 'true');
+    expect(new Set(srcs(container)).size).toBe(ROOM_TYPES.length);
+  });
+
+  it('draws the list icons, each its own picture', () => {
+    const { container } = render(
+      <>
+        <StatementDocIcon />
+        <InviteIcon />
+        <CompassIcon />
+        <CleanDoneIcon />
+        <WeekIcon />
+        <DoorOpenIcon />
+        <ReadyByIcon />
+      </>,
+    );
+    expect(new Set(srcs(container)).size).toBe(7);
   });
 
   it('draws the address map as decoration that fills its box without stretching', () => {
@@ -139,39 +139,14 @@ describe('small icons', () => {
     expect(svg).toHaveAttribute('preserveAspectRatio', 'xMidYMid slice');
   });
 
-  it('gives each instance its own gradient ids', () => {
+  it('gives each address map its own gradient ids', () => {
     const { container } = render(
       <>
-        {[0, 1].map((i) => (
-          <span key={i}>
-            {CATEGORIES.map((c) => (
-              <ExpenseCategoryIcon key={c} category={c} />
-            ))}
-            <StatementDocIcon />
-            <InviteIcon />
-            <CompassIcon />
-            <CleanDoneIcon />
-            <WeekIcon />
-            <DoorOpenIcon />
-            <ReadyByIcon />
-            <AddressMap />
-            {STEPS.map((step) => (
-              <CleanStepIcon key={step} step={step} />
-            ))}
-            {ROOM_TYPES.map((type) => (
-              <RoomIcon key={type} type={type} />
-            ))}
-          </span>
-        ))}
+        <AddressMap />
+        <AddressMap />
       </>,
     );
     const ids = [...container.querySelectorAll('[id]')].map((el) => el.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const svg of container.querySelectorAll('svg')) {
-      const own = new Set([...svg.querySelectorAll('[id]')].map((el) => el.id));
-      for (const el of svg.querySelectorAll('[fill^="url("]')) {
-        expect(own).toContain(/url\(#(.+)\)/.exec(el.getAttribute('fill')!)![1]);
-      }
-    }
   });
 });

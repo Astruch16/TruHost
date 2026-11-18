@@ -15,7 +15,7 @@ function files(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) return files(path);
-    return /\.(tsx?|css)$/.test(name) && !/\.test\.tsx?$/.test(name) && !name.endsWith('.gen.ts') ? [path] : [];
+    return /\.(tsx?|css|svg)$/.test(name) && !/\.test\.tsx?$/.test(name) && !name.endsWith('.gen.ts') ? [path] : [];
   });
 }
 
