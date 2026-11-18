@@ -7,6 +7,7 @@ import type { Dashboard, DashboardYear } from '../../lib/api-types';
 import type { CalendarStay } from '../../lib/calendar';
 import { DEV_DAMAGE } from '../../lib/dev-damage-fixtures';
 import { navItems } from '../../lib/nav';
+import { queries } from '../../lib/queries';
 
 /**
  * Dev-only preview of the dashboard layout with FIXTURE data (not served in production builds). The real
@@ -413,55 +414,101 @@ const FIXTURE_SUPPLIES: RestockItem[] = [
 ];
 
 /**
- * Made-up months for the year-to-date views (January through October 2026, October still under way). The totals are
- * the months added up as the API does: sums, with occupancy, avg. nightly and fee share from their parts.
+ * Made-up months for the year-to-date views (January through October 2026, October still under way), and for
+ * stepping back through the trend: 2025 in full, and 2024 from its first stays in June. The totals are the months
+ * added up as the API does: sums, with occupancy, avg. nightly and fee share from their parts.
  */
-const FIXTURE_YEAR: DashboardYear = (() => {
-  // [gross, fee, owner expenses, nights booked, available, complete nights, stays, waiting on payout]
-  const raw: [number, number, number, number, number, number, number, number][] = [
-    [298_000, 65_560, 8_200, 34, 93, 34, 7, 0],
-    [356_500, 78_430, 4_100, 41, 84, 41, 8, 0],
-    [402_000, 88_440, 12_350, 46, 93, 46, 9, 0],
-    [318_000, 69_960, 6_000, 37, 90, 37, 7, 0],
-    [455_000, 100_100, 9_900, 52, 93, 52, 10, 0],
-    [548_000, 120_560, 15_200, 61, 90, 61, 12, 0],
-    [612_500, 134_750, 7_400, 66, 93, 66, 13, 0],
-    [588_000, 129_360, 11_050, 63, 93, 63, 12, 0],
-    [431_000, 94_820, 5_600, 48, 90, 48, 10, 0],
-    [412_340, 90_715, 6_418, 19, 55, 17, 6, 1],
-  ];
-  const half = (n: number, d: number) => Math.floor((2 * n + d) / (2 * d));
-  const span = (rows: typeof raw) => {
-    const sum = (i: number) => rows.reduce((a, r) => a + r[i]!, 0);
-    const gross = sum(0);
-    return {
-      grossCents: gross,
-      managementFeeCents: sum(1),
-      ownerExpensesCents: sum(2),
-      netToOwnersCents: gross - sum(1) - sum(2),
-      cleaningFeesCents: sum(6) * 8_500,
-      stays: sum(6),
-      incompleteBookings: sum(7),
-      nightsBooked: sum(3),
-      availableNights: sum(4),
-      occupancyBps: half(sum(3) * 10_000, sum(4)),
-      avgNightlyEarningsCents: sum(5) > 0 ? half(gross, sum(5)) : null,
-      completeNights: sum(5),
-      feeShareBps: gross > 0 ? half(sum(1) * 10_000, gross) : null,
-    };
-  };
+// [gross, fee, owner expenses, nights booked, available, complete nights, stays, waiting on payout]
+type RawMonth = [number, number, number, number, number, number, number, number];
+const RAW_2026: RawMonth[] = [
+  [298_000, 65_560, 8_200, 34, 93, 34, 7, 0],
+  [356_500, 78_430, 4_100, 41, 84, 41, 8, 0],
+  [402_000, 88_440, 12_350, 46, 93, 46, 9, 0],
+  [318_000, 69_960, 6_000, 37, 90, 37, 7, 0],
+  [455_000, 100_100, 9_900, 52, 93, 52, 10, 0],
+  [548_000, 120_560, 15_200, 61, 90, 61, 12, 0],
+  [612_500, 134_750, 7_400, 66, 93, 66, 13, 0],
+  [588_000, 129_360, 11_050, 63, 93, 63, 12, 0],
+  [431_000, 94_820, 5_600, 48, 90, 48, 10, 0],
+  [412_340, 90_715, 6_418, 19, 55, 17, 6, 1],
+];
+
+/** 2026 runs on past October with what's booked so far (nothing complete yet in those months). */
+const FULL_2026: RawMonth[] = [
+  ...RAW_2026,
+  [365_000, 80_300, 0, 40, 90, 0, 8, 0],
+  [520_000, 114_400, 0, 55, 93, 0, 10, 0],
+];
+const EMPTY_MONTH: RawMonth = [0, 0, 0, 0, 0, 0, 0, 0];
+
+/** An earlier year at a fraction of 2026's finished months, keeping nights within what was available. */
+const scaled = (by: number): RawMonth[] =>
+  [...RAW_2026.slice(0, 9), RAW_2026[8]!, RAW_2026[3]!, RAW_2026[6]!].map(([g, f, e, n, a, , st]) => {
+    const nights = Math.min(a, Math.round(n * by));
+    return [Math.round(g * by), Math.round(f * by), e, nights, a, nights, Math.max(1, Math.round(st * by)), 0];
+  });
+
+const RAW_BY_YEAR: Record<number, RawMonth[]> = {
+  2026: FULL_2026,
+  2025: scaled(0.82),
+  2024: scaled(0.6).map((r, i) => (i < 5 ? EMPTY_MONTH : r)),
+};
+
+const half = (n: number, d: number) => Math.floor((2 * n + d) / (2 * d));
+const span = (rows: RawMonth[]) => {
+  const sum = (i: number) => rows.reduce((a, r) => a + r[i]!, 0);
+  const gross = sum(0);
   return {
-    year: 2026,
-    through: '2026-10',
-    today: '2026-10-06',
-    months: raw.map((r, i) => ({
-      month: `2026-${String(i + 1).padStart(2, '0')}`,
-      period: i === 9 ? ('MONTH_TO_DATE' as const) : ('COMPLETE' as const),
-      ...span([r]),
-    })),
+    grossCents: gross,
+    managementFeeCents: sum(1),
+    ownerExpensesCents: sum(2),
+    netToOwnersCents: gross - sum(1) - sum(2),
+    cleaningFeesCents: sum(6) * 8_500,
+    stays: sum(6),
+    incompleteBookings: sum(7),
+    nightsBooked: sum(3),
+    availableNights: sum(4),
+    occupancyBps: sum(4) > 0 ? half(sum(3) * 10_000, sum(4)) : null,
+    avgNightlyEarningsCents: sum(5) > 0 ? half(gross, sum(5)) : null,
+    completeNights: sum(5),
+    feeShareBps: gross > 0 ? half(sum(1) * 10_000, gross) : null,
+  };
+};
+
+/** January through `through` of a fixture year, judged against the preview's today (6 October 2026). */
+function fixtureYear(year: number, through: string): DashboardYear {
+  const today = '2026-10-06';
+  const raw = (RAW_BY_YEAR[year] ?? Array.from({ length: 12 }, () => EMPTY_MONTH)).slice(
+    0,
+    Number(through.slice(5, 7)),
+  );
+  return {
+    year,
+    through,
+    today,
+    months: raw.map((r, i) => {
+      const month = `${year}-${String(i + 1).padStart(2, '0')}`;
+      const now = today.slice(0, 7);
+      const period: DashboardYear['months'][number]['period'] =
+        month < now ? 'COMPLETE' : month === now ? 'MONTH_TO_DATE' : 'UPCOMING';
+      return { month, period, ...span([r]) };
+    }),
     totals: span(raw),
   };
-})();
+}
+
+/** The year query, answered from the fixtures by a stand-in client. */
+const previewYearQuery = (through: string) =>
+  queries.dashboardYear(
+    {
+      GET: async () => {
+        await new Promise((r) => setTimeout(r, 250));
+        return { data: fixtureYear(Number(through.slice(0, 4)), through), response: new Response() };
+      },
+    } as never,
+    through,
+    null,
+  );
 
 function Preview() {
   const [kpiView, setKpiView] = useState<KpiView>('month');
@@ -539,7 +586,8 @@ function Preview() {
         onAddProperty={() => undefined}
         kpiView={kpiView}
         onKpiViewChange={setKpiView}
-        year={state === 'error' || state === 'empty' ? undefined : { ...FIXTURE_YEAR, through: month }}
+        year={state === 'error' || state === 'empty' ? undefined : fixtureYear(Number(month.slice(0, 4)), month)}
+        yearQuery={previewYearQuery}
       />
     </AppShell>
   );

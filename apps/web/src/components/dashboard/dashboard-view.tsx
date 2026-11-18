@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, CalendarPlus, ReceiptText } from 'lucide-react';
 import type { DamageReport, Property, RestockItem } from '@truhost/shared';
@@ -22,9 +23,10 @@ import { PropertyDetails } from '../property-details';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { WeekTimeline } from './week-timeline';
+import { TrendDialog } from './trend-dialog';
 import { TrendsChart } from './trends-chart';
 import { YearKpis } from './year-kpis';
-import { monthShort as shortMonthName } from '../../lib/trends';
+import { monthShort as shortMonthName, type TrendMetric, type YearQuery } from '../../lib/trends';
 import { DamagePanel } from './damage-panel';
 import { NeedsAttention } from './needs-attention';
 import { SuppliesPanel } from './supplies-panel';
@@ -80,6 +82,7 @@ export function DashboardView({
   kpiView = 'month',
   onKpiViewChange,
   year,
+  yearQuery,
   yearError,
   onRetryYear,
   retryingYear = false,
@@ -122,6 +125,8 @@ export function DashboardView({
   onKpiViewChange?: (view: KpiView) => void;
   /** January through `month` (GET /v1/dashboard/year); undefined while loading or not asked for. */
   year?: DashboardYear;
+  /** Loads another year, for stepping back through the trend. */
+  yearQuery: YearQuery;
   yearError?: unknown;
   onRetryYear?: () => void;
   retryingYear?: boolean;
@@ -132,6 +137,8 @@ export function DashboardView({
   // After a failed load, sections that depend on the data show nothing (the KPI area offers a retry), never a
   // skeleton that suggests it is still loading.
   const failed = Boolean(dashboardError) && !d;
+  // The figure whose trend is open, from a Year to date card.
+  const [trend, setTrend] = useState<TrendMetric | null>(null);
   const tintIndex = (id: string, fallback: number) => {
     const i = propertyList.findIndex((p) => p.id === id);
     return i === -1 ? fallback : i;
@@ -209,10 +216,23 @@ export function DashboardView({
                 )
               ) : (
                 <div {...dim(year.through !== month)}>
-                  {kpiView === 'year' ? <YearKpis year={year} grid={KPI_GRID} /> : <TrendsChart year={year} />}
+                  {kpiView === 'year' ? (
+                    <YearKpis year={year} grid={KPI_GRID} onOpenTrend={setTrend} />
+                  ) : (
+                    <TrendsChart year={year} yearQuery={yearQuery} />
+                  )}
                 </div>
               )}
             </div>
+          )}
+          {year && (
+            <TrendDialog
+              metric={trend}
+              year={year}
+              yearQuery={yearQuery}
+              scopeName={scope.name}
+              onClose={() => setTrend(null)}
+            />
           )}
         </Card>
 

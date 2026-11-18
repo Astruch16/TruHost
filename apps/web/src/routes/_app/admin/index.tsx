@@ -75,6 +75,7 @@ function Dashboard() {
         kpiView={kpiView}
         onKpiViewChange={setKpiView}
         year={year.data}
+        yearQuery={(through) => queries.dashboardYear(api, through, propertyId)}
         yearError={year.error}
         onRetryYear={() => void year.refetch()}
         retryingYear={year.isFetching}
