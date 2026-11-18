@@ -6,11 +6,14 @@ import { Skeleton } from './skeleton';
 /**
  * Scrolls horizontally on narrow screens instead of squashing columns. The scroller is `relative` so absolutely
  * positioned content (e.g. a screen-reader-only "Actions" header) stays inside it rather than widening the page.
+ * Every cell has side padding, and the table reaches that far into its container's padding (`-mx-3`), so text lines
+ * up with the content around it while a hovered row's highlight has room either side and rounded ends. Borders are
+ * separate (not collapsed) because cells can't be rounded otherwise.
  */
 export function Table({ className, children, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="scroll-area relative -mx-1 overflow-x-auto px-1">
-      <table {...props} className={cx('w-full border-collapse text-left text-sm', className)}>
+    <div className="scroll-area relative -mx-3 overflow-x-auto">
+      <table {...props} className={cx('w-full border-separate border-spacing-0 text-left text-sm', className)}>
         {children}
       </table>
     </div>
@@ -18,11 +21,12 @@ export function Table({ className, children, ...props }: HTMLAttributes<HTMLTabl
 }
 
 export function THead({ children }: { children: ReactNode }) {
-  return <thead className="border-b border-line text-xs font-semibold text-muted">{children}</thead>;
+  return <thead className="text-xs font-semibold text-muted">{children}</thead>;
 }
 
 export function TBody({ children }: { children: ReactNode }) {
-  return <tbody className="divide-y divide-line-soft">{children}</tbody>;
+  // Hairlines between rows, drawn on the cells (rows can't have borders when borders are separate).
+  return <tbody className="[&>tr+tr>td]:border-t [&>tr+tr>td]:border-line-soft">{children}</tbody>;
 }
 
 export function Tr({
@@ -33,7 +37,12 @@ export function Tr({
   return (
     <tr
       {...props}
-      className={cx(interactive && 'transition-colors hover:bg-ground focus-within:bg-ground', className)}
+      className={cx(
+        // The highlight is painted on the cells so the row's ends can be rounded.
+        interactive &&
+          '*:transition-colors *:first:rounded-l-xl *:last:rounded-r-xl hover:*:bg-ground focus-within:*:bg-ground',
+        className,
+      )}
     />
   );
 }
@@ -44,7 +53,7 @@ export function Th({ className, align, ...props }: ThHTMLAttributes<HTMLTableCel
       scope="col"
       {...props}
       className={cx(
-        'px-3 py-2.5 font-semibold whitespace-nowrap first:pl-0 last:pr-0',
+        'border-b border-line px-3 py-2.5 font-semibold whitespace-nowrap',
         align === 'right' && 'text-right',
         className,
       )}
@@ -54,14 +63,7 @@ export function Th({ className, align, ...props }: ThHTMLAttributes<HTMLTableCel
 
 export function Td({ className, align, ...props }: TdHTMLAttributes<HTMLTableCellElement> & { align?: 'right' }) {
   return (
-    <td
-      {...props}
-      className={cx(
-        'px-3 py-3 align-middle text-ink first:pl-0 last:pr-0',
-        align === 'right' && 'text-right',
-        className,
-      )}
-    />
+    <td {...props} className={cx('px-3 py-3 align-middle text-ink', align === 'right' && 'text-right', className)} />
   );
 }
 
@@ -86,7 +88,7 @@ export function TableState({
       <>
         {[0, 1, 2].map((i) => (
           <tr key={i} aria-hidden>
-            <td colSpan={columns} className="py-3">
+            <td colSpan={columns} className="px-3 py-3">
               <Skeleton className="h-5" />
             </td>
           </tr>
@@ -100,7 +102,7 @@ export function TableState({
   if (error) {
     return (
       <tr>
-        <td colSpan={columns} className="py-3">
+        <td colSpan={columns} className="px-3 py-3">
           <ErrorAlert error={error} />
         </td>
       </tr>
@@ -109,7 +111,7 @@ export function TableState({
   if (empty) {
     return (
       <tr>
-        <td colSpan={columns} className="py-8 text-center text-muted">
+        <td colSpan={columns} className="px-3 py-8 text-center text-muted">
           {emptyMessage}
         </td>
       </tr>
