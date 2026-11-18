@@ -16,6 +16,7 @@ import { MonthStepper } from '../ui/month-stepper';
 import { cx } from '../../lib/cx';
 import { updatingStyles } from '../../lib/styles';
 import { Skeleton } from '../ui/skeleton';
+import { CalendarLink } from './calendar-link';
 import { ComingUp } from './coming-up';
 import { RevenueIllustration } from '../illustrations/revenue';
 import { PropertyCard } from '../property-card';
@@ -297,9 +298,7 @@ export function DashboardView({
               title="Next 7 days"
               description={`${dayLabel(weekStart)} – ${dayLabel(addDays(weekStart, 6))}`}
               actions={
-                <Link to="/admin/calendar" className="text-sm font-semibold text-primary link-underline">
-                  Full calendar
-                </Link>
+                <CalendarLink className="text-sm font-semibold text-primary link-underline">Full calendar</CalendarLink>
               }
             >
               {staysError && !stays ? (
