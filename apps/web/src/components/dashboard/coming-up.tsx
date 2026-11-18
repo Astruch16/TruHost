@@ -1,12 +1,14 @@
 import { useState, type ReactNode } from 'react';
-import { Link } from '@tanstack/react-router';
 import { cx } from '../../lib/cx';
 import { afterStay, sentence } from '../../lib/calendar';
 import { dayLabel } from '../../lib/dashboard-format';
 import { byProperty, readUpcomingSort, saveUpcomingSort, type UpcomingSort } from '../../lib/upcoming';
 import { ComingUpIllustration } from '../illustrations/coming-up';
+import { AnimatedHeight } from '../ui/animated-height';
 import { Card } from '../ui/card';
 import { EmptyState } from '../ui/empty-state';
+import { PillTabs } from '../ui/pill-tabs';
+import { CalendarLink } from './calendar-link';
 
 export interface UpcomingItem {
   type: 'CHECK_IN' | 'CHECK_OUT';
@@ -17,6 +19,11 @@ export interface UpcomingItem {
   nights: number;
   guestName: string | null;
 }
+
+const SORTS = [
+  { key: 'date', label: 'Date' },
+  { key: 'property', label: 'Property' },
+] as const satisfies readonly { key: UpcomingSort; label: string }[];
 
 const EVENT = { CHECK_IN: 'Check-in', CHECK_OUT: 'Check-out and clean' } as const;
 // Green for arrivals, gold for check-outs and their cleans: they read apart at dot size.
@@ -50,16 +57,20 @@ export function ComingUp({
   showProperty: boolean;
 }) {
   const [sort, setSort] = useState<UpcomingSort>(readUpcomingSort);
+  // Counts the switches, so the list fades in when re-sorted (but not when the dashboard first loads).
+  const [switches, setSwitches] = useState(0);
   const choose = (next: UpcomingSort) => {
+    if (next === sort) return;
     setSort(next);
+    setSwitches((n) => n + 1);
     saveUpcomingSort(next);
   };
   const actions = (
     <div className="flex flex-wrap items-center gap-3">
-      {showProperty && items.length > 0 && <SortToggle value={sort} onChange={choose} />}
-      <Link to="/admin/calendar" className="text-sm font-semibold text-primary link-underline">
-        Full calendar
-      </Link>
+      {showProperty && items.length > 0 && (
+        <PillTabs label="Sort" variant="switch" options={SORTS} value={sort} onChange={choose} />
+      )}
+      <CalendarLink className="text-sm font-semibold text-primary link-underline">Full calendar</CalendarLink>
     </div>
   );
   return (
@@ -68,60 +79,69 @@ export function ComingUp({
         <EmptyState size="compact" illustration={<ComingUpIllustration />} title="Nothing in the next 14 days">
           Check-ins and check-outs will be listed here as they're booked.
         </EmptyState>
-      ) : !showProperty ? (
-        <ul className="flex flex-col divide-y divide-line-soft">
-          {items.map((e) => (
-            <Row key={`${e.bookingId}-${e.type}`} event={e} title={EVENT[e.type]} detail={sentence(stayLine(e))} />
-          ))}
-        </ul>
-      ) : sort === 'date' ? (
-        <ul aria-label="By date" className="flex flex-col divide-y divide-line-soft">
-          {items.map((e) => (
-            <Row
-              key={`${e.bookingId}-${e.type}`}
-              event={e}
-              title={e.propertyName}
-              detail={
-                <>
-                  <span className={cx('font-medium', EVENT_TEXT[e.type])}>{EVENT[e.type]}</span> · {stayLine(e)}
-                </>
-              }
-            />
-          ))}
-        </ul>
       ) : (
-        <div className="flex flex-col gap-3.5">
-          {byProperty(items).map((group, g) => (
-            <section
-              key={group.property}
-              aria-labelledby={`cu-${g}`}
-              className="border-t border-line-soft pt-3.5 first:border-t-0 first:pt-0"
-            >
-              <h3 id={`cu-${g}`} className="text-base font-semibold text-ink">
-                {group.property}
-              </h3>
-              <ul className="mt-1 flex flex-col">
-                {group.items.map((e) => (
+        // Re-sorting fades the new order in while the card's height glides to fit it.
+        <AnimatedHeight>
+          <div key={switches} className={switches > 0 ? 'animate-rise-in' : undefined}>
+            {!showProperty ? (
+              <ul className="flex flex-col divide-y divide-line-soft">
+                {items.map((e) => (
                   <Row
                     key={`${e.bookingId}-${e.type}`}
                     event={e}
                     title={EVENT[e.type]}
                     detail={sentence(stayLine(e))}
-                    compact
                   />
                 ))}
               </ul>
-            </section>
-          ))}
-        </div>
+            ) : sort === 'date' ? (
+              <ul aria-label="By date" className="flex flex-col divide-y divide-line-soft">
+                {items.map((e) => (
+                  <Row
+                    key={`${e.bookingId}-${e.type}`}
+                    event={e}
+                    title={e.propertyName}
+                    detail={
+                      <>
+                        <span className={cx('font-medium', EVENT_TEXT[e.type])}>{EVENT[e.type]}</span> · {stayLine(e)}
+                      </>
+                    }
+                  />
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-col gap-3.5">
+                {byProperty(items).map((group, g) => (
+                  <section
+                    key={group.property}
+                    aria-labelledby={`cu-${g}`}
+                    className="border-t border-line-soft pt-3.5 first:border-t-0 first:pt-0"
+                  >
+                    <h3 id={`cu-${g}`} className="text-base font-semibold text-ink">
+                      {group.property}
+                    </h3>
+                    <ul className="mt-1 flex flex-col">
+                      {group.items.map((e) => (
+                        <Row
+                          key={`${e.bookingId}-${e.type}`}
+                          event={e}
+                          title={EVENT[e.type]}
+                          detail={sentence(stayLine(e))}
+                          compact
+                        />
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </AnimatedHeight>
       )}
       {total > items.length && (
         <p className="mt-3 text-sm text-muted">
           +{total - items.length} more in the{' '}
-          <Link to="/admin/calendar" className="font-semibold text-primary link-underline">
-            full calendar
-          </Link>
-          .
+          <CalendarLink className="font-semibold text-primary link-underline">full calendar</CalendarLink>.
         </p>
       )}
     </Card>
@@ -149,32 +169,5 @@ function Row({
       </div>
       <span className="figure shrink-0 text-sm text-muted">{dayLabel(e.date)}</span>
     </li>
-  );
-}
-
-/** By date or by property: two small buttons, the chosen one pressed. */
-function SortToggle({ value, onChange }: { value: UpcomingSort; onChange: (sort: UpcomingSort) => void }) {
-  return (
-    <div role="group" aria-label="Sort" className="flex rounded-full bg-ground p-0.5 ring-1 ring-line-soft">
-      {(
-        [
-          ['date', 'Date'],
-          ['property', 'Property'],
-        ] as const
-      ).map(([key, label]) => (
-        <button
-          key={key}
-          type="button"
-          aria-pressed={value === key}
-          onClick={() => onChange(key)}
-          className={cx(
-            'rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
-            value === key ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
-          )}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
   );
 }

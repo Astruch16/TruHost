@@ -181,6 +181,26 @@
   }
 }
 
+/* Page-to-page cross-fade for links that ask for it (`viewTransition`, e.g. "Full calendar"): the old page fades out
+   as the new one fades in. Off under reduced motion, from the system or Settings. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+:root[data-motion='reduced']::view-transition-group(*),
+:root[data-motion='reduced']::view-transition-old(*),
+:root[data-motion='reduced']::view-transition-new(*) {
+  animation: none !important;
+}
+
 /* Radix popover/dialog enter animations (disabled by the reduced-motion rule above). */
 @keyframes th-fade-in {
   from {
