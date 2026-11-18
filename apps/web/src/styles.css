@@ -1,5 +1,5 @@
 @import '@fontsource-variable/hanken-grotesk';
-@import '@fontsource-variable/fraunces/opsz.css';
+@import '@fontsource-variable/source-serif-4/opsz.css';
 @import '@fontsource/caveat/500.css';
 @import 'tailwindcss';
 
@@ -11,7 +11,7 @@
   --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
   --font-hand: 'Caveat', 'Segoe Script', cursive;
   /* Headings: card, dialog, page and section titles (font-display, at weight 600). Body text stays in Hanken. */
-  --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-display: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
 
   /* Surfaces and text */
   --color-sidebar: #173f3a;
