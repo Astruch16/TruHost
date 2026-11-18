@@ -23,6 +23,7 @@ import { PropertyDetails } from '../property-details';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { WeekTimeline } from './week-timeline';
+import { AnimatedHeight } from '../ui/animated-height';
 import { PillTabs } from '../ui/pill-tabs';
 import { TrendDialog } from './trend-dialog';
 import { TrendsChart } from './trends-chart';
@@ -189,45 +190,48 @@ export function DashboardView({
                     : `Jan – ${shortMonthName(month)} ${month.slice(0, 4)}`}
                 </p>
               </div>
-              {kpiView === 'month' ? (
-                failed ? (
-                  <LoadError what="the dashboard" onRetry={onRetryDashboard} retrying={retryingDashboard} />
-                ) : !d ? (
-                  <div className={KPI_GRID}>
-                    {[0, 1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-36 rounded-inner" />
-                    ))}
-                  </div>
+              {/* The height glides between views (four cards, a chart, a table) instead of the page jumping. */}
+              <AnimatedHeight>
+                {kpiView === 'month' ? (
+                  failed ? (
+                    <LoadError what="the dashboard" onRetry={onRetryDashboard} retrying={retryingDashboard} />
+                  ) : !d ? (
+                    <div className={KPI_GRID}>
+                      {[0, 1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-36 rounded-inner" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div key="month" className="animate-rise-in">
+                      <div {...dim(dashboardUpdating)}>
+                        <Kpis d={d} />
+                      </div>
+                    </div>
+                  )
+                ) : yearError && !year ? (
+                  <LoadError what="the year" onRetry={() => onRetryYear?.()} retrying={retryingYear} />
+                ) : !year ? (
+                  kpiView === 'year' ? (
+                    <div className={KPI_GRID}>
+                      {[0, 1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-36 rounded-inner" />
+                      ))}
+                    </div>
+                  ) : (
+                    <Skeleton className="h-72 rounded-inner" />
+                  )
                 ) : (
-                  <div key="month" className="animate-rise-in">
-                    <div {...dim(dashboardUpdating)}>
-                      <Kpis d={d} />
+                  <div key={kpiView} className="animate-rise-in">
+                    <div {...dim(year.through !== month)}>
+                      {kpiView === 'year' ? (
+                        <YearKpis year={year} grid={KPI_GRID} onOpenTrend={setTrend} />
+                      ) : (
+                        <TrendsChart year={year} yearQuery={yearQuery} />
+                      )}
                     </div>
                   </div>
-                )
-              ) : yearError && !year ? (
-                <LoadError what="the year" onRetry={() => onRetryYear?.()} retrying={retryingYear} />
-              ) : !year ? (
-                kpiView === 'year' ? (
-                  <div className={KPI_GRID}>
-                    {[0, 1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-36 rounded-inner" />
-                    ))}
-                  </div>
-                ) : (
-                  <Skeleton className="h-72 rounded-inner" />
-                )
-              ) : (
-                <div key={kpiView} className="animate-rise-in">
-                  <div {...dim(year.through !== month)}>
-                    {kpiView === 'year' ? (
-                      <YearKpis year={year} grid={KPI_GRID} onOpenTrend={setTrend} />
-                    ) : (
-                      <TrendsChart year={year} yearQuery={yearQuery} />
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
+              </AnimatedHeight>
             </div>
           )}
           {year && (
