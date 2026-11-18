@@ -34,8 +34,12 @@ function Dashboard() {
   const me = useQuery(queries.me(api));
   const properties = useQuery(queries.properties(api));
   const dash = useQuery(queries.dashboard(api, month, propertyId));
-  // The year so far, only once asked for (it's twelve months of figures).
-  const year = useQuery({ ...queries.dashboardYear(api, month, propertyId), enabled: kpiView !== 'month' });
+  // The year so far (twelve months of figures): loaded once the month's figures are in, so switching to Year to
+  // date or Trends shows it at once instead of placeholders.
+  const year = useQuery({
+    ...queries.dashboardYear(api, month, propertyId),
+    enabled: kpiView !== 'month' || dash.isSuccess,
+  });
   const restock = useQuery(queries.restock(api));
   const damage = useQuery(queries.damageReports(api, 'OPEN', propertyId ?? undefined));
   const [reportingDamage, setReportingDamage] = useState(false);
