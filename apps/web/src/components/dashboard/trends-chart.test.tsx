@@ -179,6 +179,16 @@ describe('the trend', () => {
     expect(screen.getByRole('button', { name: 'Previous year' })).toBeDisabled();
   });
 
+  it('marks a month with no figure with a hairline, named for screen readers', async () => {
+    const noNightly = { ...YEAR, months: YEAR.months.map((x) => ({ ...x, avgNightlyEarningsCents: null })) };
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <TrendsChart year={noNightly} yearQuery={yearQuery} initialMetric="nightly" />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText(/^Avg. nightly ·/).parentElement).toHaveTextContent('No figure yet');
+  });
+
   it('shows the same numbers as a table', async () => {
     showTrend();
     await userEvent.click(screen.getByRole('button', { name: 'Occupancy' }));
