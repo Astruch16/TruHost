@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { splitCents } from '../../lib/money';
+import { useTweened } from '../../lib/motion';
 import { Pill } from '../ui/pill';
 
 export interface KpiChange {
@@ -59,9 +60,13 @@ export function KpiCard({
   );
 }
 
-/** "$2,856" large, ".00" smaller and lighter. */
+/**
+ * "$2,856" large, ".00" smaller and lighter. When the figure changes (another month), it rolls to the new value
+ * over a moment rather than jumping; only the display moves, landing exactly on the API's figure.
+ */
 export function KpiMoney({ cents }: { cents: number }) {
-  const { whole, cents: fraction } = splitCents(cents);
+  const shown = Math.round(useTweened([cents], cents)[0] ?? cents);
+  const { whole, cents: fraction } = splitCents(shown);
   return (
     <>
       {whole}
@@ -70,11 +75,12 @@ export function KpiMoney({ cents }: { cents: number }) {
   );
 }
 
-/** "17 of 31": the denominator smaller and lighter. */
+/** "17 of 31": the denominator smaller and lighter. Rolls to a new value like KpiMoney. */
 export function KpiOf({ value, of }: { value: number; of: number }) {
+  const shown = Math.round(useTweened([value], value)[0] ?? value);
   return (
     <>
-      {value} <span className="text-[0.625em] text-muted">of {of}</span>
+      {shown} <span className="text-[0.625em] text-muted">of {of}</span>
     </>
   );
 }
