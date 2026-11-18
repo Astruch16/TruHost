@@ -1,8 +1,8 @@
-import cabinUrl from '../../../assets/scenes/cabin.svg?url';
+import cabinUrl from '../../../assets/scenes/cabin.webp?url';
 
 /**
- * Mountains at golden hour: a log cabin among pines by a river, peaks behind (src/assets/scenes/cabin.svg,
- * artwork supplied as a file). Drawn into the scene's 320×180 frame, anchored at the bottom centre and cropped at the
+ * Mountains at golden hour: a log cabin among pines by a river, peaks behind (src/assets/scenes/cabin.webp,
+ * a supplied 3D render). Drawn into the scene's 320×180 frame, anchored at the bottom centre and cropped at the
  * sides like the other scenes, so the cabin stays in view in any box.
  */
 export function MountainScene() {
