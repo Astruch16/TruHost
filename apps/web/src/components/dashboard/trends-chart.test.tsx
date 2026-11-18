@@ -195,6 +195,11 @@ describe('the trend', () => {
     await userEvent.click(screen.getByRole('button', { name: 'View as table' }));
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(rows[1]).toHaveTextContent('January 202610%');
-    expect(rows[3]).toHaveTextContent('March 2026 (booked so far)0%');
+    expect(rows[3]).toHaveTextContent('March 2026booked so far0%');
+    // The chosen month is pressed, and clicking another month picks it.
+    expect(within(rows[3]!).getByRole('button', { name: 'March 2026' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(within(rows[1]!).getByRole('button', { name: 'January 2026' }));
+    expect(within(rows[1]!).getByRole('button', { name: 'January 2026' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/^Occupancy ·/)).toHaveTextContent('January 2026');
   });
 });

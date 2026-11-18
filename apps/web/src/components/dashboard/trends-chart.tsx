@@ -56,7 +56,6 @@ export function TrendsChart({
   if (data && data !== lastData) setLastData(data);
   const loading = !data && !other.isError;
   const view = data ?? (loading ? lastData : undefined);
-  const m = trendMetric(metric);
 
   // The chosen month, kept within the months the year has (a year switch keeps the month where it can).
   const months = view?.months ?? [];
@@ -141,33 +140,13 @@ export function TrendsChart({
           <Skeleton className="h-60 rounded-inner" />
         )
       ) : table ? (
-        <table key="table" className="w-full animate-fade-in text-sm">
-          <caption className="sr-only">
-            {m.label} by month, {view.year}
-          </caption>
-          <thead>
-            <tr className="border-b border-line text-left text-xs text-muted">
-              <th className="py-2 font-semibold">Month</th>
-              <th className="py-2 text-right font-semibold">{m.label}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line-soft">
-            {view.months.map((month) => {
-              const value = m.value(month);
-              return (
-                <tr key={month.month} className={cx(month.month === selected?.month && 'bg-ground')}>
-                  <td className="py-2 text-ink">
-                    {monthLabel(month.month)}
-                    {periodNote(month.period) && <span className="text-muted"> ({periodNote(month.period)})</span>}
-                  </td>
-                  <td className="figure py-2 text-right font-semibold text-ink">
-                    {value === null ? '—' : m.format(value)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div
+          key="table"
+          aria-busy={loading || undefined}
+          className={cx('@container/table animate-fade-in transition-opacity duration-200', loading && 'opacity-50')}
+        >
+          <MonthTable year={view} metric={metric} selected={selected?.month ?? null} onPick={pick} />
+        </div>
       ) : (
         <div
           key="chart"
@@ -265,6 +244,116 @@ function Stepper({
         <ChevronRight aria-hidden className="size-4" />
       </button>
     </div>
+  );
+}
+
+/**
+ * The same months as a table: each row has the month (with "so far" or "booked so far" as a small tag), a thin bar
+ * of its value against the year's largest, and the value. A month with no figure shows a short hairline, like the
+ * readout. The chosen month's row is highlighted (rounded, inset from the card edge); clicking a month picks it.
+ */
+function MonthTable({
+  year,
+  metric,
+  selected,
+  onPick,
+}: {
+  year: DashboardYear;
+  metric: TrendMetric;
+  selected: string | null;
+  onPick: (month: string) => void;
+}) {
+  const m = trendMetric(metric);
+  const values = year.months.map((x) => m.value(x));
+  const max = Math.max(0, ...values.map((v) => Math.abs(v ?? 0)));
+  return (
+    <table className="w-full border-separate border-spacing-y-0.5 text-sm">
+      <caption className="sr-only">
+        {m.label} by month, {year.year}
+      </caption>
+      <thead>
+        <tr className="text-left text-[11px] font-bold tracking-[0.08em] text-muted uppercase">
+          <th scope="col" className="px-3 pb-2 font-bold">
+            Month
+          </th>
+          <th scope="col" className="hidden w-full px-3 pb-2 @md/table:table-cell">
+            <span className="sr-only">Compared with the year</span>
+          </th>
+          <th scope="col" className="px-3 pb-2 text-right font-bold whitespace-nowrap">
+            {m.label}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {year.months.map((month, i) => {
+          const value = values[i] ?? null;
+          const note = periodNote(month.period);
+          const chosen = month.month === selected;
+          const upcoming = month.period === 'UPCOMING';
+          return (
+            <tr
+              key={month.month}
+              onClick={() => onPick(month.month)}
+              className={cx(
+                'group cursor-pointer transition-colors [&>td]:transition-colors',
+                chosen ? '[&>td]:bg-ground' : 'hover:[&>td]:bg-ground/50',
+              )}
+            >
+              <td className="rounded-l-inner px-3 py-2 whitespace-nowrap">
+                <button
+                  type="button"
+                  aria-pressed={chosen}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPick(month.month);
+                  }}
+                  className={cx(
+                    'text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-deep',
+                    chosen ? 'font-semibold text-ink' : upcoming ? 'text-muted' : 'text-ink',
+                  )}
+                >
+                  {monthLabel(month.month)}
+                </button>
+                {note && (
+                  <span
+                    className={cx(
+                      'ml-2 rounded-full px-2 py-0.5 align-[1px] text-[11px] font-semibold text-muted',
+                      chosen ? 'bg-surface' : 'bg-ground',
+                    )}
+                  >
+                    {note}
+                  </span>
+                )}
+              </td>
+              <td aria-hidden className="hidden px-3 py-2 @md/table:table-cell">
+                <span className={cx('block h-1.5 overflow-hidden rounded-full', chosen ? 'bg-surface' : 'bg-ground')}>
+                  {value !== null && max > 0 && (
+                    <span
+                      className="block h-full rounded-full transition-[width] duration-500 ease-out"
+                      style={{
+                        width: `${(Math.abs(value) / max) * 100}%`,
+                        background: m.color,
+                        opacity: upcoming ? 0.45 : 1,
+                      }}
+                    />
+                  )}
+                </span>
+              </td>
+              <td className="figure rounded-r-inner px-3 py-2 text-right font-semibold whitespace-nowrap text-ink">
+                {value === null ? (
+                  <>
+                    <span aria-hidden className="inline-block h-px w-5 bg-ink/35 align-middle" />
+                    <span className="sr-only">No figure</span>
+                  </>
+                ) : (
+                  m.format(value)
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 
