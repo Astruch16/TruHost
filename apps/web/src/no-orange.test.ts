@@ -35,9 +35,9 @@ function hsl(hex: string): [number, number, number] {
 
 /**
  * Supplied artwork kept exactly as delivered, warm tones included: the condo scene's window glows (chosen over
- * nudging them to gold, 2026-11-18) and the cabin scene's lit windows and wood (2026-11-18).
+ * nudging them to gold, 2026-11-18).
  */
-const ARTWORK_EXCEPTIONS = new Set(['assets/scenes/condo.svg', 'assets/scenes/cabin.svg']);
+const ARTWORK_EXCEPTIONS = new Set(['assets/scenes/condo.svg']);
 
 const isOrange = (hex: string) => {
   const [h, s, l] = hsl(hex);
