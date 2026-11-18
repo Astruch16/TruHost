@@ -317,7 +317,7 @@ function MonthTable({
                 {note && (
                   <span
                     className={cx(
-                      'ml-2 rounded-full px-2 py-0.5 align-[1px] text-[11px] font-semibold text-muted',
+                      'ml-2 rounded-full border border-ink px-2 py-px align-[1px] text-[11px] font-semibold text-ink',
                       chosen ? 'bg-surface' : 'bg-ground',
                     )}
                   >
