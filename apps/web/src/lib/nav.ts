@@ -109,3 +109,19 @@ export function navGroups(items: readonly NavItem[]): { section: NavItem['sectio
   }
   return groups;
 }
+
+/**
+ * The nav item for a page (its `to`), for the sidebar's sliding highlight: the longest item path that is the page or
+ * a parent of it (exact items only the page itself), so /admin/bookings picks Bookings over the Dashboard at /admin.
+ * Null when the page isn't in the nav (e.g. a page reached from the profile menu).
+ */
+export function activeNavPath(items: readonly Pick<NavItem, 'to' | 'exact'>[], pathname: string): string | null {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+  let best: string | null = null;
+  for (const { to, exact } of items) {
+    const target = String(to);
+    const hit = path === target || (!exact && path.startsWith(`${target === '/' ? '' : target}/`));
+    if (hit && (best === null || target.length > best.length)) best = target;
+  }
+  return best;
+}

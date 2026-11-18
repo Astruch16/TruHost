@@ -132,6 +132,8 @@ export function AppShell({
           tabIndex={-1}
           className={cx(
             'mx-auto w-full max-w-[1680px] flex-1 px-4 py-6 focus:outline-none @2xl/content:px-8 @2xl/content:py-8 @[100rem]/content:px-10',
+            // Named for page-to-page cross-fades (styles.css): only the page fades, the sidebar and top bar hold still.
+            '[view-transition-name:page]',
             // Room for the tab bar (and the home indicator under it).
             tabs && 'pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8',
           )}

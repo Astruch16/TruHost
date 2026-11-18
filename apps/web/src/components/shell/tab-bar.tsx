@@ -16,6 +16,7 @@ export function TabBar({ items }: { items: NavItem[] }) {
           <li key={to}>
             <Link
               to={to}
+              viewTransition
               activeOptions={{ exact: exact ?? false }}
               className="group flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-sidebar-muted transition-colors focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-sidebar-ink data-[status=active]:text-white"
             >
