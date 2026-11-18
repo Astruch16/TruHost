@@ -6,17 +6,17 @@ import { Pill } from '../ui/pill';
 
 const MONTH = new Intl.DateTimeFormat('en-CA', { month: 'short', timeZone: 'UTC' });
 
-/** A small calendar leaf for the check-in date: "OCT" over "10". */
+/** A small calendar leaf for the check-in date: a deep-green month band ("OCT") over the day ("10"). */
 export function DateBadge({ date }: { date: string }) {
   return (
     <span
       aria-hidden
-      className="grid w-11 shrink-0 overflow-hidden rounded-lg border border-line bg-surface text-center shadow-[0_1px_0_rgb(0_0_0/0.03)]"
+      className="grid w-12 shrink-0 overflow-hidden rounded-xl border border-line bg-surface text-center shadow-[0_1px_2px_rgb(0_0_0/0.06)]"
     >
-      <span className="bg-ground py-0.5 text-[10px] font-semibold tracking-[0.08em] text-muted uppercase">
+      <span className="bg-primary py-[3px] text-[9.5px] leading-none font-bold tracking-[0.12em] text-primary-ink uppercase">
         {MONTH.format(new Date(`${date}T00:00:00Z`))}
       </span>
-      <span className="figure py-0.5 text-base leading-tight font-bold text-ink">{Number(date.slice(8))}</span>
+      <span className="figure py-1 text-lg leading-none font-bold text-ink">{Number(date.slice(8))}</span>
     </span>
   );
 }

@@ -147,7 +147,10 @@ export function BookingsList({
                     >
                       <Pencil aria-hidden className="size-4" />
                     </Button>
-                    {!cancelled && (
+                    {cancelled ? (
+                      // Holds the cancel button's place so the edit buttons stay in one column.
+                      <span aria-hidden className="w-10 shrink-0" />
+                    ) : (
                       <Button
                         variant="quiet"
                         size="sm"
