@@ -68,7 +68,7 @@ export function NightlyRange({ lowCents, highCents }: { lowCents: number | null;
 }
 
 /**
- * The year's months as small bars, each lettered underneath (J F M…, in the heading serif, the latest in ink). Hovering a bar shows its month and value;
+ * The year's months as small bars, each lettered underneath (J F M…, in the small-label style: bold tracked caps, the latest in ink). Hovering a bar shows its month and value;
  * months still to come are paler. The bars are a glance: the card opens the full trend for numbers and a table.
  */
 export function MonthBars({
@@ -109,14 +109,14 @@ export function MonthBars({
           );
         })}
       </span>
-      {/* Lettered in the heading serif; the latest month that isn't still to come is in ink. */}
+      {/* Lettered like the app's small labels (bold tracked caps); the latest month that isn't still to come is in ink. */}
       <span className="flex gap-[2px]">
         {months.map((m, i) => (
           <span
             key={m}
             className={cx(
-              'min-w-px flex-1 text-center font-display text-[10px] leading-none font-semibold',
-              i === latest ? 'text-ink' : 'text-muted',
+              'min-w-px flex-1 text-center text-[9.5px] leading-none font-bold tracking-[0.08em] uppercase',
+              i === latest ? 'text-ink' : 'text-muted/80',
             )}
           >
             {monthInitial(m)}
