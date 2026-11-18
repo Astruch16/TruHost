@@ -4,18 +4,22 @@ import { unwrap } from '@truhost/api-client';
 import type { Property } from '@truhost/shared';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { useApi } from '../lib/api-context';
-import { monogram } from '../lib/dashboard-format';
 import { PHOTO_INPUT_ACCEPT, uploadCoverPhoto } from '../lib/property-photo';
 import { queries } from '../lib/queries';
 import { CoverImage } from './cover-image';
+import { PropertyScene } from './illustrations/property-scene';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Confirmation } from './ui/confirmation';
 import { ConfirmDialog } from './ui/dialog';
 
-/** The property's cover photo, shown on property cards. Admins upload, replace or remove it here. */
-export function CoverPhotoCard({ property }: { property: Property }) {
+/**
+ * The property's cover photo, shown on property cards. Admins upload, replace or remove it here. Until there is a
+ * photo it shows the same illustrated scene as the property's cards (`sceneIndex`, its place in the property list;
+ * null while that list loads), and clicking it opens the file picker.
+ */
+export function CoverPhotoCard({ property, sceneIndex }: { property: Property; sceneIndex: number | null }) {
   const api = useApi();
   const qc = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
@@ -82,13 +86,16 @@ export function CoverPhotoCard({ property }: { property: Property }) {
                 type="button"
                 onClick={() => input.current?.click()}
                 disabled={upload.isPending}
-                className="grid size-full place-items-center text-sage-deep transition-colors hover:bg-sage-tint/70"
+                className="group relative block size-full"
               >
-                <span className="flex flex-col items-center gap-2">
-                  <span aria-hidden className="text-5xl font-bold tracking-tight">
-                    {monogram(property.name)}
-                  </span>
-                  <span className="text-sm font-semibold">
+                {sceneIndex !== null && <PropertyScene index={sceneIndex} className="absolute inset-0 size-full" />}
+                <span
+                  aria-hidden
+                  className="absolute inset-0 bg-ink/0 transition-colors group-hover:bg-ink/10 group-disabled:bg-transparent"
+                />
+                <span className="absolute inset-x-3 top-3 flex justify-start">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-ink shadow-sm backdrop-blur-sm">
+                    <ImagePlus aria-hidden className="size-4 shrink-0" />
                     {upload.isPending ? 'Preparing photo…' : 'No cover photo yet. Upload one.'}
                   </span>
                 </span>
@@ -104,7 +111,7 @@ export function CoverPhotoCard({ property }: { property: Property }) {
         open={confirmRemove}
         onOpenChange={setConfirmRemove}
         title="Remove the cover photo?"
-        description="Cards will show the property's initials instead. You can upload a new photo at any time."
+        description="Cards will show an illustrated scene instead. You can upload a new photo at any time."
         confirmLabel="Remove photo"
         destructive
         pending={remove.isPending}

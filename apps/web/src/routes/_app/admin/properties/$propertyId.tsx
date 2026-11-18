@@ -35,6 +35,10 @@ function AdminProperty() {
   const qc = useQueryClient();
   const [confirmArchive, setConfirmArchive] = useState(false);
   const property = useQuery(queries.property(api, propertyId));
+  // Its place in the property list picks the illustrated scene shown without a photo, the same one as on its cards.
+  const list = useQuery(queries.properties(api));
+  const listIndex = list.data?.items.findIndex((x) => x.id === propertyId);
+  const sceneIndex = listIndex === undefined ? (list.isError ? 0 : null) : Math.max(listIndex, 0);
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -94,7 +98,7 @@ function AdminProperty() {
       />
       <div className="flex flex-col gap-6">
         <div className="grid items-start gap-6 @[68.75rem]/content:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          <CoverPhotoCard property={p} />
+          <CoverPhotoCard property={p} sceneIndex={sceneIndex} />
           <PropertyDetailsCard property={p} onEdit={() => setEditing(true)} />
         </div>
         <div className="grid gap-6 @4xl/content:grid-cols-2">

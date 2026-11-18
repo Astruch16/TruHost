@@ -615,8 +615,8 @@ function StyleGuide() {
           </Card>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <CoverPhotoCard property={sampleProperty} />
-            <CoverPhotoCard property={{ ...sampleProperty, coverPhoto: null }} />
+            <CoverPhotoCard property={sampleProperty} sceneIndex={0} />
+            <CoverPhotoCard property={{ ...sampleProperty, coverPhoto: null }} sceneIndex={0} />
           </div>
 
           <Card
