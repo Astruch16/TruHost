@@ -23,6 +23,7 @@ import { PropertyDetails } from '../property-details';
 import { KpiCard, KpiMoney, KpiOf, type KpiChange } from './kpi-card';
 import { NightlyRange, NightsStrip, ShareBar, StaysBar } from './kpi-charts';
 import { WeekTimeline } from './week-timeline';
+import { PillTabs } from '../ui/pill-tabs';
 import { TrendDialog } from './trend-dialog';
 import { TrendsChart } from './trends-chart';
 import { YearKpis } from './year-kpis';
@@ -198,8 +199,10 @@ export function DashboardView({
                     ))}
                   </div>
                 ) : (
-                  <div {...dim(dashboardUpdating)}>
-                    <Kpis d={d} />
+                  <div key="month" className="animate-rise-in">
+                    <div {...dim(dashboardUpdating)}>
+                      <Kpis d={d} />
+                    </div>
                   </div>
                 )
               ) : yearError && !year ? (
@@ -215,12 +218,14 @@ export function DashboardView({
                   <Skeleton className="h-72 rounded-inner" />
                 )
               ) : (
-                <div {...dim(year.through !== month)}>
-                  {kpiView === 'year' ? (
-                    <YearKpis year={year} grid={KPI_GRID} onOpenTrend={setTrend} />
-                  ) : (
-                    <TrendsChart year={year} yearQuery={yearQuery} />
-                  )}
+                <div key={kpiView} className="animate-rise-in">
+                  <div {...dim(year.through !== month)}>
+                    {kpiView === 'year' ? (
+                      <YearKpis year={year} grid={KPI_GRID} onOpenTrend={setTrend} />
+                    ) : (
+                      <TrendsChart year={year} yearQuery={yearQuery} />
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -542,27 +547,17 @@ function Details({ record, feeRateBps }: { record: Partial<Property> | undefined
 
 /** This month, year to date, or the year as a chart: three small buttons, the chosen one pressed. */
 function ViewSwitch({ value, onChange }: { value: KpiView; onChange: (view: KpiView) => void }) {
-  const options: [KpiView, string][] = [
-    ['month', 'This month'],
-    ['year', 'Year to date'],
-    ['trends', 'Trends'],
-  ];
   return (
-    <div role="group" aria-label="Show" className="flex rounded-full bg-ground p-0.5 ring-1 ring-line-soft">
-      {options.map(([key, label]) => (
-        <button
-          key={key}
-          type="button"
-          aria-pressed={value === key}
-          onClick={() => onChange(key)}
-          className={cx(
-            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
-            value === key ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
-          )}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
+    <PillTabs
+      label="Show"
+      variant="switch"
+      value={value}
+      onChange={onChange}
+      options={[
+        { key: 'month', label: 'This month' },
+        { key: 'year', label: 'Year to date' },
+        { key: 'trends', label: 'Trends' },
+      ]}
+    />
   );
 }

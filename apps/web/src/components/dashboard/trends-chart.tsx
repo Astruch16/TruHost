@@ -1,8 +1,9 @@
-import { useRef, useState, type KeyboardEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { addMonths, monthLabel } from '../../lib/months';
+import { useTweened } from '../../lib/motion';
 import {
   bestMonth,
   hasFigures,
@@ -18,6 +19,7 @@ import {
   type YearQuery,
 } from '../../lib/trends';
 import type { DashboardYear } from '../../lib/api-types';
+import { PillTabs } from '../ui/pill-tabs';
 import { Skeleton } from '../ui/skeleton';
 
 /**
@@ -25,6 +27,10 @@ import { Skeleton } from '../ui/skeleton';
  * nightly), step through the months (‹ ›, the arrow keys, or a click on the chart) and through the years. The chosen
  * month's figure leads, with the month before it and the year's best month beside it. Hovering shows any month's
  * value; months still to come are paler (booked so far). A table shows the same numbers.
+ *
+ * Changes are smooth: the chosen figure's pill slides, the line and dots glide to their new values, the axis and
+ * the readout fade in, and while another year loads the last one stays on screen, dimmed (the year before the one
+ * shown is fetched ahead, so stepping back is usually instant). All of it is still under reduced motion.
  *
  * `year` is the dashboard's own year (January through its month); other years load through `yearQuery`. Every value
  * is the API's (GET /v1/dashboard/year); the scale is only for drawing, and nothing here calculates money.
@@ -45,14 +51,26 @@ export function TrendsChart({
   const isCurrent = shownYear === current.year;
   const other = useQuery({ ...yearQuery(`${shownYear}-12`), enabled: !isCurrent });
   const data = isCurrent ? current : other.data?.year === shownYear ? other.data : undefined;
+  // While another year loads, the last year shown stays on screen (dimmed) rather than a blank placeholder.
+  const [lastData, setLastData] = useState(data);
+  if (data && data !== lastData) setLastData(data);
+  const loading = !data && !other.isError;
+  const view = data ?? (loading ? lastData : undefined);
   const m = trendMetric(metric);
 
   // The chosen month, kept within the months the year has (a year switch keeps the month where it can).
-  const months = data?.months ?? [];
+  const months = view?.months ?? [];
   const selected = months.find((x) => x.month === picked) ?? months.at(-1);
   const lastYear = Math.max(current.year, Number(current.today.slice(0, 4)));
   const canPrevYear = data !== undefined && hasFigures(data.months);
   const canNextYear = shownYear < lastYear;
+  // Fetch the year before ahead of time, so stepping back is usually instant.
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (canPrevYear) void qc.prefetchQuery(yearQuery(`${shownYear - 1}-12`));
+    // `yearQuery` is rebuilt on every render of the parent; the year is what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qc, shownYear, canPrevYear]);
   const pick = (month: string) => setPicked(month);
   const stepYear = (by: number) => setPicked(`${shownYear + by}${picked.slice(4)}`);
   const stepMonth = (by: number) => {
@@ -70,22 +88,7 @@ export function TrendsChart({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="group" aria-label="Figure" className="flex flex-wrap gap-1.5">
-          {TREND_METRICS.map((x) => (
-            <button
-              key={x.key}
-              type="button"
-              aria-pressed={metric === x.key}
-              onClick={() => setMetric(x.key)}
-              className={cx(
-                'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
-                metric === x.key ? 'bg-primary text-white' : 'bg-ground text-muted hover:text-ink',
-              )}
-            >
-              {x.label}
-            </button>
-          ))}
-        </div>
+        <PillTabs label="Figure" options={TREND_METRICS} value={metric} onChange={setMetric} />
         <button
           type="button"
           onClick={() => setTable((v) => !v)}
@@ -96,7 +99,9 @@ export function TrendsChart({
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <Readout data={data} selected={selected} metric={metric} />
+        <div className={cx('min-w-0 transition-opacity duration-200', loading && 'opacity-50')}>
+          <Readout data={view} selected={selected} metric={metric} />
+        </div>
         <div className="flex items-center gap-2">
           <Stepper
             label={selected ? monthLabel(selected.month) : monthLabel(picked)}
@@ -118,7 +123,7 @@ export function TrendsChart({
         </div>
       </div>
 
-      {!data ? (
+      {!view ? (
         other.isError ? (
           <p className="grid h-60 place-items-center rounded-inner bg-ground text-sm text-muted">
             <span>
@@ -136,9 +141,9 @@ export function TrendsChart({
           <Skeleton className="h-60 rounded-inner" />
         )
       ) : table ? (
-        <table className="w-full text-sm">
+        <table key="table" className="w-full animate-fade-in text-sm">
           <caption className="sr-only">
-            {m.label} by month, {data.year}
+            {m.label} by month, {view.year}
           </caption>
           <thead>
             <tr className="border-b border-line text-left text-xs text-muted">
@@ -147,7 +152,7 @@ export function TrendsChart({
             </tr>
           </thead>
           <tbody className="divide-y divide-line-soft">
-            {data.months.map((month) => {
+            {view.months.map((month) => {
               const value = m.value(month);
               return (
                 <tr key={month.month} className={cx(month.month === selected?.month && 'bg-ground')}>
@@ -164,7 +169,13 @@ export function TrendsChart({
           </tbody>
         </table>
       ) : (
-        <LineChart year={data} metric={metric} selected={selected?.month ?? null} onPick={pick} />
+        <div
+          key="chart"
+          aria-busy={loading || undefined}
+          className={cx('animate-fade-in transition-opacity duration-200', loading && 'opacity-50')}
+        >
+          <LineChart year={view} metric={metric} selected={selected?.month ?? null} onPick={pick} />
+        </div>
       )}
     </div>
   );
@@ -188,7 +199,7 @@ function Readout({
   const best = bestMonth(data.months, m.value);
   const note = periodNote(selected.period);
   return (
-    <div aria-live="polite" className="min-w-0">
+    <div key={`${metric}-${selected.month}`} aria-live="polite" className="min-w-0 animate-rise-in">
       <p className="text-xs font-semibold tracking-wide text-muted uppercase">
         {m.label} · {monthLabel(selected.month)}
         {note && <span className="tracking-normal normal-case"> ({note})</span>}
@@ -279,26 +290,30 @@ function LineChart({
   const x = (i: number) => ((i + 0.5) / 12) * 100; // % from the left, the column's middle
   const ticks = Array.from({ length: Math.round(range / scale.step) + 1 }, (_, i) => scale.max - i * scale.step);
   const zero = y(0);
+  // Each month's height (% from the top), gliding from where it was whenever the figure, year or scale changes.
+  const ys = useTweened(
+    slots.map((s) => (s.value === null ? null : y(s.value))),
+    zero,
+  );
+  const gridKey = `${metric}-${year.year}-${scale.max}-${scale.step}`;
 
   // Line segments between neighbouring months that both have a figure; the wash under each finished stretch.
   const segments = slots.slice(1).flatMap((s, j) => {
-    const a = slots[j]!;
-    if (a.value === null || s.value === null) return [];
-    return [
-      { key: s.month, d: `M${x(j)} ${y(a.value)} L${x(j + 1)} ${y(s.value)}`, faint: s.row?.period === 'UPCOMING' },
-    ];
+    const a = ys[j];
+    const b = ys[j + 1];
+    if (a == null || b == null) return [];
+    return [{ key: s.month, d: `M${x(j)} ${a} L${x(j + 1)} ${b}`, faint: s.row?.period === 'UPCOMING' }];
   });
-  const runs: { i: number; v: number }[][] = [];
+  const runs: { i: number; at: number }[][] = [];
   slots.forEach((s, i) => {
-    if (s.value === null || s.row?.period === 'UPCOMING') return runs.push([]);
+    const at = ys[i];
+    if (at == null || s.row?.period === 'UPCOMING') return runs.push([]);
     if (runs.length === 0) runs.push([]);
-    runs.at(-1)!.push({ i, v: s.value });
+    runs.at(-1)!.push({ i, at });
   });
   const washes = runs
     .filter((r) => r.length > 1)
-    .map(
-      (r) => `M${x(r[0]!.i)} ${zero} ${r.map((p) => `L${x(p.i)} ${y(p.v)}`).join(' ')} L${x(r.at(-1)!.i)} ${zero} Z`,
-    );
+    .map((r) => `M${x(r[0]!.i)} ${zero} ${r.map((p) => `L${x(p.i)} ${p.at}`).join(' ')} L${x(r.at(-1)!.i)} ${zero} Z`);
 
   const withFigures = slots.filter((s) => s.row);
   const onKey = (e: KeyboardEvent, month: string) => {
@@ -329,7 +344,7 @@ function LineChart({
         {hasUpcoming && '. Paler months are booked so far.'}
       </figcaption>
       <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3">
-        <div className="relative h-60 w-12" aria-hidden>
+        <div key={gridKey} className="relative h-60 w-12 animate-rise-in" aria-hidden>
           {ticks.map((v) => (
             <span
               key={v}
@@ -343,9 +358,9 @@ function LineChart({
         <div className="relative h-60" onMouseLeave={() => setHover(null)}>
           {ticks.map((v) => (
             <span
-              key={v}
+              key={`${gridKey}-${v}`}
               aria-hidden
-              className={cx('absolute inset-x-0 h-px', v === 0 ? 'bg-ink/25' : 'bg-line-soft')}
+              className={cx('absolute inset-x-0 h-px animate-fade-in', v === 0 ? 'bg-ink/25' : 'bg-line-soft')}
               style={{ top: `${y(v)}%` }}
             />
           ))}
@@ -353,14 +368,14 @@ function LineChart({
           {selected && (
             <span
               aria-hidden
-              className="absolute inset-y-0 w-px -translate-x-1/2 bg-ink/30"
+              className="absolute inset-y-0 w-px -translate-x-1/2 bg-ink/30 transition-[left] duration-300 ease-out"
               style={{ left: `${x(slots.findIndex((s) => s.month === selected))}%` }}
             />
           )}
           {hovered && hovered.month !== selected && (
             <span
               aria-hidden
-              className="absolute inset-y-0 w-px -translate-x-1/2 bg-ink/15"
+              className="absolute inset-y-0 w-px -translate-x-1/2 bg-ink/15 transition-[left] duration-150 ease-out"
               style={{ left: `${x(slots.indexOf(hovered))}%` }}
             />
           )}
@@ -370,15 +385,15 @@ function LineChart({
             preserveAspectRatio="none"
             className="absolute inset-0 size-full overflow-visible"
           >
-            {washes.map((d) => (
-              <path key={d} d={d} fill={m.color} opacity={0.1} />
+            {washes.map((d, i) => (
+              <path key={i} d={d} opacity={0.1} style={{ fill: m.color, transition: 'fill 300ms' }} />
             ))}
             {segments.map((s) => (
               <path
                 key={s.key}
                 d={s.d}
                 fill="none"
-                stroke={m.color}
+                style={{ stroke: m.color, transition: 'stroke 300ms' }}
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -389,17 +404,17 @@ function LineChart({
           </svg>
           {/* Dots, ringed in the surface colour so they read where they sit on the line */}
           {slots.map((s, i) =>
-            s.value === null ? null : (
+            ys[i] == null ? null : (
               <span
                 key={s.month}
                 aria-hidden
                 className={cx(
-                  'absolute -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface transition-[width,height]',
+                  'absolute -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface transition-[width,height,background-color] duration-300',
                   s.month === selected ? 'size-3.5' : s.month === hover ? 'size-3' : 'size-2',
                 )}
                 style={{
                   left: `${x(i)}%`,
-                  top: `${y(s.value)}%`,
+                  top: `${ys[i]}%`,
                   background: m.color,
                   opacity: s.row?.period === 'UPCOMING' ? 0.5 : 1,
                 }}
@@ -414,7 +429,10 @@ function LineChart({
                 'pointer-events-none absolute z-10 -translate-y-full rounded-control bg-ink px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg',
                 slots.indexOf(hovered) > 8 ? '-translate-x-full' : slots.indexOf(hovered) < 3 ? '' : '-translate-x-1/2',
               )}
-              style={{ left: `${x(slots.indexOf(hovered))}%`, top: `calc(${y(hovered.value ?? 0)}% - 10px)` }}
+              style={{
+                left: `${x(slots.indexOf(hovered))}%`,
+                top: `calc(${ys[slots.indexOf(hovered)] ?? zero}% - 10px)`,
+              }}
             >
               <span className="font-semibold">{monthLabel(hovered.month)}</span>
               <span className="figure block">
