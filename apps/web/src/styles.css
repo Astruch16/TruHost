@@ -181,12 +181,33 @@
   }
 }
 
-/* Page-to-page cross-fade for links that ask for it (`viewTransition`, e.g. "Full calendar"): the old page fades out
-   as the new one fades in. Off under reduced motion, from the system or Settings. */
+/* Page-to-page cross-fade for links that ask for it (`viewTransition`: the nav, "Full calendar"). Only the page
+   (<main>, named "page" in the app shell) fades, the old one out as the new one comes in with a slight rise; the
+   sidebar and top bar change in place, so the sidebar's highlight is seen sliding rather than fading. The page box
+   snaps to its new height rather than stretching. Off under reduced motion, from the system or Settings. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 220ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation: none;
+}
+::view-transition-group(page) {
+  animation: none;
+}
+::view-transition-old(page) {
+  animation: th-vt-out 160ms ease-out both;
+}
+::view-transition-new(page) {
+  animation: th-vt-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes th-vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes th-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),

@@ -1,16 +1,19 @@
-import { Link } from '@tanstack/react-router';
+import { useRef } from 'react';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { CircleHelp, LogOut } from 'lucide-react';
 import { cx } from '../../lib/cx';
-import { navGroups, type NavItem } from '../../lib/nav';
+import { useSlidingHighlight } from '../../lib/motion';
+import { activeNavPath, navGroups, type NavItem } from '../../lib/nav';
 import { APP_BUILD, APP_VERSION } from '../../lib/version';
 import { Logo } from './logo';
 import { MountainScene } from './mountain-scene';
 
 const itemClass = cx(
   'group flex min-h-10 items-center gap-3 rounded-control px-3.5 text-base font-medium text-sidebar-ink/90',
-  'transition-colors hover:bg-sidebar-hover hover:text-sidebar-ink',
+  // The active item's background is the sliding highlight behind the list, so hovering it doesn't repaint it.
+  'transition-colors hover:text-sidebar-ink hover:not-data-[status=active]:bg-sidebar-hover',
   'focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-sidebar-ink',
-  'data-[status=active]:bg-sidebar-active data-[status=active]:font-semibold data-[status=active]:text-white',
+  'data-[status=active]:font-semibold data-[status=active]:text-white',
 );
 
 export function Sidebar({
@@ -24,15 +27,36 @@ export function Sidebar({
   onHelp?: () => void;
   onNavigate?: () => void;
 }) {
+  const nav = useRef<HTMLElement>(null);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { style, ready } = useSlidingHighlight(nav, activeNavPath(items, pathname) ?? '');
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-sidebar">
       <div className="px-6 pt-7 pb-8">
-        <Link to="/" onClick={onNavigate} className="inline-block rounded-control focus-visible:outline-sidebar-ink">
+        <Link
+          to="/"
+          viewTransition
+          onClick={onNavigate}
+          className="inline-block rounded-control focus-visible:outline-sidebar-ink"
+        >
           <Logo />
         </Link>
       </div>
       {/* On a short screen the scene below gives way first, then the nav scrolls, so the foot stays in view. */}
-      <nav aria-label="Main" className="scroll-area relative z-10 min-h-0 flex-initial overflow-y-auto px-3 py-0.5">
+      <nav
+        ref={nav}
+        aria-label="Main"
+        className="scroll-area relative z-10 min-h-0 flex-initial overflow-y-auto px-3 py-0.5"
+      >
+        {/* The active item's background: it slides from the old item to the new one rather than jumping. */}
+        <span
+          aria-hidden
+          className={cx(
+            'pointer-events-none absolute top-0 left-0 -z-10 rounded-control bg-sidebar-active',
+            ready && 'transition-[transform,width,height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          )}
+          style={style}
+        />
         {/* Admin items sit in small labelled groups (Money, Operations, People); the rest have no label. */}
         {navGroups(items).map((group, g) => (
           // Every group after the first sits below a hairline; a section's label is in the logo's gold, so it reads
@@ -49,7 +73,14 @@ export function Sidebar({
             <ul aria-labelledby={group.section ? `nav-${group.section}` : undefined} className="flex flex-col gap-0.5">
               {group.items.map(({ to, label, icon: Icon, badge, exact }) => (
                 <li key={to}>
-                  <Link to={to} onClick={onNavigate} className={itemClass} activeOptions={{ exact: exact ?? false }}>
+                  <Link
+                    to={to}
+                    viewTransition
+                    data-option={to}
+                    onClick={onNavigate}
+                    className={itemClass}
+                    activeOptions={{ exact: exact ?? false }}
+                  >
                     <Icon aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
                     <span className="flex-1">{label}</span>
                     {badge ? (
