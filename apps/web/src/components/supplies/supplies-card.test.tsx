@@ -45,7 +45,7 @@ describe('SuppliesCard areas', () => {
     const kitchen = screen.getByRole('region', { name: 'Kitchen' });
     expect(within(bathroom).getByRole('heading', { level: 3 })).toHaveTextContent('Bathroom 2 items');
     expect(within(kitchen).getByRole('heading', { level: 3 })).toHaveTextContent('Kitchen 1 item');
-    expect(within(bathroom).getByRole('heading', { level: 3 }).querySelector('svg[aria-hidden]')).not.toBeNull();
+    expect(within(bathroom).getByRole('heading', { level: 3 }).querySelector('img[aria-hidden]')).not.toBeNull();
     // The line sits above every area but the first.
     expect(bathroom).toHaveClass('first-of-type:border-t-0');
     expect(kitchen).toHaveClass('border-t', 'border-line-soft');
