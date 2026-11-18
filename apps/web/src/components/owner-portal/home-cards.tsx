@@ -322,7 +322,7 @@ export function ComingUpCard({ items, showProperty }: { items: OwnerHome['coming
       actions={
         <Link
           to="/owner/calendar"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-primary link-underline"
         >
           Calendar <ArrowRight aria-hidden className="size-4" />
         </Link>

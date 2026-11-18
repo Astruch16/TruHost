@@ -60,7 +60,7 @@ export function HelpDialog({
             <Link
               to="/account/preferences"
               onClick={() => onOpenChange(false)}
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold text-primary link-underline"
             >
               Change your guide
             </Link>

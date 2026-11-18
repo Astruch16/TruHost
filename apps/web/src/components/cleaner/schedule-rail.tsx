@@ -169,10 +169,10 @@ export function RailSupplies({
               <Link
                 to="/cleaner/properties/$propertyId"
                 params={{ propertyId: p.id }}
-                className="inline-flex min-w-0 items-center gap-2 text-sm font-bold text-ink hover:underline"
+                className="inline-flex min-w-0 items-center gap-2 text-sm font-bold text-ink"
               >
                 <span aria-hidden className={cx('size-2.5 shrink-0 rounded-full', colors.get(p.id) ?? 'bg-line')} />
-                <span className="truncate">{p.name}</span>
+                <span className="link-underline-inner truncate">{p.name}</span>
               </Link>
               <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted">
                 <CalendarDays aria-hidden className="size-3.5" />
@@ -208,7 +208,7 @@ export function RailSupplies({
               <Link
                 to="/cleaner/properties/$propertyId"
                 params={{ propertyId: p.id }}
-                className="mb-1.5 inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
+                className="mb-1.5 inline-flex items-center gap-0.5 text-xs font-semibold text-primary link-underline"
               >
                 {items.length - SHOWN} more <ChevronRight aria-hidden className="size-3.5" />
               </Link>

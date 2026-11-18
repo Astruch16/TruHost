@@ -213,7 +213,7 @@ export function AuthLink({ children, onClick }: { children: ReactNode; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className="rounded text-[13px] font-semibold text-[#173F3A] hover:text-[#0E2A26] hover:underline"
+      className="text-[13px] font-semibold text-[#173F3A] hover:text-[#0E2A26] link-underline"
     >
       {children}
     </button>

@@ -84,7 +84,7 @@ function PropertySupplies({ group, showName }: { group: OwnerSupplies['propertie
           aria-expanded={all}
           aria-controls={listId}
           onClick={() => setAll(!all)}
-          className="mt-4 text-sm font-semibold text-primary hover:underline"
+          className="mt-4 text-sm font-semibold text-primary link-underline"
         >
           {all ? 'Show fewer' : `Show all ${group.items.length} items`}
         </button>

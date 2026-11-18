@@ -41,7 +41,7 @@ export function DamagePanel({
           <Button variant="secondary" size="sm" onClick={onReport}>
             <TriangleAlert aria-hidden className="size-4" /> Report damage
           </Button>
-          <Link to="/admin/damage" className="rounded-control-sm text-sm font-semibold text-primary hover:underline">
+          <Link to="/admin/damage" className="text-sm font-semibold text-primary link-underline">
             See all
           </Link>
         </div>
@@ -100,7 +100,7 @@ export function DamagePanel({
         {items.length > shown.length && (
           <p className="text-sm text-muted">
             +{items.length - shown.length} more on{' '}
-            <Link to="/admin/damage" className="font-semibold text-primary hover:underline">
+            <Link to="/admin/damage" className="font-semibold text-primary link-underline">
               Damage
             </Link>
           </p>

@@ -25,7 +25,7 @@ export function SuppliesPanel({ items, showProperty }: { items: RestockItem[]; s
   const shown = items.slice(0, SHOWN);
   const more = items.length - shown.length;
   const link = (
-    <Link to="/admin/supplies" className="rounded-control-sm text-sm font-semibold text-primary hover:underline">
+    <Link to="/admin/supplies" className="text-sm font-semibold text-primary link-underline">
       See all
     </Link>
   );
@@ -64,7 +64,7 @@ export function SuppliesPanel({ items, showProperty }: { items: RestockItem[]; s
           {more > 0 && (
             <p className="mt-3 text-sm text-muted">
               +{more} more on{' '}
-              <Link to="/admin/supplies" className="font-semibold text-primary hover:underline">
+              <Link to="/admin/supplies" className="font-semibold text-primary link-underline">
                 Supplies
               </Link>
             </p>

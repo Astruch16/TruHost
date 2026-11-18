@@ -108,8 +108,8 @@ function MonthChart({ year, metric, onOpen }: { year: DashboardYear; metric: Tre
             'No figures yet'
           )}
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary group-hover:underline">
-          <LineChart className="size-3.5" /> View trend
+        <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-primary">
+          <LineChart className="size-3.5" /> <span className="link-underline-inner">View trend</span>
         </span>
       </span>
     </button>
