@@ -14,7 +14,7 @@ type Item = OwnerHome['goodToKnow'][number];
 
 /** The receipt or statement link under an item, lined up with its title (past the 40px icon and 12px gap). */
 const action =
-  'inline-flex items-center gap-1 rounded-control-sm text-xs font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-blue-deep';
+  'inline-flex items-center gap-1 text-xs font-semibold text-primary link-underline focus-visible:outline-2 focus-visible:outline-blue-deep';
 
 /**
  * Recent owner-paid expenses and adjustments on released statements: each with an icon for what it was, the date

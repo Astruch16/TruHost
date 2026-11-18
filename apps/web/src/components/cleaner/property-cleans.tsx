@@ -21,7 +21,7 @@ export function PropertyCleansCard({ propertyId }: { propertyId: string }) {
       title="Your cleans here"
       tour="cleaner-cleans"
       actions={
-        <Link to="/cleaner" className="text-sm font-semibold text-primary hover:underline">
+        <Link to="/cleaner" className="text-sm font-semibold text-primary link-underline">
           Your schedule
         </Link>
       }

@@ -59,7 +59,7 @@ export function PropertyDetailsCard({ property: p, onEdit }: { property: Propert
                   href={url}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="inline-flex items-center gap-1 font-semibold text-sage-deep hover:underline"
+                  className="inline-flex items-center gap-1 font-semibold text-sage-deep link-underline"
                 >
                   {name}
                   <ExternalLink aria-hidden className="size-3.5" />

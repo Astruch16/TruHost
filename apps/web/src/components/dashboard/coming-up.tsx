@@ -57,7 +57,7 @@ export function ComingUp({
   const actions = (
     <div className="flex flex-wrap items-center gap-3">
       {showProperty && items.length > 0 && <SortToggle value={sort} onChange={choose} />}
-      <Link to="/admin/calendar" className="rounded-control-sm text-sm font-semibold text-primary hover:underline">
+      <Link to="/admin/calendar" className="text-sm font-semibold text-primary link-underline">
         Full calendar
       </Link>
     </div>
@@ -118,7 +118,7 @@ export function ComingUp({
       {total > items.length && (
         <p className="mt-3 text-sm text-muted">
           +{total - items.length} more in the{' '}
-          <Link to="/admin/calendar" className="font-semibold text-primary hover:underline">
+          <Link to="/admin/calendar" className="font-semibold text-primary link-underline">
             full calendar
           </Link>
           .

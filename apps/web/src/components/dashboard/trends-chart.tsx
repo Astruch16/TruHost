@@ -92,7 +92,7 @@ export function TrendsChart({
         <button
           type="button"
           onClick={() => setTable((v) => !v)}
-          className="rounded-control-sm text-sm font-semibold text-primary hover:underline"
+          className="text-sm font-semibold text-primary link-underline"
         >
           {table ? 'View as chart' : 'View as table'}
         </button>
@@ -130,7 +130,7 @@ export function TrendsChart({
               Couldn’t load {shownYear}.{' '}
               <button
                 type="button"
-                className="font-semibold text-primary hover:underline"
+                className="font-semibold text-primary link-underline"
                 onClick={() => void other.refetch()}
               >
                 Try again

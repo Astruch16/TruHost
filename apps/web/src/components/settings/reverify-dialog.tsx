@@ -164,7 +164,7 @@ export function ReverifyDialog({ request, onClose }: { request: ReverifyRequest;
                 setValue('');
                 setStage('backup_code');
               }}
-              className="self-start text-sm font-semibold text-sage-deep hover:underline"
+              className="self-start text-sm font-semibold text-sage-deep link-underline"
             >
               Use a backup code instead
             </button>

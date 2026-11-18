@@ -293,10 +293,7 @@ export function DashboardView({
               title="Next 7 days"
               description={`${dayLabel(weekStart)} – ${dayLabel(addDays(weekStart, 6))}`}
               actions={
-                <Link
-                  to="/admin/calendar"
-                  className="rounded-control-sm text-sm font-semibold text-primary hover:underline"
-                >
+                <Link to="/admin/calendar" className="text-sm font-semibold text-primary link-underline">
                   Full calendar
                 </Link>
               }

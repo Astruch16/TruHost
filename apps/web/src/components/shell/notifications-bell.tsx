@@ -109,7 +109,7 @@ export function NotificationsBell({
                 type="button"
                 onClick={onMarkAllRead}
                 disabled={markingAll}
-                className="rounded-sm text-sm font-medium text-blue-deep underline-offset-4 hover:underline disabled:opacity-60"
+                className="text-sm font-medium text-blue-deep link-underline disabled:opacity-60"
               >
                 Mark all read
               </button>

@@ -81,7 +81,7 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <Link
         to="/cleaner"
-        className="inline-flex w-fit items-center gap-1.5 rounded-control text-sm font-semibold text-primary hover:underline"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary link-underline"
       >
         <ArrowLeft aria-hidden className="size-4" /> Your schedule
       </Link>

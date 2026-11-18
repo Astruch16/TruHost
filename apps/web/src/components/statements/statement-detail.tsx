@@ -222,7 +222,7 @@ function DraftNotes({ statement: s }: { statement: Statement }) {
                   <Link
                     to="/admin/statements/$statementId"
                     params={{ statementId: b.statementId }}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-semibold text-primary link-underline"
                   >
                     Open it
                   </Link>
@@ -231,7 +231,7 @@ function DraftNotes({ statement: s }: { statement: Statement }) {
                   <Link
                     to="/admin/expenses"
                     search={{ month: s.month }}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-semibold text-primary link-underline"
                   >
                     Add receipts
                   </Link>
@@ -240,7 +240,7 @@ function DraftNotes({ statement: s }: { statement: Statement }) {
                   <Link
                     to="/admin/properties/$propertyId"
                     params={{ propertyId: s.property.id }}
-                    className="font-semibold text-primary hover:underline"
+                    className="font-semibold text-primary link-underline"
                   >
                     Assign a plan
                   </Link>

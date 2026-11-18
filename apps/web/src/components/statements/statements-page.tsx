@@ -177,7 +177,7 @@ function StatementListRow({ row, starting, onStart }: { row: StatementRow; start
             <Link
               to="/admin/statements/$statementId"
               params={{ statementId: row.statementId }}
-              className="truncate font-semibold text-ink hover:underline"
+              className="truncate font-semibold text-ink link-underline"
             >
               {row.property.name}
             </Link>

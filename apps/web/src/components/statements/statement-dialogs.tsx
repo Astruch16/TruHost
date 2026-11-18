@@ -399,7 +399,7 @@ export function PdfPreviewDialog({
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 self-end text-sm font-semibold text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 self-end text-sm font-semibold text-primary link-underline"
             >
               Open in a new tab <ExternalLink aria-hidden className="size-4" />
             </a>

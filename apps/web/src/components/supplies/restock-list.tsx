@@ -53,7 +53,7 @@ export function RestockList({ items }: { items: RestockItem[] }) {
             <Link
               to="/admin/properties/$propertyId"
               params={{ propertyId: property.id }}
-              className="inline-flex items-center gap-1 rounded-control-sm text-sm font-semibold text-primary hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary link-underline"
             >
               All supplies <ArrowRight aria-hidden className="size-3.5" />
             </Link>
