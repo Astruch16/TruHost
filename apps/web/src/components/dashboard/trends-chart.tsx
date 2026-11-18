@@ -204,9 +204,16 @@ function Readout({
         {m.label} · {monthLabel(selected.month)}
         {note && <span className="tracking-normal normal-case"> ({note})</span>}
       </p>
-      <p className="figure text-[1.75rem] leading-tight font-bold tracking-[-0.02em] text-ink">
-        {value === null ? '—' : m.format(value)}
-      </p>
+      {value === null ? (
+        // No figure for the month (e.g. avg. nightly before any stay has finished): a long hairline where the
+        // number goes, the same height as one, so it reads as "nothing yet" rather than a bold dash.
+        <p className="flex h-[2.1875rem] items-center">
+          <span aria-hidden className="block h-px w-14 bg-ink/45" />
+          <span className="sr-only">No figure yet</span>
+        </p>
+      ) : (
+        <p className="figure text-[1.75rem] leading-tight font-bold tracking-[-0.02em] text-ink">{m.format(value)}</p>
+      )}
       <p className="mt-0.5 flex flex-wrap gap-x-3 text-[13px] text-muted">
         {before && (
           <span>
