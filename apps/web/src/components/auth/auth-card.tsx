@@ -1,14 +1,15 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../../lib/cx';
+import loginMarkUrl from '../../assets/brand/login-mark.webp?url';
 import { Spinner } from '../ui/spinner';
-import { LogoMark } from '../shell/logo';
 
 /**
  * The sign-in card and its parts: a light frosted-glass panel over the background loop (the sky and sunset tint it
- * through a blur), TruHost badge, title and subtitle, 48px translucent white fields, the dark green primary button
- * and the Google button. Layout from docs/design/Login.dc.html. Inside the card, muted text and rules are a shade
- * darker (--color-muted, --color-line) so they hold up on the tinted glass. With "reduce transparency" set, or
- * without backdrop-filter, the panel is near-opaque instead.
+ * through a blur), the TruHost mark (assets/brand/login-mark.webp: a cream tile with the green monogram), title and
+ * subtitle, 48px translucent white fields, the dark green primary button and the Google button. Layout from
+ * docs/design/Login.dc.html. Inside the card, muted text and rules are a shade darker (--color-muted, --color-line)
+ * so they hold up on the tinted glass. With "reduce transparency" set, or without backdrop-filter, the panel is
+ * near-opaque instead.
  */
 export function AuthCard({
   title,
@@ -27,7 +28,14 @@ export function AuthCard({
       )}
     >
       <div className="flex flex-col items-center gap-3 text-center">
-        <LogoMark size={56} className="size-12 drop-shadow-[0_8px_20px_rgba(23,63,58,0.35)] sm:size-14" />
+        <img
+          src={loginMarkUrl}
+          alt=""
+          width={56}
+          height={56}
+          draggable={false}
+          className="size-12 select-none drop-shadow-[0_8px_20px_rgba(23,63,58,0.28)] sm:size-14"
+        />
         <div>
           <h1 className="font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.015em] sm:text-[1.75rem]">
             {title}
