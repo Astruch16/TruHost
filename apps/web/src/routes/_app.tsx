@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createFileRoute, Navigate, Outlet, useMatchRoute, useNavigate, useParams } from '@tanstack/react-router';
-import { useAuth, useClerk, useUser } from '@clerk/react';
+import { useAuth, useUser } from '@clerk/react';
 import { useQuery } from '@tanstack/react-query';
 import { AuthButton, AuthCard, AuthLink } from '../components/auth/auth-card';
 import { AppShell } from '../components/shell/app-shell';
@@ -17,6 +17,7 @@ import { propertyPath } from '../lib/access';
 import { initials, navItems, roleLabel, usesOwnerPortal } from '../lib/nav';
 import { accountLoadFailure, FAILURE_TEXT } from '../lib/account-load';
 import { applyMotion, PreferencesContext } from '../lib/preferences';
+import { useLeavePortal } from '../lib/portal-entry';
 import { queries } from '../lib/queries';
 import { readStoredScope, ScopeContext, storeScope } from '../lib/scope';
 
@@ -37,7 +38,7 @@ function AppLayout() {
 
 function SignedInShell() {
   const api = useApi();
-  const { signOut } = useClerk();
+  const leavePortal = useLeavePortal();
   const { user: clerkUser } = useUser();
   const navigate = useNavigate();
   const me = useQuery(queries.me(api));
@@ -53,7 +54,7 @@ function SignedInShell() {
     setScopeState(id);
     storeScope(id);
   };
-  const handleSignOut = () => void signOut({ redirectUrl: '/sign-in' });
+  const handleSignOut = () => void leavePortal();
   const signedInAs = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
   const motion = me.data?.motion ?? 'SYSTEM';
   useEffect(() => applyMotion(motion), [motion]);

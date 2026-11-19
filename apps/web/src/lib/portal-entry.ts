@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { QueryClientContext, type QueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
+import { useClerk } from '@clerk/react';
 import type { ApiClient } from '@truhost/api-client';
 import type { Me } from '@truhost/shared';
 import { ApiContext } from './api-context';
@@ -71,5 +72,36 @@ export function useEnterPortal(): (options?: { replace?: boolean }) => Promise<v
       to = await Promise.race([ready, timeout]);
     }
     await router.navigate({ to, replace, viewTransition: { types: ['enter-portal'] } });
+  };
+}
+
+/** Lets React finish drawing the sign-in page; frames are paused during a view transition, so not requestAnimationFrame. */
+const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
+
+/**
+ * Log out (the sidebar, the profile menu, the account error screens) as the mirror of signing in: the portal holds
+ * still while the session ends, then fades out as the sign-in page fades in (view transition type "leave-portal",
+ * styles.css), instead of cutting to it. Without view transitions it simply signs out. The cached data is cleared
+ * as before (ClearCacheOnUserChange).
+ */
+export function useLeavePortal(): () => Promise<void> {
+  const { signOut } = useClerk();
+  const router = useRouter();
+  return async () => {
+    const leave = async () => {
+      // Clerk ends the session and opens /sign-in through the router (main.tsx: routerPush).
+      await signOut({ redirectUrl: '/sign-in' });
+      if (!router.state.location.pathname.startsWith('/sign-in')) {
+        await router.navigate({ to: '/sign-in/$', params: { _splat: '' }, replace: true });
+      }
+      await settle();
+    };
+    if (typeof document.startViewTransition !== 'function') return leave();
+    const typed = window.CSS?.supports?.('selector(:active-view-transition-type(a))');
+    const transition = typed
+      ? document.startViewTransition({ update: leave, types: ['leave-portal'] })
+      : document.startViewTransition(leave);
+    // A transition that can't run (e.g. the tab is hidden) still signs out: only the fade is skipped.
+    await transition.updateCallbackDone.catch(() => undefined);
   };
 }

@@ -206,6 +206,20 @@ html:active-view-transition-type(enter-portal)::view-transition-old(root) {
 html:active-view-transition-type(enter-portal)::view-transition-new(root) {
   animation: th-portal-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+/* Logging out (the mirror of signing in, type "leave-portal"): the portal fades out and steps back a touch as the
+   sign-in page fades in. */
+html:active-view-transition-type(leave-portal)::view-transition-old(root) {
+  animation: th-portal-out 240ms ease-out both;
+}
+html:active-view-transition-type(leave-portal)::view-transition-new(root) {
+  animation: th-vt-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes th-portal-out {
+  to {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+}
 @keyframes th-portal-in {
   from {
     opacity: 0;
