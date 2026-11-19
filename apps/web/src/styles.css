@@ -198,6 +198,20 @@
 ::view-transition-new(page) {
   animation: th-vt-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+/* Signing in (lib/portal-entry.ts, view transition type "enter-portal"): the sign-in screen fades out as the whole
+   portal, sidebar included, fades in and settles, in one step rather than a cut to a loading screen. */
+html:active-view-transition-type(enter-portal)::view-transition-old(root) {
+  animation: th-vt-out 220ms ease-out both;
+}
+html:active-view-transition-type(enter-portal)::view-transition-new(root) {
+  animation: th-portal-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes th-portal-in {
+  from {
+    opacity: 0;
+    transform: scale(1.01);
+  }
+}
 @keyframes th-vt-out {
   to {
     opacity: 0;
