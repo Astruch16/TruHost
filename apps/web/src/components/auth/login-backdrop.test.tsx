@@ -40,17 +40,10 @@ describe('LoginBackdrop', () => {
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('offers the 4K AV1 WebM first and the H.264 MP4 as the fallback', () => {
+  it('plays the one H.264 MP4, with no other sources', () => {
     const { container } = render(<LoginBackdrop />);
-    const sources = [...container.querySelectorAll('video > source')].map((s) => [
-      s.getAttribute('src'),
-      s.getAttribute('type'),
-    ]);
-    expect(sources).toEqual([
-      ['/login/login-loop.webm', 'video/webm; codecs="av01.0.12M.08"'],
-      ['/login/login-loop.mp4', 'video/mp4; codecs="avc1.640032"'],
-    ]);
-    expect(container.querySelector('video')).not.toHaveAttribute('src');
+    expect(container.querySelector('video')).toHaveAttribute('src', '/login/login-loop.mp4');
+    expect(container.querySelectorAll('video > source')).toHaveLength(0);
   });
 
   it('frames the guides on portrait screens', () => {

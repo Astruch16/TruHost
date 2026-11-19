@@ -8,14 +8,10 @@
  */
 
 /**
- * The sign-in background: a 10-second loop of the guides by the campfire, and its first frame as a still. The loop
- * comes as AV1 at full 4K (smaller and sharper, for browsers that can decode it) and H.264 at 2560 wide for the
- * rest; the browser plays the first one it supports.
+ * The sign-in background: a 10-second loop of the guides by the campfire (H.264, 2560 × 1440 at 60 fps, its last
+ * frame dropped so the loop doesn't show the first one twice), and its first frame as a still.
  */
-export const LOGIN_VIDEOS = [
-  { src: '/login/login-loop.webm', type: 'video/webm; codecs="av01.0.12M.08"' },
-  { src: '/login/login-loop.mp4', type: 'video/mp4; codecs="avc1.640032"' },
-] as const;
+export const LOGIN_VIDEO = '/login/login-loop.mp4';
 export const LOGIN_STILL = '/login/login-still.webp';
 
 /** The picture's aspect ratio. */
