@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useEnterPortal } from '../../lib/portal-entry';
 import { useAuth, useSignIn } from '@clerk/react';
 import { signInErrorMessage } from '../../lib/auth-errors';
 import {
@@ -34,7 +34,7 @@ type Step =
 export function SignInForm({ initialError = null }: { initialError?: string | null }) {
   const { signIn } = useSignIn();
   const { isLoaded } = useAuth();
-  const navigate = useNavigate();
+  const enterPortal = useEnterPortal();
   const [step, setStep] = useState<Step>({ kind: 'password' });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -82,7 +82,8 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
           navigate: ({ decorateUrl }) => {
             const url = decorateUrl('/');
             if (url.startsWith('http')) window.location.href = url;
-            else void navigate({ to: url });
+            // The button stays on "Signing in…" while the portal gets ready, then cross-fades into it.
+            else return enterPortal();
           },
         }),
       );

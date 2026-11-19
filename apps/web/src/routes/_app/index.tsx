@@ -4,7 +4,7 @@ import { EmptyState } from '../../components/ui/empty-state';
 import { LoadingBlock } from '../../components/ui/skeleton';
 import { useApi } from '../../lib/api-context';
 import { queries } from '../../lib/queries';
-import { usesOwnerPortal } from '../../lib/nav';
+import { landingPath } from '../../lib/portal-entry';
 
 export const Route = createFileRoute('/_app/')({
   component: Home,
@@ -13,10 +13,8 @@ export const Route = createFileRoute('/_app/')({
 function Home() {
   const me = useQuery(queries.me(useApi()));
   if (!me.data) return <LoadingBlock />;
-  if (me.data.staffRole === 'ADMIN') return <Navigate to="/admin" />;
-  if (usesOwnerPortal(me.data)) return <Navigate to="/owner" />;
-  if (me.data.memberships.some((m) => m.role === 'CLEANER')) return <Navigate to="/cleaner" />;
-  if (me.data.memberships.length > 0) return <Navigate to="/properties" />;
+  const to = landingPath(me.data);
+  if (to !== '/') return <Navigate to={to} replace />;
   return (
     <EmptyState title="No properties yet">
       You don’t have access to any properties yet. A TruHost admin will add you.

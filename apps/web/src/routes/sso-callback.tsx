@@ -3,6 +3,7 @@ import { HandleSSOCallback } from '@clerk/react';
 import { AuthCard } from '../components/auth/auth-card';
 import { AuthFrame } from '../components/shell/auth-frame';
 import { Spinner } from '../components/ui/spinner';
+import { useEnterPortal } from '../lib/portal-entry';
 
 /** Where Google sends people back. Finishes the sign-in, or returns to the sign-in page with a reason. */
 export const Route = createFileRoute('/sso-callback')({
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/sso-callback')({
 
 function SsoCallback() {
   const navigate = useNavigate();
+  const enterPortal = useEnterPortal();
   return (
     <AuthFrame>
       <AuthCard title="Signing you in" subtitle="One moment…">
@@ -22,7 +24,8 @@ function SsoCallback() {
           navigateToApp={({ decorateUrl }) => {
             const url = decorateUrl('/');
             if (url.startsWith('http')) window.location.href = url;
-            else void navigate({ to: url, replace: true });
+            // "Signing you in" stays up while the portal gets ready, then cross-fades into it.
+            else return enterPortal({ replace: true });
           }}
           // Needs more than Google can give (e.g. a device check): finish on the sign-in page.
           navigateToSignIn={() =>

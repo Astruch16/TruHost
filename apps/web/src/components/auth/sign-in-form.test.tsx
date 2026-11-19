@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { ClerkAPIResponseError } from '@clerk/react/errors';
 import { SignInForm } from './sign-in-form';
 
-const navigate = vi.fn();
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
+// Opening the portal (getting it ready, then cross-fading in) is lib/portal-entry's job; here, that it's asked to.
+const enterPortal = vi.fn(() => Promise.resolve());
+vi.mock('../../lib/portal-entry', () => ({ useEnterPortal: () => enterPortal }));
 
 const ok = { error: null };
 const fail = (code: string, status = 422, retryAfter?: number) => ({
@@ -76,7 +77,7 @@ describe('SignInForm', () => {
     render(<SignInForm />);
     await signInWith('owner@example.com', 'correct horse');
     expect(signIn.password).toHaveBeenCalledWith({ emailAddress: 'owner@example.com', password: 'correct horse' });
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/' }));
+    await waitFor(() => expect(enterPortal).toHaveBeenCalled());
   });
 
   it('stays busy after signing in, until the portal takes over', async () => {
@@ -103,7 +104,7 @@ describe('SignInForm', () => {
     await signInWith('owner@example.com', 'nope');
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
     expect(screen.getByRole('alert')).not.toHaveTextContent(/clerk/i);
-    expect(navigate).not.toHaveBeenCalled();
+    expect(enterPortal).not.toHaveBeenCalled();
   });
 
   it('asks for both fields before calling Clerk', async () => {
@@ -130,7 +131,7 @@ describe('SignInForm', () => {
     await user.type(screen.getByLabelText('Code'), '123456');
     await user.click(screen.getByRole('button', { name: 'Verify and sign in' }));
     expect(signIn.mfa.verifyEmailCode).toHaveBeenCalledWith({ code: '123456' });
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/' }));
+    await waitFor(() => expect(enterPortal).toHaveBeenCalled());
   });
 
   it('resets a forgotten password: email, code, new password, then signs in', async () => {
@@ -170,7 +171,7 @@ describe('SignInForm', () => {
       password: 'a-new-password',
       signOutOfOtherSessions: true,
     });
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/' }));
+    await waitFor(() => expect(enterPortal).toHaveBeenCalled());
   });
 
   it('shows a wrong reset code and lets the user ask for a new one', async () => {
