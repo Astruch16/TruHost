@@ -1,10 +1,6 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
-import type { PortraitFraming } from '../../lib/login-backdrop';
+import { LOGIN_STILL, LOGIN_VIDEOS, type PortraitFraming } from '../../lib/login-backdrop';
 import { useReducedMotion } from '../../lib/motion';
-
-/** The sign-in background: a 10-second loop of the guides by the campfire, and its first frame as a still. */
-export const LOGIN_VIDEO = '/login/login-loop.mp4';
-export const LOGIN_STILL = '/login/login-still.webp';
 
 /**
  * Covers the screen behind sign-in and account pages. The loop plays muted and inline, pauses while the tab is
@@ -49,7 +45,6 @@ export function LoginBackdrop({ framing }: { framing?: PortraitFraming }) {
       ) : (
         <video
           ref={video}
-          src={LOGIN_VIDEO}
           poster={LOGIN_STILL}
           autoPlay
           muted
@@ -60,7 +55,11 @@ export function LoginBackdrop({ framing }: { framing?: PortraitFraming }) {
           tabIndex={-1}
           className={fit}
           style={position}
-        />
+        >
+          {LOGIN_VIDEOS.map((v) => (
+            <source key={v.src} src={v.src} type={v.type} />
+          ))}
+        </video>
       )}
     </div>
   );
