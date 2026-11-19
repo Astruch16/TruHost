@@ -6,9 +6,8 @@ import { NotificationSettings } from '../../components/settings/notifications-se
 import { PreferenceSettings } from '../../components/settings/preferences-section';
 import { ProfileSettings } from '../../components/settings/profile-section';
 import { SecuritySettings } from '../../components/settings/security-section';
-import { SettingsNav } from '../../components/settings/settings-nav';
+import { SettingsShell } from '../../components/settings/settings-shell';
 import { AppShell } from '../../components/shell/app-shell';
-import { PageHeader } from '../../components/ui/page-header';
 import { navItems } from '../../lib/nav';
 import { PreferencesContext } from '../../lib/preferences';
 import { SecurityUserContext, type SecurityUser } from '../../lib/security-user';
@@ -217,18 +216,15 @@ function SettingsPreview() {
             onSelectProperty={() => undefined}
             onSignOut={() => undefined}
           >
-            <PageHeader title="Settings" description="Your profile, how you sign in, and how TruHost works for you." />
-            <div className="grid grid-cols-1 gap-6 @4xl/content:grid-cols-[15rem_minmax(0,1fr)] @4xl/content:gap-10">
-              <div className="min-w-0 @4xl/content:sticky @4xl/content:top-6 @4xl/content:self-start">
-                <SettingsNav
-                  preview={{
-                    active: section,
-                    onPick: (to) => void navigate({ search: (s) => ({ ...s, section: to }) }),
-                  }}
-                />
-              </div>
-              <div className="flex max-w-3xl min-w-0 flex-col gap-6">{body}</div>
-            </div>
+            <SettingsShell
+              me={me}
+              preview={{
+                active: section,
+                onPick: (to) => void navigate({ search: (s) => ({ ...s, section: to }) }),
+              }}
+            >
+              {body}
+            </SettingsShell>
           </AppShell>
         </PreferencesContext.Provider>
       </SecurityUserContext.Provider>
