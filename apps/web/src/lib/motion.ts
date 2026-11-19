@@ -1,4 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type RefObject,
+} from 'react';
 
 /** Whether motion should be kept to a minimum: the system setting, or "Reduce motion" in Settings (data-motion). */
 export function prefersReducedMotion(): boolean {
@@ -7,6 +15,25 @@ export function prefersReducedMotion(): boolean {
     document.documentElement.dataset.motion === 'reduced' ||
     (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   );
+}
+
+/**
+ * prefersReducedMotion as a hook that re-renders when either setting changes (the system's, or "Reduce motion" in
+ * Settings), for components that choose between motion and a still rather than just shortening an animation.
+ */
+export function useReducedMotion(): boolean {
+  return useSyncExternalStore(subscribeMotion, prefersReducedMotion, () => true);
+}
+
+function subscribeMotion(onChange: () => void): () => void {
+  const media = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  media?.addEventListener('change', onChange);
+  const observer = typeof MutationObserver === 'function' ? new MutationObserver(onChange) : null;
+  observer?.observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
+  return () => {
+    media?.removeEventListener('change', onChange);
+    observer?.disconnect();
+  };
 }
 
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;

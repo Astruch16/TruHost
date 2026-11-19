@@ -54,6 +54,7 @@ export function WelcomeDialog({
           <div className="px-6 pt-6 @md/content:px-8 @md/content:pt-8">
             <RadixDialog.Title className="sr-only">Welcome to TruHost</RadixDialog.Title>
             <GuidePicker
+              animated
               value={picked ?? guideFromApi(me.guide)}
               onChange={(g) => {
                 setPicked(g);
