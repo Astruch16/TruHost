@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
-import { LOGIN_STILL, LOGIN_VIDEOS, type PortraitFraming } from '../../lib/login-backdrop';
+import { LOGIN_STILL, LOGIN_VIDEO, type PortraitFraming } from '../../lib/login-backdrop';
 import { useReducedMotion } from '../../lib/motion';
 
 /**
@@ -45,6 +45,7 @@ export function LoginBackdrop({ framing }: { framing?: PortraitFraming }) {
       ) : (
         <video
           ref={video}
+          src={LOGIN_VIDEO}
           poster={LOGIN_STILL}
           autoPlay
           muted
@@ -55,11 +56,7 @@ export function LoginBackdrop({ framing }: { framing?: PortraitFraming }) {
           tabIndex={-1}
           className={fit}
           style={position}
-        >
-          {LOGIN_VIDEOS.map((v) => (
-            <source key={v.src} src={v.src} type={v.type} />
-          ))}
-        </video>
+        />
       )}
     </div>
   );
