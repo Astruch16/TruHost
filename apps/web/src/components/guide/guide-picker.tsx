@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { cx } from '../../lib/cx';
 import { GUIDE_CHARACTERS, GUIDES, type GuideCharacter } from '../../lib/guides';
 import { Guide } from './guide';
-import { OwlWave } from './owl-wave';
+import { OwlStill, OwlWave } from './owl-wave';
 
 /**
  * "Choose your guide", as in docs/design/Onboarding.dc.html: a large waving preview with a speech bubble, then one
@@ -14,7 +14,6 @@ export function GuidePicker({
   firstName,
   disabled,
   message,
-  animated = false,
 }: {
   value: GuideCharacter;
   onChange: (character: GuideCharacter) => void;
@@ -22,8 +21,6 @@ export function GuidePicker({
   disabled?: boolean;
   /** What the guide says under the greeting (the welcome screen); the character's description by default. */
   message?: ReactNode;
-  /** The welcome screen: Sage waves hello in 3D (OwlWave) instead of the drawn still. */
-  animated?: boolean;
 }) {
   const current = GUIDES[value];
   return (
@@ -33,7 +30,8 @@ export function GuidePicker({
           className="grid size-[132px] shrink-0 place-items-center rounded-full"
           style={{ backgroundColor: current.tint }}
         >
-          {animated && value === 'sage' ? (
+          {/* Sage is the 3D owl, waving hello once; Juniper and Pip are drawn. */}
+          {value === 'sage' ? (
             <OwlWave key={value} size={120} />
           ) : (
             <Guide key={value} character={value} size={120} ground={false} />
@@ -71,7 +69,11 @@ export function GuidePicker({
                   className="grid size-11 shrink-0 place-items-center rounded-full"
                   style={{ backgroundColor: g.tint }}
                 >
-                  <Guide character={key} size={40} ground={false} decorative />
+                  {key === 'sage' ? (
+                    <OwlStill size={40} />
+                  ) : (
+                    <Guide character={key} size={40} ground={false} decorative />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{g.name}</span>
