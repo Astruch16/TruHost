@@ -684,9 +684,11 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 .lg-ghost:hover {
   background: #f6f6f3;
 }
-/* Sign-in pages: the page behind the (fixed) background is the sky's colour, so the scrollbar's gutter doesn't show
-   as a pale strip down the side. */
+/* Sign-in pages: the background runs edge to edge, so don't hold space for a scrollbar the page doesn't need (the
+   gutter rule on html above); one shows only when a step is taller than the window. The sky's colour stays behind
+   it for that case. */
 html:has([data-auth-frame]) {
+  scrollbar-gutter: auto;
   background: #465996;
 }
 .lg-scene[data-paused],
