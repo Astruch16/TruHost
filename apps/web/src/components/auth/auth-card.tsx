@@ -4,8 +4,11 @@ import { Spinner } from '../ui/spinner';
 import { LogoMark } from '../shell/logo';
 
 /**
- * The sign-in card and its parts, styled as in docs/design/Login.dc.html: frosted panel, TruHost badge, title and
- * subtitle, 48px fields, the dark green primary button and the white Google button.
+ * The sign-in card and its parts: a light frosted-glass panel over the background loop (the sky and sunset tint it
+ * through a blur), TruHost badge, title and subtitle, 48px translucent white fields, the dark green primary button
+ * and the Google button. Layout from docs/design/Login.dc.html. Inside the card, muted text and rules are a shade
+ * darker (--color-muted, --color-line) so they hold up on the tinted glass. With "reduce transparency" set, or
+ * without backdrop-filter, the panel is near-opaque instead.
  */
 export function AuthCard({
   title,
@@ -17,7 +20,12 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <div className="lg-rise flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] border border-white/70 bg-[rgba(251,251,248,0.95)] px-5 pt-6 pb-5 text-ink sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7 shadow-[0_30px_80px_rgba(4,14,12,0.5),inset_0_2px_0_rgba(255,255,255,0.8)] sm:px-[34px] sm:pt-[34px]">
+    <div
+      className={cx(
+        'lg-rise lg-glass flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] border border-white/65 px-5 pt-6 pb-5 text-ink sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7',
+        '[--color-line:rgba(40,44,80,0.18)] [--color-muted:#4A4F63]',
+      )}
+    >
       <div className="flex flex-col items-center gap-3 text-center">
         <LogoMark size={56} className="size-12 drop-shadow-[0_8px_20px_rgba(23,63,58,0.35)] sm:size-14" />
         <div>
@@ -45,7 +53,7 @@ export function AuthTagline() {
 }
 
 const fieldInput =
-  'lg-input h-12 w-full rounded-xl border border-[#DADDD7] bg-white px-3.5 text-[15px] text-ink placeholder:text-muted/70';
+  'lg-input h-12 w-full rounded-xl border border-white/85 bg-white/72 px-3.5 text-[15px] text-ink placeholder:text-muted/70';
 
 /** Label, input and an optional link on the label's line (e.g. "Forgot password?"). */
 export function AuthField({
@@ -152,7 +160,7 @@ export function AuthButton({
   );
 }
 
-/** "Continue with Google", the white button with Google's mark. */
+/** "Continue with Google", the translucent white button with Google's mark. */
 export function GoogleButton({
   onClick,
   loading = false,
@@ -168,7 +176,7 @@ export function GoogleButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cx(
-        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-[#DADDD7] bg-white text-[15px] font-semibold text-ink disabled:opacity-70',
+        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-white/85 bg-white/72 text-[15px] font-semibold text-ink disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >
