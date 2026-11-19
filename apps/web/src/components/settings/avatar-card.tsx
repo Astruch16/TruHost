@@ -5,6 +5,7 @@ import type { Me } from '@truhost/shared';
 import { Camera, Trash2 } from 'lucide-react';
 import { useApi } from '../../lib/api-context';
 import { AVATAR_INPUT_ACCEPT, uploadAvatar } from '../../lib/avatar';
+import { GUIDE_WAVES, guideFromApi } from '../../lib/guides';
 import { initials, roleLabel } from '../../lib/nav';
 import { queries } from '../../lib/queries';
 import { ErrorAlert } from '../ui/alert';
@@ -12,6 +13,8 @@ import { Avatar } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Confirmation } from '../ui/confirmation';
 import { Pill } from '../ui/pill';
+import { Guide } from '../guide/guide';
+import { GuideStill } from '../guide/guide-wave';
 
 /**
  * The profile header: photo (upload, replace, remove), name, role and email. The photo is cropped square and shrunk
@@ -39,6 +42,7 @@ export function AvatarCard({ me }: { me: Me }) {
   });
   const busy = upload.isPending || remove.isPending;
   const name = `${me.firstName} ${me.lastName}`;
+  const guide = guideFromApi(me.guide);
 
   const pick = (file: File | undefined) => {
     if (!file) return;
@@ -52,7 +56,16 @@ export function AvatarCard({ me }: { me: Me }) {
       aria-label="Profile photo"
       className="relative overflow-hidden rounded-card border border-line-soft bg-surface"
     >
-      <div aria-hidden className="h-20 bg-gradient-to-r from-sage-tint via-blue-tint/80 to-lavender-tint" />
+      <div aria-hidden className="relative h-20 bg-gradient-to-r from-sage-tint via-blue-tint/80 to-lavender-tint">
+        {/* Their guide keeps them company at the end of the banner (wide screens). */}
+        <span className="absolute top-2 right-5 hidden @2xl/content:block">
+          {GUIDE_WAVES[guide] ? (
+            <GuideStill character={guide} size={76} />
+          ) : (
+            <Guide character={guide} size={76} ground={false} decorative />
+          )}
+        </span>
+      </div>
       <div className="-mt-11 flex flex-col gap-4 px-5 pb-5 @xl/content:flex-row @xl/content:items-end @xl/content:gap-5 @2xl/content:px-6 @2xl/content:pb-6">
         <button
           type="button"

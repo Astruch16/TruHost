@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unwrap } from '@truhost/api-client';
 import type { Me } from '@truhost/shared';
 import { Building2, Mail, Sparkles } from 'lucide-react';
-import { AvatarCard } from './avatar-card';
 import { SettingRow } from './setting-row';
 import { ErrorAlert, LoadError } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -24,7 +23,6 @@ export function ProfileSettings() {
   if (!me.data) return <Skeleton className="h-72 rounded-card" />;
   return (
     <>
-      <AvatarCard me={me.data} />
       <ProfileForm key={me.data.id} initial={me.data} />
       <AccessCard me={me.data} />
     </>
