@@ -30,7 +30,7 @@ export function GuidePicker({
           className="grid size-[132px] shrink-0 place-items-center rounded-full"
           style={{ backgroundColor: current.tint }}
         >
-          {/* Guides with a 3D animation (Sage, Juniper) wave hello once; the others are drawn. */}
+          {/* Guides with a 3D animation (all three now) wave hello once; any without one are drawn. */}
           {GUIDE_WAVES[value] ? (
             <GuideWave key={value} character={value} size={120} />
           ) : (

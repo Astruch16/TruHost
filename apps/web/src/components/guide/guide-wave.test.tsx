@@ -71,4 +71,13 @@ describe('GuideWave', () => {
     fireEvent.error(video);
     expect(container.querySelector('img[src="/mascots/juniper-wave-still.webp"]')).not.toBeNull();
   });
+
+  it("plays Pip's (the chickadee's) own animation, with Pip's name, and falls back to Pip's still", () => {
+    const { container } = render(<GuideWave character="pip" size={120} />);
+    expect(screen.getByRole('img', { name: /^Pip/ })).toBeInTheDocument();
+    const video = container.querySelector('video')!;
+    expect(video).toHaveAttribute('src', '/mascots/chickadee-wave.webm');
+    fireEvent.error(video);
+    expect(container.querySelector('img[src="/mascots/chickadee-wave-still.webp"]')).not.toBeNull();
+  });
 });
