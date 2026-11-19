@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { LOGIN_STILL, LOGIN_VIDEO, LoginBackdrop } from './login-backdrop';
+import { LOGIN_STILL } from '../../lib/login-backdrop';
+import { LoginBackdrop } from './login-backdrop';
 
 let play: ReturnType<typeof vi.spyOn>;
 let pause: ReturnType<typeof vi.spyOn>;
@@ -29,7 +30,6 @@ describe('LoginBackdrop', () => {
   it('loops the campfire video full screen: muted, autoplaying, inline, with the still as its poster', () => {
     const { container } = render(<LoginBackdrop />);
     const video = container.querySelector('video')!;
-    expect(video).toHaveAttribute('src', LOGIN_VIDEO);
     expect(video).toHaveAttribute('poster', LOGIN_STILL);
     expect(video.muted).toBe(true);
     expect(video.defaultMuted).toBe(true);
@@ -38,6 +38,19 @@ describe('LoginBackdrop', () => {
     expect(video).toHaveAttribute('playsinline');
     expect(video).toHaveClass('object-cover');
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('offers the 4K AV1 WebM first and the H.264 MP4 as the fallback', () => {
+    const { container } = render(<LoginBackdrop />);
+    const sources = [...container.querySelectorAll('video > source')].map((s) => [
+      s.getAttribute('src'),
+      s.getAttribute('type'),
+    ]);
+    expect(sources).toEqual([
+      ['/login/login-loop.webm', 'video/webm; codecs="av01.0.12M.08"'],
+      ['/login/login-loop.mp4', 'video/mp4; codecs="avc1.640032"'],
+    ]);
+    expect(container.querySelector('video')).not.toHaveAttribute('src');
   });
 
   it('frames the guides on portrait screens', () => {
