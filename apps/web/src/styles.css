@@ -575,9 +575,10 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
   animation: none !important;
 }
 
-/* Sign-in scene and card (components/auth). Keyframes and classes copied from docs/design/Login.dc.html. Extra:
-   everything pauses while the tab is hidden (data-paused, set by LoginScene), and reduced motion stops it outright
-   rather than leaving it on a last frame. */
+/* Sign-in card (components/auth) and the sidebar's mountain scene. Keyframes and classes from
+   docs/design/Login.dc.html. Extra: the scene pauses while the tab is hidden (data-paused, set by MountainScene), and
+   reduced motion stops it outright rather than leaving it on a last frame. The sign-in background itself is a video
+   (components/auth/login-backdrop.tsx). */
 @keyframes lg-twinkle {
   0%,
   100% {
@@ -585,87 +586,6 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
   }
   50% {
     opacity: 1;
-  }
-}
-@keyframes lg-sway {
-  0%,
-  100% {
-    transform: rotate(-1.3deg);
-  }
-  50% {
-    transform: rotate(1.3deg);
-  }
-}
-@keyframes lg-shoot {
-  0% {
-    transform: translate(0, 0);
-    opacity: 0;
-  }
-  2% {
-    opacity: 1;
-  }
-  10% {
-    transform: translate(-460px, 240px);
-    opacity: 0;
-  }
-  100% {
-    transform: translate(-460px, 240px);
-    opacity: 0;
-  }
-}
-@keyframes lg-fly {
-  0% {
-    transform: translate(-160px, 0);
-  }
-  50% {
-    transform: translate(760px, -30px);
-  }
-  100% {
-    transform: translate(1700px, 10px);
-  }
-}
-@keyframes lg-flap {
-  0%,
-  40%,
-  100% {
-    transform: scaleY(1);
-  }
-  10%,
-  30% {
-    transform: scaleY(-0.55);
-  }
-  20% {
-    transform: scaleY(1);
-  }
-}
-@keyframes lg-wave {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(var(--wl));
-  }
-}
-@keyframes lg-drift {
-  0%,
-  100% {
-    transform: translateX(-40px);
-  }
-  50% {
-    transform: translateX(40px);
-  }
-}
-@keyframes lg-smoke {
-  0% {
-    transform: translate(0, 0) scale(0.5);
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.4;
-  }
-  100% {
-    transform: translate(26px, -90px) scale(2);
-    opacity: 0;
   }
 }
 @keyframes lg-firefly {
@@ -714,35 +634,6 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 }
 .lg-twinkle {
   animation: lg-twinkle 3s ease-in-out infinite;
-}
-.lg-sway {
-  animation: lg-sway 5s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-/* Shooting stars and smoke start after a delay. "backwards" holds them on their first (invisible) frame until then;
-   without it they sit fully visible at their starting point (a bug on the board too). */
-.lg-shoot {
-  animation: lg-shoot 9s linear infinite backwards;
-}
-.lg-fly {
-  animation: lg-fly 34s linear infinite;
-}
-.lg-flap {
-  animation: lg-flap 2.2s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-.lg-wave {
-  animation: lg-wave 8s linear infinite;
-}
-.lg-drift {
-  animation: lg-drift 22s ease-in-out infinite;
-}
-.lg-smoke {
-  animation: lg-smoke 6s ease-out infinite backwards;
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
 }
 .lg-firefly {
   animation: lg-firefly 4s ease-in-out infinite;
@@ -793,29 +684,23 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 .lg-ghost:hover {
   background: #f6f6f3;
 }
+/* Sign-in pages: the page behind the (fixed) background is the sky's colour, so the scrollbar's gutter doesn't show
+   as a pale strip down the side. */
+html:has([data-auth-frame]) {
+  background: #465996;
+}
 .lg-scene[data-paused],
 .lg-scene[data-paused] * {
   animation-play-state: paused !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .lg-twinkle,
-  .lg-sway,
-  .lg-shoot,
-  .lg-fly,
-  .lg-flap,
-  .lg-drift,
-  .lg-smoke,
   .sb-smoke,
   .lg-firefly,
   .lg-glow,
   .lg-shimmer,
-  .lg-wave,
   .lg-rise {
     animation: none !important;
-  }
-  .lg-shoot,
-  .lg-fly {
-    display: none;
   }
 }
 
