@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { cx } from '../../lib/cx';
 import { GUIDE_CHARACTERS, GUIDES, type GuideCharacter } from '../../lib/guides';
 import { Guide } from './guide';
+import { OwlWave } from './owl-wave';
 
 /**
  * "Choose your guide", as in docs/design/Onboarding.dc.html: a large waving preview with a speech bubble, then one
@@ -13,6 +14,7 @@ export function GuidePicker({
   firstName,
   disabled,
   message,
+  animated = false,
 }: {
   value: GuideCharacter;
   onChange: (character: GuideCharacter) => void;
@@ -20,6 +22,8 @@ export function GuidePicker({
   disabled?: boolean;
   /** What the guide says under the greeting (the welcome screen); the character's description by default. */
   message?: ReactNode;
+  /** The welcome screen: Sage waves hello in 3D (OwlWave) instead of the drawn still. */
+  animated?: boolean;
 }) {
   const current = GUIDES[value];
   return (
@@ -29,7 +33,11 @@ export function GuidePicker({
           className="grid size-[132px] shrink-0 place-items-center rounded-full"
           style={{ backgroundColor: current.tint }}
         >
-          <Guide key={value} character={value} size={120} ground={false} />
+          {animated && value === 'sage' ? (
+            <OwlWave key={value} size={120} />
+          ) : (
+            <Guide key={value} character={value} size={120} ground={false} />
+          )}
         </span>
         <div className="min-w-0 flex-1 rounded-[4px_16px_16px_16px] bg-ground @md/content:rounded-[16px_16px_16px_4px] px-[18px] py-4">
           <p className="text-xl font-bold tracking-[-0.01em]">
