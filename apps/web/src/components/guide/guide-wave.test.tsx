@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { OWL_STILL_SRC, OWL_WAVE_SRC, OwlStill, OwlWave } from './owl-wave';
+import { GUIDE_WAVES } from '../../lib/guides';
+import { GuideStill, GuideWave } from './guide-wave';
+
+const OWL_WAVE_SRC = GUIDE_WAVES.sage!.video;
+const OWL_STILL_SRC = GUIDE_WAVES.sage!.still;
 
 const label = /^Sage, a small green owl/;
 
@@ -9,9 +13,9 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('OwlWave', () => {
+describe('GuideWave', () => {
   it('plays the 3D owl once: muted, autoplaying and inline, not looping', () => {
-    const { container } = render(<OwlWave size={120} />);
+    const { container } = render(<GuideWave character="sage" size={120} />);
     expect(screen.getByRole('img', { name: label })).toBeInTheDocument();
     const video = container.querySelector('video')!;
     expect(video).toHaveAttribute('src', OWL_WAVE_SRC);
@@ -24,14 +28,14 @@ describe('OwlWave', () => {
 
   it('shows the 3D owl still instead when motion is reduced', () => {
     document.documentElement.dataset.motion = 'reduced';
-    const { container } = render(<OwlWave size={120} />);
+    const { container } = render(<GuideWave character="sage" size={120} />);
     expect(container.querySelector('video')).toBeNull();
     expect(container.querySelector(`img[src="${OWL_STILL_SRC}"]`)).not.toBeNull();
     expect(screen.getByRole('img', { name: label })).toBeInTheDocument();
   });
 
   it('switches to the still owl when reduced motion is turned on while it shows', async () => {
-    const { container } = render(<OwlWave size={120} />);
+    const { container } = render(<GuideWave character="sage" size={120} />);
     expect(container.querySelector('video')).not.toBeNull();
     await act(async () => {
       document.documentElement.dataset.motion = 'reduced';
@@ -41,21 +45,30 @@ describe('OwlWave', () => {
   });
 
   it('falls back to the still if the video fails, or is slow to arrive', () => {
-    const failed = render(<OwlWave size={120} />);
+    const failed = render(<GuideWave character="sage" size={120} />);
     fireEvent.error(failed.container.querySelector('video')!);
     expect(failed.container.querySelector(`img[src="${OWL_STILL_SRC}"]`)).not.toBeNull();
     failed.unmount();
 
     vi.useFakeTimers();
-    const slow = render(<OwlWave size={120} />);
+    const slow = render(<GuideWave character="sage" size={120} />);
     act(() => void vi.advanceTimersByTime(2600));
     expect(slow.container.querySelector('video')).toBeNull();
     expect(slow.container.querySelector(`img[src="${OWL_STILL_SRC}"]`)).not.toBeNull();
   });
 
   it('has a small decorative still for the picker button', () => {
-    const { container } = render(<OwlStill size={40} />);
+    const { container } = render(<GuideStill character="sage" size={40} />);
     expect(container.querySelector(`img[src="${OWL_STILL_SRC}"]`)).not.toBeNull();
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it("plays Juniper's own animation, with Juniper's name, and falls back to Juniper's still", () => {
+    const { container } = render(<GuideWave character="juniper" size={120} />);
+    expect(screen.getByRole('img', { name: /^Juniper/ })).toBeInTheDocument();
+    const video = container.querySelector('video')!;
+    expect(video).toHaveAttribute('src', '/mascots/juniper-wave.webm');
+    fireEvent.error(video);
+    expect(container.querySelector('img[src="/mascots/juniper-wave-still.webp"]')).not.toBeNull();
   });
 });

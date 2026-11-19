@@ -12,6 +12,15 @@
 export const GUIDE_CHARACTERS = ['sage', 'juniper', 'pip'] as const;
 export type GuideCharacter = (typeof GUIDE_CHARACTERS)[number];
 
+/**
+ * The guides with a 3D waving-hello animation (transparent WebM, 5 s, square, the guide in the middle of the frame)
+ * and its last frame as a transparent still, served from public/mascots. Guides without one are drawn (Guide).
+ */
+export const GUIDE_WAVES: Partial<Record<GuideCharacter, { video: string; still: string }>> = {
+  sage: { video: '/mascots/owl-wave.webm', still: '/mascots/owl-wave-still.webp' },
+  juniper: { video: '/mascots/juniper-wave.webm', still: '/mascots/juniper-wave-still.webp' },
+};
+
 export const GUIDE_POSES = ['waving', 'pointing', 'celebrating', 'thinking', 'sleeping'] as const;
 export type GuidePose = (typeof GUIDE_POSES)[number];
 

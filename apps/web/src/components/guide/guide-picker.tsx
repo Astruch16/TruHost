@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { cx } from '../../lib/cx';
-import { GUIDE_CHARACTERS, GUIDES, type GuideCharacter } from '../../lib/guides';
+import { GUIDE_CHARACTERS, GUIDE_WAVES, GUIDES, type GuideCharacter } from '../../lib/guides';
 import { Guide } from './guide';
-import { OwlStill, OwlWave } from './owl-wave';
+import { GuideStill, GuideWave } from './guide-wave';
 
 /**
  * "Choose your guide", as in docs/design/Onboarding.dc.html: a large waving preview with a speech bubble, then one
@@ -30,9 +30,9 @@ export function GuidePicker({
           className="grid size-[132px] shrink-0 place-items-center rounded-full"
           style={{ backgroundColor: current.tint }}
         >
-          {/* Sage is the 3D owl, waving hello once; Juniper and Pip are drawn. */}
-          {value === 'sage' ? (
-            <OwlWave key={value} size={120} />
+          {/* Guides with a 3D animation (Sage, Juniper) wave hello once; the others are drawn. */}
+          {GUIDE_WAVES[value] ? (
+            <GuideWave key={value} character={value} size={120} />
           ) : (
             <Guide key={value} character={value} size={120} ground={false} />
           )}
@@ -69,8 +69,8 @@ export function GuidePicker({
                   className="grid size-11 shrink-0 place-items-center rounded-full"
                   style={{ backgroundColor: g.tint }}
                 >
-                  {key === 'sage' ? (
-                    <OwlStill size={40} />
+                  {GUIDE_WAVES[key] ? (
+                    <GuideStill character={key} size={40} />
                   ) : (
                     <Guide character={key} size={40} ground={false} decorative />
                   )}
