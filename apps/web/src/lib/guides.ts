@@ -19,6 +19,7 @@ export type GuideCharacter = (typeof GUIDE_CHARACTERS)[number];
 export const GUIDE_WAVES: Partial<Record<GuideCharacter, { video: string; still: string }>> = {
   sage: { video: '/mascots/owl-wave.webm', still: '/mascots/owl-wave-still.webp' },
   juniper: { video: '/mascots/juniper-wave.webm', still: '/mascots/juniper-wave-still.webp' },
+  pip: { video: '/mascots/chickadee-wave.webm', still: '/mascots/chickadee-wave-still.webp' },
 };
 
 export const GUIDE_POSES = ['waving', 'pointing', 'celebrating', 'thinking', 'sleeping'] as const;
