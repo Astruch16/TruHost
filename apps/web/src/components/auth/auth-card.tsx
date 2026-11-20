@@ -4,12 +4,9 @@ import loginMarkUrl from '../../assets/brand/login-mark.webp?url';
 import { Spinner } from '../ui/spinner';
 
 /**
- * The sign-in card and its parts: a light frosted-glass panel over the background loop (the sky and sunset tint it
- * through a blur), the TruHost mark (assets/brand/login-mark.webp: a cream tile with the green monogram), title and
- * subtitle, 48px translucent white fields, the dark green primary button and the Google button. Layout from
- * docs/design/Login.dc.html. Inside the card, muted text and rules are a shade darker (--color-muted, --color-line)
- * so they hold up on the tinted glass. With "reduce transparency" set, or without backdrop-filter, the panel is
- * near-opaque instead.
+ * The sign-in card and its parts: a white card with a soft shadow on the white page, the TruHost mark
+ * (assets/brand/login-mark.webp: a cream tile with the green monogram), title and subtitle, 48px fields, the dark
+ * green primary button and the white Google button. Layout from docs/design/Login.dc.html.
  */
 export function AuthCard({
   title,
@@ -21,12 +18,7 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <div
-      className={cx(
-        'lg-rise lg-glass flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] border border-white/65 px-5 pt-6 pb-5 text-ink sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7',
-        '[--color-line:rgba(40,44,80,0.18)] [--color-muted:#4A4F63]',
-      )}
-    >
+    <div className="lg-rise flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] border border-line-soft bg-white px-5 pt-6 pb-5 text-ink shadow-[0_1px_3px_rgba(16,24,40,0.06),0_14px_36px_-6px_rgba(16,24,40,0.12)] sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <img
           src={loginMarkUrl}
@@ -48,20 +40,36 @@ export function AuthCard({
   );
 }
 
+/** The TruHost mark and wordmark, in the top-left corner of the sign-in page. */
+export function AuthBrand() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <img
+        src={loginMarkUrl}
+        alt=""
+        width={40}
+        height={40}
+        draggable={false}
+        className="size-9 select-none sm:size-10"
+      />
+      <p className="text-[1.4rem] leading-none font-bold tracking-[-0.035em] text-ink">
+        Tru<span className="text-[#2D7A62]">Host</span>
+      </p>
+    </div>
+  );
+}
+
 /** The handwritten line under the card. */
 export function AuthTagline() {
   return (
-    <p
-      aria-hidden
-      className="lg-rise hidden -rotate-3 font-hand text-[30px] sm:block text-white/92 [animation-delay:.25s] [text-shadow:0_2px_12px_rgba(0,0,0,0.35)]"
-    >
+    <p aria-hidden className="lg-rise hidden -rotate-3 font-hand text-[30px] text-ink sm:block [animation-delay:.25s]">
       Better stays. Higher returns.
     </p>
   );
 }
 
 const fieldInput =
-  'lg-input h-12 w-full rounded-xl border border-white/85 bg-white/72 px-3.5 text-[15px] text-ink placeholder:text-muted/70';
+  'lg-input h-12 w-full rounded-xl border border-[#DADDD7] bg-white px-3.5 text-[15px] text-ink placeholder:text-muted/70';
 
 /** Label, input and an optional link on the label's line (e.g. "Forgot password?"). */
 export function AuthField({
@@ -168,7 +176,7 @@ export function AuthButton({
   );
 }
 
-/** "Continue with Google", the translucent white button with Google's mark. */
+/** "Continue with Google", the white button with Google's mark. */
 export function GoogleButton({
   onClick,
   loading = false,
@@ -184,7 +192,7 @@ export function GoogleButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cx(
-        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-white/85 bg-white/72 text-[15px] font-semibold text-ink disabled:opacity-70',
+        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-[#DADDD7] bg-white text-[15px] font-semibold text-ink disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >

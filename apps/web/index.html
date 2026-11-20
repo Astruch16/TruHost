@@ -10,7 +10,7 @@
     <title>TruHost</title>
     <script>
       // First paint, before the app's code has downloaded (it can take a few seconds on a slow connection).
-      // Sign-in pages get the evening sky of their background loop; the portal gets its own outline. React replaces it on its first render.
+      // Sign-in pages get their plain white page; the portal gets its own outline. React replaces it on its first render.
       // Keep the path rule in step with isAuthPath (src/lib/shell-context.ts).
       document.documentElement.dataset.splash = '1';
       if (/^\/(sign-in|sign-up|sso-callback)(\/|$)/.test(location.pathname)) {
@@ -26,11 +26,9 @@
         background: #f6f6f3;
         display: grid;
       }
-      html.boot-auth {
-        background: #465996;
-      }
+      html.boot-auth,
       .boot-auth .boot {
-        background: linear-gradient(#465996, #676fad 15%, #9b88b3 28%, #ba97a3 38%, #8a7c74 52%, #8d786e 70%, #67674d);
+        background: #fff;
       }
       .boot-auth .boot > :not(.boot-sr) {
         display: none;
