@@ -3,10 +3,14 @@ import { cx } from '../../lib/cx';
 import loginMarkUrl from '../../assets/brand/login-mark.webp?url';
 import { Spinner } from '../ui/spinner';
 
+/** The mark's tile: white with a thin black outline so it doesn't blend into the page (the image is the monogram). */
+const MARK_TILE = 'select-none rounded-[22%] border border-ink bg-white';
+
 /**
- * The sign-in card and its parts: a frosted-glass card (styles.css, .lg-glass) with a soft shadow on the white page, the TruHost mark
- * (assets/brand/login-mark.webp: a cream tile with the green monogram), title and subtitle, 48px fields, the dark
- * green primary button and the white Google button. Layout from docs/design/Login.dc.html.
+ * The sign-in card and its parts: a frosted-glass card (styles.css, .lg-glass) with a soft shadow on the white page,
+ * the TruHost mark (assets/brand/login-mark.webp, the green monogram, on a white tile with a thin black outline),
+ * title and subtitle, 48px fields, the dark green primary button and the white Google button. Layout from
+ * docs/design/Login.dc.html.
  */
 export function AuthCard({
   title,
@@ -26,7 +30,7 @@ export function AuthCard({
           width={56}
           height={56}
           draggable={false}
-          className="size-12 select-none sm:size-14"
+          className={cx(MARK_TILE, 'size-12 sm:size-14')}
         />
         <div>
           <h1 className="font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.015em] sm:text-[1.75rem]">
@@ -50,7 +54,7 @@ export function AuthBrand() {
         width={40}
         height={40}
         draggable={false}
-        className="size-9 select-none sm:size-10"
+        className={cx(MARK_TILE, 'size-9 sm:size-10')}
       />
       <p className="text-[1.4rem] leading-none font-bold tracking-[-0.035em] text-ink">
         Tru<span className="text-[#2D7A62]">Host</span>
