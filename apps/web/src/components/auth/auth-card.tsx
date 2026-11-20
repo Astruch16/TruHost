@@ -26,7 +26,7 @@ export function AuthCard({
           width={56}
           height={56}
           draggable={false}
-          className="size-12 select-none drop-shadow-[0_8px_20px_rgba(23,63,58,0.28)] sm:size-14"
+          className="size-12 select-none sm:size-14"
         />
         <div>
           <h1 className="font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.015em] sm:text-[1.75rem]">
