@@ -577,8 +577,7 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 
 /* Sign-in card (components/auth) and the sidebar's mountain scene. Keyframes and classes from
    docs/design/Login.dc.html. Extra: the scene pauses while the tab is hidden (data-paused, set by MountainScene), and
-   reduced motion stops it outright rather than leaving it on a last frame. The sign-in background itself is a video
-   (components/auth/login-backdrop.tsx). */
+   reduced motion stops it outright rather than leaving it on a last frame. */
 @keyframes lg-twinkle {
   0%,
   100% {
@@ -668,37 +667,16 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 .lg-rise {
   animation: lg-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-/* The sign-in card's frosted glass (components/auth/auth-card.tsx): pale and blurred so the background's sky and
-   sunset show through. Near-opaque when the browser can't blur what's behind it, or the person asked for less
-   transparency. */
-.lg-glass {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.4));
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  backdrop-filter: blur(22px) saturate(1.5);
-  box-shadow:
-    0 24px 60px rgba(20, 22, 60, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .lg-glass {
-    background: rgba(251, 251, 250, 0.94);
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .lg-glass {
-    background: rgba(251, 251, 250, 0.96);
-  }
-}
-/* Browser autofill paints fields solid blue; keep them the card's pale glass instead (an inset shadow is the only
-   way to cover autofill's background), with the focus ring on top when focused. */
+/* Browser autofill paints fields solid blue; keep them a quiet off-white instead (an inset shadow is the only way to
+   cover autofill's background), with the focus ring on top when focused. */
 .lg-input:-webkit-autofill {
   -webkit-text-fill-color: var(--color-ink);
-  box-shadow: inset 0 0 0 100px #f5f4f8;
+  box-shadow: inset 0 0 0 100px #f7f8f6;
   caret-color: var(--color-ink);
 }
 .lg-input:-webkit-autofill:focus {
   box-shadow:
-    inset 0 0 0 100px #f5f4f8,
+    inset 0 0 0 100px #f7f8f6,
     0 0 0 3px rgba(23, 63, 58, 0.18);
 }
 .lg-input:focus {
@@ -715,14 +693,11 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
   outline-offset: 2px;
 }
 .lg-ghost:hover {
-  background: rgba(255, 255, 255, 0.92);
+  background: #f6f6f3;
 }
-/* Sign-in pages: the background runs edge to edge, so don't hold space for a scrollbar the page doesn't need (the
-   gutter rule on html above); one shows only when a step is taller than the window. The sky's colour stays behind
-   it for that case. */
+/* Sign-in pages are white edge to edge, the scrollbar's gutter included. */
 html:has([data-auth-frame]) {
-  scrollbar-gutter: auto;
-  background: #465996;
+  background: #fff;
 }
 .lg-scene[data-paused],
 .lg-scene[data-paused] * {
