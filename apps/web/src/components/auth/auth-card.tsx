@@ -4,7 +4,7 @@ import loginMarkUrl from '../../assets/brand/login-mark.webp?url';
 import { Spinner } from '../ui/spinner';
 
 /**
- * The sign-in card and its parts: a white card with a soft shadow on the white page, the TruHost mark
+ * The sign-in card and its parts: a frosted-glass card (styles.css, .lg-glass) with a soft shadow on the white page, the TruHost mark
  * (assets/brand/login-mark.webp: a cream tile with the green monogram), title and subtitle, 48px fields, the dark
  * green primary button and the white Google button. Layout from docs/design/Login.dc.html.
  */
@@ -18,7 +18,7 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <div className="lg-rise flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] border border-line-soft bg-white px-5 pt-6 pb-5 text-ink shadow-[0_1px_3px_rgba(16,24,40,0.06),0_14px_36px_-6px_rgba(16,24,40,0.12)] sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7">
+    <div className="lg-rise flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] lg-glass border border-white/65 px-5 pt-6 pb-5 text-ink shadow-[0_1px_3px_rgba(16,24,40,0.06),0_14px_36px_-6px_rgba(16,24,40,0.12),inset_0_1px_0_rgba(255,255,255,0.85)] sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <img
           src={loginMarkUrl}
@@ -69,7 +69,7 @@ export function AuthTagline() {
 }
 
 const fieldInput =
-  'lg-input h-12 w-full rounded-xl border border-[#DADDD7] bg-white px-3.5 text-[15px] text-ink placeholder:text-muted/70';
+  'lg-input h-12 w-full rounded-xl border border-[#DADDD7] bg-white/72 px-3.5 text-[15px] text-ink placeholder:text-muted/70';
 
 /** Label, input and an optional link on the label's line (e.g. "Forgot password?"). */
 export function AuthField({
@@ -192,7 +192,7 @@ export function GoogleButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cx(
-        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-[#DADDD7] bg-white text-[15px] font-semibold text-ink disabled:opacity-70',
+        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-[#DADDD7] bg-white/72 text-[15px] font-semibold text-ink disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >

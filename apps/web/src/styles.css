@@ -667,6 +667,24 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 .lg-rise {
   animation: lg-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+/* The sign-in card's frosted glass (components/auth/auth-card.tsx): pale and blurred, so whatever is behind it shows
+   through softly (the shadow is on the card). Near-opaque when the browser can't blur what's behind it, or the
+   person asked for less transparency. */
+.lg-glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.4));
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-glass {
+    background: rgba(251, 251, 250, 0.94);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lg-glass {
+    background: rgba(251, 251, 250, 0.96);
+  }
+}
 /* Browser autofill paints fields solid blue; keep them a quiet off-white instead (an inset shadow is the only way to
    cover autofill's background), with the focus ring on top when focused. */
 .lg-input:-webkit-autofill {
@@ -693,7 +711,7 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
   outline-offset: 2px;
 }
 .lg-ghost:hover {
-  background: #f6f6f3;
+  background: rgba(255, 255, 255, 0.92);
 }
 /* Sign-in pages are white edge to edge, the scrollbar's gutter included. */
 html:has([data-auth-frame]) {
