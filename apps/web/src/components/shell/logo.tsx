@@ -4,7 +4,7 @@ import { cx } from '../../lib/cx';
 /**
  * The TruHost mark: a deep-green tile with the night scene from the sign-in page in miniature (mountains, a gold
  * moon) and a cream cabin whose door glows. Drawn on a 40×40 grid; ids are per instance, so several can share a page.
- * The same drawing is the favicon (public/favicon.svg).
+ * (The favicon is the newer TruHost mark, public/favicon-*.png, as on the sign-in card.)
  */
 export function LogoMark({ size = 40, className }: { size?: number; className?: string }) {
   const id = 'lm' + useId().replace(/[^a-zA-Z0-9_-]/g, '');
