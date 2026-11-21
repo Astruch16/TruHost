@@ -149,7 +149,7 @@ export function PasswordField({
   );
 }
 
-/** The dark green primary button. */
+/** The green primary button: slightly see-through, with a darker green outline. */
 export function AuthButton({
   children,
   loading = false,
@@ -170,7 +170,7 @@ export function AuthButton({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        'lg-btn flex h-[50px] items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,#24574F,#173F3A)] text-base font-bold text-white shadow-[0_8px_18px_rgba(23,63,58,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:opacity-70',
+        'lg-btn flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#173F3A] bg-[linear-gradient(180deg,rgba(47,111,98,0.9),rgba(37,92,81,0.9))] text-base font-bold text-white shadow-[0_6px_16px_rgba(23,63,58,0.22),inset_0_1px_0_rgba(255,255,255,0.22)] disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >
