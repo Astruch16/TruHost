@@ -1,11 +1,11 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../../lib/cx';
-import loginMarkUrl from '../../assets/brand/login-mark.svg?url';
+import loginMarkUrl from '../../assets/brand/login-mark.webp?url';
 import { Spinner } from '../ui/spinner';
 
 /**
  * The sign-in card and its parts: a frosted-glass card (styles.css, .lg-glass) with a soft shadow on the white page,
- * the TruHost mark (assets/brand/login-mark.svg, the cream and light green monogram on a dark green tile),
+ * the TruHost mark (assets/brand/login-mark.webp, the cream and light green monogram on a dark green tile),
  * title and subtitle, 48px fields, the green primary button and the white Google button. Layout from
  * docs/design/Login.dc.html.
  */
