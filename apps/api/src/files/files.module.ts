@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { CLOCK, type Clock } from '../common/clock.js';
 import { ENV, type Env } from '../config/env.js';
 import { FilesController } from './files.controller.js';
 import { FilesService } from './files.service.js';
@@ -17,8 +18,8 @@ const localDriver = (process.env.STORAGE_DRIVER ?? 'local') === 'local';
     FilesService,
     {
       provide: FILE_STORAGE,
-      inject: [ENV],
-      useFactory: (env: Env) =>
+      inject: [ENV, CLOCK],
+      useFactory: (env: Env, clock: Clock) =>
         env.STORAGE_DRIVER === 'r2'
           ? new R2Storage(
               {
@@ -28,7 +29,7 @@ const localDriver = (process.env.STORAGE_DRIVER ?? 'local') === 'local';
               },
               env.R2_BUCKET!,
             )
-          : new LocalStorage(env.STORAGE_LOCAL_DIR, env.STORAGE_SIGNING_SECRET, env.API_PUBLIC_URL),
+          : new LocalStorage(env.STORAGE_LOCAL_DIR, env.STORAGE_SIGNING_SECRET, env.API_PUBLIC_URL, clock),
     },
   ],
   exports: [FilesService, FILE_STORAGE],

@@ -1,6 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
+import { systemClock, type Clock } from '../common/clock.js';
 import {
   GET_TTL_SECONDS,
   PUT_TTL_SECONDS,
@@ -20,6 +21,10 @@ interface StoredMeta {
 /**
  * Disk-backed storage for development and tests, with the same guarantees as R2: links are HMAC-signed and expire,
  * and a PUT is rejected unless type, length and SHA-256 match what was signed. Served by LocalStorageController.
+ *
+ * Signing and checking both read the app's clock (CLOCK), never Date.now() directly: windowed links take their expiry
+ * from FilesService's clock, so checking them against the real time would refuse every link once a test's fixed
+ * clock falls behind the real date.
  */
 export class LocalStorage implements FileStorage {
   private readonly root: string;
@@ -28,12 +33,13 @@ export class LocalStorage implements FileStorage {
     dir: string,
     private readonly secret: string,
     private readonly publicUrl: string,
+    private readonly clock: Clock = systemClock,
   ) {
     this.root = resolve(dir);
   }
 
   presignPut(o: { key: string; contentType: string; sizeBytes: number; sha256Hex: string }): Promise<PutTarget> {
-    const exp = Math.floor(Date.now() / 1000) + PUT_TTL_SECONDS;
+    const exp = this.nowSeconds() + PUT_TTL_SECONDS;
     const params = { op: 'put', exp: String(exp), ct: o.contentType, len: String(o.sizeBytes), sha: o.sha256Hex };
     return Promise.resolve({
       url: this.url(o.key, params),
@@ -49,9 +55,7 @@ export class LocalStorage implements FileStorage {
   }
 
   presignGet(key: string, o: { contentType: string; filename: string | null; window?: LinkWindow }) {
-    const exp = o.window
-      ? Math.floor(o.window.expiresAt.getTime() / 1000)
-      : Math.floor(Date.now() / 1000) + GET_TTL_SECONDS;
+    const exp = o.window ? Math.floor(o.window.expiresAt.getTime() / 1000) : this.nowSeconds() + GET_TTL_SECONDS;
     const params: Record<string, string> = { op: 'get', exp: String(exp), name: o.filename ?? '' };
     if (o.window) params.cc = WINDOWED_CACHE_CONTROL;
     const url = this.url(key, params);
@@ -72,7 +76,7 @@ export class LocalStorage implements FileStorage {
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
     if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-    if (Number(params.exp) < Math.floor(Date.now() / 1000)) return null;
+    if (Number(params.exp) < this.nowSeconds()) return null;
     return params;
   }
 
@@ -121,6 +125,10 @@ export class LocalStorage implements FileStorage {
   private url(key: string, params: Record<string, string>): string {
     const query = new URLSearchParams({ ...params, sig: this.sign(key, params) });
     return `${this.publicUrl}/v1/local-storage/${key}?${query.toString()}`;
+  }
+
+  private nowSeconds(): number {
+    return Math.floor(this.clock.now().getTime() / 1000);
   }
 
   private sign(key: string, params: Record<string, string>): string {
