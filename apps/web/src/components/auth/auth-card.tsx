@@ -60,13 +60,10 @@ export function AuthBrand() {
   );
 }
 
-/** The line under the card, in the heading serif's italic (wider screens only). */
+/** The handwritten line under the card, set level (wider screens only). */
 export function AuthTagline() {
   return (
-    <p
-      aria-hidden
-      className="lg-rise hidden font-display text-[21px] tracking-[-0.005em] text-ink/80 italic sm:block [animation-delay:.25s]"
-    >
+    <p aria-hidden className="lg-rise hidden font-hand text-[30px] text-ink sm:block [animation-delay:.25s]">
       Better stays. Higher returns.
     </p>
   );
