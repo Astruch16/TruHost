@@ -14,6 +14,6 @@ describe('AuthFrame', () => {
     expect(container.querySelector('video')).toBeNull();
     expect(screen.getByRole('banner')).toHaveTextContent('TruHost');
     expect(screen.getByRole('main')).toContainElement(screen.getByRole('heading', { name: 'Welcome back' }));
-    expect(screen.getByText('Better stays. Higher returns.')).toHaveClass('text-ink');
+    expect(screen.getByText('Better stays. Higher returns.')).toHaveClass('font-display', 'italic');
   });
 });
