@@ -209,7 +209,7 @@ export function CleanerSchedulePage() {
 
 /**
  * The top of the page, as four cards of one size in a row (two by two on a tablet; on a phone, today across the top
- * and the three counts under it). First, on the deep green the owner home uses: a greeting, what today holds (or
+ * and the three counts under it). First, on the deep blue the owner home uses: a greeting, what today holds (or
  * what's next) and a way straight into the next clean. Then a card for each count: cleans left this week, in the next
  * 30 days, and the properties they're at, each saying the dates it covers.
  */
@@ -373,7 +373,7 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
             <Link
               to="/cleaner/cleans/$cleanId"
               params={{ cleanId: c.id }}
-              className="after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-blue-deep"
+              className="after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-sky-deep"
             >
               {c.property.name}
             </Link>
@@ -409,7 +409,7 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
           </div>
           <div aria-hidden className="mt-1.5 h-2 overflow-hidden rounded-full bg-line">
             <div
-              className={cx('h-full rounded-full', c.status === 'COMPLETE' ? 'bg-sage-deep' : 'bg-amber-mid')}
+              className={cx('h-full rounded-full', c.status === 'COMPLETE' ? 'bg-sky-deep' : 'bg-amber-mid')}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -421,7 +421,7 @@ function TodayCard({ clean: c, today }: { clean: CleanSummary; today: string }) 
           type="button"
           onClick={() => start.mutate()}
           disabled={start.isPending}
-          className="relative z-10 mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-ink transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep disabled:cursor-progress disabled:opacity-80"
+          className="relative z-10 mt-5 inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-ink transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep disabled:cursor-progress disabled:opacity-80"
         >
           {start.isPending ? 'Starting…' : action} <ArrowRight aria-hidden className="size-4" />
         </button>
@@ -487,7 +487,7 @@ function UpNextCard({
               to="/cleaner/cleans/$cleanId"
               params={{ cleanId: c.id }}
               aria-label={`Up next: ${c.property.name}, ${dayLabel(c.scheduledDate)}`}
-              className="truncate after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-blue-deep"
+              className="truncate after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-sky-deep"
             >
               {c.property.name}
             </Link>

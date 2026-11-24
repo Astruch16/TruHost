@@ -18,7 +18,7 @@ function SsoCallback() {
     <AuthFrame>
       <AuthCard title="Signing you in" subtitle="One moment…">
         <div className="flex justify-center py-2">
-          <Spinner className="size-6 text-[#173F3A]" label="Signing you in" />
+          <Spinner className="size-6 text-primary" label="Signing you in" />
         </div>
         <HandleSSOCallback
           navigateToApp={({ decorateUrl }) => {

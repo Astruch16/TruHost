@@ -90,7 +90,7 @@ export function PropertyCard({
           ) : property.hasPlan === false ? (
             <Pill tone="lavender">No plan</Pill>
           ) : (
-            <Pill tone="sage">Active</Pill>
+            <Pill tone="sky">Active</Pill>
           )}
         </div>
         {wide && details && <div className="hidden @[34rem]/card:block">{details}</div>}
@@ -113,7 +113,7 @@ export function PropertyCard({
                 className="mt-2 hidden h-1.5 overflow-hidden rounded-full bg-line-soft @[34rem]/card:block"
               >
                 <span
-                  className="block h-full rounded-full bg-sage-mid"
+                  className="block h-full rounded-full bg-sky-mid"
                   style={{ width: `${Math.min(100, known.occupancyBps / 100)}%` }}
                 />
               </span>

@@ -17,7 +17,7 @@ export function StaysBar({ grossByStayCents }: { grossByStayCents: number[] }) {
       {grossByStayCents.map((cents, i) => (
         <span
           key={i}
-          className="h-1.5 min-w-px rounded-[3px] bg-[#4F7A63] transition-[flex-grow] duration-500 ease-out"
+          className="h-1.5 min-w-px rounded-[3px] bg-sky-mid transition-[flex-grow] duration-500 ease-out"
           style={{ flexGrow: cents, flexBasis: 0 }}
         />
       ))}

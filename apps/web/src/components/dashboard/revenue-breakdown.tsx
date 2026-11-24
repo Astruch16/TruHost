@@ -62,7 +62,7 @@ export function RevenueBreakdown({
               <strong className="figure ml-1 text-xl font-bold text-ink">{formatCents(b.grossCents)}</strong>
             </p>
             {keep !== null && (
-              <Pill tone="sage" className="figure">
+              <Pill tone="sky" className="figure">
                 Owners keep {keep}%
               </Pill>
             )}
@@ -132,7 +132,7 @@ export function RevenueBreakdown({
               </p>
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-between gap-4 rounded-inner bg-surface px-4 py-3.5 ring-1 ring-sage-deep/15">
+            <div className="flex flex-1 items-center justify-between gap-4 rounded-inner bg-surface px-4 py-3.5 ring-1 ring-sky-deep/15">
               <div>
                 <p className="font-semibold text-ink">Net to owners</p>
                 <p className="text-xs text-muted">Gross, less the fee and expenses</p>
@@ -140,7 +140,7 @@ export function RevenueBreakdown({
               <p
                 className={cx(
                   'figure text-2xl font-bold tracking-tight',
-                  b.netToOwnersCents < 0 ? 'text-danger-deep' : 'text-sage-deep',
+                  b.netToOwnersCents < 0 ? 'text-danger-deep' : 'text-sky-deep',
                 )}
               >
                 {formatCents(b.netToOwnersCents)}

@@ -283,7 +283,7 @@ function MembersCard({ propertyId, defaultCleanerId }: { propertyId: string; def
                 <Td className="text-muted">{m.user.email}</Td>
                 <Td>
                   <span className="flex flex-wrap gap-1.5">
-                    <Pill tone={m.role === 'OWNER' ? 'sage' : 'blue'}>{titleCase(m.role)}</Pill>
+                    <Pill tone={m.role === 'OWNER' ? 'sky' : 'blue'}>{titleCase(m.role)}</Pill>
                     {m.role === 'CLEANER' && m.user.id === defaultCleanerId && <Pill tone="lavender">Default</Pill>}
                   </span>
                 </Td>

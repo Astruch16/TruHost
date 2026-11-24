@@ -9,10 +9,10 @@ export function AddPropertyTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className={cx(
         'group flex w-full items-center gap-4 rounded-card border-2 border-dashed border-line bg-surface/60 p-5 text-left transition-colors',
-        'hover:border-sage-mid/60 hover:bg-sage-tint/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+        'hover:border-sky-mid/60 hover:bg-sky-tint/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep',
       )}
     >
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-sage-tint text-sage-deep transition-transform group-hover:scale-105">
+      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-sky-tint text-sky-deep transition-transform group-hover:scale-105">
         <Plus aria-hidden className="size-6" />
       </span>
       <span>

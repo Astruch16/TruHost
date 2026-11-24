@@ -57,7 +57,7 @@ export function MyPropertyFeature({ item, onEdit }: { item: MyProperty; onEdit?:
           fallback={<PropertyScene index={index} className={COVER} />}
         />
         <Pill
-          tone={owner ? 'sage' : 'lavender'}
+          tone={owner ? 'sky' : 'lavender'}
           icon={owner ? <KeyRound /> : <Sparkles />}
           className="absolute top-4 left-4 shadow-sm"
         >

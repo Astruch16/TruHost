@@ -27,7 +27,7 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
           type="button"
           onClick={onEdit}
           aria-label={`Edit ${p.name}`}
-          className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-ink shadow-sm backdrop-blur transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-blue-deep"
+          className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-ink shadow-sm backdrop-blur transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-sky-deep"
         >
           <Pencil aria-hidden className="size-3.5" /> Edit
         </button>
@@ -38,7 +38,7 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
         className={cx(
           'group flex h-full flex-col overflow-hidden rounded-card border border-line-soft bg-surface',
           'transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-line hover:shadow-[0_18px_40px_-24px_rgba(26,29,33,0.45)]',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep',
         )}
       >
         <div className={cx('relative aspect-[16/10] overflow-hidden', tint.bg)}>
@@ -49,7 +49,7 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
             fallback={<PropertyScene index={index} className={COVER} />}
           />
           <Pill
-            tone={owner ? 'sage' : 'lavender'}
+            tone={owner ? 'sky' : 'lavender'}
             icon={owner ? <KeyRound /> : <Sparkles />}
             className="absolute top-3 left-3 shadow-sm"
           >
@@ -84,7 +84,7 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
                 In {formatTime(p.checkInTime)} · Out {formatTime(p.checkOutTime)}
               </span>
             </span>
-            <span className="flex shrink-0 items-center gap-1 font-semibold text-sage-deep">
+            <span className="flex shrink-0 items-center gap-1 font-semibold text-sky-deep">
               {owner ? 'View' : 'Open'}
               <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>

@@ -214,12 +214,12 @@ function StyleGuide() {
               <Pill tone="dark">Out</Pill>
               <Pill tone="lavender">Low</Pill>
               <Pill tone="amber">In progress</Pill>
-              <Pill tone="sage">Stocked</Pill>
+              <Pill tone="sky">Stocked</Pill>
               <Pill tone="blue">Open</Pill>
               <Pill tone="neutral">Archived</Pill>
               <Pill tone="danger">Overdue</Pill>
               <Pill tone="rose">Airbnb</Pill>
-              <Pill tone="sage" icon={<KeyRound />}>
+              <Pill tone="sky" icon={<KeyRound />}>
                 You own this
               </Pill>
               <Pill dot={false}>2 bedrooms</Pill>
@@ -232,7 +232,7 @@ function StyleGuide() {
               <Pill tone="amber" size="sm" pulse>
                 Now
               </Pill>
-              <Pill tone="sage" size="sm">
+              <Pill tone="sky" size="sm">
                 Done
               </Pill>
             </div>

@@ -1,7 +1,7 @@
 /** Styles Clerk's sign-in/up components with our tokens so they sit naturally in the auth frame. */
 export const clerkAppearance = {
   variables: {
-    colorPrimary: '#173f3a',
+    colorPrimary: '#1f78bd',
     colorText: '#1a1d21',
     colorTextSecondary: '#5b6068',
     colorBackground: '#ffffff',

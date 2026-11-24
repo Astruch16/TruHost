@@ -176,8 +176,8 @@ export function WeekTimeline({
         className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold text-ink"
       >
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="h-2.5 w-5 rounded-sm border border-sage-mid/55 bg-sage-tint" /> Guest stay, in
-          the property’s colour
+          <span aria-hidden className="h-2.5 w-5 rounded-sm border border-sky-mid/55 bg-sky-tint" /> Guest stay, in the
+          property’s colour
         </li>
         <li className="flex items-center gap-1.5">
           <span

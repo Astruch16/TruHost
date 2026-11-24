@@ -7,7 +7,7 @@ import { Spinner } from '../ui/spinner';
 /**
  * The sign-in card and its parts: a frosted-glass card (styles.css, .lg-glass) with a soft shadow on the white page,
  * the TruHost mark (assets/brand/login-mark.webp, the cream and light green monogram on a dark green tile),
- * title and subtitle, 48px fields, the green primary button and the white Google button. Layout from
+ * title and subtitle, 48px fields, the blue primary button and the white Google button. Layout from
  * docs/design/Login.dc.html.
  */
 export function AuthCard({
@@ -129,7 +129,7 @@ export function PasswordField({
           onClick={() => setShown(!shown)}
           aria-label={shown ? 'Hide password' : 'Show password'}
           aria-pressed={shown}
-          className="absolute top-1 right-1 grid size-10 place-items-center rounded-[9px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-[rgba(23,63,58,0.35)]"
+          className="absolute top-1 right-1 grid size-10 place-items-center rounded-[9px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-[rgba(31,120,189,0.4)]"
         >
           <svg
             width="19"
@@ -152,7 +152,7 @@ export function PasswordField({
   );
 }
 
-/** The green primary button: slightly see-through, with a darker green outline. */
+/** The blue primary button: slightly see-through, with a darker blue outline. */
 export function AuthButton({
   children,
   loading = false,
@@ -173,7 +173,7 @@ export function AuthButton({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        'lg-btn flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#173F3A] bg-[linear-gradient(180deg,rgba(47,111,98,0.9),rgba(37,92,81,0.9))] text-base font-bold text-white shadow-[0_6px_16px_rgba(23,63,58,0.22),inset_0_1px_0_rgba(255,255,255,0.22)] disabled:opacity-70',
+        'lg-btn flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#154F7D] bg-[linear-gradient(180deg,rgba(31,120,189,0.95),rgba(26,102,162,0.95))] text-base font-bold text-white shadow-[0_6px_16px_rgba(21,79,125,0.22),inset_0_1px_0_rgba(255,255,255,0.22)] disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >
@@ -244,7 +244,7 @@ export function AuthLink({ children, onClick }: { children: ReactNode; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className="text-[13px] font-semibold text-[#173F3A] hover:text-[#0E2A26] link-underline"
+      className="text-[13px] font-semibold text-primary hover:text-primary-hover link-underline"
     >
       {children}
     </button>

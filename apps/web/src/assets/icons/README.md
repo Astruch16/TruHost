@@ -19,7 +19,7 @@ The supply alert is two files: `supply-alert-low.svg` (amber, gauge a third full
 
 - **Grid:** UI icons are drawn on `0 0 40 40` and look best displayed at 28–40px. Empty states are drawn on `0 0 96 96` and look best displayed at 96–160px.
 - **Outline:** ink `#2E3532`, 1.75px on UI icons and 2.25px on empty states, with round caps and round joins. The stroke is set once on the root `<svg>`.
-- **Colour:** each icon uses one tint, plus cream `#FFFDF8` for paper or white parts and gold `#DDB443` for accents. The only exception is the green tick on "Cleans done", which uses deep sage `#5E8E6C`.
+- **Colour:** each icon uses one tint, plus cream `#FFFDF8` for paper or white parts and gold `#DDB443` for accents. The only exception is the tick on "Cleans done", which uses deep sky `#2B8BD0`.
 - **Backgrounds:** UI icons are transparent and have no circle or tile behind them, so place them straight on the card. Empty states include their own soft tinted circle.
 - **No orange:** every colour was checked. Gold sits at hue 44° and amber at 44–46°, with nothing between 10° and 40°. If the app's orange check still flags gold, replace `#DDB443` everywhere with `#D9BC4C`.
 
@@ -27,7 +27,7 @@ The supply alert is two files: `supply-alert-low.svg` (amber, gauge a third full
 
 | Tint          | Base      | Shade     | Light (empty-state backdrop) |
 | ------------- | --------- | --------- | ---------------------------- |
-| sage          | `#AFCBB6` | `#8DB299` | `#E4EFE7`                    |
+| sky           | `#A8D9FB` | `#7CC8FF` | `#E2F2FE`                    |
 | lavender      | `#CAC4E8` | `#ACA4D6` | `#EDEBF8`                    |
 | amber         | `#F4DE9C` | `#E6C76E` | `#FBF3D8`                    |
 | blue          | `#B9D3EC` | `#94BAE0` | `#E5EEF8`                    |

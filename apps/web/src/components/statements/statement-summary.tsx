@@ -16,7 +16,7 @@ import { StatementLine } from '../statement-line';
 
 /**
  * The statement's totals, read top to bottom like the PDF: gross, the plan fee, expenses, owner-stay cleaning,
- * adjustments, then the net to the owner on the brand green. Every amount is the API's.
+ * adjustments, then the net to the owner on the brand blue. Every amount is the API's.
  */
 export function StatementSummary({
   statement: s,

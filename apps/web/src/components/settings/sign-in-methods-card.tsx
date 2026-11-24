@@ -45,7 +45,7 @@ export function SignInMethodsCard() {
         <SettingRow
           icon={<KeyRound />}
           title="Password"
-          status={hasPassword ? <Pill tone="sage">Set</Pill> : <Pill>Not set</Pill>}
+          status={hasPassword ? <Pill tone="sky">Set</Pill> : <Pill>Not set</Pill>}
           description={
             hasPassword
               ? 'Use a long password you don’t use anywhere else.'
@@ -67,7 +67,7 @@ export function SignInMethodsCard() {
         <SettingRow
           icon={<GoogleMark />}
           title="Google"
-          status={google ? <Pill tone="sage">Connected</Pill> : <Pill>Not connected</Pill>}
+          status={google ? <Pill tone="sky">Connected</Pill> : <Pill>Not connected</Pill>}
           description={
             google
               ? `You can use “Continue with Google” as ${google.emailAddress}.`

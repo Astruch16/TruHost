@@ -79,7 +79,7 @@ export function RailProperties({
             <Link
               to="/cleaner/properties/$propertyId"
               params={{ propertyId: p.id }}
-              className="flex items-center gap-3 rounded-inner px-2 py-2.5 transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep"
+              className="flex items-center gap-3 rounded-inner px-2 py-2.5 transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-sky-deep"
             >
               <span aria-hidden className={cx('h-9 w-1.5 shrink-0 rounded-full', colors.get(p.id) ?? 'bg-line')} />
               <span className="min-w-0 flex-1">

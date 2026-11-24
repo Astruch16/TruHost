@@ -61,7 +61,7 @@ export function GuidePicker({
                 disabled={disabled}
                 onClick={() => !selected && onChange(key)}
                 className={cx(
-                  'flex min-h-[60px] items-center gap-2.5 rounded-inner border border-line bg-surface py-2 pr-3 pl-2 text-left text-ink transition-[box-shadow,background-color] duration-150 hover:bg-sage-tint/40',
+                  'flex min-h-[60px] items-center gap-2.5 rounded-inner border border-line bg-surface py-2 pr-3 pl-2 text-left text-ink transition-[box-shadow,background-color] duration-150 hover:bg-sky-tint/40',
                   selected && 'shadow-[0_0_0_2px_var(--color-primary)]',
                 )}
               >

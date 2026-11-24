@@ -19,7 +19,7 @@ import { useWeekStart, weekdayNames } from '../../lib/preferences';
 import { controlStyles, menuSurfaceStyles } from '../../lib/styles';
 
 const navButton =
-  'grid size-8 place-items-center rounded-full text-ink transition-colors hover:bg-sage-tint/60 disabled:opacity-30 disabled:hover:bg-transparent';
+  'grid size-8 place-items-center rounded-full text-ink transition-colors hover:bg-sky-tint/60 disabled:opacity-30 disabled:hover:bg-transparent';
 
 /**
  * Date field with our own calendar (native date pickers can't be styled and look different in every browser).
@@ -226,15 +226,15 @@ export function DatePicker({
                       aria-selected={selected}
                       className={cx(
                         'flex justify-center py-0.5',
-                        shaded && 'bg-sage-tint/70',
+                        shaded && 'bg-sky-tint/70',
                         isStart &&
                           rangeEnd &&
                           rangeEnd > iso &&
-                          'rounded-l-full bg-gradient-to-r from-transparent from-50% to-sage-tint/70 to-50%',
+                          'rounded-l-full bg-gradient-to-r from-transparent from-50% to-sky-tint/70 to-50%',
                         selected &&
                           rangeStart &&
                           iso > rangeStart &&
-                          'bg-gradient-to-r from-sage-tint/70 from-50% to-transparent to-50%',
+                          'bg-gradient-to-r from-sky-tint/70 from-50% to-transparent to-50%',
                       )}
                     >
                       <button
@@ -249,9 +249,9 @@ export function DatePicker({
                         onFocus={() => setFocused(iso)}
                         className={cx(
                           'figure grid size-9 place-items-center rounded-full text-sm transition-colors duration-100 outline-none',
-                          'hover:bg-sage-tint focus-visible:ring-2 focus-visible:ring-blue-deep',
+                          'hover:bg-sky-tint focus-visible:ring-2 focus-visible:ring-sky-deep',
                           outside ? 'text-muted/60' : 'text-ink',
-                          isToday && !selected && 'font-bold text-sage-deep ring-1 ring-sage-deep/40',
+                          isToday && !selected && 'font-bold text-sky-deep ring-1 ring-sky-deep/40',
                           (selected || isStart) && 'bg-primary font-semibold text-white hover:bg-primary-hover',
                           blocked && 'cursor-not-allowed text-muted/35 hover:bg-transparent',
                         )}
@@ -287,7 +287,7 @@ export function DatePicker({
                 <button
                   type="button"
                   onClick={() => pick(today)}
-                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-sage-deep hover:bg-sage-tint/60"
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-sky-deep hover:bg-sky-tint/60"
                 >
                   Today
                 </button>

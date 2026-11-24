@@ -113,7 +113,7 @@ export function RequestTimeOff() {
                 className={cx(
                   'flex flex-col items-start rounded-inner border px-3.5 py-2.5 text-left transition-colors',
                   reason === r.value
-                    ? 'border-primary bg-sage-tint/40 ring-1 ring-primary'
+                    ? 'border-primary bg-sky-tint/40 ring-1 ring-primary'
                     : 'border-line bg-surface hover:bg-ground',
                 )}
               >

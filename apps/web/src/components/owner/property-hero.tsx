@@ -50,7 +50,7 @@ export function PropertyHero({
       <div className="flex min-h-64 flex-col justify-between gap-6 p-5 @2xl/content:min-h-80 @2xl/content:p-7">
         <div className="flex items-start justify-between gap-3">
           <Pill
-            tone={role === 'OWNER' ? 'sage' : 'lavender'}
+            tone={role === 'OWNER' ? 'sky' : 'lavender'}
             icon={role === 'OWNER' ? <KeyRound /> : <Sparkles />}
             className="shadow-sm"
           >

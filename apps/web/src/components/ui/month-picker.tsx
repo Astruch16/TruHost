@@ -9,7 +9,7 @@ import { controlStyles, menuSurfaceStyles } from '../../lib/styles';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const pad = (m: number) => String(m).padStart(2, '0');
 const navButton =
-  'grid size-8 place-items-center rounded-full text-ink transition-colors hover:bg-sage-tint/60 disabled:opacity-30 disabled:hover:bg-transparent';
+  'grid size-8 place-items-center rounded-full text-ink transition-colors hover:bg-sky-tint/60 disabled:opacity-30 disabled:hover:bg-transparent';
 
 /**
  * A year of months to pick from (the panel inside MonthPicker and the month stepper). Arrow keys move by month
@@ -107,8 +107,8 @@ export function MonthGrid({
               onFocus={() => setFocused(m)}
               className={cx(
                 'h-11 rounded-xl text-sm font-medium text-ink transition-colors duration-100 outline-none',
-                'hover:bg-sage-tint focus-visible:ring-2 focus-visible:ring-blue-deep',
-                isCurrent && !selected && 'font-bold text-sage-deep ring-1 ring-sage-deep/40',
+                'hover:bg-sky-tint focus-visible:ring-2 focus-visible:ring-sky-deep',
+                isCurrent && !selected && 'font-bold text-sky-deep ring-1 ring-sky-deep/40',
                 selected && 'bg-primary font-semibold text-white hover:bg-primary-hover',
                 'disabled:text-muted/35 disabled:hover:bg-transparent',
               )}
@@ -123,7 +123,7 @@ export function MonthGrid({
           <button
             type="button"
             onClick={() => onPick(current)}
-            className="rounded-full px-3 py-1.5 text-xs font-semibold text-sage-deep hover:bg-sage-tint/60"
+            className="rounded-full px-3 py-1.5 text-xs font-semibold text-sky-deep hover:bg-sky-tint/60"
           >
             This month
           </button>

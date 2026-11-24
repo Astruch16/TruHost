@@ -6,7 +6,7 @@ import { Pill } from '../ui/pill';
 
 const MONTH = new Intl.DateTimeFormat('en-CA', { month: 'short', timeZone: 'UTC' });
 
-/** A small calendar leaf for the check-in date: a deep-green month band ("OCT") over the day ("10"). */
+/** A small calendar leaf for the check-in date: a deep-blue month band ("OCT") over the day ("10"). */
 export function DateBadge({ date }: { date: string }) {
   return (
     <span

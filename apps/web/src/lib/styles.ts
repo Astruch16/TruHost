@@ -21,8 +21,8 @@ export function buttonStyles({
     variant === 'primary' &&
       'bg-primary text-primary-ink hover:bg-primary-hover focus-visible:outline-primary disabled:hover:bg-primary',
     variant === 'secondary' &&
-      'border border-line bg-surface text-ink hover:border-ink/30 hover:bg-ground focus-visible:outline-blue-deep',
-    variant === 'quiet' && 'text-muted hover:bg-ink/5 hover:text-ink focus-visible:outline-blue-deep',
+      'border border-line bg-surface text-ink hover:border-ink/30 hover:bg-ground focus-visible:outline-sky-deep',
+    variant === 'quiet' && 'text-muted hover:bg-ink/5 hover:text-ink focus-visible:outline-sky-deep',
     variant === 'danger' &&
       'border border-danger-line bg-surface text-danger-deep hover:bg-danger-tint focus-visible:outline-danger-deep',
     // Final confirmation of a destructive action (inside ConfirmDialog only).
@@ -35,21 +35,21 @@ export function buttonStyles({
 export const controlStyles = cx(
   'min-h-11 w-full rounded-control border border-line bg-surface px-3.5 text-base text-ink sm:text-sm',
   'placeholder:text-muted/70 transition-[border-color,box-shadow]',
-  'hover:border-ink/25 focus-visible:border-blue-deep focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-tint',
+  'hover:border-ink/25 focus-visible:border-sky-deep focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-sky-tint',
   'disabled:cursor-not-allowed disabled:bg-ground disabled:text-muted',
   'aria-invalid:border-danger-deep aria-invalid:focus-visible:ring-danger-tint',
 );
 
-export type PillTone = 'dark' | 'blue' | 'lavender' | 'sage' | 'amber' | 'rose' | 'neutral' | 'danger';
+export type PillTone = 'dark' | 'blue' | 'lavender' | 'sky' | 'amber' | 'rose' | 'neutral' | 'danger';
 
 export interface PillLook {
   /** sm: the tight spots (a step's "Now", a room's "Before"). */
   size?: 'md' | 'sm';
-  /** On the deep green (a hero): frosted white, the tone only in the dot. */
+  /** On the deep blue (a hero): frosted white, the tone only in the dot. */
   glass?: boolean;
 }
 
-/** Each tone's accent, on white and on the deep green: the dot, and the icon in its place. */
+/** Each tone's accent, on white and on the deep blue: the dot, and the icon in its place. */
 const PILL_ACCENT: Record<PillTone, { dot: string; icon: string; glassDot: string; glassIcon: string }> = {
   dark: { dot: 'bg-amber-light', icon: 'text-amber-light', glassDot: 'bg-amber-light', glassIcon: 'text-amber-light' },
   blue: { dot: 'bg-blue-mid', icon: 'text-blue-mid', glassDot: 'bg-blue-tint', glassIcon: 'text-blue-tint' },
@@ -59,7 +59,7 @@ const PILL_ACCENT: Record<PillTone, { dot: string; icon: string; glassDot: strin
     glassDot: 'bg-lavender-tint',
     glassIcon: 'text-lavender-tint',
   },
-  sage: { dot: 'bg-sage-mid', icon: 'text-sage-mid', glassDot: 'bg-sage-light', glassIcon: 'text-sage-light' },
+  sky: { dot: 'bg-sky-mid', icon: 'text-sky-mid', glassDot: 'bg-sky-light', glassIcon: 'text-sky-light' },
   amber: { dot: 'bg-amber-mid', icon: 'text-amber-mid', glassDot: 'bg-amber-light', glassIcon: 'text-amber-light' },
   rose: { dot: 'bg-rose-mid', icon: 'text-rose-mid', glassDot: 'bg-rose-tint', glassIcon: 'text-rose-tint' },
   neutral: { dot: 'bg-muted/40', icon: 'text-muted', glassDot: 'bg-white/55', glassIcon: 'text-white/70' },
@@ -74,7 +74,7 @@ const PILL_ACCENT: Record<PillTone, { dot: string; icon: string; glassDot: strin
 /**
  * A pill: quiet by design. White, a grey hairline and ink text, with the tone carried only by the dot (or icon) before
  * the label, so a row of them reads calm and the colour still sorts them at a glance. Danger keeps its text red;
- * dark (the urgent "Out" and a few top-level labels) is the one solid pill; glass is frosted, on the deep green.
+ * dark (the urgent "Out" and a few top-level labels) is the one solid pill; glass is frosted, on the deep blue.
  */
 export const pillStyles = (tone: PillTone, { size = 'md', glass = false }: PillLook = {}) =>
   cx(
@@ -126,11 +126,11 @@ export const menuSurfaceStyles = cx(
   'data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out',
 );
 
-/** One row in a dropdown: rounded, with a faint sage tint that fades in on hover or keyboard highlight. */
+/** One row in a dropdown: rounded, with a faint sky tint that fades in on hover or keyboard highlight. */
 export const menuItemStyles = cx(
   'relative flex min-h-10 w-full items-center gap-2.5 rounded-control-sm px-3 text-left text-sm text-ink outline-none select-none',
   'transition-[background-color,color] duration-150 ease-out',
-  'hover:bg-sage-tint/60 hover:text-sage-deep focus-visible:bg-sage-tint/60 focus-visible:text-sage-deep',
-  'data-[highlighted]:bg-sage-tint/60 data-[highlighted]:text-sage-deep',
+  'hover:bg-sky-tint/60 hover:text-sky-deep focus-visible:bg-sky-tint/60 focus-visible:text-sky-deep',
+  'data-[highlighted]:bg-sky-tint/60 data-[highlighted]:text-sky-deep',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
 );

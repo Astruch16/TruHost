@@ -40,7 +40,7 @@ export function KpiCard({
         <span className="min-w-0">{support}</span>
         {change && (
           <Pill
-            tone={change.direction === 'up' ? 'sage' : change.direction === 'down' ? 'danger' : 'neutral'}
+            tone={change.direction === 'up' ? 'sky' : change.direction === 'down' ? 'danger' : 'neutral'}
             icon={
               change.direction === 'up' ? (
                 <ArrowUpRight />

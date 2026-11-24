@@ -16,7 +16,7 @@ describe('stay colours', () => {
     expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'AIRBNB')).bar).toContain('bg-rose-tint');
     expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'VRBO')).bar).toContain('bg-blue-tint');
     expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'BOOKING_COM')).bar).toContain('bg-amber-tint');
-    expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'DIRECT')).bar).toContain('bg-sage-tint');
+    expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'DIRECT')).bar).toContain('bg-sky-tint');
     expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'OTHER')).label).toBe('Other channel');
     // An owner stay is an owner stay, whatever channel it was entered with.
     expect(stayStyle(stay('a', '2026-10-01', '2026-10-03', 'AIRBNB', 'OWNER_STAY')).label).toBe('Owner stay');

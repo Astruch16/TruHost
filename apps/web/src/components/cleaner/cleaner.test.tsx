@@ -231,7 +231,7 @@ describe('cleaner schedule', () => {
         .getAllByRole('link')
         .find((l) => l.getAttribute('href') === `/cleaner/cleans/${id}`)!;
     // Cedar Cabin is the first property by name, so it gets the first colour.
-    expect(tile('a').style.getPropertyValue('--tile')).toBe('var(--color-sage-mid)');
+    expect(tile('a').style.getPropertyValue('--tile')).toBe('var(--color-sky-mid)');
     expect(tile('a').className).toContain('border-[color-mix(in_srgb,var(--tile)_70%,transparent)]');
     expect(tile('x').className).toContain('border-dashed');
   });

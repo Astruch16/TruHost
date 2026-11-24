@@ -22,7 +22,7 @@ import { Pill } from '../ui/pill';
 import { CleanStatusPill } from './clean-status-pill';
 
 /**
- * One clean, as its cleaner works it on a phone. A hero on the deep green says where and when (free from, ready by,
+ * One clean, as its cleaner works it on a phone. A hero on the deep blue says where and when (free from, ready by,
  * the pay), how far along it is, and what to do now (book it, start it, or why it can't be started yet). Below it,
  * before the start, the five steps it will take; once started, its checklist (CleanChecklist): before photos, damage,
  * a stock count, after photos and "Clean finished", which tells TruHost and the owner. Finishing is a milestone: the
@@ -154,7 +154,7 @@ export function CleanPage({ cleanId }: { cleanId: string }) {
 }
 
 /**
- * The top of the page, as cards. A deep-green card says where (the day and occasion, the property, its status) and
+ * The top of the page, as cards. A deep-blue card says where (the day and occasion, the property, its status) and
  * what to do now; beside it (below, on a phone), a white card for each fact: free from, ready by, how far along it is
  * (once started) and the pay (once TruHost has set it).
  */
@@ -203,7 +203,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
       />,
     );
   }
-  // Under way or done, the green card closes on where it's at (before the start, it holds what to do instead).
+  // Under way or done, the blue card closes on where it's at (before the start, it holds what to do instead).
   const now = c.status === 'IN_PROGRESS' ? c.checklist.current : null;
   const line = now ? (
     <>
@@ -253,7 +253,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
 
       <dl
         className={cx(
-          // A phone: two by two. A tablet, below the green card: one row. Wide, beside it: two by two again, or two
+          // A phone: two by two. A tablet, below the blue card: one row. Wide, beside it: two by two again, or two
           // stacked when there are only two. An odd one out spans the bottom of a two-by-two.
           'grid auto-rows-fr grid-cols-2 gap-3 @2xl/content:auto-cols-fr @2xl/content:grid-flow-col @2xl/content:grid-cols-none @2xl/content:gap-4',
           '@4xl/content:grid-flow-row',
@@ -321,7 +321,7 @@ function StepsRing({ done, total }: { done: number; total: number }) {
             cy="36"
             r={r}
             fill="none"
-            stroke={finished ? 'var(--color-sage-mid)' : 'var(--color-primary)'}
+            stroke={finished ? 'var(--color-sky-mid)' : 'var(--color-primary)'}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={length}
@@ -330,7 +330,7 @@ function StepsRing({ done, total }: { done: number; total: number }) {
         )}
       </svg>
       {finished ? (
-        <Check aria-hidden className="size-7 text-sage-mid" />
+        <Check aria-hidden className="size-7 text-sky-mid" />
       ) : (
         <span aria-hidden className="figure text-base leading-none font-bold text-ink @2xl/content:text-lg">
           {done}/{total}
@@ -503,7 +503,7 @@ function RoomsAtAGlance({ clean: c }: { clean: Clean }) {
 
 function PhaseTag({ label, done }: { label: string; done: boolean }) {
   return (
-    <Pill tone={done ? 'sage' : 'neutral'} size="sm">
+    <Pill tone={done ? 'sky' : 'neutral'} size="sm">
       {label}
       <span className="sr-only">{done ? ' taken' : ' not taken yet'}</span>
     </Pill>

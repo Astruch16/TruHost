@@ -244,7 +244,7 @@ export function AdjustmentDialog({
               onClick={() => setDirection(key)}
               className={cx(
                 'rounded-inner border px-3.5 py-3 text-left transition-colors',
-                direction === key ? 'border-primary bg-sage-tint ring-1 ring-primary' : 'border-line hover:bg-ground',
+                direction === key ? 'border-primary bg-sky-tint ring-1 ring-primary' : 'border-line hover:bg-ground',
               )}
             >
               <span className="block text-sm font-semibold text-ink">{label}</span>

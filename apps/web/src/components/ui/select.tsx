@@ -93,7 +93,7 @@ export function Select({
               >
                 <RadixSelect.ItemText>{o.label}</RadixSelect.ItemText>
                 <RadixSelect.ItemIndicator className="absolute right-3 inline-flex">
-                  <Check aria-hidden className="size-4 text-sage-deep" />
+                  <Check aria-hidden className="size-4 text-sky-deep" />
                 </RadixSelect.ItemIndicator>
               </RadixSelect.Item>
             ))}

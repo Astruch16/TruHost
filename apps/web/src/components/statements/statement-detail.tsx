@@ -201,7 +201,7 @@ export function StatementDetail({ statementId, correcting }: { statementId: stri
 function DraftNotes({ statement: s }: { statement: Statement }) {
   if (s.blockers.length === 0 && s.pendingPayouts.length === 0) {
     return (
-      <p className="flex items-center gap-2 rounded-inner bg-sage-tint px-4 py-3 text-sm text-sage-deep">
+      <p className="flex items-center gap-2 rounded-inner bg-sky-tint px-4 py-3 text-sm text-sky-deep">
         <Lock aria-hidden className="size-4 shrink-0" />
         Ready to finalize. Figures follow the month’s records until you do.
       </p>

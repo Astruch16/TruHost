@@ -28,7 +28,7 @@ export const TREND_METRICS: readonly {
     value: (m) => m.grossCents,
     format: formatCents,
     tick: formatCentsShort,
-    color: '#4F7A63',
+    color: '#2B8BD0',
   },
   {
     key: 'fees',
@@ -44,7 +44,7 @@ export const TREND_METRICS: readonly {
     value: (m) => m.netToOwnersCents,
     format: formatCents,
     tick: formatCentsShort,
-    color: '#3F7A8C',
+    color: '#1A5E8F',
   },
   {
     key: 'nights',

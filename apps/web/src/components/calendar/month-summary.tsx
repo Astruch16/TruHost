@@ -77,7 +77,7 @@ export function MonthSummary({
         label="Check-ins"
         value={count('CHECK_IN')}
         support={next('CHECK_IN')}
-        chart={<DayMarks marks={marks('CHECK_IN')} color="var(--color-sage-mid)" />}
+        chart={<DayMarks marks={marks('CHECK_IN')} color="var(--color-sky-mid)" />}
       />
       <KpiCard
         label="Cleans to schedule"

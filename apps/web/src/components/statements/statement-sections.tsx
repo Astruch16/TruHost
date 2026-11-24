@@ -218,7 +218,7 @@ export function AdjustmentsSection({
                 <span
                   className={cx(
                     'figure font-semibold',
-                    a.voidedAt ? 'text-muted line-through' : a.amountCents < 0 ? 'text-danger-deep' : 'text-sage-deep',
+                    a.voidedAt ? 'text-muted line-through' : a.amountCents < 0 ? 'text-danger-deep' : 'text-sky-deep',
                   )}
                 >
                   {formatSigned(a.amountCents)}

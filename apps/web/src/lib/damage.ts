@@ -8,7 +8,7 @@ export const STATUS_TONE: Record<DamageStatus, PillTone> = {
   SUBMITTED: 'lavender',
   ACKNOWLEDGED: 'blue',
   CLAIM_FILED: 'amber',
-  RESOLVED: 'sage',
+  RESOLVED: 'sky',
 };
 
 const DAY = 86_400_000;

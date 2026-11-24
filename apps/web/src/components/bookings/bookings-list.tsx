@@ -19,7 +19,7 @@ import { Table, TableState, TBody, Td, Th, THead, Tr } from '../ui/table';
 import { ChannelPill, DateBadge, FilterChips, GuestAvatar } from './booking-parts';
 
 const money = (cents: number | null | undefined) => (cents == null ? '—' : formatCents(cents));
-const PHASE_TONE = { UPCOMING: 'blue', IN_HOUSE: 'sage', CHECKED_OUT: 'neutral' } as const satisfies Record<
+const PHASE_TONE = { UPCOMING: 'blue', IN_HOUSE: 'sky', CHECKED_OUT: 'neutral' } as const satisfies Record<
   string,
   PillTone
 >;

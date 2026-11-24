@@ -231,7 +231,7 @@ function Stepper({
   wide?: boolean;
 }) {
   const button =
-    'grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep disabled:pointer-events-none disabled:opacity-35';
+    'grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-ink/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-sky-deep disabled:pointer-events-none disabled:opacity-35';
   return (
     <div className="inline-flex items-center rounded-full bg-surface p-0.5 ring-1 ring-line">
       <button type="button" aria-label={`Previous ${what}`} className={button} onClick={onPrev} disabled={prevDisabled}>
@@ -308,7 +308,7 @@ function MonthTable({
                     onPick(month.month);
                   }}
                   className={cx(
-                    'text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-deep',
+                    'text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-deep',
                     chosen ? 'font-semibold text-ink' : upcoming ? 'text-muted' : 'text-ink',
                   )}
                 >
@@ -565,7 +565,7 @@ function LineChart({
                   onBlur={() => setHover(null)}
                   onClick={() => onPick(s.month)}
                   onKeyDown={(e) => onKey(e, s.month)}
-                  className="flex-1 cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-deep"
+                  className="flex-1 cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-deep"
                 />
               ) : (
                 <span key={s.month} aria-hidden className="flex-1" />

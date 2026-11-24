@@ -261,7 +261,7 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
           />
           <AuthError>{error}</AuthError>
           {notice && (
-            <p role="status" className="text-center text-sm text-sage-deep">
+            <p role="status" className="text-center text-sm text-sky-deep">
               {notice}
             </p>
           )}

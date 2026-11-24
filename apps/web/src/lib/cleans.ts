@@ -7,7 +7,7 @@ import type { PillTone } from './styles';
 export const CLEAN_STATUS_TONE: Record<CleanStatus, PillTone> = {
   SCHEDULED: 'blue',
   IN_PROGRESS: 'amber',
-  COMPLETE: 'sage',
+  COMPLETE: 'sky',
   CANCELLED: 'neutral',
 };
 
@@ -71,7 +71,7 @@ export function scheduleGroups<T extends Pick<CleanSummary, 'id' | 'status' | 's
 
 /** Dot colours for properties on the schedule's calendar, in a fixed order. */
 export const PROPERTY_DOTS = [
-  'bg-sage-mid',
+  'bg-sky-mid',
   'bg-blue-deep',
   'bg-amber-mid',
   'bg-lavender-deep',
@@ -85,7 +85,7 @@ export function propertyColorValue(dot: string | undefined): string {
 
 /**
  * How a day with cleans is marked on the month: a ring in its properties' colours and a fill of the same, faint (a
- * share each, as slices, when it has cleans at more than one). Today keeps its solid green fill inside the ring, with a
+ * share each, as slices, when it has cleans at more than one). Today keeps its solid blue fill inside the ring, with a
  * white hairline between them.
  */
 export function dayMarkStyle(
@@ -109,7 +109,7 @@ export function dayMarkStyle(
         : [`${slices(true)} padding-box`, `${solid('var(--color-surface)')} padding-box`]),
       `${slices(false)} border-box`,
     ].join(', '),
-    // On today's dark fill a white hairline inside the ring keeps a green ring from melting into it.
+    // On today's dark fill a white hairline inside the ring keeps a blue ring from melting into it.
     ...(today ? { boxShadow: 'inset 0 0 0 1.5px var(--color-surface)' } : {}),
   };
 }

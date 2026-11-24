@@ -48,14 +48,14 @@ export function AddressMap({ className }: { className?: string }) {
         <path d="M200 0 V45 M200 65 V120" />
       </g>
       {/* The pin, with a soft ring around where it lands */}
-      <ellipse cx="200" cy="74" rx="22" ry="7" fill="#4F7A63" opacity="0.14" />
+      <ellipse cx="200" cy="74" rx="22" ry="7" fill="#1F78BD" opacity="0.14" />
       <ellipse cx="200" cy="74" rx="9" ry="3" fill={url.shadow} />
       <path
         d="M200 74 C200 74 186 58 186 47 A14 14 0 1 1 214 47 C214 58 200 74 200 74 Z"
         transform="translate(1.4 1.6)"
-        fill="#2F5548"
+        fill="#154F7D"
       />
-      <path d="M200 74 C200 74 186 58 186 47 A14 14 0 1 1 214 47 C214 58 200 74 200 74 Z" fill="#4F7A63" />
+      <path d="M200 74 C200 74 186 58 186 47 A14 14 0 1 1 214 47 C214 58 200 74 200 74 Z" fill="#1F78BD" />
       <path d="M200 74 C200 74 186 58 186 47 A14 14 0 1 1 214 47 C214 58 200 74 200 74 Z" fill={url.sheen} />
       <circle cx="200" cy="47" r="5.4" fill="#FFFFFF" />
       <circle cx="200" cy="47" r="2.6" fill="#D9AE3C" />

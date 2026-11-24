@@ -19,11 +19,11 @@ export function inviteEmail(to: { email: string; firstName: string }, url: strin
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 24px;font-size:16px;line-height:1.5">You’ve been invited to TruHost, our property management portal.</p>
-<p style="margin:0 0 24px"><a href="${escape(url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Create your account</a></p>
+<p style="margin:0 0 24px"><a href="${escape(url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Create your account</a></p>
 <p style="margin:0;font-size:13px;color:#5b6068;line-height:1.5">If the button doesn’t work, copy this link into your browser:<br>${escape(url)}</p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">If you weren’t expecting this, you can ignore this email.</p>
 </td></tr></table></td></tr></table></body></html>`;
@@ -56,7 +56,7 @@ export function supplyAlertEmail(
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
@@ -64,7 +64,7 @@ export function supplyAlertEmail(
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px"><tr><td style="background:#eeeeeb;border-radius:999px;height:10px">
 <div style="width:${Math.max(alert.levelPct, 2)}%;height:10px;border-radius:999px;background:${alert.out ? '#8a2c24' : '#c99a2e'}"></div>
 </td></tr></table>
-<p style="margin:0 0 8px"><a href="${escape(alert.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(alert.property)}</a></p>
+<p style="margin:0 0 8px"><a href="${escape(alert.url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(alert.property)}</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because supply alerts are on in your TruHost settings.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: headline + ` · ${alert.property}`, text, html };
@@ -100,12 +100,12 @@ export function damageReportEmail(
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
 <p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escape(detail)} Open it to see the photos and the stay it’s linked to.</p>
-<p style="margin:0 0 8px"><a href="${escape(report.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(report.property)}</a></p>
+<p style="margin:0 0 8px"><a href="${escape(report.url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(report.property)}</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because damage report alerts are on in your TruHost settings.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: `${headline}: ${report.title}`, text, html };
@@ -132,12 +132,12 @@ export function cleanCompletedEmail(
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
 <p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escape(detail)} Open it to see the before and after photos.</p>
-<p style="margin:0 0 8px"><a href="${escape(c.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(c.property)}</a></p>
+<p style="margin:0 0 8px"><a href="${escape(c.url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(c.property)}</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because clean alerts are on in your TruHost settings.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: headline, text, html };
@@ -155,12 +155,12 @@ export function cleanBookedEmail(
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
 <p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escape(detail)}</p>
-<p style="margin:0 0 8px"><a href="${escape(c.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(c.property)}</a></p>
+<p style="margin:0 0 8px"><a href="${escape(c.url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Open ${escape(c.property)}</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because clean booking alerts are on in your TruHost settings.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: `${headline}: ${c.property}, ${c.day}`, text, html };
@@ -189,13 +189,13 @@ export function timeOffRequestedEmail(
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
 <p style="margin:0 0 ${r.note ? '12' : '20'}px;font-size:16px;line-height:1.5">${escape(detail)}</p>
 ${r.note ? `<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:#5b6068">“${escape(r.note)}”</p>` : ''}
-<p style="margin:0 0 8px"><a href="${escape(r.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Review the request</a></p>
+<p style="margin:0 0 8px"><a href="${escape(r.url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">Review the request</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because time off alerts are on in your TruHost settings.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: `${headline}: ${r.dates}`, text, html };
@@ -222,14 +222,14 @@ export function statementReleasedEmail(
   const html = `<!doctype html><html><body style="margin:0;background:#f6f6f3;font-family:Arial,Helvetica,sans-serif;color:#1a1d21">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #eeeeeb;border-radius:18px">
-<tr><td style="background:#173f3a;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef3f1;font-size:22px;font-weight:bold">TruHost</td></tr>
+<tr><td style="background:#102a44;border-radius:18px 18px 0 0;padding:20px 28px;color:#eef4fa;font-size:22px;font-weight:bold">TruHost</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 12px;font-size:16px">Hi ${escape(name)},</p>
 <p style="margin:0 0 8px;font-size:20px;font-weight:bold">${escape(headline)}</p>
 <p style="margin:0 0 4px;font-size:13px;color:#5b6068;text-transform:uppercase;letter-spacing:0.08em">Net to you</p>
-<p style="margin:0 0 20px;font-size:32px;font-weight:bold;color:#173f3a">${escape(s.net)}</p>
+<p style="margin:0 0 20px;font-size:32px;font-weight:bold;color:#102a44">${escape(s.net)}</p>
 <p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escape(detail)} Open it to see your stays, the TruPlan fee and expenses, with receipts.</p>
-<p style="margin:0 0 8px"><a href="${escape(s.url)}" style="display:inline-block;background:#173f3a;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">View statement</a></p>
+<p style="margin:0 0 8px"><a href="${escape(s.url)}" style="display:inline-block;background:#1f78bd;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:12px">View statement</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#5b6068">You get these because statement emails are on in your TruHost settings.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { to: to.email, subject: headline, text, html };

@@ -23,7 +23,7 @@ export function RouteLoading() {
       <div
         role="status"
         aria-label="Loading"
-        className="min-h-dvh bg-[linear-gradient(#08141f,#102638_40%,#1a4042_64%,#2b584f)]"
+        className="min-h-dvh bg-[linear-gradient(#08141f,#102638_40%,#122d47_64%,#22405d)]"
       />
     );
   }

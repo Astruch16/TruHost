@@ -234,14 +234,14 @@ function StatementCard({
     <li className="group relative flex flex-col rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-[0_6px_18px_rgb(16_20_18/0.06)]">
       <div className="flex items-start justify-between gap-3">
         <StatementDocIcon size={44} className="shrink-0" />
-        <Pill tone="sage">Released {shortDate(s.releasedOn)}</Pill>
+        <Pill tone="sky">Released {shortDate(s.releasedOn)}</Pill>
       </div>
       <h3 className="mt-4 text-lg leading-snug font-bold text-ink">
         {/* The link covers the card, so anywhere on it opens the statement; the PDF button sits above it. */}
         <Link
           to="/owner/statements/$statementId"
           params={{ statementId: s.id }}
-          className="rounded-card after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-blue-deep"
+          className="rounded-card after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-sky-deep"
         >
           {monthLabel(s.month)}
         </Link>
@@ -314,7 +314,7 @@ export function OwnerStatementPage({ statementId }: { statementId: string }) {
         title={
           <span className="flex flex-wrap items-center gap-3">
             {monthLabel(s.month)}
-            <Pill tone="sage">Released {shortDate(s.released.on)}</Pill>
+            <Pill tone="sky">Released {shortDate(s.released.on)}</Pill>
           </span>
         }
         actions={

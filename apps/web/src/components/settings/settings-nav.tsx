@@ -19,7 +19,7 @@ const SECTIONS = [
 ] as const;
 
 /**
- * The Settings sections, with one sage highlight that slides to the open section (as in the sidebar). Wide screens:
+ * The Settings sections, with one sky highlight that slides to the open section (as in the sidebar). Wide screens:
  * a card beside the section, a line about each. Phones: a row of pills that scrolls sideways.
  */
 export function SettingsNav({
@@ -55,7 +55,7 @@ export function SettingsNav({
         <span
           aria-hidden
           className={cx(
-            'pointer-events-none absolute top-0 left-0 -z-10 rounded-full bg-sage-tint @4xl/content:rounded-inner',
+            'pointer-events-none absolute top-0 left-0 -z-10 rounded-full bg-sky-tint @4xl/content:rounded-inner',
             ready && 'transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           )}
           style={style}
@@ -75,7 +75,7 @@ export function SettingsNav({
               })}
               className={cx(
                 'group flex items-center gap-3 rounded-full border border-line py-1.5 pr-4 pl-1.5 text-sm font-semibold text-muted transition-colors',
-                'hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep',
+                'hover:text-ink focus-visible:outline-2 focus-visible:outline-sky-deep',
                 'data-[status=active]:border-transparent data-[status=active]:text-ink',
                 '@4xl/content:rounded-inner @4xl/content:border-0 @4xl/content:p-2.5',
               )}

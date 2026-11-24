@@ -41,7 +41,7 @@ export function monogram(name: string): string {
 }
 
 export const TINTS = [
-  { bg: 'bg-sage-tint', fg: 'text-sage-deep' },
+  { bg: 'bg-sky-tint', fg: 'text-sky-deep' },
   { bg: 'bg-blue-tint', fg: 'text-blue-deep' },
   { bg: 'bg-lavender-tint', fg: 'text-lavender-deep' },
 ] as const;
