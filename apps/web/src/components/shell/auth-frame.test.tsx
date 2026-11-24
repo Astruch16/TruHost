@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { AuthFrame } from './auth-frame';
 
 describe('AuthFrame', () => {
@@ -12,7 +12,7 @@ describe('AuthFrame', () => {
     const frame = container.querySelector('[data-auth-frame]')!;
     expect(frame).toHaveClass('bg-white');
     expect(container.querySelector('video')).toBeNull();
-    expect(screen.getByRole('banner')).toHaveTextContent('TruHost');
+    expect(within(screen.getByRole('banner')).getByRole('img', { name: 'TruHost' })).toBeInTheDocument();
     expect(screen.getByRole('main')).toContainElement(screen.getByRole('heading', { name: 'Welcome back' }));
     expect(screen.getByText('Better stays. Higher returns.')).toHaveClass('font-hand', 'text-ink');
     expect(screen.getByText('Better stays. Higher returns.')).not.toHaveClass('-rotate-3');

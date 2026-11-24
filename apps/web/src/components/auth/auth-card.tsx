@@ -1,6 +1,7 @@
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../../lib/cx';
 import loginMarkUrl from '../../assets/brand/login-mark.webp?url';
+import wordmarkUrl from '../../assets/brand/truhost-wordmark-light.svg?url';
 import { Spinner } from '../ui/spinner';
 
 /**
@@ -41,7 +42,7 @@ export function AuthCard({
   );
 }
 
-/** The TruHost mark and wordmark, in the top-left corner of the sign-in page. */
+/** The TruHost mark and wordmark (assets/brand/truhost-wordmark-light.svg), in the sign-in page's top-left corner. */
 export function AuthBrand() {
   return (
     <div className="flex items-center gap-2.5">
@@ -53,9 +54,14 @@ export function AuthBrand() {
         draggable={false}
         className="size-9 select-none sm:size-10"
       />
-      <p className="text-[1.4rem] leading-none font-bold tracking-[-0.035em] text-ink">
-        Tru<span className="text-[#2D7A62]">Host</span>
-      </p>
+      <img
+        src={wordmarkUrl}
+        alt="TruHost"
+        width={90}
+        height={22}
+        draggable={false}
+        className="h-5 w-auto select-none sm:h-[22px]"
+      />
     </div>
   );
 }
