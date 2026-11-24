@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * There is no orange in the app: gold (amber-mid, #D9AE3C) marks what's low or needs attention, the muted rose what's
- * empty, green what's done. This fails on any orange colour in the web app's source: a hex value in the orange range
+ * empty, sky blue what's done. This fails on any orange colour in the web app's source: a hex value in the orange range
  * (hue 12–40°, saturated and neither near-black nor near-white, so wood browns, tans and golds pass), or an `orange`
  * colour token or class.
  */

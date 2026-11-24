@@ -27,8 +27,8 @@ export const Route = createFileRoute('/_app/admin/team')({
 type Role = 'ADMIN' | 'OWNER' | 'CLEANER';
 type Pending = { kind: 'deactivate' | 'revoke'; id: string; label: string } | null;
 
-const statusTone: Record<string, PillTone> = { ACTIVE: 'sage', INVITED: 'lavender', DEACTIVATED: 'neutral' };
-const inviteTone: Record<string, PillTone> = { PENDING: 'lavender', ACCEPTED: 'sage', REVOKED: 'neutral' };
+const statusTone: Record<string, PillTone> = { ACTIVE: 'sky', INVITED: 'lavender', DEACTIVATED: 'neutral' };
+const inviteTone: Record<string, PillTone> = { PENDING: 'lavender', ACCEPTED: 'sky', REVOKED: 'neutral' };
 
 function Team() {
   const api = useApi();

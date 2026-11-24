@@ -56,7 +56,7 @@ export function PortalLoading({ onRetry }: { onRetry?: () => void }) {
             aria-live="polite"
             className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-muted"
           >
-            {online && stage !== 'stuck' && <Spinner className="size-4 text-sage-deep" />}
+            {online && stage !== 'stuck' && <Spinner className="size-4 text-sky-deep" />}
             <span>{message}</span>
             {stage === 'stuck' && (
               <Button variant="secondary" size="sm" onClick={onRetry ?? (() => window.location.reload())}>

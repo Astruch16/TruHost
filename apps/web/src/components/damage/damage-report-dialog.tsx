@@ -162,7 +162,7 @@ function ReportBody({ report: r, owner }: { report: DamageReportDetail; owner: b
                 aria-hidden
                 className={cx(
                   'grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold',
-                  s.at ? 'bg-sage-mid text-white' : 'bg-line-soft text-muted',
+                  s.at ? 'bg-sky-mid text-white' : 'bg-line-soft text-muted',
                 )}
               >
                 {i + 1}
@@ -176,7 +176,7 @@ function ReportBody({ report: r, owner }: { report: DamageReportDetail; owner: b
         </ol>
       )}
       {r.resolutionNote && (
-        <p className="rounded-inner bg-sage-tint/50 px-4 py-3 text-sm text-sage-deep">{r.resolutionNote}</p>
+        <p className="rounded-inner bg-sky-tint/50 px-4 py-3 text-sm text-sky-deep">{r.resolutionNote}</p>
       )}
 
       {r.can.submit && <SendDraft report={r} />}

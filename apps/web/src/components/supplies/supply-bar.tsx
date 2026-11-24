@@ -4,7 +4,7 @@ import { checkedAgo, levelText, URGENCY_LABELS } from '../../lib/supplies';
 import { Pill } from '../ui/pill';
 
 const FILL: Record<SupplyState, string> = {
-  OK: 'bg-sage-mid',
+  OK: 'bg-sky-mid',
   LOW: 'bg-amber-mid',
   OUT: 'bg-rose-mid',
   UNKNOWN: '',

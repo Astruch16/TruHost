@@ -56,7 +56,7 @@ export function AvatarCard({ me }: { me: Me }) {
       aria-label="Profile photo"
       className="relative overflow-hidden rounded-card border border-line-soft bg-surface"
     >
-      <div aria-hidden className="relative h-20 bg-gradient-to-r from-sage-tint via-blue-tint/80 to-lavender-tint">
+      <div aria-hidden className="relative h-20 bg-gradient-to-r from-sky-tint via-blue-tint/80 to-lavender-tint">
         {/* Their guide keeps them company at the end of the banner (wide screens). */}
         <span className="absolute top-2 right-5 hidden @2xl/content:block">
           {GUIDE_WAVES[guide] ? (
@@ -72,7 +72,7 @@ export function AvatarCard({ me }: { me: Me }) {
           onClick={() => input.current?.click()}
           disabled={busy}
           aria-label={me.avatar ? 'Change your photo' : 'Add a photo'}
-          className="group relative size-24 shrink-0 rounded-full ring-4 ring-surface focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-deep"
+          className="group relative size-24 shrink-0 rounded-full ring-4 ring-surface focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-deep"
         >
           <Avatar url={me.avatar?.url} initials={initials(me.firstName, me.lastName)} className="size-24 text-2xl" />
           <span
@@ -91,7 +91,7 @@ export function AvatarCard({ me }: { me: Me }) {
             <h2 className="truncate font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.01em] text-ink">
               {name}
             </h2>
-            <Pill tone="sage">{roleLabel(me)}</Pill>
+            <Pill tone="sky">{roleLabel(me)}</Pill>
           </div>
           <p className="truncate text-sm text-muted">{me.email}</p>
         </div>

@@ -5,7 +5,7 @@ import { useSlidingHighlight } from '../../lib/motion';
 /**
  * A row of pill options where one is chosen (figure tabs, a view switch). The chosen pill's background slides from
  * the old option to the new one instead of jumping, and the labels cross-fade their colour. `solid` fills the
- * chosen pill in the primary green (white text) over pale pills; `switch` is a segmented control: a white pill
+ * chosen pill in the primary blue (white text) over pale pills; `switch` is a segmented control: a white pill
  * sliding along a grey track. Each option is a toggle button (aria-pressed) in a labelled group.
  */
 export function PillTabs<K extends string>({

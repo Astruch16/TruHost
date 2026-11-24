@@ -169,7 +169,7 @@ function StepCard({
             </Pill>
           )}
           {state === 'done' && (
-            <Pill tone="sage" size="sm">
+            <Pill tone="sky" size="sm">
               Done
             </Pill>
           )}
@@ -197,13 +197,13 @@ function StepCard({
         <span
           className={cx(
             'relative shrink-0 rounded-full',
-            state === 'current' && 'ring-4 ring-sage-light/40',
+            state === 'current' && 'ring-4 ring-sky-light/40',
             state === 'locked' && 'opacity-45 grayscale',
           )}
         >
           <CleanStepIcon step={step} size={44} />
           {state === 'done' && (
-            <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-sage-deep text-white ring-2 ring-ground">
+            <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-sky-deep text-white ring-2 ring-ground">
               <Check className="size-3" />
             </span>
           )}
@@ -214,7 +214,7 @@ function StepCard({
           )}
         </span>
         {!last && (
-          <span className={cx('my-1.5 w-0.5 flex-1 rounded-full', state === 'done' ? 'bg-sage-mid/60' : 'bg-line')} />
+          <span className={cx('my-1.5 w-0.5 flex-1 rounded-full', state === 'done' ? 'bg-sky-mid/60' : 'bg-line')} />
         )}
       </div>
       <div
@@ -232,7 +232,7 @@ function StepCard({
             type="button"
             onClick={onToggle}
             aria-expanded={open}
-            className="flex w-full items-center gap-3 rounded-card p-4 focus-visible:outline-2 focus-visible:outline-blue-deep @2xl/content:px-5"
+            className="flex w-full items-center gap-3 rounded-card p-4 focus-visible:outline-2 focus-visible:outline-sky-deep @2xl/content:px-5"
           >
             {head}
             <ChevronDown
@@ -245,7 +245,7 @@ function StepCard({
             className={cx(
               'flex items-center gap-3 rounded-t-card p-4 @2xl/content:px-5',
               state === 'current' &&
-                'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-sage-tint)_85%,transparent)_0%,transparent_70%)] @2xl/content:py-5',
+                'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-sky-tint)_85%,transparent)_0%,transparent_70%)] @2xl/content:py-5',
             )}
           >
             {head}
@@ -289,7 +289,7 @@ function RoomPhotos({
               className={cx(
                 'flex min-w-0 flex-col gap-2 rounded-inner border p-2.5 @2xl/content:p-3',
                 photos.length
-                  ? 'border-sage-mid/40 bg-sage-tint/25'
+                  ? 'border-sky-mid/40 bg-sky-tint/25'
                   : flagged
                     ? 'border-amber-mid bg-amber-tint/30'
                     : 'border-line-soft bg-surface',
@@ -352,7 +352,7 @@ function PhotoSlot({
           aria-label={`${room.displayName}, ${label} photo (opens full size)`}
         >
           <img src={latest.thumbUrl} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
-          <span className="absolute top-2 left-2 grid size-6 place-items-center rounded-full bg-sage-deep text-white shadow-sm">
+          <span className="absolute top-2 left-2 grid size-6 place-items-center rounded-full bg-sky-deep text-white shadow-sm">
             <Check aria-hidden className="size-3.5" />
           </span>
           {photos.length > 1 && (
@@ -446,7 +446,7 @@ function DamageStep({ clean: c, onUpdated }: { clean: Clean; onUpdated: (c: Clea
               found === o.value
                 ? o.value
                   ? 'border-danger-deep bg-danger-tint text-danger-deep'
-                  : 'border-primary bg-sage-tint/50 text-sage-deep'
+                  : 'border-primary bg-sky-tint/50 text-sky-deep'
                 : 'border-line bg-surface text-ink hover:bg-ground',
             )}
           >
@@ -638,10 +638,10 @@ function FinishStep({
   const showError = Boolean(error) && !(error instanceof ApiError && error.problem.code === 'CLEAN_MISSING_PHOTOS');
   return (
     <div className="flex flex-col gap-4">
-      <ul className="flex flex-col gap-2.5 rounded-inner bg-sage-tint/40 p-4 text-sm text-ink">
+      <ul className="flex flex-col gap-2.5 rounded-inner bg-sky-tint/40 p-4 text-sm text-ink">
         {[`Before and after photos of ${c.rooms.length} rooms`, damageSummary(c), stockSummary(c)].map((line) => (
           <li key={line} className="flex items-center gap-2.5">
-            <span aria-hidden className="grid size-5 shrink-0 place-items-center rounded-full bg-sage-deep text-white">
+            <span aria-hidden className="grid size-5 shrink-0 place-items-center rounded-full bg-sky-deep text-white">
               <Check className="size-3" />
             </span>
             {line}
@@ -695,7 +695,7 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
                     <figcaption
                       className={cx(
                         'pointer-events-none absolute bottom-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase',
-                        phase === 'BEFORE' ? 'bg-white/90 text-ink' : 'bg-sage-deep text-white',
+                        phase === 'BEFORE' ? 'bg-white/90 text-ink' : 'bg-sky-deep text-white',
                       )}
                     >
                       {label}

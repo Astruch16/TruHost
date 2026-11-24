@@ -88,7 +88,7 @@ function MonthChart({ year, metric, onOpen }: { year: DashboardYear; metric: Tre
       type="button"
       onClick={onOpen}
       aria-label={`${m.label} by month: view the trend`}
-      className="group -m-1.5 flex w-[calc(100%+0.75rem)] flex-col gap-2 rounded-inner p-1.5 text-left transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep"
+      className="group -m-1.5 flex w-[calc(100%+0.75rem)] flex-col gap-2 rounded-inner p-1.5 text-left transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-sky-deep"
     >
       <MonthBars
         months={year.months.map((x) => x.month)}

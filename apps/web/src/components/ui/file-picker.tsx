@@ -52,7 +52,7 @@ export function FilePicker({
         className={cx(
           buttonStyles({ variant: 'secondary', size: 'sm' }),
           'shrink-0 cursor-pointer bg-ground',
-          'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-deep',
+          'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-deep',
           disabled && 'pointer-events-none',
         )}
       >
@@ -84,7 +84,7 @@ export function FilePicker({
               onChange(null);
               if (input.current) input.current.value = '';
             }}
-            className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-line-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep"
+            className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-line-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-sky-deep"
           >
             <X aria-hidden className="size-4" />
           </button>

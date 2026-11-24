@@ -22,14 +22,14 @@ export interface StatementDocument {
 }
 
 const C = {
-  brand: '#173f3a',
-  brandInk: '#eef3f1',
-  brandMuted: '#a9c2bb',
+  brand: '#102a44',
+  brandInk: '#eef4fa',
+  brandMuted: '#9eb0c2',
   ink: '#1a1d21',
   muted: '#5b6068',
   line: '#e4e4df',
   soft: '#f6f6f3',
-  sage: '#ddebdf',
+  sky: '#dff1ff',
   gold: '#c99a2e',
   goldSoft: '#fbf3df',
 };

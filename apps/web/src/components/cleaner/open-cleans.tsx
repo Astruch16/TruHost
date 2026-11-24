@@ -39,7 +39,7 @@ export function OpenCleans({ cleans, colors }: { cleans: readonly CleanSummary[]
         <p className="figure text-sm font-semibold text-muted">{cleans.length} open</p>
       </div>
       {booked && (
-        <p role="status" className="mt-3 rounded-inner bg-sage-tint/60 px-3.5 py-2.5 text-sm text-sage-deep">
+        <p role="status" className="mt-3 rounded-inner bg-sky-tint/60 px-3.5 py-2.5 text-sm text-sky-deep">
           Booked: <strong>{booked.property.name}</strong>, {dayLabel(booked.scheduledDate)}. It’s on your schedule.
         </p>
       )}

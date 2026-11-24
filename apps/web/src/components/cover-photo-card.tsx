@@ -74,7 +74,7 @@ export function CoverPhotoCard({ property, sceneIndex }: { property: Property; s
         }}
       />
       <div className="flex flex-col gap-3">
-        <div className="aspect-[16/9] max-h-96 w-full overflow-hidden rounded-inner bg-sage-tint">
+        <div className="aspect-[16/9] max-h-96 w-full overflow-hidden rounded-inner bg-sky-tint">
           <CoverImage
             key={photo?.id ?? 'none'}
             url={photo?.url}

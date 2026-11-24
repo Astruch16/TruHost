@@ -30,10 +30,10 @@ export function MountainScene({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#173f3a" stopOpacity="0" />
-          <stop offset="0.3" stopColor="#173f3a" stopOpacity="0.6" />
-          <stop offset="0.62" stopColor="#21504a" />
-          <stop offset="0.75" stopColor="#2c5f57" />
+          <stop offset="0" stopColor="#102a44" stopOpacity="0" />
+          <stop offset="0.3" stopColor="#102a44" stopOpacity="0.6" />
+          <stop offset="0.62" stopColor="#183756" />
+          <stop offset="0.75" stopColor="#224365" />
         </linearGradient>
         <radialGradient id={`${id}-horizon`} cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="#B9ACE6" stopOpacity="0.22" />
@@ -49,33 +49,33 @@ export function MountainScene({ className }: { className?: string }) {
           <stop offset="1" stopColor="#E6D8A6" />
         </radialGradient>
         <linearGradient id={`${id}-far`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#5d8d82" />
-          <stop offset="1" stopColor="#3f6d64" />
+          <stop offset="0" stopColor="#527191" />
+          <stop offset="1" stopColor="#355372" />
         </linearGradient>
         <linearGradient id={`${id}-mid`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3c6b62" />
-          <stop offset="1" stopColor="#24504a" />
+          <stop offset="0" stopColor="#325170" />
+          <stop offset="1" stopColor="#1b3855" />
         </linearGradient>
         <linearGradient id={`${id}-mist`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#E8F2EE" stopOpacity="0" />
-          <stop offset="0.55" stopColor="#E8F2EE" stopOpacity="0.16" />
-          <stop offset="1" stopColor="#E8F2EE" stopOpacity="0" />
+          <stop offset="0" stopColor="#DCE6EF" stopOpacity="0" />
+          <stop offset="0.55" stopColor="#DCE6EF" stopOpacity="0.16" />
+          <stop offset="1" stopColor="#DCE6EF" stopOpacity="0" />
         </linearGradient>
         <linearGradient id={`${id}-lake`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3b6e66" />
-          <stop offset="1" stopColor="#1f4a44" />
+          <stop offset="0" stopColor="#315273" />
+          <stop offset="1" stopColor="#17334f" />
         </linearGradient>
         <radialGradient id={`${id}-warm`}>
           <stop offset="0" stopColor="#F6D77E" stopOpacity="0.55" />
           <stop offset="1" stopColor="#F6D77E" stopOpacity="0" />
         </radialGradient>
         <linearGradient id={`${id}-foot`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#0e2421" stopOpacity="0" />
-          <stop offset="1" stopColor="#0e2421" />
+          <stop offset="0" stopColor="#0a1827" stopOpacity="0" />
+          <stop offset="1" stopColor="#0a1827" />
         </linearGradient>
         <linearGradient id={`${id}-path`} x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0" stopColor="#2c5a52" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#3d6c62" stopOpacity="0.5" />
+          <stop offset="0" stopColor="#23415f" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#335271" stopOpacity="0.5" />
         </linearGradient>
       </defs>
 
@@ -105,24 +105,24 @@ export function MountainScene({ className }: { className?: string }) {
       {/* Far range: hazy, the moonlit faces lighter, snow on the high peaks */}
       <path d={scene.farRange} fill={url('far')} />
       {scene.farLit.map((d) => (
-        <path key={d} d={d} fill="#7aa79b" opacity="0.38" />
+        <path key={d} d={d} fill="#6d8cac" opacity="0.38" />
       ))}
       {scene.farSnow.map((s) => (
         <g key={s.cap}>
-          <path d={s.cap} fill="#C9DAD3" opacity="0.85" />
-          <path d={s.lit} fill="#F2F6F2" opacity="0.9" />
+          <path d={s.cap} fill="#BECBD8" opacity="0.85" />
+          <path d={s.lit} fill="#E8EDF1" opacity="0.9" />
         </g>
       ))}
 
       {/* Mid range */}
       <path d={scene.midRange} fill={url('mid')} />
       {scene.midLit.map((d) => (
-        <path key={d} d={d} fill="#5d8d82" opacity="0.35" />
+        <path key={d} d={d} fill="#527191" opacity="0.35" />
       ))}
       {scene.midSnow.map((s) => (
         <g key={s.cap}>
-          <path d={s.cap} fill="#B8CEC6" opacity="0.75" />
-          <path d={s.lit} fill="#E9F1EC" opacity="0.8" />
+          <path d={s.cap} fill="#ADBDCD" opacity="0.75" />
+          <path d={s.lit} fill="#DEE6ED" opacity="0.8" />
         </g>
       ))}
 
@@ -131,8 +131,8 @@ export function MountainScene({ className }: { className?: string }) {
 
       {/* Lake, the far shore's treeline, and the moon on the water */}
       <rect y="220" width={SCENE_WIDTH} height="40" fill={url('lake')} />
-      <path d={scene.treeline} fill="#244f49" />
-      <rect y="222" width={SCENE_WIDTH} height="1.2" fill="#9cc2b7" opacity="0.18" />
+      <path d={scene.treeline} fill="#1c3854" />
+      <rect y="222" width={SCENE_WIDTH} height="1.2" fill="#8eaac5" opacity="0.18" />
       <g stroke="#F4EBC8" strokeLinecap="round">
         <path d="M193 228 h14" strokeWidth="1.3" opacity="0.55" className="lg-shimmer" />
         <path
@@ -150,15 +150,15 @@ export function MountainScene({ className }: { className?: string }) {
           style={{ animationDelay: '1.4s' }}
         />
       </g>
-      <g stroke="#cfe3dc" strokeLinecap="round" strokeWidth="0.8" opacity="0.22">
+      <g stroke="#c3d2e2" strokeLinecap="round" strokeWidth="0.8" opacity="0.22">
         {scene.ripples.map((d) => (
           <path key={d} d={d} />
         ))}
       </g>
 
       {/* Near shore and the cabin's knoll, its edge catching the light */}
-      <path d={scene.shore} fill="#1c433d" />
-      <path d={SHORE} fill="none" stroke="#4f8478" strokeOpacity="0.35" strokeWidth="0.8" />
+      <path d={scene.shore} fill="#152e48" />
+      <path d={SHORE} fill="none" stroke="#446689" strokeOpacity="0.35" strokeWidth="0.8" />
 
       {/* The cabin: log walls, a moonlit roof, lit windows and a curl of smoke. Smoke and fireflies start invisible:
           they only show while animating, so reduced motion leaves them out. */}
@@ -170,7 +170,7 @@ export function MountainScene({ className }: { className?: string }) {
             cx="198"
             cy="230"
             r="2.2"
-            fill="#cfd9d4"
+            fill="#c6ced5"
             opacity="0"
             className="sb-smoke"
             style={{ animationDelay: delay }}
@@ -200,9 +200,9 @@ export function MountainScene({ className }: { className?: string }) {
       </g>
 
       {/* Middle pines, then the ground and the path to the door */}
-      <path d={scene.midPines.d} fill="#173a34" />
-      <path d={scene.midPines.lit} fill="#2d5a52" opacity="0.8" />
-      <path d={scene.ground} fill="#122d29" />
+      <path d={scene.midPines.d} fill="#10273e" />
+      <path d={scene.midPines.lit} fill="#24415f" opacity="0.8" />
+      <path d={scene.ground} fill="#0d1f30" />
       <path d={scene.path} fill={url('path')} />
 
       {/* Fireflies near the cabin */}
@@ -227,8 +227,8 @@ export function MountainScene({ className }: { className?: string }) {
       ))}
 
       {/* Front pines framing the scene; the ground fades into the foot's colour along the bottom */}
-      <path d={scene.frontPines.d} fill="#0e2421" />
-      <path d={scene.frontPines.lit} fill="#1f3f3a" opacity="0.9" />
+      <path d={scene.frontPines.d} fill="#0a1827" />
+      <path d={scene.frontPines.lit} fill="#192e43" opacity="0.9" />
       <rect y="292" width={SCENE_WIDTH} height="38" fill={url('foot')} />
     </svg>
   );

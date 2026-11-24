@@ -58,7 +58,7 @@ export function MonthCalendar({
                   !day
                     ? 'bg-ground/60'
                     : roomy && day === today
-                      ? 'bg-sage-tint/30'
+                      ? 'bg-sky-tint/30'
                       : roomy && isWeekend(di, weekStartsOn) && 'bg-ground/45',
                 )}
                 style={{ minHeight: (roomy ? 92 : 64) + week.lanes * (BAR_H + BAR_GAP) }}

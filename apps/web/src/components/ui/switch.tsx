@@ -26,7 +26,7 @@ export function Switch({
       {...aria}
       className={cx(
         'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors duration-150',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep disabled:opacity-45',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep disabled:opacity-45',
         checked ? 'border-primary bg-primary' : 'border-line bg-line-soft hover:bg-line',
         className,
       )}

@@ -62,7 +62,7 @@ export function ScheduleCalendar({
           type="button"
           aria-label="Previous month"
           onClick={() => onMonthChange(addMonths(month, -1))}
-          className="grid size-9 place-items-center rounded-full text-ink transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep"
+          className="grid size-9 place-items-center rounded-full text-ink transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-sky-deep"
         >
           <ChevronLeft aria-hidden className="size-4" />
         </button>
@@ -76,7 +76,7 @@ export function ScheduleCalendar({
           type="button"
           aria-label="Next month"
           onClick={() => onMonthChange(addMonths(month, 1))}
-          className="grid size-9 place-items-center rounded-full text-ink transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep"
+          className="grid size-9 place-items-center rounded-full text-ink transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-sky-deep"
         >
           <ChevronRight aria-hidden className="size-4" />
         </button>
@@ -148,8 +148,8 @@ export function ScheduleCalendar({
                       aria-pressed={isSelected}
                       onClick={() => onSelect(isSelected ? null : day)}
                       className={cx(
-                        'flex w-full max-w-11 flex-col items-center rounded-inner py-1 transition-colors focus-visible:outline-2 focus-visible:outline-blue-deep',
-                        isSelected ? 'bg-sage-tint ring-1 ring-sage-deep/40' : 'hover:bg-ground',
+                        'flex w-full max-w-11 flex-col items-center rounded-inner py-1 transition-colors focus-visible:outline-2 focus-visible:outline-sky-deep',
+                        isSelected ? 'bg-sky-tint ring-1 ring-sky-deep/40' : 'hover:bg-ground',
                         !inMonth && 'opacity-60',
                       )}
                     >

@@ -117,7 +117,7 @@ export function WeekBoard({
                 // Narrow: a row per day (days without cleans stay out of the way). Wide: a column per day.
                 'grid grid-cols-[3.25rem_minmax(0,1fr)] gap-3 @2xl/board:flex @2xl/board:min-h-40 @2xl/board:flex-col @2xl/board:gap-2 @2xl/board:rounded-inner @2xl/board:p-1.5',
                 here.length === 0 && '@max-2xl/board:hidden',
-                day === highlight && '@2xl/board:bg-sage-tint/60 @2xl/board:ring-1 @2xl/board:ring-sage-deep/30',
+                day === highlight && '@2xl/board:bg-sky-tint/60 @2xl/board:ring-1 @2xl/board:ring-sky-deep/30',
               )}
             >
               <div className="pt-1 text-center @2xl/board:pt-0">
@@ -178,7 +178,7 @@ function WeekTile({ clean: c, color }: { clean: CleanSummary; color?: string }) 
         title={`${c.property.name}${unusual ? ` · ${unusual}` : ''}`}
         style={{ '--tile': propertyColorValue(color) } as CSSProperties}
         className={cx(
-          'group block w-full rounded-inner border-[1.5px] transition-[border-color,box-shadow] hover:shadow-[0_4px_12px_rgb(16_20_18/0.07)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+          'group block w-full rounded-inner border-[1.5px] transition-[border-color,box-shadow] hover:shadow-[0_4px_12px_rgb(16_20_18/0.07)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep',
           cancelled
             ? 'border-dashed border-line bg-surface opacity-55'
             : 'border-[color-mix(in_srgb,var(--tile)_70%,transparent)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--tile)_9%,var(--color-surface)),var(--color-surface)_75%)] hover:border-[var(--tile)]',

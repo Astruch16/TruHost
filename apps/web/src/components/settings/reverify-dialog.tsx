@@ -109,7 +109,7 @@ export function ReverifyDialog({ request, onClose }: { request: ReverifyRequest;
       size="sm"
       title={
         <span className="flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-full bg-sage-tint text-sage-deep">
+          <span className="grid size-8 place-items-center rounded-full bg-sky-tint text-sky-deep">
             <ShieldCheck aria-hidden className="size-4" />
           </span>
           Confirm it’s you
@@ -164,7 +164,7 @@ export function ReverifyDialog({ request, onClose }: { request: ReverifyRequest;
                 setValue('');
                 setStage('backup_code');
               }}
-              className="self-start text-sm font-semibold text-sage-deep link-underline"
+              className="self-start text-sm font-semibold text-sky-deep link-underline"
             >
               Use a backup code instead
             </button>

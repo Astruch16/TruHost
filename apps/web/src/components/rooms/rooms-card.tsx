@@ -227,10 +227,10 @@ function Counter({ type, value, onChange }: { type: RoomType; value: number; onC
       aria-labelledby={id}
       className={cx(
         'flex items-center gap-3 rounded-inner border bg-surface py-2 pr-2 pl-3 transition-colors',
-        value > 0 ? 'border-sage-deep/30' : 'border-line-soft',
+        value > 0 ? 'border-sky-deep/30' : 'border-line-soft',
       )}
     >
-      <Icon aria-hidden className={cx('size-5 shrink-0', value > 0 ? 'text-sage-deep' : 'text-muted')} />
+      <Icon aria-hidden className={cx('size-5 shrink-0', value > 0 ? 'text-sky-deep' : 'text-muted')} />
       <span id={id} className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
         {name}
       </span>
@@ -402,7 +402,7 @@ function TypeChips({
             onClick={() => onChange(t)}
             className={cx(
               'inline-flex items-center gap-1.5 rounded-full border font-medium transition-colors',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep',
               compact ? 'min-h-8 px-2.5 text-xs' : 'min-h-9 px-3 text-sm',
               selected
                 ? 'border-primary bg-primary text-white'
@@ -515,7 +515,7 @@ function SortableRoom({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cx(
         'rounded-inner border bg-surface',
-        isDragging ? 'relative z-10 border-sage-deep/40 shadow-lg' : 'border-line-soft',
+        isDragging ? 'relative z-10 border-sky-deep/40 shadow-lg' : 'border-line-soft',
       )}
     >
       {editing ? (
@@ -536,14 +536,14 @@ function SortableRoom({
             {...attributes}
             {...listeners}
             aria-label={`Reorder ${room.displayName}`}
-            className="grid size-9 shrink-0 cursor-grab touch-none place-items-center rounded-control-sm text-muted hover:bg-ground hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep active:cursor-grabbing"
+            className="grid size-9 shrink-0 cursor-grab touch-none place-items-center rounded-control-sm text-muted hover:bg-ground hover:text-ink focus-visible:outline-2 focus-visible:outline-sky-deep active:cursor-grabbing"
           >
             <GripVertical aria-hidden className="size-4" />
           </button>
           <span className="figure grid size-6 shrink-0 place-items-center rounded-full bg-ground text-xs font-semibold text-muted">
             {index + 1}
           </span>
-          <Icon aria-hidden className="size-4 shrink-0 text-sage-deep" />
+          <Icon aria-hidden className="size-4 shrink-0 text-sky-deep" />
           <span className="min-w-0 flex-1 py-1 text-sm font-medium [overflow-wrap:anywhere] text-ink">
             {/* Keep the dot with the label when the name wraps: "Bedroom / · Primary". */}
             {room.displayName.replace(' · ', ' ·\u00a0')}
@@ -577,7 +577,7 @@ function IconButton({
       aria-label={label}
       onClick={onClick}
       className={cx(
-        'grid size-9 shrink-0 place-items-center rounded-full text-muted transition-colors focus-visible:outline-2 focus-visible:outline-blue-deep',
+        'grid size-9 shrink-0 place-items-center rounded-full text-muted transition-colors focus-visible:outline-2 focus-visible:outline-sky-deep',
         danger ? 'hover:bg-danger-tint hover:text-danger-deep' : 'hover:bg-ground hover:text-ink',
       )}
     >

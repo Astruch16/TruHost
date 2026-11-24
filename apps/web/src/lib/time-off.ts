@@ -5,9 +5,9 @@ import { dayLabel } from './dashboard-format';
 export const timeOffDates = (r: Pick<TimeOffRequest, 'startDate' | 'endDate'>) =>
   r.startDate === r.endDate ? dayLabel(r.startDate) : `${dayLabel(r.startDate)} – ${dayLabel(r.endDate)}`;
 
-export const TIME_OFF_TONE: Record<TimeOffStatus, 'amber' | 'sage' | 'danger' | 'neutral'> = {
+export const TIME_OFF_TONE: Record<TimeOffStatus, 'amber' | 'sky' | 'danger' | 'neutral'> = {
   PENDING: 'amber',
-  APPROVED: 'sage',
+  APPROVED: 'sky',
   DECLINED: 'danger',
   CANCELLED: 'neutral',
 };

@@ -352,7 +352,7 @@ export function TourOverlay({
           <button
             type="button"
             onClick={() => leave(onSkip)}
-            className="min-h-10 rounded-control px-1 text-sm font-semibold text-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep"
+            className="min-h-10 rounded-control px-1 text-sm font-semibold text-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-sky-deep"
           >
             Skip tour
           </button>

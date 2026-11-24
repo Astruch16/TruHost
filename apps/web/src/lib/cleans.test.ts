@@ -64,7 +64,7 @@ describe('schedule organising', () => {
       { id: 'b', name: 'Seaside Loft' },
     ]);
     expect([...colors]).toEqual([
-      ['a', 'bg-sage-mid'],
+      ['a', 'bg-sky-mid'],
       ['b', 'bg-blue-deep'],
     ]);
   });
@@ -113,31 +113,31 @@ describe('agenda and hero helpers', () => {
 describe('calendar day marks', () => {
   it('turns a property’s dot class into its colour', async () => {
     const { propertyColorValue, PROPERTY_DOTS } = await import('./cleans');
-    expect(propertyColorValue('bg-sage-mid')).toBe('var(--color-sage-mid)');
+    expect(propertyColorValue('bg-sky-mid')).toBe('var(--color-sky-mid)');
     expect(propertyColorValue(undefined)).toBe('var(--color-line)');
     // Every colour a property can get is a theme token.
     for (const dot of PROPERTY_DOTS) expect(propertyColorValue(dot)).toMatch(/^var\(--color-[a-z]+-[a-z]+\)$/);
   });
 
-  it('rings a day in its colour with a faint fill of it, a slice each for several, and keeps today green', async () => {
+  it('rings a day in its colour with a faint fill of it, a slice each for several, and keeps today blue', async () => {
     const { dayMarkStyle } = await import('./cleans');
-    const one = dayMarkStyle(['var(--color-sage-mid)']);
+    const one = dayMarkStyle(['var(--color-sky-mid)']);
     expect(one.border).toBe('2px solid transparent');
     expect(one.background).toBe(
-      'conic-gradient(color-mix(in srgb, var(--color-sage-mid) 16%, transparent) 0% 100%) padding-box, ' +
+      'conic-gradient(color-mix(in srgb, var(--color-sky-mid) 16%, transparent) 0% 100%) padding-box, ' +
         'linear-gradient(var(--color-surface), var(--color-surface)) padding-box, ' +
-        'conic-gradient(var(--color-sage-mid) 0% 100%) border-box',
+        'conic-gradient(var(--color-sky-mid) 0% 100%) border-box',
     );
-    const two = dayMarkStyle(['var(--color-sage-mid)', 'var(--color-blue-deep)']);
+    const two = dayMarkStyle(['var(--color-sky-mid)', 'var(--color-blue-deep)']);
     expect(two.background).toContain(
-      'conic-gradient(var(--color-sage-mid) 0% 50%, var(--color-blue-deep) 50% 100%) border-box',
+      'conic-gradient(var(--color-sky-mid) 0% 50%, var(--color-blue-deep) 50% 100%) border-box',
     );
     expect(one.boxShadow).toBeUndefined();
-    const today = dayMarkStyle(['var(--color-sage-mid)'], true);
+    const today = dayMarkStyle(['var(--color-sky-mid)'], true);
     expect(today.boxShadow).toBe('inset 0 0 0 1.5px var(--color-surface)');
     expect(today.background).toBe(
       'linear-gradient(var(--color-primary), var(--color-primary)) padding-box, ' +
-        'conic-gradient(var(--color-sage-mid) 0% 100%) border-box',
+        'conic-gradient(var(--color-sky-mid) 0% 100%) border-box',
     );
   });
 });

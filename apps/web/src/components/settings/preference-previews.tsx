@@ -13,7 +13,7 @@ export function WeekPreview({ weekStartsOn }: { weekStartsOn: WeekStart }) {
         const weekend = n === 'Saturday' || n === 'Sunday';
         return (
           <span key={n} className="flex flex-col items-center gap-1">
-            <span className={cx('text-[0.65rem] font-semibold', i === 0 ? 'text-sage-deep' : 'text-muted')}>
+            <span className={cx('text-[0.65rem] font-semibold', i === 0 ? 'text-sky-deep' : 'text-muted')}>
               {n.slice(0, 2)}
             </span>
             <span
@@ -37,7 +37,7 @@ export function MotionPreview({ reduced }: { reduced: boolean }) {
     <svg aria-hidden viewBox="0 0 240 60" className="block h-[3.75rem] w-full">
       <line x1="16" y1="50" x2="224" y2="50" stroke="var(--color-line)" strokeWidth="2" strokeLinecap="round" />
       {reduced ? (
-        <circle cx="120" cy="40" r="9" fill="var(--color-sage-deep)" />
+        <circle cx="120" cy="40" r="9" fill="var(--color-sky-deep)" />
       ) : (
         <>
           <path
@@ -54,9 +54,9 @@ export function MotionPreview({ reduced }: { reduced: boolean }) {
             [120, 41, 0.55],
             [160, 19, 0.75],
           ].map(([cx, cy, o]) => (
-            <circle key={cx} cx={cx} cy={cy} r="9" fill="var(--color-sage-deep)" fillOpacity={o} />
+            <circle key={cx} cx={cx} cy={cy} r="9" fill="var(--color-sky-deep)" fillOpacity={o} />
           ))}
-          <circle cx="200" cy="41" r="9" fill="var(--color-sage-deep)" />
+          <circle cx="200" cy="41" r="9" fill="var(--color-sky-deep)" />
         </>
       )}
     </svg>

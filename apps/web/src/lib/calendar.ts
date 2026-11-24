@@ -151,10 +151,10 @@ export const STAY_STYLES: readonly StayStyle[] = [
   {
     key: 'DIRECT',
     label: 'Direct',
-    bar: 'bg-sage-tint text-sage-deep',
-    edge: 'border-sage-deep/40',
-    swatch: 'bg-sage-tint ring-1 ring-sage-deep/40',
-    tone: 'sage',
+    bar: 'bg-sky-tint text-sky-deep',
+    edge: 'border-sky-deep/40',
+    swatch: 'bg-sky-tint ring-1 ring-sky-deep/40',
+    tone: 'sky',
   },
   {
     key: 'OTHER',

@@ -17,7 +17,7 @@ export function CleanRow({ clean: c, color }: { clean: CleanSummary; color?: str
       <Link
         to="/cleaner/cleans/$cleanId"
         params={{ cleanId: c.id }}
-        className="flex items-center gap-3.5 rounded-inner px-2 py-3 transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-blue-deep"
+        className="flex items-center gap-3.5 rounded-inner px-2 py-3 transition-colors hover:bg-ground focus-visible:outline-2 focus-visible:outline-sky-deep"
       >
         <span
           className={cx(

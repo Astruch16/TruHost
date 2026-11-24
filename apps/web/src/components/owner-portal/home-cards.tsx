@@ -68,7 +68,7 @@ export function MonthEarningsHero({
             {monthLabel(month)} {released ? 'statement' : 'earnings'}
           </h2>
           {chip && (
-            <Pill tone={released ? 'sage' : 'amber'} glass>
+            <Pill tone={released ? 'sky' : 'amber'} glass>
               {chip}
             </Pill>
           )}
@@ -172,12 +172,12 @@ function Money({ cents, signed = false }: { cents: number; signed?: boolean }) {
   );
 }
 
-/** The change on the month before: green and rising, rose and falling, or a quiet "No change". */
+/** The change on the month before: blue and rising, rose and falling, or a quiet "No change". */
 function Change({ cents }: { cents: number }) {
   if (cents === 0) return <span className="text-lg font-semibold text-primary-ink-muted">{changeAmount(0)}</span>;
   const Arrow = cents > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={cx('inline-flex items-center gap-1.5', cents > 0 ? 'text-[#bfe6cb]' : 'text-[#f6c3bc]')}>
+    <span className={cx('inline-flex items-center gap-1.5', cents > 0 ? 'text-[#bfe3ff]' : 'text-[#f6c3bc]')}>
       <Arrow aria-hidden className="size-5 shrink-0" strokeWidth={2.5} />
       <span>
         <Money cents={cents} signed />
@@ -216,7 +216,7 @@ export function ThisMonthCard({ m }: { m: OwnerHome['thisMonth'] }) {
           )}
           {m.nightsUpcoming > 0 && (
             <span
-              className={cx('h-full bg-sage-light', m.nightsStayed === 0 && 'rounded-l-full')}
+              className={cx('h-full bg-sky-light', m.nightsStayed === 0 && 'rounded-l-full')}
               style={{ width: `${widthOf(m.nightsUpcoming, m.daysInMonth)}%` }}
             />
           )}
@@ -227,7 +227,7 @@ export function ThisMonthCard({ m }: { m: OwnerHome['thisMonth'] }) {
             <strong className="figure text-ink">{m.nightsStayed}</strong> nights stayed
           </li>
           <li className="inline-flex items-center gap-1.5">
-            <span aria-hidden className="size-2.5 rounded-full bg-sage-light" />
+            <span aria-hidden className="size-2.5 rounded-full bg-sky-light" />
             <strong className="figure text-ink">{m.nightsUpcoming}</strong> to come
           </li>
           <li className="inline-flex items-center gap-1.5">
@@ -283,7 +283,7 @@ export function NetByMonthChart({ months }: { months: OwnerHome['netByMonth'] })
                 className={cx(
                   'w-full max-w-10 rounded-t-md',
                   m.state === 'RELEASED' && 'bg-primary',
-                  m.state === 'IN_PROGRESS' && 'border-2 border-dashed border-primary/60 bg-sage-tint',
+                  m.state === 'IN_PROGRESS' && 'border-2 border-dashed border-primary/60 bg-sky-tint',
                   m.state === 'PENDING' && 'bg-line-soft',
                 )}
                 style={{ height: h === null ? '4px' : `${h}%` }}
@@ -300,7 +300,7 @@ export function NetByMonthChart({ months }: { months: OwnerHome['netByMonth'] })
           <span aria-hidden className="size-2.5 rounded-sm bg-primary" /> Released
         </li>
         <li className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="size-2.5 rounded-sm border border-dashed border-primary/60 bg-sage-tint" /> In
+          <span aria-hidden className="size-2.5 rounded-sm border border-dashed border-primary/60 bg-sky-tint" /> In
           progress
         </li>
       </ul>

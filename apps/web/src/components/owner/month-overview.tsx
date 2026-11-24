@@ -75,11 +75,11 @@ export function MonthOverview({
 function Figures({ f }: { f: MonthFigures }) {
   return (
     <div className="grid gap-3 @xl/content:grid-cols-[1.3fr_1fr_1fr]">
-      {/* The headline tile: soft green (the sage pair), set apart from the white tiles beside it. */}
-      <div className="flex flex-col justify-between gap-3 rounded-inner bg-sage-tint p-5 text-sage-deep @xl/content:row-span-2">
+      {/* The headline tile: soft blue (the sky pair), set apart from the white tiles beside it. */}
+      <div className="flex flex-col justify-between gap-3 rounded-inner bg-sky-tint p-5 text-sky-deep @xl/content:row-span-2">
         <p className="text-sm font-semibold">Net to you</p>
         <p className="figure text-4xl font-bold tracking-tight">{formatCents(f.netCents)}</p>
-        <p className="text-sm text-sage-deep/80">
+        <p className="text-sm text-sky-deep/80">
           {f.managementFeeCents > 0 ? 'After the management fee and expenses.' : 'After expenses.'}
         </p>
       </div>
@@ -95,7 +95,7 @@ function Figures({ f }: { f: MonthFigures }) {
           <span className="flex items-center gap-2">
             <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-soft">
               <span
-                className="block h-full rounded-full bg-sage-mid"
+                className="block h-full rounded-full bg-sky-mid"
                 style={{ width: `${Math.min(100, (f.occupancyBps ?? 0) / 100)}%` }}
               />
             </span>
@@ -165,7 +165,7 @@ function Breakdown({ f }: { f: MonthFigures }) {
           Where it went
         </h3>
         {keep !== null && (
-          <Pill tone="sage" className="figure">
+          <Pill tone="sky" className="figure">
             You keep {keep}%
           </Pill>
         )}
@@ -203,7 +203,7 @@ function Breakdown({ f }: { f: MonthFigures }) {
           share={f.ownerExpensesCents > 0 ? share(f.ownerExpensesCents) : null}
         />
       </dl>
-      <div className="flex items-center justify-between gap-4 rounded-inner bg-surface px-4 py-3.5 ring-1 ring-sage-deep/15">
+      <div className="flex items-center justify-between gap-4 rounded-inner bg-surface px-4 py-3.5 ring-1 ring-sky-deep/15">
         <div>
           <p className="font-semibold text-ink">Net to you</p>
           <p className="text-xs text-muted">Gross, less the fee and expenses</p>
@@ -211,7 +211,7 @@ function Breakdown({ f }: { f: MonthFigures }) {
         <p
           className={cx(
             'figure text-2xl font-bold tracking-tight',
-            f.netCents < 0 ? 'text-danger-deep' : 'text-sage-deep',
+            f.netCents < 0 ? 'text-danger-deep' : 'text-sky-deep',
           )}
         >
           {formatCents(f.netCents)}

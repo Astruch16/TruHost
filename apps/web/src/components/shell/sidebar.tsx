@@ -113,7 +113,7 @@ export function Sidebar({
 
       {/* Foot: Help, Log out and the version, on the scene's darkest ground so the trees run into it. Always at the bottom;
           the scene above gives way first on short screens. */}
-      <div className="relative z-10 flex-none bg-[#0e2421] px-3 pt-1 pb-4">
+      <div className="relative z-10 flex-none bg-[#0a1827] px-3 pt-1 pb-4">
         {onHelp && (
           <button type="button" onClick={onHelp} className={cx(itemClass, 'w-full text-left')}>
             <CircleHelp aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />

@@ -14,7 +14,7 @@ type Item = OwnerHome['goodToKnow'][number];
 
 /** The receipt or statement link under an item, lined up with its title (past the 40px icon and 12px gap). */
 const action =
-  'inline-flex items-center gap-1 text-xs font-semibold text-primary link-underline focus-visible:outline-2 focus-visible:outline-blue-deep';
+  'inline-flex items-center gap-1 text-xs font-semibold text-primary link-underline focus-visible:outline-2 focus-visible:outline-sky-deep';
 
 /**
  * Recent owner-paid expenses and adjustments on released statements: each with an icon for what it was, the date
@@ -54,7 +54,7 @@ function GoodToKnowItem({
   onViewReceipt: (fileId: string) => void;
 }) {
   const expense = g.kind === 'EXPENSE';
-  const tone = expense ? 'text-ink/75' : g.amountCents > 0 ? 'text-sage-deep' : 'text-danger-deep';
+  const tone = expense ? 'text-ink/75' : g.amountCents > 0 ? 'text-sky-deep' : 'text-danger-deep';
   const kind = expense ? categoryLabel(g.category ?? 'OTHER') : g.amountCents > 0 ? 'Credit' : 'Charge';
   const source = expense ? g.vendor : g.statementMonth && `${monthOnly(g.statementMonth)} statement`;
   return (
@@ -77,7 +77,7 @@ function GoodToKnowItem({
           {showProperty && <p className="text-xs text-muted">{g.property.name}</p>}
         </div>
         <div className="shrink-0 text-right">
-          <p className={cx('figure leading-snug font-semibold', g.amountCents > 0 ? 'text-sage-deep' : 'text-ink')}>
+          <p className={cx('figure leading-snug font-semibold', g.amountCents > 0 ? 'text-sky-deep' : 'text-ink')}>
             {formatSigned(g.amountCents)}
           </p>
           <p className="mt-0.5 text-xs text-muted">{shortDate(g.date)}</p>

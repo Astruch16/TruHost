@@ -5,7 +5,7 @@ import { pillDotStyles, pillIconStyles, pillStyles, type PillLook, type PillTone
 /**
  * A pill: a dot (or an icon) in its tone's colour and a label, on white with a grey hairline. Every status, role and label chip in the portals
  * is one. `pulse` is for what's happening right now (a clean in progress): the dot sends out a slow ring, which stops
- * under reduced motion. Dark for the urgent ("Out") and top-level labels; `glass` on the deep green.
+ * under reduced motion. Dark for the urgent ("Out") and top-level labels; `glass` on the deep blue.
  */
 export function Pill({
   tone = 'neutral',

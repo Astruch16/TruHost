@@ -20,7 +20,7 @@ export const STATE_TONE: Record<StatementState, PillTone> = {
   NOT_STARTED: 'neutral',
   DRAFT: 'lavender',
   FINALIZED: 'amber',
-  RELEASED: 'sage',
+  RELEASED: 'sky',
 };
 
 /** The fill for each state in a progress bar: the colour of its pill's dot. */
@@ -28,7 +28,7 @@ export const STATE_BAR: Record<StatementState, string> = {
   NOT_STARTED: 'bg-muted/30',
   DRAFT: 'bg-lavender-mid',
   FINALIZED: 'bg-amber-mid',
-  RELEASED: 'bg-sage-mid',
+  RELEASED: 'bg-sky-mid',
 };
 
 /** The states in order, from no statement to paid out. */

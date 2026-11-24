@@ -417,7 +417,7 @@ function AddSupply({
                   type="button"
                   disabled={add.isPending}
                   onClick={() => add.mutate({ name: s.name, category: s.category, thresholdPct: 25 })}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-full border border-line bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-sage-tint disabled:opacity-60"
+                  className="inline-flex min-h-9 items-center gap-1 rounded-full border border-line bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-sky-tint disabled:opacity-60"
                 >
                   <Plus aria-hidden className="size-3.5" /> {s.name}
                 </button>

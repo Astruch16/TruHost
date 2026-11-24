@@ -32,7 +32,7 @@ export function YearToDateCard({ ytd, month }: { ytd: OwnerHome['yearToDate']; m
               : `From your released statement${ytd.months === 1 ? '' : 's'}, so every figure is final.`}
           </p>
         </div>
-        <Pill tone="sage">
+        <Pill tone="sky">
           {ytd.months} of {monthsSoFar} month{monthsSoFar === 1 ? '' : 's'} released
         </Pill>
       </header>

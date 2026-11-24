@@ -80,7 +80,7 @@ function ProfileForm({ initial }: { initial: Me }) {
           hint={
             <>
               You sign in with this address. To change it, ask TruHost. Password and two-step are in{' '}
-              <Link to="/account/security" className="font-semibold text-sage-deep link-underline">
+              <Link to="/account/security" className="font-semibold text-sky-deep link-underline">
                 Security
               </Link>
               .

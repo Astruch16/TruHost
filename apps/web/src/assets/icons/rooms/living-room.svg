@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#2E3532" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
 <rect x="6.5" y="29.5" width="3" height="4" rx="1" fill="#DDB443"/>
 <rect x="30.5" y="29.5" width="3" height="4" rx="1" fill="#DDB443"/>
-<rect x="7" y="10" width="26" height="12" rx="3" fill="#AFCBB6"/>
+<rect x="7" y="10" width="26" height="12" rx="3" fill="#A8D9FB"/>
 <rect x="11.5" y="13.2" width="6" height="5.6" rx="1.6" fill="#DDB443" transform="rotate(-12 14.5 16)"/>
 <rect x="9" y="19" width="11" height="6" rx="1.5" fill="#FFFDF8"/>
 <rect x="20" y="19" width="11" height="6" rx="1.5" fill="#FFFDF8"/>
-<rect x="3.5" y="15" width="6.5" height="14" rx="3" fill="#AFCBB6"/>
-<rect x="30" y="15" width="6.5" height="14" rx="3" fill="#AFCBB6"/>
-<rect x="6" y="25" width="28" height="4.5" rx="1.5" fill="#8DB299"/>
+<rect x="3.5" y="15" width="6.5" height="14" rx="3" fill="#A8D9FB"/>
+<rect x="30" y="15" width="6.5" height="14" rx="3" fill="#A8D9FB"/>
+<rect x="6" y="25" width="28" height="4.5" rx="1.5" fill="#7CC8FF"/>
 </svg>

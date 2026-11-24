@@ -29,7 +29,7 @@ export function PropertyDetailsPanel({ property: p }: { property: Property }) {
               href={maps}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 inline-flex items-center gap-1 font-semibold text-sage-deep link-underline"
+              className="mt-1 inline-flex items-center gap-1 font-semibold text-sky-deep link-underline"
             >
               Open in Maps <ExternalLink aria-hidden className="size-3.5" />
             </a>

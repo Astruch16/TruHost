@@ -61,7 +61,7 @@ function Progress({ done, of }: { done: number; of: number }) {
   return (
     <span aria-hidden className="block h-1.5 overflow-hidden rounded-full bg-line-soft">
       <span
-        className="block h-full rounded-full bg-sage-mid transition-[width] duration-500"
+        className="block h-full rounded-full bg-sky-mid transition-[width] duration-500"
         style={{ width: of > 0 ? `${(done / of) * 100}%` : '0%' }}
       />
     </span>

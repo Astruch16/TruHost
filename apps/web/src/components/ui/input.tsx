@@ -60,7 +60,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttribut
           onClick={() => setShown(!shown)}
           aria-label={shown ? 'Hide password' : 'Show password'}
           aria-pressed={shown}
-          className="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center rounded-control-sm text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-blue-deep"
+          className="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center rounded-control-sm text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-sky-deep"
         >
           <Icon aria-hidden className="size-4" />
         </button>

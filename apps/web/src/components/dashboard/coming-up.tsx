@@ -26,9 +26,9 @@ const SORTS = [
 ] as const satisfies readonly { key: UpcomingSort; label: string }[];
 
 const EVENT = { CHECK_IN: 'Check-in', CHECK_OUT: 'Check-out and clean' } as const;
-// Green for arrivals, gold for check-outs and their cleans: they read apart at dot size.
-const DOT = { CHECK_IN: 'bg-sage-mid', CHECK_OUT: 'bg-amber-mid' } as const;
-const EVENT_TEXT = { CHECK_IN: 'text-sage-deep', CHECK_OUT: 'text-amber-deep' } as const;
+// Blue for arrivals, gold for check-outs and their cleans: they read apart at dot size.
+const DOT = { CHECK_IN: 'bg-sky-mid', CHECK_OUT: 'bg-amber-mid' } as const;
+const EVENT_TEXT = { CHECK_IN: 'text-sky-deep', CHECK_OUT: 'text-amber-deep' } as const;
 
 /**
  * The line under an event. A check-in gives the stay that's starting ("Maya · 6 nights"); a check-out is one day, so

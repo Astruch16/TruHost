@@ -79,7 +79,7 @@ export function DevicesCard() {
                 key={s.id}
                 icon={<Icon />}
                 title={deviceLabel(a)}
-                status={current ? <Pill tone="sage">This device</Pill> : undefined}
+                status={current ? <Pill tone="sky">This device</Pill> : undefined}
                 description={[placeLabel(a), current ? 'Active now' : timeAgo(s.lastActiveAt)]
                   .filter(Boolean)
                   .join(' · ')}

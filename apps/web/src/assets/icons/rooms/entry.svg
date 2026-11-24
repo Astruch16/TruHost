@@ -2,6 +2,6 @@
 <rect x="17" y="18" width="19" height="4.5" rx="1.5" fill="#DDB443"/>
 <path d="M26.5 22.5 v4.5 h3.2 v-4.5" fill="#DDB443"/>
 <path d="M31.8 22.5 v3 h3.2 v-3" fill="#DDB443"/>
-<path d="M4.5 17.5 L11.5 11.5 L18.5 17.5 V25.5 a1.5 1.5 0 0 1 -1.5 1.5 H6 A1.5 1.5 0 0 1 4.5 25.5 Z" fill="#AFCBB6"/>
+<path d="M4.5 17.5 L11.5 11.5 L18.5 17.5 V25.5 a1.5 1.5 0 0 1 -1.5 1.5 H6 A1.5 1.5 0 0 1 4.5 25.5 Z" fill="#A8D9FB"/>
 <circle cx="11.5" cy="20.8" r="2" fill="#FFFDF8"/>
 </svg>

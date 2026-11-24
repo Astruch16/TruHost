@@ -184,7 +184,7 @@ function GlanceTile({
     <button
       type="button"
       onClick={onOpen}
-      className="flex h-full w-full items-center gap-3.5 rounded-inner border border-line bg-surface p-3 text-left transition-colors hover:border-ink/20 hover:bg-ground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep"
+      className="flex h-full w-full items-center gap-3.5 rounded-inner border border-line bg-surface p-3 text-left transition-colors hover:border-ink/20 hover:bg-ground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep"
     >
       <span
         aria-hidden

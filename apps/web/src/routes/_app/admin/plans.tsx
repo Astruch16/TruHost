@@ -79,7 +79,7 @@ function Plans() {
                   </Td>
                   <Td>
                     <div className="flex flex-wrap gap-1.5">
-                      {p.archivedAt ? <Pill tone="neutral">Archived</Pill> : <Pill tone="sage">Active</Pill>}
+                      {p.archivedAt ? <Pill tone="neutral">Archived</Pill> : <Pill tone="sky">Active</Pill>}
                       {p.inUse && (
                         <Pill tone="lavender">
                           <Lock aria-hidden className="size-3" /> Rate locked

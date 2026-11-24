@@ -314,7 +314,7 @@ function MonthProgress({ month: m }: { month: StatementMonth }) {
           </dl>
           <h3 className="mt-5 mb-2 text-sm font-semibold text-ink">Up next</h3>
           {next.length === 0 ? (
-            <p className="flex items-center gap-2 text-sm text-sage-deep">
+            <p className="flex items-center gap-2 text-sm text-sky-deep">
               <CircleCheck aria-hidden className="size-4" /> Every statement is paid out.
             </p>
           ) : (

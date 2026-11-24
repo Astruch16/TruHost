@@ -3,7 +3,7 @@ import type { NavItem } from '../../lib/nav';
 
 /**
  * The owner's bottom tab bar on phones (below 768px), in place of the sidebar drawer: the same items as their
- * sidebar, in the sidebar's green, clear of the home indicator (safe-area padding).
+ * sidebar, in the sidebar's navy, clear of the home indicator (safe-area padding).
  */
 export function TabBar({ items }: { items: NavItem[] }) {
   return (

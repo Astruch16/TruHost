@@ -59,7 +59,7 @@ export function MonthAgenda({
             <li key={date} data-date={date} className={cx(date < today && 'opacity-60')}>
               <h3 className="mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] text-muted uppercase">
                 {DAY_HEADING.format(new Date(`${date}T00:00:00Z`))}
-                {date === today && <Pill tone="sage">Today</Pill>}
+                {date === today && <Pill tone="sky">Today</Pill>}
               </h3>
               <ul className="flex flex-col gap-1">
                 {events.map((event) => (
@@ -100,10 +100,10 @@ function AgendaItem({
   );
   const body = (
     <>
-      {/* Coming (green) or going (gold), as in Coming up and the calendar's clean markers. */}
+      {/* Coming (blue) or going (gold), as in Coming up and the calendar's clean markers. */}
       <span
         aria-hidden
-        className={cx('mt-1.5 size-2.5 shrink-0 rounded-full', checkIn ? 'bg-sage-mid' : 'bg-amber-mid')}
+        className={cx('mt-1.5 size-2.5 shrink-0 rounded-full', checkIn ? 'bg-sky-mid' : 'bg-amber-mid')}
       />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-ink">{checkIn ? 'Check-in' : 'Check-out and clean'}</span>{' '}

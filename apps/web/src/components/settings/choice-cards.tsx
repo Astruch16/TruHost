@@ -45,9 +45,9 @@ export function ChoiceCards<T extends string | number>({
             onClick={() => onChange(o.value)}
             className={cx(
               'relative flex flex-col gap-3 rounded-inner border p-3.5 text-left transition-[border-color,box-shadow] duration-150',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-deep',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-deep',
               selected
-                ? 'border-sage-deep/60 bg-sage-tint/30 shadow-[0_0_0_3px_rgba(35,68,47,0.08)]'
+                ? 'border-sky-deep/60 bg-sky-tint/30 shadow-[0_0_0_3px_rgba(19,74,115,0.08)]'
                 : 'border-line hover:border-ink/25',
             )}
           >
@@ -57,7 +57,7 @@ export function ChoiceCards<T extends string | number>({
                 aria-hidden
                 className={cx(
                   'mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border',
-                  selected ? 'border-sage-deep bg-sage-deep text-white' : 'border-line bg-surface',
+                  selected ? 'border-sky-deep bg-sky-deep text-white' : 'border-line bg-surface',
                 )}
               >
                 {selected && <Check className="size-3" strokeWidth={3} />}

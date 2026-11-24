@@ -63,8 +63,8 @@ function AllThumb({ properties, small = false }: { properties: SwitcherProperty[
 const rowClass = cx(
   'group relative flex w-full items-center gap-3 rounded-xl p-2 text-left outline-none',
   'transition-[background-color,box-shadow] duration-150 ease-out',
-  'hover:bg-sage-tint/50 focus-visible:bg-sage-tint/60 focus-visible:shadow-[inset_0_0_0_2px_var(--color-sage-deep)]',
-  'aria-[current=true]:bg-sage-tint/70',
+  'hover:bg-sky-tint/50 focus-visible:bg-sky-tint/60 focus-visible:shadow-[inset_0_0_0_2px_var(--color-sky-deep)]',
+  'aria-[current=true]:bg-sky-tint/70',
 );
 
 /**
@@ -133,7 +133,7 @@ export function PropertySwitcher({
         className={cx(
           'group flex min-h-12 w-full max-w-xs items-center gap-3 rounded-full border border-line bg-surface py-1.5 pr-4 pl-1.5 text-left',
           'transition-[border-color,box-shadow] duration-150 hover:border-ink/25 hover:shadow-sm',
-          'data-[state=open]:border-sage-deep/40 data-[state=open]:shadow-[0_0_0_4px_rgba(35,68,47,0.08)]',
+          'data-[state=open]:border-sky-deep/40 data-[state=open]:shadow-[0_0_0_4px_rgba(19,74,115,0.08)]',
         )}
         aria-label={
           selected
@@ -162,7 +162,7 @@ export function PropertySwitcher({
         </span>
         <ChevronsUpDown
           aria-hidden
-          className="size-4 shrink-0 text-muted transition-colors group-hover:text-ink group-data-[state=open]:text-sage-deep"
+          className="size-4 shrink-0 text-muted transition-colors group-hover:text-ink group-data-[state=open]:text-sky-deep"
         />
       </Popover.Trigger>
       <Popover.Portal>
@@ -190,7 +190,7 @@ export function PropertySwitcher({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by name or town"
-                className="min-h-11 w-full rounded-xl border border-transparent bg-ground pr-10 pl-9 text-sm transition-colors placeholder:text-muted/80 focus-visible:border-sage-deep/40 focus-visible:bg-surface focus-visible:outline-none"
+                className="min-h-11 w-full rounded-xl border border-transparent bg-ground pr-10 pl-9 text-sm transition-colors placeholder:text-muted/80 focus-visible:border-sky-deep/40 focus-visible:bg-surface focus-visible:outline-none"
               />
               {query && (
                 <button
@@ -267,7 +267,7 @@ export function PropertySwitcher({
               <Link
                 to="/admin/properties"
                 onClick={() => setOpen(false)}
-                className="flex min-h-10 items-center justify-between rounded-xl px-3 text-sm font-semibold text-sage-deep transition-colors hover:bg-sage-tint/50 focus-visible:bg-sage-tint/60 focus-visible:outline-none"
+                className="flex min-h-10 items-center justify-between rounded-xl px-3 text-sm font-semibold text-sky-deep transition-colors hover:bg-sky-tint/50 focus-visible:bg-sky-tint/60 focus-visible:outline-none"
               >
                 Manage properties
                 <ArrowRight aria-hidden className="size-4" />
@@ -283,7 +283,7 @@ export function PropertySwitcher({
 function SelectedMark({ show }: { show: boolean }) {
   if (!show) return <span className="size-6 shrink-0" />;
   return (
-    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-sage-deep text-white">
+    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-sky-deep text-white">
       <Check aria-label="Selected" className="size-3.5" strokeWidth={3} />
     </span>
   );

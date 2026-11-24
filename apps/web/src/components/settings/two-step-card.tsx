@@ -66,7 +66,7 @@ export function TwoStepCard() {
         <SettingRow
           icon={<Smartphone />}
           title="Authenticator app"
-          status={on ? <Pill tone="sage">On</Pill> : <Pill>Off</Pill>}
+          status={on ? <Pill tone="sky">On</Pill> : <Pill>Off</Pill>}
           description={
             on
               ? 'You’ll enter a 6-digit code from your app when you sign in on a new device.'
@@ -87,7 +87,7 @@ export function TwoStepCard() {
           <SettingRow
             icon={<KeySquare />}
             title="Backup codes"
-            status={user.backupCodeEnabled ? <Pill tone="sage">Ready</Pill> : undefined}
+            status={user.backupCodeEnabled ? <Pill tone="sky">Ready</Pill> : undefined}
             description="One-time codes for when you don’t have your phone. Making new ones stops the old ones working."
           >
             <Button variant="secondary" size="sm" onClick={() => void makeCodes()} loading={pending && !dialog}>
