@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import wordmarkUrl from '../../assets/brand/truhost-wordmark-dark.svg?url';
 import { cx } from '../../lib/cx';
 
 /**
@@ -53,15 +54,20 @@ export function LogoMark({ size = 40, className }: { size?: number; className?: 
   );
 }
 
-/** The mark with the wordmark, as on the sidebar. */
+/** The mark with the wordmark (assets/brand/truhost-wordmark-dark.svg, for dark backgrounds), as on the sidebar. */
 export function Logo() {
   return (
     <div className="flex items-center gap-3">
       <LogoMark size={44} className="drop-shadow-[0_4px_10px_rgb(0_0_0/0.25)]" />
       <div className="leading-none">
-        <p className="text-[1.6rem] font-bold tracking-[-0.035em] text-sidebar-ink">
-          Tru<span className="text-[#F2D987]">Host</span>
-        </p>
+        <img
+          src={wordmarkUrl}
+          alt="TruHost"
+          width={98}
+          height={24}
+          draggable={false}
+          className="h-6 w-auto select-none"
+        />
         <p className="mt-1.5 text-[0.6rem] leading-[1.35] font-semibold tracking-[0.16em] text-sidebar-muted/85 uppercase">
           Vacation rental
           <br />
