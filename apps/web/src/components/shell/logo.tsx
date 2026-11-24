@@ -2,7 +2,7 @@ import markUrl from '../../assets/brand/truhost-mark.svg?url';
 import wordmarkUrl from '../../assets/brand/truhost-wordmark-dark.svg?url';
 
 /**
- * The TruHost mark (assets/brand/truhost-mark.svg, a cream tile) with the wordmark (truhost-wordmark-dark.svg, for dark
+ * The TruHost mark (assets/brand/truhost-mark.svg, a white tile) with the wordmark (truhost-wordmark-dark.svg, for dark
  * backgrounds), as on the sidebar. The image's alt carries the name; the mark is decorative.
  */
 export function Logo() {
