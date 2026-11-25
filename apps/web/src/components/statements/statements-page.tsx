@@ -170,7 +170,7 @@ export function StatementsPage({ month, onMonthChange }: { month: string; onMont
 function StatementListRow({ row, starting, onStart }: { row: StatementRow; starting: boolean; onStart: () => void }) {
   return (
     <li className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-4 first:pt-0 last:pb-0 @2xl/list:grid-cols-[auto_minmax(0,1fr)_auto_9.5rem_6.5rem]">
-      <StatementDocIcon size={40} />
+      <StatementDocIcon />
       <div className="min-w-0">
         <p className="flex min-w-0 items-baseline gap-2">
           {row.statementId ? (

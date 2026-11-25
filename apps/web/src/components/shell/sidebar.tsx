@@ -81,7 +81,11 @@ export function Sidebar({
                     className={itemClass}
                     activeOptions={{ exact: exact ?? false }}
                   >
-                    <Icon aria-hidden className="size-[18px] shrink-0 opacity-90" strokeWidth={1.75} />
+                    <Icon
+                      aria-hidden
+                      className="size-[18px] shrink-0 opacity-90 group-data-[status=active]:text-sidebar-accent group-data-[status=active]:opacity-100"
+                      strokeWidth={1.75}
+                    />
                     <span className="flex-1">{label}</span>
                     {badge ? (
                       <span className="grid min-w-6 place-items-center rounded-full bg-white/15 px-1.5 text-xs font-semibold text-white">

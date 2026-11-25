@@ -21,7 +21,7 @@ export function TabBar({ items }: { items: NavItem[] }) {
               className="group flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-sidebar-muted transition-colors focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-sidebar-ink data-[status=active]:text-white"
             >
               <span className="grid h-7 w-12 place-items-center rounded-full transition-colors group-data-[status=active]:bg-sidebar-active">
-                <Icon aria-hidden className="size-5" />
+                <Icon aria-hidden className="size-5 group-data-[status=active]:text-sidebar-accent" />
               </span>
               {label}
             </Link>

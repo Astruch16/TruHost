@@ -233,7 +233,7 @@ function StatementCard({
   return (
     <li className="group relative flex flex-col rounded-card border border-line-soft bg-surface p-5 transition-[border-color,box-shadow] hover:border-line hover:shadow-[0_6px_18px_rgb(16_20_18/0.06)]">
       <div className="flex items-start justify-between gap-3">
-        <StatementDocIcon size={44} className="shrink-0" />
+        <StatementDocIcon className="shrink-0" />
         <Pill tone="sky">Released {shortDate(s.releasedOn)}</Pill>
       </div>
       <h3 className="mt-4 text-lg leading-snug font-bold text-ink">

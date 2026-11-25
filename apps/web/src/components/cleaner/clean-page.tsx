@@ -169,22 +169,17 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
   const facts: ReactNode[] = [
     <FactCard
       key="from"
-      icon={<DoorOpenIcon size={44} />}
+      icon={<DoorOpenIcon />}
       label="Free from"
       value={from ? from.replace('Free from ', '') : 'Any time'}
     />,
-    <FactCard
-      key="ready"
-      icon={<ReadyByIcon size={44} />}
-      label="Ready by"
-      value={readyBy(c).replace('Ready by ', '')}
-    />,
+    <FactCard key="ready" icon={<ReadyByIcon />} label="Ready by" value={readyBy(c).replace('Ready by ', '')} />,
   ];
   if (stepsDone !== null) {
     facts.push(
       <FactCard
         key="progress"
-        icon={<CleanDoneIcon size={44} />}
+        icon={<CleanDoneIcon />}
         label="Progress"
         value={stepsDone === CLEAN_STEPS.length ? 'All done' : `${CLEAN_STEPS.length - stepsDone} to go`}
         aside={<StepsRing done={stepsDone} total={CLEAN_STEPS.length} />}
@@ -194,13 +189,7 @@ function CleanHero({ clean: c, children }: { clean: Clean; children: ReactNode }
   // Pay, once TruHost has set it (a clean at $0 means it hasn't been).
   if (c.cleanerPayCents) {
     facts.push(
-      <FactCard
-        key="pay"
-        icon={<GrossIcon size={44} />}
-        label="You earn"
-        value={formatCents(c.cleanerPayCents)}
-        figure
-      />,
+      <FactCard key="pay" icon={<GrossIcon />} label="You earn" value={formatCents(c.cleanerPayCents)} figure />,
     );
   }
   // Under way or done, the blue card closes on where it's at (before the start, it holds what to do instead).
@@ -424,7 +413,7 @@ function StepsAhead() {
             key={step}
             className="flex items-center gap-3.5 rounded-inner bg-ground p-3 @3xl/content:flex-col @3xl/content:items-start @3xl/content:p-4"
           >
-            <CleanStepIcon step={step} size={44} className="shrink-0" />
+            <CleanStepIcon step={step} className="shrink-0" />
             <div className="min-w-0">
               <p className="figure text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Step {i + 1}</p>
               <p className="font-semibold text-ink">{CLEAN_STEP_LABELS[step]}</p>

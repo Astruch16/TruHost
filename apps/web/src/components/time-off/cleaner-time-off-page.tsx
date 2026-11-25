@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useApi } from '../../lib/api-context';
 import { todayIso } from '../../lib/dates';
 import { queries } from '../../lib/queries';
-import { TimeOffIcon } from '../illustrations/list-icons';
+import { IconEmptyState } from '../illustrations/icon-image';
 import { LoadError } from '../ui/alert';
 import { PageHeader } from '../ui/page-header';
 import { Skeleton } from '../ui/skeleton';
@@ -41,7 +41,7 @@ export function CleanerTimeOffPage() {
             <Skeleton className="h-32 rounded-card" />
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-line-soft px-6 py-10 text-center">
-              <TimeOffIcon size={48} />
+              <IconEmptyState path="notices/time-off" />
               <p className="font-bold text-ink">No time off asked for yet</p>
               <p className="max-w-xs text-sm text-muted">Your requests, and what TruHost decides, will show here.</p>
             </div>

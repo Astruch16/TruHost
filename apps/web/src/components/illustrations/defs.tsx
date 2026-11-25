@@ -38,13 +38,13 @@ export function IllustrationDefs({
   );
 }
 
-/** Props of the empty-state illustrations (96px by default, drawn on a 96×96 grid). */
+/** Props of the empty-state illustrations (96px by default, drawn on a 64×64 grid). */
 export interface IllustrationProps {
   size?: number;
   className?: string;
 }
 
-/** Props of the small 40×40 icons (statement lines, expense categories, list rows). Decorative. */
+/** Props of the small icons (statement lines, expense categories, list rows): 24×24, shown at 20–24px. Decorative. */
 export interface IconProps {
   size?: number;
   className?: string;

@@ -23,23 +23,28 @@ import { ROOM_TYPES } from '../../lib/rooms';
 import { RevenueIllustration } from './revenue';
 
 const ALL = [
-  [RevenueIllustration, 'A pie chart with a gold coin'],
-  [BookingsIllustration, 'A calendar page'],
-  [ReceiptsIllustration, 'A paper receipt with a gold seal'],
-  [CareIllustration, 'Two instant photos of a tidy room'],
-  [ExpensesIllustration, 'A wallet with a card tucked inside'],
-  [ComingUpIllustration, 'A cabin waiting for its next guests'],
-  [AllClearIllustration, 'A green shield with a check mark'],
+  [RevenueIllustration, 'A rising bar chart'],
+  [BookingsIllustration, 'An empty calendar'],
+  [ReceiptsIllustration, 'An empty receipt'],
+  [CareIllustration, 'Two stacked photos'],
+  [ExpensesIllustration, 'A wallet'],
+  [ComingUpIllustration, 'A cabin under a crescent moon'],
+  [AllClearIllustration, 'A shield with a check mark'],
 ] as const;
 
-const srcs = (container: HTMLElement) => [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+const icons = (container: HTMLElement) => [...container.querySelectorAll('svg[data-icon]')];
+const srcs = (container: HTMLElement) => icons(container).map((svg) => svg.getAttribute('data-icon'));
 
 describe('empty state illustrations', () => {
   it.each(ALL)('%o: its own picture, named, 96px by default', (Illustration, label) => {
     render(<Illustration />);
     const img = screen.getByRole('img', { name: label });
     expect(img).toHaveAttribute('width', '96');
-    expect(img.getAttribute('src')).toBeTruthy();
+    expect(img).toHaveAttribute('viewBox', '0 0 64 64');
+    // Drawn inline in the CSS colour, so it can follow the theme.
+    expect(img).toHaveAttribute('stroke', 'currentColor');
+    expect(img).not.toHaveAttribute('color');
+    expect(img.querySelector('*')).not.toBeNull();
   });
 
   it('draws a different picture for each', () => {
@@ -71,7 +76,7 @@ describe('small icons', () => {
     'OTHER',
   ];
 
-  it('draws a distinct, decorative 40×40 icon for each expense category, and the receipt for anything else', () => {
+  it('draws a distinct, decorative 24px icon for each expense category, and the receipt for anything else', () => {
     const { container } = render(
       <>
         {CATEGORIES.map((c) => (
@@ -80,12 +85,13 @@ describe('small icons', () => {
         <ExpenseCategoryIcon category={null} />
       </>,
     );
-    const imgs = [...container.querySelectorAll('img')];
+    const imgs = icons(container);
     expect(imgs).toHaveLength(CATEGORIES.length + 1);
     for (const img of imgs) {
       expect(img).toHaveAttribute('aria-hidden', 'true');
-      expect(img).toHaveAttribute('alt', '');
-      expect(img).toHaveAttribute('width', '40');
+      expect(img).toHaveAttribute('width', '24');
+      expect(img).toHaveAttribute('viewBox', '0 0 24 24');
+      expect(img).toHaveAttribute('stroke-width', '2');
     }
     // Every category but OTHER looks different; OTHER and no category both get the receipt.
     const all = srcs(container);
@@ -101,7 +107,7 @@ describe('small icons', () => {
         ))}
       </>,
     );
-    for (const img of container.querySelectorAll('img')) expect(img).toHaveAttribute('aria-hidden', 'true');
+    for (const img of icons(container)) expect(img).toHaveAttribute('aria-hidden', 'true');
     expect(new Set(srcs(container)).size).toBe(STEPS.length);
   });
 
@@ -113,7 +119,7 @@ describe('small icons', () => {
         ))}
       </>,
     );
-    for (const img of container.querySelectorAll('img')) expect(img).toHaveAttribute('aria-hidden', 'true');
+    for (const img of icons(container)) expect(img).toHaveAttribute('aria-hidden', 'true');
     expect(new Set(srcs(container)).size).toBe(ROOM_TYPES.length);
   });
 

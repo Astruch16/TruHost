@@ -561,7 +561,7 @@ function StarterSetup({ propertyId }: { propertyId: string }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-4">
-        <SuppliesIllustration size={72} className="shrink-0" />
+        <SuppliesIllustration className="shrink-0" />
         <div>
           <p className="font-semibold text-ink">Set up this property’s supplies</p>
           <p className="mt-0.5 text-sm text-muted">

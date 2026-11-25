@@ -194,21 +194,22 @@ function StepCard({
       className="flex gap-3 @2xl/content:gap-4"
     >
       <div aria-hidden className="flex flex-col items-center pt-3">
+        {/* The icon on its own (no circle behind it), in a 40px box so the done and locked badges sit off its corner.
+            The current step is the raised card beside it. */}
         <span
           className={cx(
-            'relative shrink-0 rounded-full',
-            state === 'current' && 'ring-4 ring-sky-light/40',
+            'relative grid size-10 shrink-0 place-items-center',
             state === 'locked' && 'opacity-45 grayscale',
           )}
         >
-          <CleanStepIcon step={step} size={44} />
+          <CleanStepIcon step={step} />
           {state === 'done' && (
-            <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-sky-deep text-white ring-2 ring-ground">
+            <span className="absolute -right-2.5 -bottom-2 grid size-5 place-items-center rounded-full bg-sky-deep text-white ring-2 ring-ground">
               <Check className="size-3" />
             </span>
           )}
           {state === 'locked' && (
-            <span className="absolute -right-1 -bottom-1 grid size-5 place-items-center rounded-full bg-muted text-white ring-2 ring-ground">
+            <span className="absolute -right-2.5 -bottom-2 grid size-5 place-items-center rounded-full bg-muted text-white ring-2 ring-ground">
               <Lock className="size-2.5" />
             </span>
           )}
@@ -710,7 +711,7 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
       <div className="grid grid-cols-1 gap-3 @xl/content:grid-cols-2">
         <div className="rounded-card border border-line-soft bg-surface p-4">
           <div className="flex items-center gap-3">
-            <DamageAlertIcon size={40} className="shrink-0" />
+            <DamageAlertIcon className="shrink-0" />
             <div className="min-w-0">
               <h3 className="font-semibold text-ink">Damage</h3>
               <p className="text-sm text-muted">{damageSummary(c)}</p>
@@ -735,7 +736,7 @@ export function CompletedClean({ clean: c }: { clean: Clean }) {
         </div>
         <div className="rounded-card border border-line-soft bg-surface p-4">
           <div className="flex items-center gap-3">
-            <SuppliesIcon size={40} className="shrink-0" />
+            <SuppliesIcon className="shrink-0" />
             <div className="min-w-0">
               <h3 className="font-semibold text-ink">Stock count</h3>
               <p className="text-sm text-muted">

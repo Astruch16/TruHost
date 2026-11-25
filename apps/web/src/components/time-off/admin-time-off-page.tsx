@@ -5,7 +5,7 @@ import { useApi } from '../../lib/api-context';
 import { cx } from '../../lib/cx';
 import { todayIso } from '../../lib/dates';
 import { queries } from '../../lib/queries';
-import { TimeOffIcon } from '../illustrations/list-icons';
+import { IconEmptyState } from '../illustrations/icon-image';
 import { LoadError } from '../ui/alert';
 import { PageHeader } from '../ui/page-header';
 import { Skeleton } from '../ui/skeleton';
@@ -64,7 +64,7 @@ export function AdminTimeOffPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-line-soft px-6 py-12 text-center">
-          <TimeOffIcon size={56} />
+          <IconEmptyState path="notices/time-off" />
           <p className="font-bold text-ink">
             {view === 'waiting' ? 'Nothing waiting' : view === 'approved' ? 'No time off coming up' : 'No requests yet'}
           </p>
