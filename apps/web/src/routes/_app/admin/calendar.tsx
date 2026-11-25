@@ -24,7 +24,8 @@ import { updatingStyles } from '../../../lib/styles';
 /**
  * Full calendar for the property chosen in the switcher (or all): the month at a glance (nights booked, stays,
  * check-ins and cleans), every confirmed stay as a bar with the guest's name, and the month's arrivals and departures
- * beside it. Clicking a stay opens its booking; "Add booking" adds one.
+ * beside it. Clicking a stay opens its details (dates, guests, what it earned) with a switch to edit it; "Add booking"
+ * adds one.
  */
 export const Route = createFileRoute('/_app/admin/calendar')({
   validateSearch: monthSearch,
@@ -147,6 +148,7 @@ function Calendar() {
           onOpenChange={(open) => !open && setEditingId(null)}
           properties={list}
           booking={editing}
+          details
         />
       )}
     </>
