@@ -59,9 +59,14 @@ beforeEach(() => {
 });
 
 describe('SignInForm', () => {
-  it('matches the board: Google, email and password, forgot password, invite-only note, no sign-up link', () => {
+  it('is email and password first, then “or” and Google, forgot password, invite-only note, no sign-up link', () => {
     render(<SignInForm />);
-    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+    // No visible title (the logo and the form say enough), but still a heading for screen readers.
+    expect(screen.getByRole('heading', { name: 'Sign in to TruHost' }).parentElement).toHaveClass('sr-only');
+    const signIn = screen.getByRole('button', { name: 'Sign in' });
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    expect(signIn.compareDocumentPosition(google) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText('or')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Forgot password?' })).toBeInTheDocument();
     expect(screen.getByText(/TruHost is invite only/)).toBeInTheDocument();

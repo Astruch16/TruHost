@@ -202,7 +202,7 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
   if (step.kind === 'reset-request') {
     return (
       <AuthCard title="Reset your password" subtitle="We’ll email you a code to choose a new one.">
-        <form onSubmit={requestReset} noValidate className="flex flex-col gap-3.5 sm:gap-[18px]">
+        <form onSubmit={requestReset} noValidate className="flex flex-col gap-4">
           <AuthField
             label="Email"
             type="email"
@@ -243,11 +243,7 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
           )
         }
       >
-        <form
-          onSubmit={reset ? verifyResetCode : verifyDeviceCode}
-          noValidate
-          className="flex flex-col gap-3.5 sm:gap-[18px]"
-        >
+        <form onSubmit={reset ? verifyResetCode : verifyDeviceCode} noValidate className="flex flex-col gap-4">
           <AuthField
             label="Code"
             inputMode="numeric"
@@ -291,7 +287,7 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
             : 'Enter one of the backup codes you saved when you set up two-step verification.'
         }
       >
-        <form onSubmit={verifyTwoStep} noValidate className="flex flex-col gap-3.5 sm:gap-[18px]">
+        <form onSubmit={verifyTwoStep} noValidate className="flex flex-col gap-4">
           <AuthField
             key={step.kind}
             label={app ? 'Authentication code' : 'Backup code'}
@@ -324,7 +320,7 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
   if (step.kind === 'reset-password') {
     return (
       <AuthCard title="Choose a new password" subtitle="At least 8 characters. You’ll be signed in afterwards.">
-        <form onSubmit={saveNewPassword} noValidate className="flex flex-col gap-3.5 sm:gap-[18px]">
+        <form onSubmit={saveNewPassword} noValidate className="flex flex-col gap-4">
           <PasswordField
             label="New password"
             autoComplete="new-password"
@@ -353,39 +349,37 @@ export function SignInForm({ initialError = null }: { initialError?: string | nu
   }
 
   return (
-    <AuthCard title="Welcome back" subtitle="Sign in to your TruHost portal">
-      <GoogleButton
-        onClick={() => void google()}
-        loading={pending === 'google'}
-        disabled={notReady || pending === 'submit'}
-      />
-      <AuthDivider>or with email</AuthDivider>
-      <form onSubmit={submitPassword} noValidate className="flex flex-col gap-3.5 sm:gap-[18px]">
-        <div className="flex flex-col gap-3.5">
-          <AuthField
-            label="Email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            invalid={Boolean(error)}
-          />
-          <PasswordField
-            label="Password"
-            autoComplete="current-password"
-            placeholder="Your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            invalid={Boolean(error)}
-            aside={<AuthLink onClick={() => go({ kind: 'reset-request' })}>Forgot password?</AuthLink>}
-          />
-        </div>
+    <AuthCard title="Sign in to TruHost" titleHidden>
+      <form onSubmit={submitPassword} noValidate className="flex flex-col gap-4">
+        <AuthField
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          invalid={Boolean(error)}
+        />
+        <PasswordField
+          label="Password"
+          autoComplete="current-password"
+          placeholder="Your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          invalid={Boolean(error)}
+          aside={<AuthLink onClick={() => go({ kind: 'reset-request' })}>Forgot password?</AuthLink>}
+        />
         <AuthError>{error}</AuthError>
         <AuthButton loading={pending === 'submit' || leaving} disabled={notReady || pending === 'google'}>
           {leaving ? 'Signing in…' : 'Sign in'}
         </AuthButton>
       </form>
+      <AuthDivider>or</AuthDivider>
+      <GoogleButton
+        onClick={() => void google()}
+        loading={pending === 'google'}
+        disabled={notReady || pending === 'submit'}
+      />
       <AuthNote>
         TruHost is invite only. If you own, clean or manage with us and need access, ask your TruHost contact.
       </AuthNote>
