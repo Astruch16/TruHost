@@ -70,7 +70,10 @@ describe('the calendar’s stay dialog', () => {
   it('switches to the edit form and back, keeping what was typed', async () => {
     const dialog = open(stay());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Edit' }));
-    expect(within(dialog).getByRole('heading', { name: 'Edit booking' })).toBeInTheDocument();
+    // The header stays put; the switch shows the view.
+    expect(within(dialog).getByRole('heading', { name: 'Maya' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(dialog).getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
     const name = within(dialog).getByLabelText('Guest name');
     await userEvent.clear(name);
     await userEvent.type(name, 'Maya R');
