@@ -524,6 +524,7 @@ function PerformanceCards({
         {overflow && (
           <Link
             to="/admin/properties"
+            viewTransition
             className="group flex min-h-40 flex-col items-center justify-center gap-2 rounded-inner border border-dashed border-line bg-ground/60 p-6 text-center transition-colors hover:border-ink/25 hover:bg-ground"
           >
             <span className="font-display text-xl font-semibold text-ink">View all {properties.length} properties</span>
