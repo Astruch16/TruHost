@@ -6,7 +6,9 @@ import { useApi } from '../lib/api-context';
 import { fieldErrors } from '../lib/errors';
 import { CHANNELS, channelLabel, kindLabel } from '../lib/format';
 import { centsToInput, parseDollarsToCents } from '../lib/money';
+import { cx } from '../lib/cx';
 import { StayDetails } from './bookings/stay-details';
+import { AnimatedHeight } from './ui/animated-height';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
@@ -18,6 +20,8 @@ import { PillTabs } from './ui/pill-tabs';
 import { Select } from './ui/select';
 
 const KINDS = ['GUEST', 'OWNER_STAY', 'BLOCK'] as const;
+
+const PAYOUT_HINT = 'Enter the payout once the channel pays it out. Until then the stay counts as incomplete.';
 
 const VIEWS = [
   { key: 'details', label: 'Details' },
@@ -118,8 +122,10 @@ export function BookingDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => !save.isPending && onOpenChange(next)}
+      // With the Details / Edit switch the header stays the same in both views, so switching doesn't shift the dialog;
+      // the switch says which view is showing, and the payout hint moves into the form.
       title={
-        showDetails
+        withDetails
           ? booking!.kind === 'GUEST'
             ? booking!.guestName || 'Guest stay'
             : kindLabel(booking!.kind)
@@ -127,11 +133,7 @@ export function BookingDialog({
             ? 'Edit booking'
             : 'Add booking'
       }
-      description={
-        showDetails
-          ? undefined
-          : 'Enter the payout once the channel pays it out. Until then the stay counts as incomplete.'
-      }
+      description={withDetails ? undefined : PAYOUT_HINT}
       size="lg"
     >
       {withDetails && (
@@ -144,113 +146,122 @@ export function BookingDialog({
           className="mb-5 w-fit"
         />
       )}
-      {showDetails ? (
-        <>
-          <StayDetails booking={booking!} propertyName={properties.find((p) => p.id === booking!.propertyId)?.name} />
-          <div className="mt-6 flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-            <Button onClick={() => setView('edit')}>Edit booking</Button>
-          </div>
-        </>
-      ) : (
-        <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-          {!editing && properties.length > 1 && (
-            <Field label="Property" className="sm:col-span-2" required>
-              <Select
-                value={v.propertyId}
-                onValueChange={pick('propertyId')}
-                options={properties.map((p) => ({ value: p.id, label: p.name }))}
-              />
-            </Field>
-          )}
-          <Field label="Type">
-            <Select
-              value={v.kind}
-              onValueChange={pick('kind')}
-              options={KINDS.map((k) => ({ value: k, label: kindLabel(k) }))}
-            />
-          </Field>
-          <Field label="Channel" error={errors.channel}>
-            <Select
-              value={v.channel}
-              onValueChange={pick('channel')}
-              options={CHANNELS.map((c) => ({ value: c, label: channelLabel(c) }))}
-            />
-          </Field>
-          <Field label="Check-in" error={errors.checkInDate} required>
-            <DatePicker
-              value={v.checkInDate}
-              onChange={(checkInDate) =>
-                // Keep check-out after check-in: if the new check-in reaches it, move it to the next day.
-                setV({
-                  ...v,
-                  checkInDate,
-                  checkOutDate:
-                    v.checkOutDate && checkInDate && v.checkOutDate <= checkInDate
-                      ? addDays(checkInDate, 1)
-                      : v.checkOutDate,
-                })
-              }
-              placeholder="Choose check-in"
-            />
-          </Field>
-          <Field label="Check-out" error={errors.checkOutDate} required>
-            <DatePicker
-              value={v.checkOutDate}
-              onChange={pick('checkOutDate')}
-              rangeStart={v.checkInDate || undefined}
-              min={v.checkInDate ? addDays(v.checkInDate, 1) : undefined}
-              placeholder="Choose check-out"
-            />
-          </Field>
-          {isGuest && (
+      {/* The new view fades in while the dialog's height glides to fit it (both instant under reduced motion). */}
+      <AnimatedHeight>
+        <div key={view} className={cx(withDetails && 'animate-view-in')}>
+          {showDetails ? (
             <>
-              <Field
-                label="Payout received ($)"
-                error={errors.payoutCents}
-                hint="After the channel’s fee. Blank if not paid yet."
-              >
-                <Input value={v.payout} onChange={set('payout')} inputMode="decimal" className="figure" />
-              </Field>
-              <Field label="Cleaning fee charged ($)" error={errors.guestCleaningFeeCents} hint="TruHost revenue.">
-                <Input value={v.cleaningFee} onChange={set('cleaningFee')} inputMode="decimal" className="figure" />
-              </Field>
-              <Field label="Guest name" error={errors.guestName}>
-                <Input value={v.guestName} onChange={set('guestName')} autoComplete="off" />
-              </Field>
-              <Field label="Guests" error={errors.guestCount}>
-                <Input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={v.guestCount}
-                  onChange={set('guestCount')}
-                  className="figure"
+              <StayDetails
+                booking={booking!}
+                propertyName={properties.find((p) => p.id === booking!.propertyId)?.name}
+              />
+              <div className="mt-6 flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => setView('edit')}>Edit booking</Button>
+              </div>
+            </>
+          ) : (
+            <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+              {withDetails && <p className="text-sm text-muted sm:col-span-2">{PAYOUT_HINT}</p>}
+              {!editing && properties.length > 1 && (
+                <Field label="Property" className="sm:col-span-2" required>
+                  <Select
+                    value={v.propertyId}
+                    onValueChange={pick('propertyId')}
+                    options={properties.map((p) => ({ value: p.id, label: p.name }))}
+                  />
+                </Field>
+              )}
+              <Field label="Type">
+                <Select
+                  value={v.kind}
+                  onValueChange={pick('kind')}
+                  options={KINDS.map((k) => ({ value: k, label: kindLabel(k) }))}
                 />
               </Field>
-            </>
+              <Field label="Channel" error={errors.channel}>
+                <Select
+                  value={v.channel}
+                  onValueChange={pick('channel')}
+                  options={CHANNELS.map((c) => ({ value: c, label: channelLabel(c) }))}
+                />
+              </Field>
+              <Field label="Check-in" error={errors.checkInDate} required>
+                <DatePicker
+                  value={v.checkInDate}
+                  onChange={(checkInDate) =>
+                    // Keep check-out after check-in: if the new check-in reaches it, move it to the next day.
+                    setV({
+                      ...v,
+                      checkInDate,
+                      checkOutDate:
+                        v.checkOutDate && checkInDate && v.checkOutDate <= checkInDate
+                          ? addDays(checkInDate, 1)
+                          : v.checkOutDate,
+                    })
+                  }
+                  placeholder="Choose check-in"
+                />
+              </Field>
+              <Field label="Check-out" error={errors.checkOutDate} required>
+                <DatePicker
+                  value={v.checkOutDate}
+                  onChange={pick('checkOutDate')}
+                  rangeStart={v.checkInDate || undefined}
+                  min={v.checkInDate ? addDays(v.checkInDate, 1) : undefined}
+                  placeholder="Choose check-out"
+                />
+              </Field>
+              {isGuest && (
+                <>
+                  <Field
+                    label="Payout received ($)"
+                    error={errors.payoutCents}
+                    hint="After the channel’s fee. Blank if not paid yet."
+                  >
+                    <Input value={v.payout} onChange={set('payout')} inputMode="decimal" className="figure" />
+                  </Field>
+                  <Field label="Cleaning fee charged ($)" error={errors.guestCleaningFeeCents} hint="TruHost revenue.">
+                    <Input value={v.cleaningFee} onChange={set('cleaningFee')} inputMode="decimal" className="figure" />
+                  </Field>
+                  <Field label="Guest name" error={errors.guestName}>
+                    <Input value={v.guestName} onChange={set('guestName')} autoComplete="off" />
+                  </Field>
+                  <Field label="Guests" error={errors.guestCount}>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={v.guestCount}
+                      onChange={set('guestCount')}
+                      className="figure"
+                    />
+                  </Field>
+                </>
+              )}
+              <Field label="Confirmation code" error={errors.externalId} hint="From the channel, e.g. HM4XYZ…">
+                <Input value={v.externalId} onChange={set('externalId')} autoComplete="off" />
+              </Field>
+              <Field label="Notes" error={errors.notes} className="sm:col-span-2" hint="Admin only.">
+                <Textarea value={v.notes} onChange={set('notes')} rows={2} />
+              </Field>
+              <div className="flex flex-col gap-3 sm:col-span-2">
+                <ErrorAlert error={Object.keys(fieldErrors(save.error)).length ? null : save.error} />
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" disabled={save.isPending} onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" loading={save.isPending}>
+                    {editing ? 'Save changes' : 'Add booking'}
+                  </Button>
+                </div>
+              </div>
+            </form>
           )}
-          <Field label="Confirmation code" error={errors.externalId} hint="From the channel, e.g. HM4XYZ…">
-            <Input value={v.externalId} onChange={set('externalId')} autoComplete="off" />
-          </Field>
-          <Field label="Notes" error={errors.notes} className="sm:col-span-2" hint="Admin only.">
-            <Textarea value={v.notes} onChange={set('notes')} rows={2} />
-          </Field>
-          <div className="flex flex-col gap-3 sm:col-span-2">
-            <ErrorAlert error={Object.keys(fieldErrors(save.error)).length ? null : save.error} />
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" disabled={save.isPending} onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" loading={save.isPending}>
-                {editing ? 'Save changes' : 'Add booking'}
-              </Button>
-            </div>
-          </div>
-        </form>
-      )}
+        </div>
+      </AnimatedHeight>
     </Dialog>
   );
 }

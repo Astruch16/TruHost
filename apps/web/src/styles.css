@@ -317,6 +317,17 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 @utility animate-fade-in {
   animation: th-fade-in 160ms ease-out;
 }
+/* A view switching in place (the stay dialog's Details / Edit): fades in with a slight rise, in step with the switch's
+   sliding pill and the height glide around it. */
+@keyframes th-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@utility animate-view-in {
+  animation: th-view-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 /* Text links: a thin line a few pixels under the text that draws in from the left on hover or keyboard focus,
    instead of an underline pressed against the letters. Drawn as a background along the bottom of the text's box, so it
    can animate, wraps with the text and moves nothing (links using it have square corners, which would otherwise
