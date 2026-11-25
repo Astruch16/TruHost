@@ -1,16 +1,22 @@
+import { useState } from 'react';
 import { createFileRoute, notFound } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ApiClient } from '@truhost/api-client';
+import { BookingDialog } from '../../components/booking-dialog';
 import { MonthAgenda } from '../../components/calendar/month-agenda';
 import { MonthSummary } from '../../components/calendar/month-summary';
 import { CalendarLegend, MonthCalendar } from '../../components/dashboard/month-calendar';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { PageHeader } from '../../components/ui/page-header';
-import type { Dashboard } from '../../lib/api-types';
+import { ApiContext } from '../../lib/api-context';
+import type { Booking, Dashboard } from '../../lib/api-types';
 import { monthAgenda, type CalendarStay } from '../../lib/calendar';
 
 /**
  * Dev only: the Calendar page's layout on fixture stays (no sign-in, no API), for review screenshots. `?all=1` shows
- * two properties. The real page is /admin/calendar.
+ * two properties; clicking a stay opens its details (fixture amounts; Andrew's payout isn't entered). The real page is
+ * /admin/calendar.
  */
 export const Route = createFileRoute('/dev/calendar')({
   beforeLoad: () => {
@@ -51,6 +57,28 @@ const STAYS: CalendarStay[] = [
   stay('h', 'p2', '2026-10-30', '2026-11-02', 3, 'Sam', 'GUEST', 'VRBO'),
 ];
 
+/** A stay as the API returns it to an admin, with fixture amounts (Andrew's payout not entered yet). */
+const booking = (s: CalendarStay, i: number): Booking => {
+  const guest = s.kind === 'GUEST';
+  const payout = guest && s.id !== 'b' ? 38_000 + i * 7_250 : null;
+  const cleaning = guest ? 12_500 : null;
+  return {
+    ...s,
+    source: 'MANUAL',
+    status: 'CONFIRMED',
+    cancelledAt: null,
+    complete: !guest || payout !== null,
+    ownerGrossCents: payout !== null && cleaning !== null ? payout - cleaning : null,
+    externalId: guest ? `HM${4100 + i * 37}XQ` : null,
+    guestCount: guest ? 2 + (i % 3) : null,
+    payoutCents: payout,
+    guestCleaningFeeCents: cleaning,
+    taxesCollectedCents: null,
+    notes: s.id === 'a' ? 'Late check-in, around 9 pm. Code sent.' : null,
+    version: 1,
+  } as Booking;
+};
+
 const kpis = (stays: CalendarStay[], properties: number): Dashboard['kpis'] => {
   const nightsByDay = Array.from({ length: 31 }, (_, i) => {
     const day = `${MONTH}-${String(i + 1).padStart(2, '0')}`;
@@ -82,39 +110,57 @@ function CalendarPreview() {
   const { all } = Route.useSearch();
   const stays = all ? STAYS : STAYS.filter((s) => s.propertyId === 'p1');
   const agenda = monthAgenda(MONTH, stays);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [api] = useState(() => ({}) as ApiClient);
+  const [client] = useState(() => new QueryClient());
+  const index = STAYS.findIndex((s) => s.id === selected);
   return (
-    <div className="@container/content min-h-dvh bg-ground px-4 py-6 @2xl/content:px-8 @2xl/content:py-8">
-      <div className="mx-auto max-w-[1680px]">
-        <PageHeader
-          title="Calendar"
-          description={all ? 'All properties' : 'Petersburg Retreat'}
-          actions={<Button>Add booking</Button>}
-        />
-        <div className="flex flex-col gap-6">
-          <MonthSummary month={MONTH} kpis={kpis(stays, all ? 2 : 1)} agenda={agenda} today={TODAY} />
-          <div className="grid grid-cols-1 items-start gap-6 @[68.75rem]/content:grid-cols-[minmax(0,1fr)_340px]">
-            <Card title="October 2026" actions={<CalendarLegend month={MONTH} stays={stays} />}>
-              <MonthCalendar
-                month={MONTH}
-                stays={stays}
-                propertyNames={NAMES}
-                today={TODAY}
-                showProperty={all}
-                onSelect={() => undefined}
-                roomy
-              />
-            </Card>
-            <MonthAgenda
-              month={MONTH}
-              agenda={agenda}
-              today={TODAY}
-              propertyNames={NAMES}
-              showProperty={all}
-              onSelect={() => undefined}
+    <ApiContext.Provider value={api}>
+      <QueryClientProvider client={client}>
+        <div className="@container/content min-h-dvh bg-ground px-4 py-6 @2xl/content:px-8 @2xl/content:py-8">
+          <div className="mx-auto max-w-[1680px]">
+            <PageHeader
+              title="Calendar"
+              description={all ? 'All properties' : 'Petersburg Retreat'}
+              actions={<Button>Add booking</Button>}
             />
+            <div className="flex flex-col gap-6">
+              <MonthSummary month={MONTH} kpis={kpis(stays, all ? 2 : 1)} agenda={agenda} today={TODAY} />
+              <div className="grid grid-cols-1 items-start gap-6 @[68.75rem]/content:grid-cols-[minmax(0,1fr)_340px]">
+                <Card title="October 2026" actions={<CalendarLegend month={MONTH} stays={stays} />}>
+                  <MonthCalendar
+                    month={MONTH}
+                    stays={stays}
+                    propertyNames={NAMES}
+                    today={TODAY}
+                    showProperty={all}
+                    onSelect={setSelected}
+                    roomy
+                  />
+                </Card>
+                <MonthAgenda
+                  month={MONTH}
+                  agenda={agenda}
+                  today={TODAY}
+                  propertyNames={NAMES}
+                  showProperty={all}
+                  onSelect={setSelected}
+                />
+              </div>
+            </div>
           </div>
+          {index >= 0 && (
+            <BookingDialog
+              key={selected}
+              open
+              onOpenChange={(open) => !open && setSelected(null)}
+              properties={[...NAMES].map(([id, name]) => ({ id, name }))}
+              booking={booking(STAYS[index]!, index)}
+              details
+            />
+          )}
         </div>
-      </div>
-    </div>
+      </QueryClientProvider>
+    </ApiContext.Provider>
   );
 }

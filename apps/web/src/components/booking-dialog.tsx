@@ -6,6 +6,7 @@ import { useApi } from '../lib/api-context';
 import { fieldErrors } from '../lib/errors';
 import { CHANNELS, channelLabel, kindLabel } from '../lib/format';
 import { centsToInput, parseDollarsToCents } from '../lib/money';
+import { StayDetails } from './bookings/stay-details';
 import { ErrorAlert } from './ui/alert';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
@@ -13,17 +14,28 @@ import { Field } from './ui/field';
 import { DatePicker } from './ui/date-picker';
 import { addDays } from '../lib/dates';
 import { Input, Textarea } from './ui/input';
+import { PillTabs } from './ui/pill-tabs';
 import { Select } from './ui/select';
 
 const KINDS = ['GUEST', 'OWNER_STAY', 'BLOCK'] as const;
 
-/** Add or edit a booking. Money is typed in dollars and sent as integer cents. */
+const VIEWS = [
+  { key: 'details', label: 'Details' },
+  { key: 'edit', label: 'Edit' },
+] as const;
+
+/**
+ * Add or edit a booking. Money is typed in dollars and sent as integer cents. With `details` (the calendar), an
+ * existing booking opens on a read-only view of the stay and what it earned, with a switch to the edit form; edits in
+ * progress survive switching back and forth.
+ */
 export function BookingDialog({
   open,
   onOpenChange,
   properties,
   initialPropertyId,
   booking,
+  details = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,10 +43,15 @@ export function BookingDialog({
   initialPropertyId?: string;
   /** Present when editing. */
   booking?: Booking;
+  /** Open an existing booking on its details, with a Details | Edit switch. */
+  details?: boolean;
 }) {
   const api = useApi();
   const qc = useQueryClient();
   const editing = Boolean(booking);
+  const withDetails = details && booking !== undefined;
+  const [view, setView] = useState<'details' | 'edit'>(withDetails ? 'details' : 'edit');
+  const showDetails = withDetails && view === 'details';
   const [v, setV] = useState({
     propertyId: booking?.propertyId ?? initialPropertyId ?? properties[0]?.id ?? '',
     kind: booking?.kind ?? ('GUEST' as (typeof KINDS)[number]),
@@ -101,105 +118,139 @@ export function BookingDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => !save.isPending && onOpenChange(next)}
-      title={editing ? 'Edit booking' : 'Add booking'}
-      description="Enter the payout once the channel pays it out. Until then the stay counts as incomplete."
+      title={
+        showDetails
+          ? booking!.kind === 'GUEST'
+            ? booking!.guestName || 'Guest stay'
+            : kindLabel(booking!.kind)
+          : editing
+            ? 'Edit booking'
+            : 'Add booking'
+      }
+      description={
+        showDetails
+          ? undefined
+          : 'Enter the payout once the channel pays it out. Until then the stay counts as incomplete.'
+      }
       size="lg"
     >
-      <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-        {!editing && properties.length > 1 && (
-          <Field label="Property" className="sm:col-span-2" required>
-            <Select
-              value={v.propertyId}
-              onValueChange={pick('propertyId')}
-              options={properties.map((p) => ({ value: p.id, label: p.name }))}
-            />
-          </Field>
-        )}
-        <Field label="Type">
-          <Select
-            value={v.kind}
-            onValueChange={pick('kind')}
-            options={KINDS.map((k) => ({ value: k, label: kindLabel(k) }))}
-          />
-        </Field>
-        <Field label="Channel" error={errors.channel}>
-          <Select
-            value={v.channel}
-            onValueChange={pick('channel')}
-            options={CHANNELS.map((c) => ({ value: c, label: channelLabel(c) }))}
-          />
-        </Field>
-        <Field label="Check-in" error={errors.checkInDate} required>
-          <DatePicker
-            value={v.checkInDate}
-            onChange={(checkInDate) =>
-              // Keep check-out after check-in: if the new check-in reaches it, move it to the next day.
-              setV({
-                ...v,
-                checkInDate,
-                checkOutDate:
-                  v.checkOutDate && checkInDate && v.checkOutDate <= checkInDate
-                    ? addDays(checkInDate, 1)
-                    : v.checkOutDate,
-              })
-            }
-            placeholder="Choose check-in"
-          />
-        </Field>
-        <Field label="Check-out" error={errors.checkOutDate} required>
-          <DatePicker
-            value={v.checkOutDate}
-            onChange={pick('checkOutDate')}
-            rangeStart={v.checkInDate || undefined}
-            min={v.checkInDate ? addDays(v.checkInDate, 1) : undefined}
-            placeholder="Choose check-out"
-          />
-        </Field>
-        {isGuest && (
-          <>
-            <Field
-              label="Payout received ($)"
-              error={errors.payoutCents}
-              hint="After the channel’s fee. Blank if not paid yet."
-            >
-              <Input value={v.payout} onChange={set('payout')} inputMode="decimal" className="figure" />
-            </Field>
-            <Field label="Cleaning fee charged ($)" error={errors.guestCleaningFeeCents} hint="TruHost revenue.">
-              <Input value={v.cleaningFee} onChange={set('cleaningFee')} inputMode="decimal" className="figure" />
-            </Field>
-            <Field label="Guest name" error={errors.guestName}>
-              <Input value={v.guestName} onChange={set('guestName')} autoComplete="off" />
-            </Field>
-            <Field label="Guests" error={errors.guestCount}>
-              <Input
-                type="number"
-                min={1}
-                max={50}
-                value={v.guestCount}
-                onChange={set('guestCount')}
-                className="figure"
+      {withDetails && (
+        <PillTabs
+          label="View"
+          variant="switch"
+          options={VIEWS}
+          value={view}
+          onChange={setView}
+          className="mb-5 w-fit"
+        />
+      )}
+      {showDetails ? (
+        <>
+          <StayDetails booking={booking!} propertyName={properties.find((p) => p.id === booking!.propertyId)?.name} />
+          <div className="mt-6 flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            <Button onClick={() => setView('edit')}>Edit booking</Button>
+          </div>
+        </>
+      ) : (
+        <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+          {!editing && properties.length > 1 && (
+            <Field label="Property" className="sm:col-span-2" required>
+              <Select
+                value={v.propertyId}
+                onValueChange={pick('propertyId')}
+                options={properties.map((p) => ({ value: p.id, label: p.name }))}
               />
             </Field>
-          </>
-        )}
-        <Field label="Confirmation code" error={errors.externalId} hint="From the channel, e.g. HM4XYZ…">
-          <Input value={v.externalId} onChange={set('externalId')} autoComplete="off" />
-        </Field>
-        <Field label="Notes" error={errors.notes} className="sm:col-span-2" hint="Admin only.">
-          <Textarea value={v.notes} onChange={set('notes')} rows={2} />
-        </Field>
-        <div className="flex flex-col gap-3 sm:col-span-2">
-          <ErrorAlert error={Object.keys(fieldErrors(save.error)).length ? null : save.error} />
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" disabled={save.isPending} onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={save.isPending}>
-              {editing ? 'Save changes' : 'Add booking'}
-            </Button>
+          )}
+          <Field label="Type">
+            <Select
+              value={v.kind}
+              onValueChange={pick('kind')}
+              options={KINDS.map((k) => ({ value: k, label: kindLabel(k) }))}
+            />
+          </Field>
+          <Field label="Channel" error={errors.channel}>
+            <Select
+              value={v.channel}
+              onValueChange={pick('channel')}
+              options={CHANNELS.map((c) => ({ value: c, label: channelLabel(c) }))}
+            />
+          </Field>
+          <Field label="Check-in" error={errors.checkInDate} required>
+            <DatePicker
+              value={v.checkInDate}
+              onChange={(checkInDate) =>
+                // Keep check-out after check-in: if the new check-in reaches it, move it to the next day.
+                setV({
+                  ...v,
+                  checkInDate,
+                  checkOutDate:
+                    v.checkOutDate && checkInDate && v.checkOutDate <= checkInDate
+                      ? addDays(checkInDate, 1)
+                      : v.checkOutDate,
+                })
+              }
+              placeholder="Choose check-in"
+            />
+          </Field>
+          <Field label="Check-out" error={errors.checkOutDate} required>
+            <DatePicker
+              value={v.checkOutDate}
+              onChange={pick('checkOutDate')}
+              rangeStart={v.checkInDate || undefined}
+              min={v.checkInDate ? addDays(v.checkInDate, 1) : undefined}
+              placeholder="Choose check-out"
+            />
+          </Field>
+          {isGuest && (
+            <>
+              <Field
+                label="Payout received ($)"
+                error={errors.payoutCents}
+                hint="After the channel’s fee. Blank if not paid yet."
+              >
+                <Input value={v.payout} onChange={set('payout')} inputMode="decimal" className="figure" />
+              </Field>
+              <Field label="Cleaning fee charged ($)" error={errors.guestCleaningFeeCents} hint="TruHost revenue.">
+                <Input value={v.cleaningFee} onChange={set('cleaningFee')} inputMode="decimal" className="figure" />
+              </Field>
+              <Field label="Guest name" error={errors.guestName}>
+                <Input value={v.guestName} onChange={set('guestName')} autoComplete="off" />
+              </Field>
+              <Field label="Guests" error={errors.guestCount}>
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={v.guestCount}
+                  onChange={set('guestCount')}
+                  className="figure"
+                />
+              </Field>
+            </>
+          )}
+          <Field label="Confirmation code" error={errors.externalId} hint="From the channel, e.g. HM4XYZ…">
+            <Input value={v.externalId} onChange={set('externalId')} autoComplete="off" />
+          </Field>
+          <Field label="Notes" error={errors.notes} className="sm:col-span-2" hint="Admin only.">
+            <Textarea value={v.notes} onChange={set('notes')} rows={2} />
+          </Field>
+          <div className="flex flex-col gap-3 sm:col-span-2">
+            <ErrorAlert error={Object.keys(fieldErrors(save.error)).length ? null : save.error} />
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" disabled={save.isPending} onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={save.isPending}>
+                {editing ? 'Save changes' : 'Add booking'}
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      )}
     </Dialog>
   );
 }
