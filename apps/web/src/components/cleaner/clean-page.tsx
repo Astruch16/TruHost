@@ -26,7 +26,7 @@ import { CleanStatusPill } from './clean-status-pill';
  * the pay), how far along it is, and what to do now (book it, start it, or why it can't be started yet). Below it,
  * before the start, the five steps it will take; once started, its checklist (CleanChecklist): before photos, damage,
  * a stock count, after photos and "Clean finished", which tells TruHost and the owner. Finishing is a milestone: the
- * celebrating guide. A finished clean shows what was done. Wide, a side column beside it has the notes and every room's
+ * guide's notice. A finished clean shows what was done. Wide, a side column beside it has the notes and every room's
  * photos; it scrolls with the page, so its heading stays level with the checklist's.
  */
 export function CleanPage({ cleanId }: { cleanId: string }) {

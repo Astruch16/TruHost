@@ -43,7 +43,7 @@ function Supplies() {
         </div>
       ) : items.length === 0 ? (
         <Card>
-          <EmptyState mood="celebrating" title="All stocked">
+          <EmptyState title="All stocked">
             Nothing {propertyId ? 'at this property' : 'at your properties'} is at or near its restock point.
           </EmptyState>
         </Card>

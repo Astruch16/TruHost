@@ -42,7 +42,7 @@ export function HelpDialog({
                 className="grid size-12 shrink-0 place-items-center rounded-full"
                 style={{ backgroundColor: g.tint }}
               >
-                <Guide character={character} size={44} ground={false} decorative />
+                <Guide character={character} size={44} decorative />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-ink">Need a hand?</p>

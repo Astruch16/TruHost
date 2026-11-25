@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { GUIDE_WAVES } from '../../lib/guides';
-import { GuideStill, GuideWave } from './guide-wave';
+import { GUIDES } from '../../lib/guides';
+import { Guide } from './guide';
+import { GuideWave } from './guide-wave';
 
-const OWL_WAVE_SRC = GUIDE_WAVES.sage!.video;
-const OWL_STILL_SRC = GUIDE_WAVES.sage!.still;
+const OWL_WAVE_SRC = GUIDES.sage.wave.video;
+const OWL_STILL_SRC = GUIDES.sage.wave.still;
 
 const label = /^Sage, a small green owl/;
 
@@ -58,7 +59,7 @@ describe('GuideWave', () => {
   });
 
   it('has a small decorative still for the picker button', () => {
-    const { container } = render(<GuideStill character="sage" size={40} />);
+    const { container } = render(<Guide character="sage" size={40} decorative />);
     expect(container.querySelector(`img[src="${OWL_STILL_SRC}"]`)).not.toBeNull();
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
   });

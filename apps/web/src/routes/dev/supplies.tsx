@@ -301,9 +301,7 @@ function SuppliesPreview() {
             </Pane>
             <Pane label="Supplies page (all stocked)">
               <Card>
-                <EmptyState mood="celebrating" title="All stocked">
-                  Nothing at your properties is at or near its restock point.
-                </EmptyState>
+                <EmptyState title="All stocked">Nothing at your properties is at or near its restock point.</EmptyState>
               </Card>
             </Pane>
             <Pane label="Bell">

@@ -5,7 +5,7 @@ import { cx } from '../../lib/cx';
 import { Guide } from '../guide/guide';
 
 /**
- * A milestone: the signed-in user's guide celebrating, on the deep-green banner from docs/design/Onboarding.dc.html.
+ * A milestone: the signed-in user's guide (3D), on the banner from docs/design/Onboarding.dc.html.
  * Reserved for real milestones (a completed clean, a finalized statement; see docs/spec.md). Routine actions such as
  * saving or sending use Confirmation instead.
  */
@@ -28,7 +28,7 @@ export function SuccessNotice({
         className="grid size-14 shrink-0 place-items-center rounded-full"
         style={{ backgroundColor: GUIDES[guide].tint }}
       >
-        <Guide character={guide} pose="celebrating" size={50} />
+        <Guide character={guide} size={50} />
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-bold">{title}</p>

@@ -134,7 +134,7 @@ export function MonthEarningsHero({
           className="pointer-events-none absolute right-6 bottom-5 hidden size-20 place-items-center rounded-full @3xl/content:grid"
           style={{ backgroundColor: GUIDES[guide].tint }}
         >
-          <Guide character={guide} pose="waving" size={72} />
+          <Guide character={guide} size={72} />
         </span>
       )}
     </section>
