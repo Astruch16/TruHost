@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GuideContext } from '../../lib/guide-context';
-import { GUIDE_CHARACTERS, GUIDE_POSES, guideFromApi, guideToApi } from '../../lib/guides';
+import { GUIDE_CHARACTERS, GUIDES, guideFromApi, guideToApi } from '../../lib/guides';
 import { BookingsIllustration } from '../illustrations/bookings';
 import { Confirmation } from '../ui/confirmation';
 import { EmptyState } from '../ui/empty-state';
@@ -11,71 +11,20 @@ import { Guide } from './guide';
 import { GuidePicker } from './guide-picker';
 
 describe('Guide', () => {
-  it.each(GUIDE_CHARACTERS.flatMap((c) => GUIDE_POSES.map((p) => [c, p] as const)))(
-    'draws %s %s with a text alternative',
-    (character, pose) => {
-      render(<Guide character={character} pose={pose} size={80} />);
-      const img = screen.getByRole('img');
-      expect(img.getAttribute('aria-label')).toMatch(/^(Sage|Juniper|Pip)\b/);
-      expect(img).toHaveAttribute('width', '80');
-    },
-  );
-
-  it('uses the alternatives from the design boards', () => {
-    render(
-      <>
-        <Guide character="sage" pose="waving" />
-        <Guide character="juniper" pose="pointing" />
-        <Guide character="pip" pose="celebrating" />
-        <Guide character="sage" pose="thinking" />
-        <Guide character="juniper" pose="sleeping" />
-      </>,
-    );
-    expect(screen.getAllByRole('img').map((el) => el.getAttribute('aria-label'))).toEqual([
-      'Sage, a small green owl with yellow eyes, waving a wing and wearing a gold key',
-      'Juniper pointing to one side',
-      'Pip celebrating with both arms up',
-      'Sage thinking',
-      'Juniper asleep',
-    ]);
-  });
-
-  it('gives every instance its own gradient and clip ids, and points its fills at them', () => {
-    const { container } = render(
-      <>
-        <Guide character="pip" />
-        <Guide character="pip" pose="sleeping" />
-      </>,
-    );
-    const ids = [...container.querySelectorAll('[id]')].map((el) => el.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const svg of container.querySelectorAll('svg')) {
-      const own = new Set([...svg.querySelectorAll('[id]')].map((el) => el.id));
-      const refs = [...svg.querySelectorAll('[fill^="url("], [clip-path^="url("]')].map(
-        (el) => /url\(#(.+)\)/.exec(el.getAttribute('fill') ?? el.getAttribute('clip-path') ?? '')![1]!,
-      );
-      expect(refs.length).toBeGreaterThan(0);
-      for (const ref of refs) expect(own).toContain(ref);
-    }
+  it.each(GUIDE_CHARACTERS)('shows %s in 3D with a text alternative', (character) => {
+    const { container } = render(<Guide character={character} size={80} />);
+    const img = screen.getByRole('img');
+    expect(img.getAttribute('aria-label')).toMatch(/^(Sage|Juniper|Pip), .* wearing a gold key$/);
+    expect(img).toHaveStyle({ width: '80px', height: '80px' });
+    // The 3D still, not a drawing.
+    expect(container.querySelector('img')).toHaveAttribute('src', GUIDES[character].wave.still);
+    expect(container.querySelector('svg')).toBeNull();
   });
 
   it('is hidden from assistive tech when decorative', () => {
     const { container } = render(<Guide character="juniper" decorative />);
     expect(screen.queryByRole('img')).toBeNull();
-    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-  });
-
-  it('swaps only the arms, eyes and props between poses', () => {
-    const { container: waving } = render(<Guide character="sage" pose="waving" />);
-    const { container: sleeping } = render(<Guide character="sage" pose="sleeping" />);
-    expect(waving.querySelector('.th-wave')).not.toBeNull();
-    expect(waving.querySelector('.th-blink')).not.toBeNull();
-    expect(sleeping.querySelector('.th-sleep')).not.toBeNull();
-    expect(sleeping.querySelector('.th-float')?.textContent).toBe('zzZ');
-    // Same base drawing: the body outline is in both.
-    const body = 'path[d^="M100 44 C62 44"][fill="#4F7A63"]';
-    expect(waving.querySelector(body)).not.toBeNull();
-    expect(sleeping.querySelector(body)).not.toBeNull();
+    expect(container.querySelector('[data-guide]')).toHaveAttribute('aria-hidden', 'true');
   });
 });
 
@@ -104,17 +53,16 @@ describe('GuidePicker', () => {
 });
 
 describe('the signed-in user’s guide', () => {
-  it('sleeps in page empty states and celebrates in milestones', () => {
+  it('keeps page empty states and milestones company', () => {
     render(
       <GuideContext.Provider value="pip">
         <EmptyState title="No bookings yet" />
         <SuccessNotice title="Invite sent" />
       </GuideContext.Provider>,
     );
-    expect(screen.getByRole('img', { name: 'Pip asleep' })).toBeInTheDocument();
-    expect(screen.getByRole('status')).toContainElement(
-      screen.getByRole('img', { name: 'Pip celebrating with both arms up' }),
-    );
+    const [page, notice] = screen.getAllByRole('img', { name: /^Pip, / });
+    expect(page).toHaveAttribute('data-guide', 'pip');
+    expect(screen.getByRole('status')).toContainElement(notice!);
   });
 
   it('stays out of compact empty states and routine confirmations', () => {
@@ -129,17 +77,8 @@ describe('the signed-in user’s guide', () => {
     expect(document.querySelector('[data-guide]')).toBeNull();
   });
 
-  it('celebrates in good-news empty states, such as “All stocked”', () => {
-    render(
-      <GuideContext.Provider value="juniper">
-        <EmptyState mood="celebrating" title="All stocked" />
-      </GuideContext.Provider>,
-    );
-    expect(screen.getByRole('img', { name: 'Juniper celebrating with both arms up' })).toBeInTheDocument();
-  });
-
   it('defaults to Sage outside the signed-in app', () => {
     render(<EmptyState title="Nothing here" />);
-    expect(screen.getByRole('img', { name: 'Sage asleep' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /^Sage, / })).toBeInTheDocument();
   });
 });

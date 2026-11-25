@@ -318,7 +318,7 @@ export function TourOverlay({
       >
         <div className="flex items-center gap-3.5">
           <span className="grid size-14 shrink-0 place-items-center rounded-full" style={{ backgroundColor: g.tint }}>
-            <Guide character={guide} pose="pointing" size={52} ground={false} decorative />
+            <Guide character={guide} size={52} decorative />
           </span>
           <div key={shown?.step.id} className="min-w-0 animate-fade-in">
             <p className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">

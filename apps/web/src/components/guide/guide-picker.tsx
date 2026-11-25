@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { cx } from '../../lib/cx';
-import { GUIDE_CHARACTERS, GUIDE_WAVES, GUIDES, type GuideCharacter } from '../../lib/guides';
+import { GUIDE_CHARACTERS, GUIDES, type GuideCharacter } from '../../lib/guides';
 import { Guide } from './guide';
-import { GuideStill, GuideWave } from './guide-wave';
+import { GuideWave } from './guide-wave';
 
 /**
  * "Choose your guide", as in docs/design/Onboarding.dc.html: a large waving preview with a speech bubble, then one
@@ -30,12 +30,8 @@ export function GuidePicker({
           className="grid size-[132px] shrink-0 place-items-center rounded-full"
           style={{ backgroundColor: current.tint }}
         >
-          {/* Guides with a 3D animation (all three now) wave hello once; any without one are drawn. */}
-          {GUIDE_WAVES[value] ? (
-            <GuideWave key={value} character={value} size={120} />
-          ) : (
-            <Guide key={value} character={value} size={120} ground={false} />
-          )}
+          {/* The picked guide waves hello once. */}
+          <GuideWave key={value} character={value} size={120} />
         </span>
         <div className="min-w-0 flex-1 rounded-[4px_16px_16px_16px] bg-ground @md/content:rounded-[16px_16px_16px_4px] px-[18px] py-4">
           <p className="text-xl font-bold tracking-[-0.01em]">
@@ -69,11 +65,7 @@ export function GuidePicker({
                   className="grid size-11 shrink-0 place-items-center rounded-full"
                   style={{ backgroundColor: g.tint }}
                 >
-                  {GUIDE_WAVES[key] ? (
-                    <GuideStill character={key} size={40} />
-                  ) : (
-                    <Guide character={key} size={40} ground={false} decorative />
-                  )}
+                  <Guide character={key} size={40} decorative />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{g.name}</span>

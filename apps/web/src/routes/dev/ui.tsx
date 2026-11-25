@@ -39,7 +39,7 @@ import { CleanStatusPill } from '../../components/cleaner/clean-status-pill';
 import { SuccessNotice } from '../../components/ui/success-notice';
 import { Table, TableState, TBody, Td, Th, THead, Tr } from '../../components/ui/table';
 import { GuideContext } from '../../lib/guide-context';
-import { GUIDE_CHARACTERS, GUIDE_POSES, GUIDES, guideLabel, type GuideCharacter } from '../../lib/guides';
+import { GUIDE_CHARACTERS, GUIDES, guideLabel, type GuideCharacter } from '../../lib/guides';
 import { navItems } from '../../lib/nav';
 
 /**
@@ -621,37 +621,27 @@ function StyleGuide() {
 
           <Card
             title="Guides"
-            description="Every character in every pose, as in docs/design. The picker sets the guide used by the page empty state and the milestone above."
+            description="The three guides in 3D. The picker sets the guide used by the page empty state and the milestone above."
           >
             <div className="flex flex-col gap-6">
               <div className="max-w-2xl">
                 <GuidePicker value={guide} onChange={setGuide} firstName="Sam" />
               </div>
-              <div className="grid gap-5">
+              <div className="grid grid-cols-1 gap-3 @2xl/content:grid-cols-3">
                 {GUIDE_CHARACTERS.map((character) => (
-                  <div
+                  <figure
                     key={character}
-                    className="grid grid-cols-2 gap-3 @2xl/content:grid-cols-3 @5xl/content:grid-cols-5"
+                    className="flex flex-col gap-2 rounded-inner border border-line bg-surface p-3"
                   >
-                    {GUIDE_POSES.map((pose) => (
-                      <figure
-                        key={pose}
-                        className="flex flex-col gap-2 rounded-inner border border-line bg-surface p-3"
-                      >
-                        <div
-                          className="grid aspect-square place-items-center rounded-[12px]"
-                          style={{ backgroundColor: GUIDES[character].tint }}
-                        >
-                          <Guide character={character} pose={pose} size={168} className="h-auto w-full max-w-[168px]" />
-                        </div>
-                        <figcaption className="flex items-baseline justify-between gap-2 px-1">
-                          <span className="font-bold capitalize">{pose}</span>
-                          <span className="text-[13px] text-muted">{GUIDES[character].name}</span>
-                        </figcaption>
-                        <p className="px-1 text-xs text-muted">{guideLabel(character, pose)}</p>
-                      </figure>
-                    ))}
-                  </div>
+                    <div
+                      className="grid aspect-square place-items-center rounded-[12px]"
+                      style={{ backgroundColor: GUIDES[character].tint }}
+                    >
+                      <Guide character={character} size={168} />
+                    </div>
+                    <figcaption className="px-1 font-bold">{GUIDES[character].name}</figcaption>
+                    <p className="px-1 text-xs text-muted">{guideLabel(character)}</p>
+                  </figure>
                 ))}
               </div>
             </div>
