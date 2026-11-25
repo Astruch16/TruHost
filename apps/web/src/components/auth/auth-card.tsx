@@ -5,78 +5,59 @@ import wordmarkUrl from '../../assets/brand/truhost-wordmark-light.svg?url';
 import { Spinner } from '../ui/spinner';
 
 /**
- * The sign-in card and its parts: a frosted-glass card (styles.css, .lg-glass) with a soft shadow on the white page,
- * the TruHost mark (assets/brand/login-mark.webp, the cream and light green monogram on a dark green tile),
- * title and subtitle, 48px fields, the blue primary button and the white Google button. Layout from
- * docs/design/Login.dc.html.
+ * The sign-in page and its parts, in the style of a clean single-column sign-in: no card, just the content on the
+ * white page under the logo (AuthFrame), with pill-shaped fields, a flat blue pill button and a soft grey pill for
+ * Continue with Google.
  */
 export function AuthCard({
   title,
   subtitle,
+  titleHidden = false,
   children,
 }: {
   title: ReactNode;
   subtitle?: ReactNode;
+  /** Keep the title for screen readers only (the sign-in step, where the logo and the form say enough). */
+  titleHidden?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="lg-rise flex w-[420px] max-w-full flex-col gap-3.5 rounded-[26px] lg-glass border border-white/65 px-5 pt-6 pb-5 text-ink shadow-[0_1px_3px_rgba(16,24,40,0.06),0_14px_36px_-6px_rgba(16,24,40,0.12),inset_0_1px_0_rgba(255,255,255,0.85)] sm:gap-[18px] sm:px-[34px] sm:pt-[34px] sm:pb-7">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <img
-          src={loginMarkUrl}
-          alt=""
-          width={56}
-          height={56}
-          draggable={false}
-          className="size-12 select-none sm:size-14"
-        />
-        <div>
-          <h1 className="font-display text-[1.5rem] leading-tight font-semibold tracking-[-0.015em] sm:text-[1.75rem]">
-            {title}
-          </h1>
-          {subtitle && <div className="mt-0.5 text-[15px] text-muted">{subtitle}</div>}
-        </div>
+    <div className="lg-rise flex w-[388px] max-w-full flex-col gap-4 text-ink">
+      <div className={cx('text-center', titleHidden && 'sr-only')}>
+        <h1 className="font-display text-2xl leading-tight font-semibold tracking-[-0.015em]">{title}</h1>
+        {subtitle && <div className="mt-1 text-[15px] text-muted">{subtitle}</div>}
       </div>
       {children}
     </div>
   );
 }
 
-/** The TruHost mark and wordmark (assets/brand/truhost-wordmark-light.svg), in the sign-in page's top-left corner. */
+/** The TruHost mark and wordmark (assets/brand/truhost-wordmark-light.svg), centred at the top of the sign-in page. */
 export function AuthBrand() {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="lg-rise flex items-center gap-3">
       <img
         src={loginMarkUrl}
         alt=""
-        width={40}
-        height={40}
+        width={48}
+        height={48}
         draggable={false}
-        className="size-9 select-none sm:size-10"
+        className="size-11 select-none sm:size-12"
       />
       <img
         src={wordmarkUrl}
         alt="TruHost"
-        width={90}
-        height={22}
+        width={131}
+        height={32}
         draggable={false}
-        className="h-5 w-auto select-none sm:h-[22px]"
+        className="h-7 w-auto select-none sm:h-8"
       />
     </div>
   );
 }
 
-/** The handwritten line under the card, set level (wider screens only). */
-export function AuthTagline() {
-  return (
-    <p aria-hidden className="lg-rise hidden font-hand text-[30px] text-ink sm:block [animation-delay:.25s]">
-      Better stays. Higher returns.
-    </p>
-  );
-}
-
 const fieldInput =
-  'lg-input h-12 w-full rounded-xl border border-[#DADDD7] bg-white/72 px-3.5 text-[15px] text-ink placeholder:text-muted/70';
+  'lg-input h-11 w-full rounded-full border border-[#D3D8DF] bg-white px-4 text-[15px] text-ink placeholder:text-muted/70';
 
 /** Label, input and an optional link on the label's line (e.g. "Forgot password?"). */
 export function AuthField({
@@ -89,7 +70,7 @@ export function AuthField({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <label htmlFor={id} className="text-sm font-semibold">
+        <label htmlFor={id} className="text-sm font-medium">
           {label}
         </label>
         {aside}
@@ -111,7 +92,7 @@ export function PasswordField({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <label htmlFor={id} className="text-sm font-semibold">
+        <label htmlFor={id} className="text-sm font-medium">
           {label}
         </label>
         {aside}
@@ -129,7 +110,7 @@ export function PasswordField({
           onClick={() => setShown(!shown)}
           aria-label={shown ? 'Hide password' : 'Show password'}
           aria-pressed={shown}
-          className="absolute top-1 right-1 grid size-10 place-items-center rounded-[9px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-[rgba(31,120,189,0.4)]"
+          className="absolute top-0.5 right-1.5 grid size-10 place-items-center rounded-full text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-[rgba(31,120,189,0.4)]"
         >
           <svg
             width="19"
@@ -152,7 +133,7 @@ export function PasswordField({
   );
 }
 
-/** The blue primary button: slightly see-through, with a darker blue outline. */
+/** The primary button: a flat blue pill. */
 export function AuthButton({
   children,
   loading = false,
@@ -173,7 +154,7 @@ export function AuthButton({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        'lg-btn flex h-[50px] items-center justify-center gap-2 rounded-xl border border-[#154F7D] bg-[linear-gradient(180deg,rgba(31,120,189,0.95),rgba(26,102,162,0.95))] text-base font-bold text-white shadow-[0_6px_16px_rgba(21,79,125,0.22),inset_0_1px_0_rgba(255,255,255,0.22)] disabled:opacity-70',
+        'lg-btn flex h-11 items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-semibold text-white hover:bg-primary-hover disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >
@@ -183,7 +164,7 @@ export function AuthButton({
   );
 }
 
-/** "Continue with Google", the white button with Google's mark. */
+/** "Continue with Google": a soft grey pill with Google's mark. */
 export function GoogleButton({
   onClick,
   loading = false,
@@ -199,7 +180,7 @@ export function GoogleButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cx(
-        'lg-ghost flex h-12 items-center justify-center gap-2.5 rounded-xl border border-[#DADDD7] bg-white/72 text-[15px] font-semibold text-ink disabled:opacity-70',
+        'lg-ghost flex h-11 items-center justify-center gap-2.5 rounded-full bg-[#F1F3F6] text-[15px] font-medium text-ink disabled:opacity-70',
         loading && 'cursor-progress',
       )}
     >
@@ -227,13 +208,13 @@ export function GoogleButton({
   );
 }
 
-/** "or with email". */
+/** The "or" between the form and Continue with Google. */
 export function AuthDivider({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-3 text-[13px] text-muted">
-      <span className="h-px flex-1 bg-line" />
+    <div className="flex items-center gap-4 py-1 text-sm text-muted">
+      <span className="h-px flex-1 bg-line-soft" />
       {children}
-      <span className="h-px flex-1 bg-line" />
+      <span className="h-px flex-1 bg-line-soft" />
     </div>
   );
 }
@@ -241,11 +222,7 @@ export function AuthDivider({ children }: { children: ReactNode }) {
 /** A text link styled as on the board ("Forgot password?", "Back to sign in"). */
 export function AuthLink({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-[13px] font-semibold text-primary hover:text-primary-hover link-underline"
-    >
+    <button type="button" onClick={onClick} className="text-sm text-primary hover:text-primary-hover link-underline">
       {children}
     </button>
   );
@@ -264,7 +241,9 @@ export function AuthError({ children }: { children: ReactNode }) {
   );
 }
 
-/** Small print at the bottom of the card. */
+/** Small print at the foot of the page, under a hairline. */
 export function AuthNote({ children }: { children: ReactNode }) {
-  return <p className="pt-0.5 text-center text-[13px] leading-normal text-muted">{children}</p>;
+  return (
+    <p className="mt-2 border-t border-line-soft pt-5 text-center text-[13px] leading-normal text-muted">{children}</p>
+  );
 }
