@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ApiClient } from '@truhost/api-client';
+import { ApiContext } from '../../lib/api-context';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router';
 import type { AttentionItem } from '../../lib/attention';
@@ -66,5 +69,42 @@ describe('needs attention', () => {
       'href',
       '/admin/expenses?month=2026-11',
     );
+  });
+
+  it('opens a property without a plan the way its cards do, loading it when the pointer arrives', async () => {
+    const GET = vi.fn(() => new Promise(() => undefined));
+    const router = createRouter({
+      routeTree: createRootRoute({
+        component: () => (
+          <NeedsAttention
+            items={[
+              {
+                kind: 'NO_PLAN',
+                id: 'p1',
+                propertyId: 'p1',
+                propertyName: 'Cedar Cabin',
+                title: 'No plan in force',
+                detail: 'Cedar Cabin has no management plan for November 2026.',
+                date: null,
+              },
+            ]}
+            counts={{ PAYOUT_MISSING: 0, RECEIPT_MISSING: 0, NO_PLAN: 1, INVITE_PENDING: 0 }}
+            showProperty
+          />
+        ),
+      }),
+      history: createMemoryHistory({ initialEntries: ['/admin'] }),
+    });
+    render(
+      <ApiContext.Provider value={{ GET } as unknown as ApiClient}>
+        <QueryClientProvider client={new QueryClient()}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </ApiContext.Provider>,
+    );
+    const row = await screen.findByRole('link', { name: /No plan in force/ });
+    expect(row).toHaveAttribute('href', '/admin/properties/p1');
+    fireEvent.mouseEnter(row);
+    expect(GET).toHaveBeenCalledWith('/v1/properties/{id}', { params: { path: { id: 'p1' } } });
   });
 });

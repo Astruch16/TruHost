@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { attentionGroups, type AttentionGroup, type AttentionItem } from '../../lib/attention';
+import { usePrefetchProperty } from '../../lib/property-query';
 import type { IconProps } from '../illustrations/defs';
 import { InviteIcon } from '../illustrations/list-icons';
 import { ExpensesIcon, FeeIcon, GrossIcon } from '../illustrations/statement-icons';
@@ -18,6 +19,19 @@ const ICONS: Record<AttentionItem['kind'], (props: IconProps) => ReactElement> =
 
 const ROW =
   'group -mx-2 flex w-[calc(100%+1rem)] items-start gap-3.5 rounded-control px-2 py-4 text-left transition-colors hover:bg-ground focus-visible:bg-ground';
+
+/**
+ * A row opening one property's page, the way its cards do: a cross-fade, its data on the way from when the pointer or
+ * focus arrived.
+ */
+function PropertyRow({ propertyId, children }: { propertyId: string; children: ReactNode }) {
+  const prefetch = usePrefetchProperty(propertyId);
+  return (
+    <Link to="/admin/properties/$propertyId" params={{ propertyId }} viewTransition {...prefetch} className={ROW}>
+      {children}
+    </Link>
+  );
+}
 
 /** Where a row goes: payouts open the payout list; the rest go to the page where they're fixed. */
 function Target({
@@ -49,11 +63,9 @@ function Target({
       );
     case 'NO_PLAN':
       return one ? (
-        <Link to="/admin/properties/$propertyId" params={{ propertyId: one.id }} className={ROW}>
-          {children}
-        </Link>
+        <PropertyRow propertyId={one.id}>{children}</PropertyRow>
       ) : (
-        <Link to="/admin/properties" className={ROW}>
+        <Link to="/admin/properties" viewTransition className={ROW}>
           {children}
         </Link>
       );
