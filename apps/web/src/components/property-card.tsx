@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Pencil } from 'lucide-react';
 import { cx } from '../lib/cx';
+import { usePrefetchProperty } from '../lib/property-query';
 import { TINTS } from '../lib/dashboard-format';
 import { formatOccupancy } from '../lib/format';
 import { formatCents } from '../lib/money';
@@ -48,6 +49,8 @@ export function PropertyCard({
   details?: ReactNode;
 }) {
   const tint = TINTS[index % TINTS.length]!;
+  // Its page opens with a cross-fade, its data already on the way from when the pointer or focus arrived.
+  const prefetch = usePrefetchProperty(property.id);
   const figure = (value: string) =>
     figures === 'loading' ? <Skeleton className="mt-1 h-6 w-16" /> : <span className="figure">{value}</span>;
   const known = figures && figures !== 'loading' ? figures : null;
@@ -55,6 +58,8 @@ export function PropertyCard({
     <Link
       to="/admin/properties/$propertyId"
       params={{ propertyId: property.id }}
+      viewTransition
+      {...prefetch}
       className={cx(
         'group flex h-full flex-col overflow-hidden rounded-inner border border-line bg-surface transition-[border-color,box-shadow] hover:border-ink/25 hover:shadow-sm',
         wide && '@[34rem]/card:flex-row',

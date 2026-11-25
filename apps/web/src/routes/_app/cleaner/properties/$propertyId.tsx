@@ -11,6 +11,7 @@ import { PageHeader } from '../../../../components/ui/page-header';
 import { LoadingBlock } from '../../../../components/ui/skeleton';
 import { propertyRole } from '../../../../lib/access';
 import { useApi } from '../../../../lib/api-context';
+import { useProperty } from '../../../../lib/property-query';
 import { queries } from '../../../../lib/queries';
 
 /**
@@ -26,7 +27,7 @@ function CleanerProperty() {
   const api = useApi();
   const me = useQuery(queries.me(api));
   const cleans = me.data ? propertyRole(me.data, propertyId) === 'CLEANER' : false;
-  const property = useQuery({ ...queries.property(api, propertyId), enabled: cleans });
+  const property = useProperty(propertyId, { enabled: cleans });
 
   if (!me.data) return <LoadingBlock />;
   if (!cleans) return <NotAvailable />;

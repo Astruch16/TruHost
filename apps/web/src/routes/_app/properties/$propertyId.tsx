@@ -21,6 +21,7 @@ import { Skeleton } from '../../../components/ui/skeleton';
 import { isAdmin, propertyPath } from '../../../lib/access';
 import { useApi } from '../../../lib/api-context';
 import { monthKey } from '../../../lib/months';
+import { useProperty } from '../../../lib/property-query';
 import { queries } from '../../../lib/queries';
 
 /**
@@ -47,7 +48,7 @@ function PropertyPage() {
 
 function OwnerPropertyView({ propertyId, admin }: { propertyId: string; admin: boolean }) {
   const api = useApi();
-  const property = useQuery(queries.property(api, propertyId));
+  const property = useProperty(propertyId);
   const list = useQuery(queries.properties(api));
   const [month, setMonth] = useState(monthKey);
   const [editing, setEditing] = useState(false);

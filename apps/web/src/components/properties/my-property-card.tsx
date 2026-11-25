@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Clock, KeyRound, MapPin, Pencil, Sparkles } from 'lucide-react';
 import { cx } from '../../lib/cx';
+import { usePrefetchProperty } from '../../lib/property-query';
 import { TINTS } from '../../lib/dashboard-format';
 import { formatTime, propertyFacts, type MyProperty } from '../../lib/my-properties';
 import { CoverImage } from '../cover-image';
@@ -17,6 +18,8 @@ const COVER = 'size-full transition-transform duration-500 group-hover:scale-[1.
 export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: () => void }) {
   const { property: p, role, index } = item;
   const tint = TINTS[index % TINTS.length]!;
+  // Its page opens with a cross-fade, its data already on the way from when the pointer or focus arrived.
+  const prefetch = usePrefetchProperty(p.id);
   const facts = propertyFacts(p);
   const owner = role === 'OWNER';
   return (
@@ -35,6 +38,8 @@ export function MyPropertyCard({ item, onEdit }: { item: MyProperty; onEdit?: ()
       <Link
         to={owner ? '/properties/$propertyId' : '/cleaner/properties/$propertyId'}
         params={{ propertyId: p.id }}
+        viewTransition
+        {...prefetch}
         className={cx(
           'group flex h-full flex-col overflow-hidden rounded-card border border-line-soft bg-surface',
           'transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-line hover:shadow-[0_18px_40px_-24px_rgba(26,29,33,0.45)]',
