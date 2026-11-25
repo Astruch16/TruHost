@@ -6,7 +6,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Spinner } from '../ui/spinner';
 import { PageSkeleton } from './page-skeleton';
 import { Logo } from './logo';
-import { MountainScene } from './mountain-scene';
+import { NavScene } from './nav-scene';
 
 /**
  * What people see between signing in and the portal being ready: the portal's own frame (the real sidebar look,
@@ -91,7 +91,7 @@ function SidebarPlaceholder() {
         ))}
       </div>
       <div className="sidebar-foot pointer-events-none relative mt-auto min-h-0 flex-1 basis-0 overflow-hidden">
-        <MountainScene className="sidebar-scene absolute inset-x-0 bottom-0 h-[min(330px,100%)] w-full" />
+        <NavScene className="sidebar-scene absolute inset-x-0 bottom-0 h-[min(330px,100%)] w-full" />
         <p className="sidebar-tagline absolute inset-x-0 bottom-[296px] -rotate-3 px-6 text-center font-hand text-[1.75rem] leading-[1.15] text-sidebar-ink/90">
           Better stays.
           <br />

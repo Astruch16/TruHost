@@ -579,52 +579,8 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
   animation: none !important;
 }
 
-/* Sign-in card (components/auth) and the sidebar's mountain scene. Keyframes and classes from
-   docs/design/Login.dc.html. Extra: the scene pauses while the tab is hidden (data-paused, set by MountainScene), and
-   reduced motion stops it outright rather than leaving it on a last frame. */
-@keyframes lg-twinkle {
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@keyframes lg-firefly {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translate(0, 0);
-  }
-  35% {
-    opacity: 1;
-  }
-  65% {
-    opacity: 0.7;
-    transform: translate(12px, -16px);
-  }
-}
-@keyframes lg-glow {
-  0%,
-  100% {
-    opacity: 0.82;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@keyframes lg-shimmer {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: scaleX(0.7);
-  }
-  50% {
-    opacity: 0.75;
-    transform: scaleX(1.1);
-  }
-}
+/* Sign-in card (components/auth). Keyframes and classes from docs/design/Login.dc.html; reduced motion stops the
+   entrance rather than leaving it part-way. */
 @keyframes lg-rise {
   from {
     opacity: 0;
@@ -634,39 +590,6 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
     opacity: 1;
     transform: none;
   }
-}
-.lg-twinkle {
-  animation: lg-twinkle 3s ease-in-out infinite;
-}
-.lg-firefly {
-  animation: lg-firefly 4s ease-in-out infinite;
-}
-/* The sidebar scene's chimney smoke: a short curl, sized for its small cabin. */
-@keyframes sb-smoke {
-  0% {
-    transform: translate(0, 0) scale(0.5);
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.45;
-  }
-  100% {
-    transform: translate(7px, -24px) scale(1.8);
-    opacity: 0;
-  }
-}
-.sb-smoke {
-  animation: sb-smoke 5s ease-out infinite backwards;
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-.lg-glow {
-  animation: lg-glow 4s ease-in-out infinite;
-}
-.lg-shimmer {
-  animation: lg-shimmer 2.6s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
 }
 .lg-rise {
   animation: lg-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -735,16 +658,7 @@ html:active-view-transition-type(leave-portal)::view-transition-new(root) {
 html:has([data-auth-frame]) {
   background: #fff;
 }
-.lg-scene[data-paused],
-.lg-scene[data-paused] * {
-  animation-play-state: paused !important;
-}
 @media (prefers-reduced-motion: reduce) {
-  .lg-twinkle,
-  .sb-smoke,
-  .lg-firefly,
-  .lg-glow,
-  .lg-shimmer,
   .lg-rise {
     animation: none !important;
   }
