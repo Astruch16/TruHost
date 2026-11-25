@@ -1,50 +1,50 @@
-/** One icon per expense category, from the custom set (src/assets/icons/expense-categories). 40px by default. */
+/** One icon per expense category, from the custom set (src/assets/icons/expense-categories). 24px by default. */
 import type { IconProps } from './defs';
 import { IconImage } from './icon-image';
 import { CleaningIcon, ExpensesIcon } from './statement-icons';
 
-/** Supplies: a taped kraft box with a label (also the general supply category). */
-export function SuppliesIcon({ size = 40, className }: IconProps) {
+/** Supplies: a box (also the general supply category). */
+export function SuppliesIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/supplies" size={size} className={className} />;
 }
 
-/** Repairs and maintenance: a steel wrench with a gold grip. */
-export function RepairsIcon({ size = 40, className }: IconProps) {
+/** Repairs and maintenance: a wrench. */
+export function RepairsIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/repairs-maintenance" size={size} className={className} />;
 }
 
-/** Subscriptions: a screen on a gold stand. */
-export function SubscriptionsIcon({ size = 40, className }: IconProps) {
+/** Subscriptions: circular arrows, for something that renews. */
+export function SubscriptionsIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/subscriptions" size={size} className={className} />;
 }
 
-/** Utilities: a lit bulb. */
-export function UtilitiesIcon({ size = 40, className }: IconProps) {
+/** Utilities: a light bulb. */
+export function UtilitiesIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/utilities" size={size} className={className} />;
 }
 
-/** Internet: a router under the wifi arcs. */
-export function InternetIcon({ size = 40, className }: IconProps) {
+/** Internet: a wifi signal. */
+export function InternetIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/internet" size={size} className={className} />;
 }
 
-/** Furnishings: a tufted armchair on gold legs. */
-export function FurnishingsIcon({ size = 40, className }: IconProps) {
+/** Furnishings: an armchair. */
+export function FurnishingsIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/furnishings" size={size} className={className} />;
 }
 
-/** Licensing and permits: a certificate with a gold seal and ribbon. */
-export function LicensingIcon({ size = 40, className }: IconProps) {
+/** Licensing and permits: a certificate with a seal. */
+export function LicensingIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/licensing-permits" size={size} className={className} />;
 }
 
-/** Insurance: a blue shield with a check. */
-export function InsuranceIcon({ size = 40, className }: IconProps) {
+/** Insurance: a shield with a check. */
+export function InsuranceIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/insurance" size={size} className={className} />;
 }
 
-/** Strata: an apartment building with a gold door. */
-export function StrataIcon({ size = 40, className }: IconProps) {
+/** Strata: an apartment building. */
+export function StrataIcon({ size = 24, className }: IconProps) {
   return <IconImage path="expense-categories/strata" size={size} className={className} />;
 }
 

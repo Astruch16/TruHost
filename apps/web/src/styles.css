@@ -27,6 +27,8 @@
   --color-ground: #f6f6f3;
   --color-surface: #ffffff;
   --color-ink: #1a1d21;
+  /* The custom icons' line colour (src/assets/icons): navy, unless a text colour class on the icon says otherwise. */
+  --color-icon: #0d3a5c;
   --color-muted: #5b6068;
   --color-line: #e3e4e1;
   --color-line-soft: #eeeeeb;
@@ -695,5 +697,13 @@ html:has([data-auth-frame]) {
   100% {
     transform: scale(3);
     opacity: 0;
+  }
+}
+
+/* Custom icons (components/illustrations/icon-image.tsx) draw in currentColor: navy by default. In the base layer so any
+   text colour utility on the icon (white on dark surfaces, the danger colour for alerts) wins. */
+@layer base {
+  .th-icon {
+    color: var(--color-icon);
   }
 }

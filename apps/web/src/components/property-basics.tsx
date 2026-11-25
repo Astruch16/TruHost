@@ -62,8 +62,8 @@ export function PropertyAddressCard({ property: p }: { property: Property }) {
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-2">
-          <StayTime icon={<DoorOpenIcon size={34} />} label="Check-out" time={p.checkOutTime} />
-          <StayTime icon={<ReadyByIcon size={34} />} label="Check-in" time={p.checkInTime} />
+          <StayTime icon={<DoorOpenIcon />} label="Check-out" time={p.checkOutTime} />
+          <StayTime icon={<ReadyByIcon />} label="Check-in" time={p.checkInTime} />
         </dl>
       </div>
     </Card>
@@ -133,10 +133,10 @@ export function PropertyRoomsCard({
                 className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-inner border border-line-soft bg-ground/60 px-2 py-3 text-center"
               >
                 <span className="relative shrink-0">
-                  <RoomIcon type={r.type} size={40} />
+                  <RoomIcon type={r.type} />
                   <span
                     aria-hidden
-                    className="figure absolute -top-1 -right-1.5 grid size-[18px] place-items-center rounded-full bg-ink text-[10px] font-bold text-white ring-2 ring-surface"
+                    className="figure absolute -top-1.5 -right-4 grid size-[18px] place-items-center rounded-full bg-ink text-[10px] font-bold text-white ring-2 ring-surface"
                   >
                     {i + 1}
                   </span>

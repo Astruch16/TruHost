@@ -1,7 +1,8 @@
 /**
- * TruHost's custom icons (src/assets/icons, see its README for the style): 41 UI icons on a 40×40 grid and 9
- * empty-state illustrations on 96×96. Each is a static SVG file bundled by Vite; `iconUrl` gives its URL from its
- * path in that folder, without the extension ("money/gross-revenue").
+ * TruHost's custom icons (src/assets/icons, see its README for the style): 41 monoline UI icons on a 24×24 grid and 9
+ * empty-state illustrations on 64×64, all drawn in `currentColor`. Each file is bundled as text so it can be drawn
+ * inline and take the CSS colour around it; `iconSvg` gives its viewBox, stroke width and inner markup from its path
+ * in that folder, without the extension ("money/gross-revenue").
  */
 export type IconPath =
   | 'checklist/after-photos'
@@ -55,10 +56,31 @@ export type IconPath =
   | 'rooms/other-room'
   | 'rooms/patio-deck';
 
-const FILES = import.meta.glob<string>('../assets/icons/**/*.svg', { eager: true, query: '?url', import: 'default' });
+const FILES = import.meta.glob<string>('../assets/icons/**/*.svg', { eager: true, query: '?raw', import: 'default' });
 
-export function iconUrl(path: IconPath): string {
-  const url = FILES[`../assets/icons/${path}.svg`];
-  if (!url) throw new Error(`No icon file for ${path}`);
-  return url;
+export interface IconSvg {
+  viewBox: string;
+  /** Set on the root of the UI icons (2); the empty states set it inside. */
+  strokeWidth: string | undefined;
+  /** Everything inside the root <svg>, as written in the file. */
+  body: string;
+}
+
+const parsed = new Map<IconPath, IconSvg>();
+
+/**
+ * The parts of an icon's file needed to draw it inline. The root's own attributes (the default navy `color`, the size)
+ * are dropped: the icon takes its colour from CSS and its size from the component.
+ */
+export function iconSvg(path: IconPath): IconSvg {
+  const cached = parsed.get(path);
+  if (cached) return cached;
+  const text = FILES[`../assets/icons/${path}.svg`];
+  const match = text && /^\s*<svg\b([^>]*)>([\s\S]*)<\/svg>\s*$/.exec(text);
+  if (!match) throw new Error(`No icon file for ${path}`);
+  const [, attrs, body] = match;
+  const attr = (name: string) => new RegExp(`\\s${name}="([^"]*)"`).exec(attrs)?.[1];
+  const svg = { viewBox: attr('viewBox') ?? '0 0 24 24', strokeWidth: attr('stroke-width'), body: body.trim() };
+  parsed.set(path, svg);
+  return svg;
 }

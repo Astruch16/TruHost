@@ -145,13 +145,13 @@ export function NotificationsBell({
                     )}
                   >
                     {n.kind === 'DAMAGE_REPORTED' ? (
-                      <DamageAlertIcon size={36} className="shrink-0" />
+                      <DamageAlertIcon size={20} className="mt-0.5 shrink-0" />
                     ) : n.kind === 'CLEAN_COMPLETED' || n.kind === 'CLEAN_BOOKED' ? (
-                      <CleanDoneIcon size={36} className="shrink-0" />
+                      <CleanDoneIcon size={20} className="mt-0.5 shrink-0" />
                     ) : n.kind === 'TIME_OFF_REQUESTED' ? (
-                      <TimeOffIcon size={36} className="shrink-0" />
+                      <TimeOffIcon size={20} className="mt-0.5 shrink-0" />
                     ) : (
-                      <SupplyAlertIcon out={n.kind === 'SUPPLY_OUT'} size={36} className="shrink-0" />
+                      <SupplyAlertIcon out={n.kind === 'SUPPLY_OUT'} size={20} className="mt-0.5 shrink-0" />
                     )}
                     <span className="min-w-0 flex-1">
                       <span className={cx('block text-sm text-ink', n.readAt ? 'font-medium' : 'font-semibold')}>

@@ -323,7 +323,7 @@ function CountCard({
 }) {
   return (
     <div className="flex min-w-0 flex-col rounded-card border border-line-soft bg-surface p-4 @2xl/content:p-6">
-      <Icon size={44} className="hidden shrink-0 @2xl/content:block" />
+      <Icon className="hidden shrink-0 @2xl/content:block" />
       <dl className="flex flex-1 flex-col @2xl/content:mt-4">
         <dt className="text-[11px] leading-tight font-semibold tracking-[0.08em] text-muted uppercase @2xl/content:text-xs">
           {label}
@@ -459,7 +459,7 @@ function UpNextCard({
   if (!c) {
     return (
       <li className="hidden flex-col items-center justify-center gap-3 rounded-card border border-dashed border-line bg-surface/60 p-5 text-center @3xl/content:flex">
-        <ComingUpIllustration size={72} />
+        <ComingUpIllustration />
         <div>
           <p className="font-semibold text-ink">Nothing else booked yet</p>
           <p className="mt-0.5 text-sm text-muted">New cleans appear here as stays are booked.</p>

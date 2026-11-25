@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import { CompassIcon } from '../illustrations/list-icons';
+import { IconEmptyState } from '../illustrations/icon-image';
 import { buttonStyles } from '../../lib/styles';
 
 /**
@@ -18,7 +18,7 @@ export function NotAvailable({
   return (
     <div className="flex justify-center py-10 @2xl/content:py-16">
       <div className="flex max-w-md flex-col items-center gap-4 rounded-card border border-line-soft bg-surface px-6 py-10 text-center @2xl/content:px-10">
-        <CompassIcon size={64} />
+        <IconEmptyState path="notices/compass" size={112} />
         <div>
           <h1 className="font-display text-2xl leading-tight font-semibold tracking-[-0.01em] text-ink">{title}</h1>
           <p className="mt-1.5 text-sm text-muted">{children}</p>

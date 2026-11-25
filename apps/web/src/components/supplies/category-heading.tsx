@@ -25,7 +25,7 @@ export function CategoryHeading({
 }
 
 /** An area's icon: the room it's kept in, the spray bottle for cleaning, the box for the rest. */
-export function CategoryIcon({ category, size = 28 }: { category: SupplyCategory; size?: number }) {
+export function CategoryIcon({ category, size = 20 }: { category: SupplyCategory; size?: number }) {
   const props = { size, className: 'shrink-0' };
   switch (category) {
     case 'BATHROOM':

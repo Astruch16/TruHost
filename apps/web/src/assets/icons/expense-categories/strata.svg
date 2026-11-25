@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#2E3532" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-<rect x="9" y="7" width="22" height="27.5" rx="1.5" fill="#D3D7D4"/>
-<rect x="7.5" y="5" width="25" height="3.5" rx="1" fill="#B3BAB5"/>
-<g fill="#FFFDF8" stroke-width="1.15">
-<rect x="12.2" y="11.5" width="3.4" height="3" rx="0.5"/><rect x="18.3" y="11.5" width="3.4" height="3" rx="0.5"/><rect x="24.4" y="11.5" width="3.4" height="3" rx="0.5"/>
-<rect x="12.2" y="17" width="3.4" height="3" rx="0.5"/><rect x="18.3" y="17" width="3.4" height="3" rx="0.5"/><rect x="24.4" y="17" width="3.4" height="3" rx="0.5"/>
-<rect x="12.2" y="22.5" width="3.4" height="3" rx="0.5"/><rect x="24.4" y="22.5" width="3.4" height="3" rx="0.5"/>
-</g>
-<path d="M17.2 34.5 V28.4 a2.8 2.8 0 0 1 5.6 0 V34.5" fill="#DDB443"/>
-<line x1="4.5" y1="34.5" x2="35.5" y2="34.5"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" color="#0D3A5C" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M8.5 7h2M13.5 7h2M8.5 11h2M13.5 11h2M8.5 15h2M13.5 15h2"/><path d="M10.5 21v-2.5h3V21"/></svg>
