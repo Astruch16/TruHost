@@ -59,13 +59,13 @@ export function Sidebar({
         />
         {/* Admin items sit in small labelled groups (Money, Operations, People); the rest have no label. */}
         {navGroups(items).map((group, g) => (
-          // Every group after the first sits below a hairline; a section's label is in the logo's gold, so it reads
-          // as a heading rather than another item.
+          // Every group after the first sits below a hairline; a section's label is in Outfit and the brand sky blue,
+          // so it reads as a heading rather than another item.
           <div key={group.section ?? `plain-${g}`} className={cx(g > 0 && 'mt-2.5 border-t border-white/12 pt-2.5')}>
             {group.section && (
               <p
                 id={`nav-${group.section}`}
-                className="px-3.5 pt-1 pb-1.5 text-[11px] font-bold tracking-[0.14em] text-sidebar-accent uppercase"
+                className="px-3.5 pt-1.5 pb-1.5 font-section text-[15px] font-semibold tracking-[0.01em] text-sidebar-accent"
               >
                 {group.section}
               </p>

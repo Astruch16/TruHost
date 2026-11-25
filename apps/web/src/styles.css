@@ -1,4 +1,5 @@
 @import '@fontsource-variable/hanken-grotesk';
+@import '@fontsource-variable/outfit';
 @import '@fontsource-variable/source-serif-4/opsz.css';
 @import '@fontsource/caveat/500.css';
 @import 'tailwindcss';
@@ -12,6 +13,8 @@
   --font-hand: 'Caveat', 'Segoe Script', cursive;
   /* Headings: card, dialog, page and section titles (font-display, at weight 600). Body text stays in Hanken. */
   --font-display: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
+  /* The sidebar's section headers (Money, Operations, People): a rounder geometric sans, so they stand apart. */
+  --font-section: 'Outfit Variable', 'Hanken Grotesk Variable', ui-sans-serif, sans-serif;
 
   /* Surfaces and text */
   --color-sidebar: #102a44;

@@ -308,6 +308,9 @@ importers:
       '@fontsource-variable/hanken-grotesk':
         specifier: ^5.3.0
         version: 5.3.0
+      '@fontsource-variable/outfit':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource-variable/source-serif-4':
         specifier: ^5.3.1
         version: 5.3.1
@@ -976,6 +979,9 @@ packages:
 
   '@fontsource-variable/hanken-grotesk@5.3.0':
     resolution: {integrity: sha512-DOd0FqL+3cH2dfNy0JtSq9tUfxBz5mLmHMjTU0DOr3E9Zo6wxuatCl53DIPNrSPgCsnuKyM739BTIG5glCLirw==}
+
+  '@fontsource-variable/outfit@5.3.0':
+    resolution: {integrity: sha512-fPb5XnYK0k7SbR++HEmm4+ZqDszmLKQ+sPRUr8oQ/KNC0vy6r6hazJFe8iYozv4cqlHbvJ/JECkJWrfDodUMVQ==}
 
   '@fontsource-variable/source-serif-4@5.3.1':
     resolution: {integrity: sha512-4Rtay22SC4lMvw11r/+9kxANB6P3M0X8s1NudBC2v0J1KU2y3DcMoNcT3lBoZ/CqLirzf+StlO6UlJilyrvaUg==}
@@ -5759,6 +5765,8 @@ snapshots:
   '@floating-ui/utils@0.2.12': {}
 
   '@fontsource-variable/hanken-grotesk@5.3.0': {}
+
+  '@fontsource-variable/outfit@5.3.0': {}
 
   '@fontsource-variable/source-serif-4@5.3.1': {}
 
