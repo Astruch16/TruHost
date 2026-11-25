@@ -6,7 +6,7 @@ import { useSlidingHighlight } from '../../lib/motion';
 import { activeNavPath, navGroups, type NavItem } from '../../lib/nav';
 import { APP_BUILD, APP_VERSION } from '../../lib/version';
 import { Logo } from './logo';
-import { MountainScene } from './mountain-scene';
+import { NavScene } from './nav-scene';
 
 const itemClass = cx(
   'group flex min-h-10 items-center gap-3 rounded-control px-3.5 text-base font-medium text-sidebar-ink/90',
@@ -103,7 +103,7 @@ export function Sidebar({
         aria-hidden
         className="sidebar-foot pointer-events-none relative mt-auto min-h-0 flex-1 basis-0 overflow-hidden"
       >
-        <MountainScene className="sidebar-scene absolute inset-x-0 bottom-0 h-[min(330px,100%)] w-full" />
+        <NavScene className="sidebar-scene absolute inset-x-0 bottom-0 h-[min(330px,100%)] w-full" />
         <p className="sidebar-tagline absolute inset-x-0 bottom-[296px] -rotate-3 px-6 text-center font-hand text-[1.75rem] leading-[1.15] text-sidebar-ink/90">
           Better stays.
           <br />

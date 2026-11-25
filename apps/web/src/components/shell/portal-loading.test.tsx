@@ -3,7 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { beginLoading, endLoading, SLOW_AFTER_MS, STUCK_AFTER_MS } from '../../lib/use-load-stage';
 import { PortalLoading } from './portal-loading';
 
-vi.mock('./mountain-scene', () => ({ MountainScene: () => null }));
+vi.mock('./nav-scene', () => ({ NavScene: () => null }));
 
 describe('PortalLoading', () => {
   beforeEach(() => {
