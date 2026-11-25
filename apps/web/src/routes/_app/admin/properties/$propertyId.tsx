@@ -23,6 +23,7 @@ import { formatBps, titleCase } from '../../../../lib/format';
 import { DamageCard } from '../../../../components/damage/damage-card';
 import { RoomsCard } from '../../../../components/rooms/rooms-card';
 import { SuppliesCard } from '../../../../components/supplies/supplies-card';
+import { useProperty } from '../../../../lib/property-query';
 import { queries } from '../../../../lib/queries';
 
 export const Route = createFileRoute('/_app/admin/properties/$propertyId')({
@@ -34,7 +35,7 @@ function AdminProperty() {
   const api = useApi();
   const qc = useQueryClient();
   const [confirmArchive, setConfirmArchive] = useState(false);
-  const property = useQuery(queries.property(api, propertyId));
+  const property = useProperty(propertyId);
   // Its place in the property list picks the illustrated scene shown without a photo, the same one as on its cards.
   const list = useQuery(queries.properties(api));
   const listIndex = list.data?.items.findIndex((x) => x.id === propertyId);

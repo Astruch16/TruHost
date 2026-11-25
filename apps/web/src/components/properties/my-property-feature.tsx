@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, BedDouble, ExternalLink, KeyRound, MapPin, Pencil, Sparkles } from 'lucide-react';
 import { cx } from '../../lib/cx';
+import { usePrefetchProperty } from '../../lib/property-query';
 import { TINTS } from '../../lib/dashboard-format';
 import { formatTime, propertyFacts, type MyProperty } from '../../lib/my-properties';
 import { buttonStyles } from '../../lib/styles';
@@ -21,6 +22,8 @@ export function MyPropertyFeature({ item, onEdit }: { item: MyProperty; onEdit?:
   const { property: p, role, index } = item;
   const owner = role === 'OWNER';
   const tint = TINTS[index % TINTS.length]!;
+  // Its page opens with a cross-fade, its data already on the way from when the pointer or focus arrived.
+  const prefetch = usePrefetchProperty(p.id);
   // Sleeps is one of the figures, so the layout pills are just rooms.
   const layout = propertyFacts({ ...p, maxGuests: null });
   const figures = [
@@ -36,6 +39,8 @@ export function MyPropertyFeature({ item, onEdit }: { item: MyProperty; onEdit?:
   const link = {
     to: owner ? ('/properties/$propertyId' as const) : ('/cleaner/properties/$propertyId' as const),
     params: { propertyId: p.id },
+    viewTransition: true,
+    ...prefetch,
   };
 
   return (
